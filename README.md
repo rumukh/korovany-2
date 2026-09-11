@@ -41,7 +41,7 @@ driver, with isolated browser profiles and no additional test dependencies:
 
 ```powershell
 $env:KOROVANY_BROWSER = '1'
-npm test -- tests\ui-browser.test.ts
+npm test -- tests\ui-browser.test.ts tests\story-browser.test.ts
 ```
 
 Set `AEGIS_BROWSER` to an executable path if the browser is not installed in a
@@ -84,7 +84,9 @@ bridges connect the heartlands to Greenmarch, Fenlands, Saltcoast, Ashsteppe,
 Crownlands, Frostspine and Hollowvale. The original military sites remain in the
 heartlands.
 
-Start with the road keeper near your home convoy. **T** talks to a nearby resident
+The campaign has **five main chapters**, **eight branching side quests**, **20
+named NPCs**, and **three mutually exclusive endings**. Begin with Mara, the road
+keeper near your home convoy. **T** talks to a nearby resident
 or examines a landmark; the on-screen prompt tells you what is available.
 Conversations pause the simulation. Choose a response with the mouse or **1-9**;
 **Escape** leaves without selecting a response. Residents offer local stories,
@@ -132,6 +134,10 @@ Campaign, profile, and settings are stored locally in the browser under the
 simulation state, including the convoy and ongoing encounters. Terminal run
 rewards are claimed once per run ID. Clearing browser site data removes these
 saves; private browsing or blocked storage can prevent persistence.
+
+Story saves also retain discoveries, testimony, reputation, quest outcomes,
+tracked objectives and open conversations. Version-one saves keep their original
+world and military-only victory rules; a new campaign uses the expanded world.
 
 ## Architecture
 

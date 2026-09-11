@@ -244,6 +244,7 @@ function begin(sameSeed?: boolean): void {
 
 function resume(): void {
   if (!campaign || !snapshot) return;
+  atTitle = false;
   rendererFor(snapshot);
   lastAim = { x: Math.sin(snapshot.player.heading), z: Math.cos(snapshot.player.heading) };
   shell?.update(snapshot);

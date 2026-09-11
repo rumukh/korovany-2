@@ -158,7 +158,9 @@ export class Atlas {
       title.textContent = t(site.nameKey);
       marker.append(title);
       root.append(marker);
-      if (!miniature && (local || width <= 200)) label(t(site.nameKey), x(site.x), z(site.z) - 4 * scale);
+      const namedSettlement = world.exploration?.locations.some((place) =>
+        snapshot.narrative?.discovered.includes(place.id) && Math.hypot(place.x - site.x, place.z - site.z) < 8);
+      if (!miniature && !namedSettlement && (local || width <= 200)) label(t(site.nameKey), x(site.x), z(site.z) - 4 * scale);
     }
     for (const npc of snapshot.narrative?.npcs ?? []) {
       if (!npc.available || Math.hypot(npc.x - snapshot.player.x, npc.z - snapshot.player.z) > 38) continue;

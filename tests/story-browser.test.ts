@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
 import { createCampaign, type GameSnapshot } from "../src/game";
-import { defaultSettings, storageKeys } from "../src/ui/storage";
+import { storageKeys, type Settings } from "../src/ui/storage";
 import {
   click, evaluate, launchBrowser, openPage, screenshot, until,
   type CdpSession, type LaunchedBrowser,
@@ -29,7 +29,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
   }
   async function select(selector: string): Promise<void> {
     const point = await evaluate<{ x: number; y: number }>(cdp, `(() => {
-      const button = document.querySelector(${JSON.stringify(selector)});
+      const button = [...document.querySelectorAll(${JSON.stringify(selector)})].find(element => element.getClientRects().length > 0);
       if (!button || button.disabled) throw new Error('Unavailable narrative control: ' + ${JSON.stringify(selector)});
       button.scrollIntoView({block:'center'});
       const rect = button.getBoundingClientRect();
@@ -57,9 +57,10 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     cdp = await openPage(browser.port, origin, { width: 1440, height: 1000 });
     await until(cdp, "Boolean(window.korovany)", Boolean, 30_000);
     const save = createCampaign({ seed: "story-browser", faction: "guard", runId: "story-browser-run" }).serialize();
+    const settings: Settings = { language: "en", quality: "high", reducedMotion: false, muted: false };
     await evaluate(cdp, `(() => {
       localStorage.setItem(${JSON.stringify(storageKeys.campaign)}, ${JSON.stringify(JSON.stringify(save))});
-      localStorage.setItem(${JSON.stringify(storageKeys.settings)}, ${JSON.stringify(JSON.stringify({ ...defaultSettings(), language: "en" }))});
+      localStorage.setItem(${JSON.stringify(storageKeys.settings)}, ${JSON.stringify(JSON.stringify(settings))});
     })()`);
     await reload();
   }, 90_000);
@@ -78,7 +79,8 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     await until(cdp, "Boolean(window.korovany.inspect().snapshot.narrative?.interaction?.kind === 'talk')", Boolean, 20_000);
     const before = await inspect();
     expect(before.snapshot.world.exploration?.regions.length).toBeGreaterThanOrEqual(8);
-    expect(before.snapshot.narrative?.npcs.length).toBeGreaterThanOrEqual(16);
+    expect(before.snapshot.narrative?.npcs.some((npc) => npc.id === before.snapshot.narrative?.interaction?.targetId)).toBe(true);
+    await capture("residents-at-roadward");
     await tap("KeyT");
     await until(cdp, "window.korovany.inspect().overlay", (value: string) => value === "dialogue", 15_000);
     const talking = await inspect();

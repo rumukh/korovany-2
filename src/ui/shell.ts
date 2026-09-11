@@ -211,8 +211,11 @@ export class GameShell {
     const story = snapshot.narrative;
     const language = this.state.settings.language;
     const tracked = story?.quests.find((quest) => quest.id === story.trackedQuestId);
+    const storyRemains = story && snapshot.fortress.bossDefeated && !story.ending;
     objective.append(element("p", "eyebrow", story ? localText(story.chapter, language) : this.t("chapter")),
-      element("h2", "", tracked ? localText(tracked.title, language) : this.t(snapshot.objective.key)));
+      element("h2", "", tracked ? localText(tracked.title, language)
+        : storyRemains ? localText(story.title, language) : this.t(snapshot.objective.key)));
+    if (!tracked && storyRemains) objective.append(element("p", "tracked-objective", localText(story.summary, language)));
     if (tracked) {
       objective.append(element("p", "tracked-objective", localText(tracked.objective, language)));
       const target = questTarget(snapshot, tracked);
