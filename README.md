@@ -31,6 +31,18 @@ npm run build
 npm run preview
 ```
 
+Real-browser coverage uses an installed Chrome or Edge and Aegis's existing CDP
+driver, with isolated browser profiles and no additional test dependencies:
+
+```powershell
+$env:KOROVANY_BROWSER = '1'
+npm test -- tests\ui-browser.test.ts
+```
+
+Set `AEGIS_BROWSER` to an executable path if the browser is not installed in a
+standard location. `KOROVANY_CAPTURE_DIR` optionally selects a screenshot output
+directory.
+
 The production game is written to `dist`. Serve that directory over HTTP; opening
 `index.html` directly with `file://` is not supported. Assets use relative paths,
 so the same build works at a site root or under `/korovany-2/`. Runtime assets are
@@ -63,8 +75,9 @@ Russian is the default language; English is available in the game.
 | Control | Action |
 | --- | --- |
 | WASD | Move relative to the camera |
-| Mouse | Aim |
+| Mouse / Arrow keys | Aim |
 | Left mouse / Space | Attack |
+| Right mouse drag / Mouse wheel | Orbit camera / Zoom |
 | Shift | Sprint |
 | Q | Dodge |
 | F | Faction ability |
@@ -73,8 +86,9 @@ Russian is the default language; English is available in the game.
 | M / Tab | Campaign map |
 | Escape | Pause / close overlay |
 
-The in-game help describes additional camera and interface controls. Opening
-menus pauses the campaign. Browser focus loss releases held controls.
+Opening menus pauses the campaign. Browser focus loss pauses play and releases
+held controls. Once the atlas is open, Tab navigates its controls; use M or
+Escape to return to the road.
 
 ## Saves
 
