@@ -6,6 +6,7 @@ import { WorldEffects } from './effects';
 import { factionColors, palette } from './palette';
 import { part, shapeGeometry } from './primitives';
 import { ViewResources } from './resources';
+import { WorldResidents } from './residents';
 import { createWorldScenery, type WorldScenery } from './world';
 
 export type { GroundPoint, MovementBasis } from './camera';
@@ -98,6 +99,7 @@ class Presentation {
   readonly scenery: WorldScenery;
   readonly sun: THREE.DirectionalLight;
   readonly effects: WorldEffects;
+  readonly residents: WorldResidents;
   private readonly actorVisuals = new Map<string, ActorVisual>();
   private readonly postVisuals = new Map<string, PostVisual>();
   private hero: ActorModel | undefined;
@@ -122,6 +124,7 @@ class Presentation {
     this.scenery = createWorldScenery(this.resources, world);
     this.scene.add(this.scenery.group);
     this.effects = new WorldEffects(this.resources, this.scene);
+    this.residents = new WorldResidents(this.resources, this.scene);
     const skyLight = new THREE.HemisphereLight('#d3e2d6', '#8d805b', 1.55);
     this.scene.add(skyLight);
     this.sun = new THREE.DirectionalLight(palette.sun, 2.1);
@@ -356,11 +359,13 @@ class Presentation {
       visual.supply.quaternion.copy(camera.quaternion);
     }
     this.effects.update(snapshot, dt, this.cosmeticTime, reducedMotion);
+    this.residents.update(snapshot, camera, reducedMotion);
     this.lastTick = snapshot.tick;
   }
 
   dispose(): void {
     this.effects.dispose();
+    this.residents.dispose();
     this.scenery.dispose();
     this.sun.shadow.dispose();
     this.scene.clear();

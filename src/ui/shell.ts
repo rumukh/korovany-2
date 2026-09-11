@@ -1,9 +1,10 @@
-import { FACTIONS, type FactionId, type GameEvent, type GameInput, type GameSnapshot, type MetaProfile, type UpgradeId } from "../game";
+import { FACTIONS, type FactionId, type GameEvent, type GameInput, type GameSnapshot, type MetaProfile, type NarrativeInput, type UpgradeId } from "../game";
 import { Atlas } from "./atlas";
 import { formatTime, translate } from "./locale";
 import type { Settings } from "./storage";
+import { dialogueContent, journalContent, localText, questTarget, type QuestFilter } from "./story";
 
-export type Overlay = "menu" | "pause" | "map" | "settings" | "help" | "records" | "terminal" | "fatal" | null;
+export type Overlay = "menu" | "pause" | "map" | "journal" | "dialogue" | "settings" | "help" | "records" | "terminal" | "fatal" | null;
 export interface MetaOffer {
   id: UpgradeId;
   level: number;
@@ -18,7 +19,8 @@ export type ShellAction =
   | { type: "seed"; seed: string }
   | { type: "settings"; settings: Settings }
   | { type: "metaUpgrade" | "upgrade"; id: UpgradeId }
-  | { type: "convoy"; order: NonNullable<GameInput["convoy"]> };
+  | { type: "convoy"; order: NonNullable<GameInput["convoy"]> }
+  | { type: "narrative"; command: NarrativeInput };
 
 export interface ShellState {
   settings: Settings;
@@ -77,6 +79,9 @@ export class GameShell {
   private state: ShellState;
   private lastMapTick = -Infinity;
   private fatalKind: "graphics" | "game" = "graphics";
+  private selectedQuest: string | null = null;
+  private questFilter: QuestFilter = "active";
+  private localMap = false;
 
   constructor(root: HTMLElement, state: ShellState, private readonly dispatch: (action: ShellAction) => void) {
     this.state = state;
@@ -184,6 +189,7 @@ export class GameShell {
 
   private buildControls(): void {
     this.controls.replaceChildren(
+      this.button("story.journal", { type: "overlay", overlay: "journal" }, "hud-button"),
       this.button("map", { type: "overlay", overlay: "map" }, "hud-button"),
       this.button("pause", { type: "overlay", overlay: "pause" }, "hud-button"),
     );
@@ -202,7 +208,17 @@ export class GameShell {
     crest.append(vitals);
     const objective = element("section", "objective");
     objective.setAttribute("aria-label", this.t("progressLabel"));
-    objective.append(this.label("chapter"), element("h2", "", this.t(snapshot.objective.key)));
+    const story = snapshot.narrative;
+    const language = this.state.settings.language;
+    const tracked = story?.quests.find((quest) => quest.id === story.trackedQuestId);
+    objective.append(element("p", "eyebrow", story ? localText(story.chapter, language) : this.t("chapter")),
+      element("h2", "", tracked ? localText(tracked.title, language) : this.t(snapshot.objective.key)));
+    if (tracked) {
+      objective.append(element("p", "tracked-objective", localText(tracked.objective, language)));
+      const target = questTarget(snapshot, tracked);
+      if (target) objective.append(element("p", "quest-distance",
+        `${Math.round(Math.hypot(target.x - snapshot.player.x, target.z - snapshot.player.z))} ${this.t("story.metres")} / J · ${this.t("story.journal")}`));
+    }
     objective.append(element("p", "objective-counts",
       `${this.t("capturedCount")} ${snapshot.objective.captured}/${snapshot.objective.captureRequired} · ` +
       `${this.t("suppliedCount")} ${snapshot.objective.supplied}/${snapshot.objective.supplyRequired}`));
@@ -218,6 +234,16 @@ export class GameShell {
     if (snapshot.convoy.disabled) convoy.append(element("p", "danger-text", this.t("disabledConvoy")));
     convoy.append(element("p", "key-prompt", `C · ${this.t("orders")}`));
     const actions = element("section", "action-panel");
+    if (story?.interaction) {
+      const interaction = story.interaction;
+      const prompt = this.button("interact", { type: "narrative", command: interaction.kind === "talk"
+        ? { type: "talk", npcId: interaction.targetId } : { type: "inspect", locationId: interaction.targetId } }, "interaction story-interaction");
+      prompt.replaceChildren(element("kbd", "", "T"), element("span", "", localText(interaction.label, language)));
+      prompt.disabled = !interaction.enabled;
+      prompt.dataset.action = "interact-story";
+      actions.append(prompt);
+    }
+    if (story?.notice) actions.append(element("p", "story-notice", localText(story.notice, language)));
     if (snapshot.interaction) {
       const interaction = element("div", `interaction ${snapshot.interaction.enabled ? "" : "unavailable"}`);
       interaction.append(element("kbd", "", "E"), element("span", "", `${this.t("hold")} · ${this.t(snapshot.interaction.key)}`));
@@ -295,11 +321,14 @@ export class GameShell {
       : this.currentOverlay === "pause" ? "paused"
         : this.currentOverlay === "terminal" ? (this.snapshot?.phase === "victory" ? "victory" : "defeat")
           : this.currentOverlay === "fatal" ? (this.fatalKind === "graphics" ? "graphicsFailure" : "gameFailure")
-            : this.currentOverlay;
+            : this.currentOverlay === "journal" || this.currentOverlay === "dialogue" ? `story.${this.currentOverlay}` : this.currentOverlay;
     panel.setAttribute("aria-label", this.t(headingKey));
     if (this.currentOverlay === "menu") this.menu(panel);
     else if (this.currentOverlay === "pause") this.pause(panel);
     else if (this.currentOverlay === "map") this.map(panel);
+    else if (this.currentOverlay === "journal") this.questJournal(panel);
+    else if (this.currentOverlay === "dialogue" && this.snapshot) panel.append(dialogueContent(this.snapshot, this.state.settings.language,
+      (command) => this.dispatch({ type: "narrative", command })));
     else if (this.currentOverlay === "settings") this.settings(panel);
     else if (this.currentOverlay === "help") this.help(panel);
     else if (this.currentOverlay === "records") this.records(panel);
@@ -375,6 +404,7 @@ export class GameShell {
     const buttons = element("div", "pause-actions");
     buttons.append(this.button("resume", { type: "resume" }, "button primary"), this.button("save", { type: "save" }),
       this.button("map", { type: "overlay", overlay: "map" }), this.button("help", { type: "overlay", overlay: "help" }),
+      this.button("story.journal", { type: "overlay", overlay: "journal" }),
       this.button("settings", { type: "overlay", overlay: "settings" }), this.button("titleReturn", { type: "title" }));
     panel.append(buttons);
     panel.append(element("p", "save-feedback small"));
@@ -400,9 +430,20 @@ export class GameShell {
     const snapshot = this.snapshot;
     panel.append(this.heading("map"), element("p", "small muted", this.t("mapNote")));
     if (!snapshot) return;
+    if (snapshot.world.exploration) {
+      const toggle = element("button", "button quiet map-scale", this.t(this.localMap ? "story.worldMap" : "story.localMap"));
+      toggle.type = "button";
+      toggle.dataset.action = "map-scale";
+      toggle.addEventListener("click", () => { this.localMap = !this.localMap; this.renderOverlay(); });
+      panel.append(toggle);
+      const region = snapshot.world.exploration.regions.find(({ bounds }) => snapshot.player.x >= bounds.minX &&
+        snapshot.player.x <= bounds.maxX && snapshot.player.z >= bounds.minZ && snapshot.player.z <= bounds.maxZ);
+      if (region) panel.append(element("p", "region-caption", localText(region.name, this.state.settings.language)),
+        element("p", "region-lore small muted", localText(region.description, this.state.settings.language)));
+    }
     const layout = element("div", "atlas-layout");
     const map = element("div", "atlas-paper");
-    map.append(this.atlas.draw(snapshot, this.state.settings.language));
+    map.append(this.atlas.draw(snapshot, this.state.settings.language, false, this.localMap));
     const sidebar = element("div", "atlas-sidebar");
     sidebar.append(this.label("chapter"), element("h3", "", this.t(snapshot.objective.key)));
     for (const post of snapshot.outposts) {
@@ -425,10 +466,17 @@ export class GameShell {
     destinations.id = "convoy-destination";
     label.htmlFor = destinations.id;
     const sites = snapshot.world.sites.filter((site) => snapshot.world.roads.nodes.some((node) => node.id === site.id));
+    const places = snapshot.world.exploration?.locations.filter((place) => snapshot.narrative?.discovered.includes(place.id)) ?? [];
     for (const site of sites) {
       const option = element("option", "", this.t(site.nameKey));
       option.value = site.id;
       option.selected = snapshot.convoy.destination === site.id;
+      destinations.append(option);
+    }
+    for (const place of places) {
+      const option = element("option", "", localText(place.name, this.state.settings.language));
+      option.value = place.id;
+      option.selected = snapshot.convoy.destination === place.id;
       destinations.append(option);
     }
     const send = element("button", "button primary", this.t("sendConvoy"));
@@ -442,8 +490,42 @@ export class GameShell {
       legend.append(element("span", `legend-item legend-${key}`, this.t(key)));
     }
     sidebar.append(legend);
+    if (snapshot.narrative) {
+      sidebar.append(this.button("story.journal", { type: "overlay", overlay: "journal" }, "button quiet"));
+      const travel = element("section", "travel-controls");
+      travel.append(this.heading("story.travel", "h3"));
+      const eligibility = snapshot.narrative.travel;
+      travel.append(element("p", "small muted", eligibility.reason
+        ? localText(eligibility.reason, this.state.settings.language) : this.t("story.travelNote")));
+      for (const place of places.filter((place) => eligibility.destinations.includes(place.id))) {
+        const go = this.button("story.travel", { type: "narrative", command: { type: "travel", locationId: place.id } }, "button small");
+        go.textContent = localText(place.name, this.state.settings.language);
+        go.disabled = !eligibility.available;
+        go.dataset.travel = place.id;
+        travel.append(go);
+      }
+      if (!eligibility.destinations.length) travel.append(element("p", "small muted", this.t("story.noTravel")));
+      sidebar.append(travel);
+      if (snapshot.narrative.notice) sidebar.append(element("p", "story-notice", localText(snapshot.narrative.notice, this.state.settings.language)));
+    }
     layout.append(map, sidebar);
     panel.append(layout, this.button("resume", { type: "resume" }, "button primary"));
+  }
+
+  private questJournal(panel: HTMLElement): void {
+    if (!this.snapshot) {
+      panel.append(this.heading("story.journal"), element("p", "guide-copy", this.t("story.begin")));
+      this.back(panel, "menu");
+      return;
+    }
+    panel.append(journalContent(this.snapshot, this.state.settings.language, this.selectedQuest, this.questFilter,
+      (id) => { this.selectedQuest = id; this.renderOverlay(); },
+      (filter) => { this.questFilter = filter; this.renderOverlay(); },
+      (command) => this.dispatch({ type: "narrative", command })));
+    const actions = element("div", "journal-actions");
+    actions.append(this.button("map", { type: "overlay", overlay: "map" }),
+      this.button("resume", { type: "resume" }, "button primary"));
+    panel.append(actions);
   }
 
   private settings(panel: HTMLElement): void {
@@ -485,6 +567,7 @@ export class GameShell {
     for (const [heading, paragraph] of [
       ["chapter", "guideCampaign"], ["orders", "guideConvoy"], ["attack", "guideCombat"],
       ["upgrades", "guideRecovery"], ["map", "guideCamera"], ["save", "guideSave"],
+      ["story.journal", "story.guide"],
     ]) {
       if (heading && paragraph) panel.append(this.heading(heading, "h3"), element("p", "guide-copy", this.t(paragraph)));
     }
@@ -527,6 +610,7 @@ export class GameShell {
     const victory = snapshot.phase === "victory";
     panel.append(emblem(), this.label("edition"), this.heading(victory ? "victory" : "defeat"),
       element("p", "prologue", this.t(victory ? "victoryStory" : "defeatStory")));
+    if (snapshot.narrative?.ending) panel.append(element("p", "quest-outcome", localText(snapshot.narrative.ending, this.state.settings.language)));
     const stats = element("div", "record-stats");
     stats.append(this.stat("campaignTime", formatTime(snapshot.elapsed)),
       this.stat("capturedCount", snapshot.objective.captured), this.stat("suppliedCount", snapshot.objective.supplied),
@@ -550,11 +634,19 @@ export class GameShell {
   private overlayKey(event: KeyboardEvent): void {
     if (this.currentOverlay === null || this.currentOverlay === "fatal") return;
     const editable = event.target instanceof HTMLElement && event.target.matches("input, textarea, select");
-    if (event.code === "Escape" || (this.currentOverlay === "map" && !editable && event.code === "KeyM")) {
+    if (this.currentOverlay === "dialogue" && !editable && !event.repeat && /^Digit[1-9]$/.test(event.code)) {
+      event.preventDefault();
+      const choice = this.overlayHost.querySelectorAll<HTMLButtonElement>(".dialogue-choice")[Number(event.code.slice(-1)) - 1];
+      if (choice && !choice.disabled) choice.click();
+      return;
+    }
+    if (event.code === "Escape" || (this.currentOverlay === "map" && !editable && event.code === "KeyM") ||
+      (this.currentOverlay === "journal" && !editable && event.code === "KeyJ")) {
       event.preventDefault();
       if (event.repeat) return;
       if (["settings", "help", "records"].includes(this.currentOverlay)) this.dispatch({ type: "overlay", overlay: this.returnOverlay });
-      else if (this.currentOverlay === "pause" || this.currentOverlay === "map") this.dispatch({ type: "resume" });
+      else if (this.currentOverlay === "dialogue") this.dispatch({ type: "narrative", command: { type: "close" } });
+      else if (["pause", "map", "journal"].includes(this.currentOverlay)) this.dispatch({ type: "resume" });
       return;
     }
     if (event.code === "Tab") {

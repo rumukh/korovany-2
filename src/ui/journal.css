@@ -259,3 +259,58 @@ kbd { font: 11px "Segoe UI", sans-serif; display: inline-grid; place-items: cent
   .setting-row select { min-width: 120px; max-width: 150px; }
 }
 @media (pointer: coarse) { .touch-note { display: block; } }
+.hud-controls { flex-wrap: wrap; }
+.tracked-objective { margin-top: 8px; font-size: 12px; line-height: 1.45; color: #e7dfc5; }
+.quest-distance { color: var(--brass); font-size: 10px; margin-top: 6px; }
+.story-interaction { pointer-events: auto; text-align: left; color: var(--paper); }
+.story-notice { padding: 9px 13px; background: #16271ee8; border-left: 2px solid var(--brass); font-size: 12px; line-height: 1.5; max-width: 480px; }
+.journal-panel { width: min(1060px, 100%); }
+.journal-actions { display: flex; gap: 12px; justify-content: end; margin-top: 24px; }
+.quest-filters { display: flex; gap: 8px; margin: 20px 0; }
+.quest-filters [aria-pressed="true"] { color: var(--brass); border-color: var(--brass); }
+.quest-layout { display: grid; grid-template-columns: minmax(200px, .8fr) minmax(0, 1.5fr); gap: 28px; align-items: start; }
+.quest-list { display: grid; gap: 7px; max-height: 460px; overflow-y: auto; padding: 2px; scrollbar-width: thin; }
+.quest-entry { display: grid; gap: 5px; text-align: left; padding: 15px; background: #122017; border: 1px solid var(--border); }
+.quest-entry strong { font: 17px/1.3 Georgia, serif; }
+.quest-entry .eyebrow { font-size: 8px; margin: 0; letter-spacing: .12em; }
+.quest-entry[aria-current="true"] { border-color: var(--brass); background: #354334; }
+.quest-tracked { color: #a9c9b2; font-size: 10px; }
+.quest-detail h3 { margin: 0 0 14px; font-size: 28px; }
+.quest-detail > h3:not(:first-of-type) { margin: 24px 0 12px; font-size: 21px; }
+.quest-objective { border-left: 2px solid var(--brass); padding: 12px 16px; background: #263426; margin: 20px 0; font-size: 14px; line-height: 1.6; }
+.quest-history { margin: 12px 0; padding-left: 22px; color: #d4d6c5; font-size: 13px; line-height: 1.65; }
+.quest-history li { padding: 3px 0 8px 6px; }
+.quest-outcome { margin-top: 22px; padding: 20px; border: 1px solid var(--border); background: #303b2b; font: italic 17px/1.65 Georgia, serif; }
+.reputation-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.reputation-standing { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px; background: #132219; border-top: 1px solid var(--border); font-size: 12px; }
+.reputation-standing strong { font: 22px Georgia, serif; color: var(--brass); }
+.reputation-standing strong.danger-text { color: #f0aa8d; }
+.story-facts { margin-top: 24px; }
+.story-facts summary { cursor: pointer; padding: 12px 0; color: var(--brass); }
+.story-facts p { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.dialogue-panel { width: min(800px, 100%); border-top: 3px solid var(--brass); }
+.conversation-header { display: flex; align-items: center; gap: 22px; }
+.speaker-seal { display: grid; place-items: center; width: 72px; height: 84px; flex: 0 0 72px; border: 1px solid var(--brass); border-radius: 50% 50% 38% 38%; color: var(--brass); background: #354132; font: 42px Georgia, serif; }
+.dialogue-speech { font: 19px/1.7 Georgia, serif; color: #e7e3ce; margin: 26px 0; white-space: pre-line; }
+.dialogue-choices { display: grid; gap: 8px; margin-bottom: 16px; }
+.dialogue-choice { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 7px 12px; padding: 14px 16px; text-align: left; background: #283829; border: 1px solid var(--border); font-size: 14px; line-height: 1.5; }
+.dialogue-choice:hover:not(:disabled) { background: #3b4932; border-color: var(--brass); }
+.choice-number { color: var(--brass); font-family: Georgia, serif; }
+.choice-reason { grid-column: 2; color: #dfbd95; }
+.conversation > .button { margin-top: 20px; }
+.map-scale { margin-top: 12px; }
+.region-caption { display: inline; margin-left: 16px; color: var(--brass); font: italic 16px Georgia, serif; }
+.region-lore { margin-top: 14px; max-width: 720px; }
+.travel-controls { display: grid; gap: 8px; padding-top: 12px; margin-top: 16px; border-top: 1px solid var(--border); }
+.travel-controls h3 { margin-top: 0; }
+@media (max-width: 760px) {
+  .quest-layout { grid-template-columns: 1fr; gap: 22px; }
+  .quest-list { max-height: 230px; }
+  .reputation-grid { grid-template-columns: 1fr; }
+  .dialogue-speech { font-size: 16px; }
+  .dialogue-choice { padding: 12px; font-size: 13px; }
+  .conversation-header { gap: 15px; }
+  .speaker-seal { width: 52px; height: 65px; flex-basis: 52px; font-size: 30px; }
+  .travel-controls { grid-column: 1 / -1; }
+  .tracked-objective { font-size: 10px; }
+}

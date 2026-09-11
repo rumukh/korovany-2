@@ -247,7 +247,7 @@ function resume(): void {
   rendererFor(snapshot);
   lastAim = { x: Math.sin(snapshot.player.heading), z: Math.cos(snapshot.player.heading) };
   shell?.update(snapshot);
-  if (snapshot.phase === "playing") changeOverlay(null);
+  if (snapshot.phase === "playing") changeOverlay(snapshot.narrative?.dialogue ? "dialogue" : null);
   else finish();
 }
 
@@ -339,6 +339,26 @@ function dispatch(action: ShellAction): void {
         resume();
         if (running) queued = { ...queued, convoy: action.order };
         break;
+      case "narrative": {
+        if (!campaign || !snapshot || atTitle || snapshot.phase !== "playing") break;
+        if (campaignSave.conflicted) {
+          shell?.warn("storage.conflict");
+          break;
+        }
+        const overlay = shell?.overlay ?? null;
+        freeze();
+        campaign.step({ narrative: action.command });
+        snapshot = campaign.snapshot();
+        campaignSave.markDirty();
+        atlasSave.markDirty();
+        shell?.update(snapshot);
+        events(snapshot);
+        saveCampaign();
+        if (snapshot.phase !== "playing") finish();
+        else if (!campaignSave.conflicted) changeOverlay(snapshot.narrative?.dialogue ? "dialogue"
+          : overlay === "dialogue" ? null : overlay);
+        break;
+      }
       case "reload": window.location.reload(); break;
     }
   } catch (error) {
@@ -358,6 +378,12 @@ function worldDirection(local: Vec2): Vec2 {
 function sampleInput(): CampaignInput {
   const sample = input?.consume();
   if (!sample || !snapshot) return {};
+  if (sample.talk && snapshot.narrative?.interaction) {
+    const target = snapshot.narrative.interaction;
+    queued = {};
+    return { narrative: target.kind === "talk" ? { type: "talk", npcId: target.targetId }
+      : { type: "inspect", locationId: target.targetId } };
+  }
   if (sample.keyboardAim) lastAim = worldDirection(sample.keyboardAim);
   else if (sample.pointer) {
     const point = view?.screenToWorld(sample.pointer.x, sample.pointer.y);
@@ -420,14 +446,17 @@ function frame(time: number): void {
   try {
     if (running && campaign) {
       accumulator += delta;
+      let stepped = false;
       while (accumulator >= STEP) {
-        campaign.step(sampleInput());
+        const command = sampleInput();
+        campaign.step(command);
+        stepped = true;
         campaignSave.markDirty();
         atlasSave.markDirty();
         accumulator -= STEP;
-        snapshot = campaign.snapshot();
-        if (snapshot.phase !== "playing") break;
+        if (command.narrative) break;
       }
+      if (stepped) snapshot = campaign.snapshot();
       if (snapshot) {
         events(snapshot);
         hudElapsed += delta;
@@ -436,6 +465,10 @@ function frame(time: number): void {
           hudElapsed = 0;
         }
         if (snapshot.phase !== "playing") finish();
+        else if (snapshot.narrative?.dialogue) {
+          shell?.update(snapshot);
+          changeOverlay("dialogue");
+        }
       }
     }
     const display = atTitle ? preview : snapshot;

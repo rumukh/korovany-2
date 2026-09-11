@@ -1,13 +1,18 @@
-# Korovany II: War of the Road
+# Korovany II: The Unwritten Road
 
 A standalone, single-player 3D action campaign built on
 [Aegis Engine](https://github.com/rumukh/aegis-engine), and a sequel to
 [Korovany](https://github.com/rumukh/korovany).
 
-Take the road as a forest elf, palace guard, or villain. Fight for supply posts,
-raid a rival caravan, and command a physical convoy along the road network.
-Deliveries open the final stronghold; returning victorious earns permanent
-upgrades for the next expedition.
+Take the road as a forest elf, palace guard, or villain. Villages are vanishing
+from the toll ledgers, and the supply wagons no longer stop for people who
+officially do not exist. Investigate the missing names, listen to conflicting
+witnesses, and decide who should control the borderlands' roads.
+
+An original branching narrative sits alongside the physical convoy campaign:
+fight for supply posts, raid a rival caravan, and escort cargo to open the final
+stronghold. Your conversations and investigations determine the road's future;
+military victory alone does not finish a new story campaign.
 
 ## Run locally
 
@@ -70,6 +75,33 @@ The same seed reproduces the world, not a promise of identical outcomes under
 different player inputs. New campaigns can apply purchased permanent upgrades.
 Russian is the default language; English is available in the game.
 
+## The borderlands and their stories
+
+New campaigns explore a **980 x 980 metre** continuous world, **49 times the area**
+of the original military map. Eight named regions contain 24 authored locations:
+settlements, inns, ruins, shrines and landmarks. Interconnected roads and three
+bridges connect the heartlands to Greenmarch, Fenlands, Saltcoast, Ashsteppe,
+Crownlands, Frostspine and Hollowvale. The original military sites remain in the
+heartlands.
+
+Start with the road keeper near your home convoy. **T** talks to a nearby resident
+or examines a landmark; the on-screen prompt tells you what is available.
+Conversations pause the simulation. Choose a response with the mouse or **1-9**;
+**Escape** leaves without selecting a response. Residents offer local stories,
+testimony and decisions with persistent consequences, not repeatable reward
+dispensers.
+
+**J** opens the quest journal. It records objectives, testimony, outcomes and
+faction reputation. Track a quest to mark its destination on the atlas and show
+distance on the HUD. **M** opens the atlas; switch between the whole borderlands
+and local surroundings. The minimap stays local so nearby roads and people remain
+readable. Locations become discovered through exploration.
+
+The atlas also offers convoy travel to eligible discovered stops. Travel is
+authoritative: the game checks the starting location, nearby danger, destination
+and convoy conditions, and shows why a journey is unavailable. It is not an
+unrestricted teleport out of combat.
+
 ## Controls
 
 | Control | Action |
@@ -82,6 +114,9 @@ Russian is the default language; English is available in the game.
 | Q | Dodge |
 | F | Faction ability |
 | E (hold) | Contextual capture, transfer, repair, or rest |
+| T | Talk to a nearby resident / examine a landmark |
+| J | Quest journal and tracking |
+| 1-9 | Select a dialogue response |
 | C | Cycle convoy orders |
 | M / Tab | Campaign map |
 | Escape | Pause / close overlay |

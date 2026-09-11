@@ -13,15 +13,17 @@ export interface InputSample {
   ability: boolean;
   interact: boolean;
   convoy: boolean;
+  talk: boolean;
 }
 
-type Edge = "dodge" | "ability" | "interact" | "convoy" | "attack";
+type Edge = "dodge" | "ability" | "interact" | "convoy" | "attack" | "talk";
 const bindings: Record<string, Edge> = {
   KeyQ: "dodge",
   KeyF: "ability",
   KeyE: "interact",
   KeyC: "convoy",
   Space: "attack",
+  KeyT: "talk",
 };
 const gameKeys = new Set([
   "KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft",
@@ -50,15 +52,15 @@ export class GameInput {
 
   constructor(
     private readonly surface: HTMLElement,
-    onOverlay: (overlay: "pause" | "map") => void,
+    onOverlay: (overlay: "pause" | "map" | "journal") => void,
     onFocusLost: () => void,
   ) {
     const signal = this.controller.signal;
     window.addEventListener("keydown", (event) => {
       if (!this.enabled || event.defaultPrevented || editable(event.target)) return;
-      if (["Escape", "KeyM", "Tab"].includes(event.code)) {
+      if (["Escape", "KeyM", "Tab", "KeyJ"].includes(event.code)) {
         event.preventDefault();
-        if (!event.repeat) onOverlay(event.code === "Escape" ? "pause" : "map");
+        if (!event.repeat) onOverlay(event.code === "Escape" ? "pause" : event.code === "KeyJ" ? "journal" : "map");
         return;
       }
       if (!gameKeys.has(event.code)) return;
@@ -132,6 +134,7 @@ export class GameInput {
       ability: this.edges.has("ability"),
       interact: this.keys.has("KeyE") || this.edges.has("interact"),
       convoy: this.edges.has("convoy"),
+      talk: this.edges.has("talk"),
     };
     this.edges.clear();
     return sample;

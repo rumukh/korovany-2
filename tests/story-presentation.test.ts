@@ -1,0 +1,79 @@
+import { describe, expect, it, vi } from "vitest";
+import * as THREE from "three";
+import { createCampaign, type GameSnapshot, type NarrativeSnapshot } from "../src/game";
+import { localText, questTarget } from "../src/ui/story";
+import { translate } from "../src/ui/locale";
+import { WorldResidents } from "../src/view/residents";
+import { ViewResources } from "../src/view/resources";
+
+function fixture(): GameSnapshot {
+  const snapshot = createCampaign({ seed: "residents", faction: "guard" }).snapshot();
+  const copy = { en: "Road keeper", ru: "Road keeper RU" };
+  const story: NarrativeSnapshot = {
+    title: copy, chapter: copy, summary: copy, dialogue: null, trackedQuestId: "witness",
+    discovered: [], reputation: [], facts: [], ending: null, notice: null, interaction: null,
+    travel: { available: false, reason: copy, destinations: [] },
+    npcs: [{ id: "keeper", name: copy, role: copy, faction: "elf", locationId: "home", x: 1, z: -54,
+      heading: 0, activity: copy, available: true, questAvailable: true }],
+    quests: [{ id: "witness", title: copy, description: copy, kind: "main", status: "active",
+      objective: copy, targetId: "keeper", entries: [], outcome: null }],
+  };
+  snapshot.narrative = story;
+  return snapshot;
+}
+
+describe("narrative presentation contract", () => {
+  it("resolves NPC and site objectives without guessing a progression state", () => {
+    const snapshot = fixture();
+    const quest = snapshot.narrative!.quests[0]!;
+    expect(questTarget(snapshot, quest)).toMatchObject({ x: 1, z: -54 });
+    expect(questTarget(snapshot, { ...quest, targetId: "home" })).toMatchObject({ x: 0, z: -54 });
+    expect(questTarget(snapshot, { ...quest, targetId: "missing" })).toBeNull();
+    expect(questTarget(snapshot)).toBeNull();
+  });
+
+  it("localizes narrative and interface text in both languages", () => {
+    expect(localText({ en: "Witness", ru: "Testimony RU" }, "ru")).toBe("Testimony RU");
+    for (const key of ["journal", "dialogue", "guide", "travel", "active", "failed", "main", "side", "mapTarget"]) {
+      expect(translate("en", `story.${key}`)).not.toBe(`story.${key}`);
+      expect(translate("ru", `story.${key}`)).not.toBe(translate("en", `story.${key}`));
+    }
+  });
+
+  it("mirrors noncombatants without changing simulation state and reuses their resources", () => {
+    const snapshot = fixture();
+    const original = structuredClone(snapshot);
+    const scene = new THREE.Scene();
+    const resources = new ViewResources();
+    const residents = new WorldResidents(resources, scene);
+    const camera = new THREE.PerspectiveCamera();
+    residents.update(snapshot, camera, true);
+    const person = scene.getObjectByName("resident:keeper");
+    expect(person?.visible).toBe(true);
+    expect(person?.userData.npcId).toBe("keeper");
+    const disposals: ReturnType<typeof vi.fn>[] = [];
+    const materials = new Set<THREE.Material>();
+    scene.traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        for (const material of Array.isArray(object.material) ? object.material : [object.material]) materials.add(material);
+      }
+    });
+    for (const material of materials) {
+      const dispose = vi.fn();
+      material.addEventListener("dispose", dispose);
+      disposals.push(dispose);
+    }
+    for (let i = 0; i < 100; i++) residents.update(snapshot, camera, true);
+    expect(scene.children).toHaveLength(1);
+    expect(snapshot).toEqual(original);
+    snapshot.player.x = 450;
+    residents.update(snapshot, camera, false);
+    expect(person?.visible).toBe(false);
+    snapshot.narrative!.npcs = [];
+    residents.update(snapshot, camera, false);
+    expect(scene.children).toHaveLength(0);
+    residents.dispose();
+    resources.dispose();
+    expect(disposals.every((dispose) => dispose.mock.calls.length === 1)).toBe(true);
+  });
+});

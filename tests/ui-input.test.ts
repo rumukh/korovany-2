@@ -67,6 +67,19 @@ describe("browser input tick boundary", () => {
     expect(sample.keyboardAim).toEqual({ x: -1, z: 0 });
   });
 
+  it("consumes conversation once and opens the journal without leaking held controls", () => {
+    windowTarget.dispatchEvent(event("keydown", { code: "KeyT", repeat: false }));
+    expect(input.consume().talk).toBe(true);
+    windowTarget.dispatchEvent(event("keydown", { code: "KeyT", repeat: true }));
+    expect(input.consume().talk).toBe(false);
+    windowTarget.dispatchEvent(event("keyup", { code: "KeyT" }));
+    windowTarget.dispatchEvent(event("keydown", { code: "KeyJ", repeat: false }));
+    expect(overlay).toHaveBeenCalledWith("journal");
+    input.setEnabled(false);
+    windowTarget.dispatchEvent(event("keydown", { code: "KeyT", repeat: false }));
+    expect(input.consume().talk).toBe(false);
+  });
+
   it("keeps mouse aiming while moving and clears all held controls on blur or overlays", () => {
     surface.dispatchEvent(event("pointermove", { clientX: 80, clientY: 90, movementX: 1, movementY: 1 }));
     windowTarget.dispatchEvent(event("keydown", { code: "KeyW", repeat: false }));
