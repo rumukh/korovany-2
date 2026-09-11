@@ -16,6 +16,7 @@ class InstancePool {
     private readonly material: THREE.Material,
     private capacity: number,
     private readonly shadow = false,
+    private readonly depthMaterial?: THREE.Material,
   ) {
     this.mesh = this.createMesh();
   }
@@ -25,6 +26,7 @@ class InstancePool {
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     mesh.frustumCulled = false;
     mesh.castShadow = this.shadow;
+    mesh.customDepthMaterial = this.depthMaterial;
     mesh.count = 0;
     this.parent.add(mesh);
     return mesh;
@@ -84,6 +86,7 @@ export class WorldEffects {
   private readonly all: InstancePool[];
   private readonly bursts: Burst[] = [];
   private lastEvent = -1;
+  private lastTick = -1;
   private trailClock = 0;
   private low = false;
 
@@ -95,10 +98,10 @@ export class WorldEffects {
       resources.geometry('effect-arc', () => new THREE.RingGeometry(0.34, 0.5, 24, 1, -Math.PI / 3, Math.PI * 2 / 3).rotateX(-Math.PI / 2).rotateY(-Math.PI / 2)),
       unlit, 64);
     this.sparks = new InstancePool(parent, shapeGeometry(resources, 'sphere'), unlit, 512);
-    this.arrows = new InstancePool(parent, shapeGeometry(resources, 'box'), solid, 64, true);
+    this.arrows = new InstancePool(parent, shapeGeometry(resources, 'box'), solid, 64, true, resources.depthMaterial());
     this.arrowheads = new InstancePool(parent, shapeGeometry(resources, 'cone'), solid, 64);
-    this.coins = new InstancePool(parent, shapeGeometry(resources, 'cylinder'), solid, 64, true);
-    this.packages = new InstancePool(parent, shapeGeometry(resources, 'box'), solid, 64, true);
+    this.coins = new InstancePool(parent, shapeGeometry(resources, 'cylinder'), solid, 64, true, resources.depthMaterial());
+    this.packages = new InstancePool(parent, shapeGeometry(resources, 'box'), solid, 64, true, resources.depthMaterial());
     this.crosses = new InstancePool(parent, shapeGeometry(resources, 'box'), unlit, 64);
     this.motes = new InstancePool(parent, shapeGeometry(resources, 'sphere'), unlit, 44);
     this.all = [this.rings, this.arcs, this.sparks, this.arrows, this.arrowheads, this.coins, this.packages, this.crosses, this.motes];
@@ -136,7 +139,7 @@ export class WorldEffects {
       }
     }
     this.trailClock += dt;
-    if (snapshot.player.state === 'dodge' && !reducedMotion && this.trailClock > 0.045) {
+    if (snapshot.tick !== this.lastTick && snapshot.player.state === 'dodge' && !reducedMotion && this.trailClock > 0.045) {
       this.trailClock = 0;
       this.bursts.push({ x: snapshot.player.x, z: snapshot.player.z, age: 0.12, color: palette.teal, seed: snapshot.tick });
     }
@@ -182,7 +185,7 @@ export class WorldEffects {
       this.arrows.add(projectile.x, 1.0, projectile.z, siege ? 0.3 : 0.045, siege ? 0.3 : 0.045, length,
         siege ? palette.iron : palette.timberLight, 0, projectile.heading, 0);
       this.arrowheads.add(projectile.x + Math.sin(projectile.heading) * length * 0.53, 1.0,
-        projectile.z + Math.cos(projectile.heading) * length * 0.53, 0.14, 0.23, 0.14, color, Math.PI / 2, projectile.heading, 0);
+        projectile.z + Math.cos(projectile.heading) * length * 0.53, 0.14, 0.23, 0.14, color, Math.PI / 2, 0, -projectile.heading);
     }
     for (const pickup of snapshot.pickups) {
       const bob = reducedMotion ? 0 : Math.sin(cosmeticTime * 2.5 + pickup.x) * 0.08;
@@ -208,6 +211,7 @@ export class WorldEffects {
       }
     }
     for (const pool of this.all) pool.finish();
+    this.lastTick = snapshot.tick;
   }
 
   dispose(): void {

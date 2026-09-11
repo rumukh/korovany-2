@@ -108,6 +108,42 @@ describe('authoritative scenery boundary', () => {
     resources.dispose();
     expect(instanceDisposals.every((disposed) => disposed.mock.calls.length === 1)).toBe(true);
   });
+
+  it('matches the exact bridge deck and keeps rails over blocked water, not land approaches', () => {
+    const world = testWorld();
+    const resources = new ViewResources();
+    const scenery = createWorldScenery(resources, world);
+    const matrix = new THREE.Matrix4();
+    const position = new THREE.Vector3();
+    const scale = new THREE.Vector3();
+    const quaternion = new THREE.Quaternion();
+    let deckFound = false;
+    let rails = 0;
+    scenery.group.traverse((object) => {
+      if (!(object instanceof THREE.InstancedMesh) || !(object.geometry instanceof THREE.BoxGeometry)) return;
+      for (let index = 0; index < object.count; index += 1) {
+        object.getMatrixAt(index, matrix);
+        matrix.decompose(position, quaternion, scale);
+        if (Math.abs(position.y - 0.046) < 0.00001) {
+          expect(position.x).toBe(0);
+          expect(position.z).toBe(0);
+          expect(scale.x).toBeCloseTo(10);
+          expect(scale.z).toBeCloseTo(16);
+          deckFound = true;
+        }
+        if (Math.abs(position.y - 0.68) < 0.00001) {
+          expect(Math.abs(position.x) - scale.x / 2).toBeGreaterThan(5);
+          expect(position.z - scale.z / 2).toBeGreaterThanOrEqual(-5);
+          expect(position.z + scale.z / 2).toBeLessThanOrEqual(5);
+          rails += 1;
+        }
+      }
+    });
+    expect(deckFound).toBe(true);
+    expect(rails).toBe(2);
+    scenery.dispose();
+    resources.dispose();
+  });
 });
 
 describe('procedural resources and rigs', () => {
@@ -116,15 +152,18 @@ describe('procedural resources and rigs', () => {
     const geometry = resources.geometry('shared', () => new THREE.BoxGeometry());
     const material = resources.material('#ffffff');
     const texture = resources.ownTexture(new THREE.Texture());
+    const depth = resources.depthMaterial();
     const disposed = vi.fn();
     geometry.addEventListener('dispose', disposed);
     material.addEventListener('dispose', disposed);
     texture.addEventListener('dispose', disposed);
+    depth.addEventListener('dispose', disposed);
+    expect(resources.depthMaterial()).toBe(depth);
     expect(resources.geometry('shared', () => new THREE.SphereGeometry())).toBe(geometry);
     expect(resources.material('#ffffff')).toBe(material);
     resources.dispose();
     resources.dispose();
-    expect(disposed).toHaveBeenCalledTimes(3);
+    expect(disposed).toHaveBeenCalledTimes(4);
   });
 
   it('keeps seeded decoration stable between replays', () => {

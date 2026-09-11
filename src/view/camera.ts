@@ -18,7 +18,7 @@ export class FollowCamera {
   private readonly ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   private readonly intersection = new THREE.Vector3();
   private readonly cursor = new THREE.Vector2();
-  private yaw = 0;
+  private yaw = Math.PI;
   private pitch = 0.77;
   private distance = 26;
   private initialized = false;

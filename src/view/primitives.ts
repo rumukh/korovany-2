@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ViewResources } from './resources';
 
-export type Shape = 'box' | 'sphere' | 'rock' | 'cone' | 'cylinder' | 'disc' | 'ring' | 'cloth';
+export type Shape = 'box' | 'sphere' | 'rock' | 'cone' | 'cylinder' | 'disc' | 'ring' | 'zone-ring' | 'cloth';
 export type Triplet = readonly [number, number, number];
 
 export function shapeGeometry(resources: ViewResources, shape: Shape): THREE.BufferGeometry {
@@ -14,6 +14,7 @@ export function shapeGeometry(resources: ViewResources, shape: Shape): THREE.Buf
       case 'cylinder': return new THREE.CylinderGeometry(0.5, 0.5, 1, 8);
       case 'disc': return new THREE.CylinderGeometry(0.5, 0.5, 1, 24);
       case 'ring': return new THREE.RingGeometry(0.42, 0.5, 40).rotateX(-Math.PI / 2);
+      case 'zone-ring': return new THREE.RingGeometry(0.494, 0.5, 80).rotateX(-Math.PI / 2);
       case 'cloth': {
         const geometry = new THREE.PlaneGeometry(1, 1, 3, 2);
         const positions = geometry.getAttribute('position');
@@ -44,7 +45,8 @@ export function part(
   mesh.position.set(...position);
   mesh.scale.set(...scale);
   mesh.rotation.set(...rotation);
-  mesh.castShadow = shape !== 'ring';
+  mesh.castShadow = shape !== 'ring' && shape !== 'zone-ring';
+  mesh.customDepthMaterial = resources.depthMaterial();
   mesh.receiveShadow = true;
   parent.add(mesh);
   return mesh;
@@ -132,6 +134,7 @@ export class StaticBatch {
       const mesh = new THREE.InstancedMesh(batch.geometry, batch.material, batch.transforms.length);
       batch.transforms.forEach((matrix, index) => mesh.setMatrixAt(index, matrix));
       mesh.castShadow = batch.shadow;
+      mesh.customDepthMaterial = this.resources.depthMaterial();
       mesh.receiveShadow = true;
       mesh.computeBoundingSphere();
       parent.add(mesh);

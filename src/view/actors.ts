@@ -171,6 +171,7 @@ export function createWagon(resources: ViewResources, friendly: boolean): WagonM
   const roof = new THREE.Mesh(cover, resources.material(canvas, { side: THREE.DoubleSide }));
   roof.position.y = 1.43;
   roof.castShadow = true;
+  roof.customDepthMaterial = resources.depthMaterial();
   roof.receiveShadow = true;
   cart.add(roof);
   for (const z of [-1.14, 0, 1.14]) {

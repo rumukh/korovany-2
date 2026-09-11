@@ -158,6 +158,7 @@ function structure(resources: ViewResources, obstacle: Obstacle, site: WorldSite
   const base = masonry ? palette.stone : palette.timber;
   const roof = fortress ? palette.slate : palace ? palette.slateLight : palette.moss;
   root.rotation.y = obstacle.variant % 4 * Math.PI / 2;
+  part(resources, root, 'disc', palette.earth, [0, 0.025, 0], [radius * 1.99, 0.05, radius * 1.99]);
   if (!fortress && !palace && obstacle.variant % 3 === 1) {
     part(resources, root, 'box', palette.timber, [0, 0.2, 0], [radius * 1.3, 0.4, radius * 1.3]);
     const geometry = resources.geometry('tent', () => {
@@ -173,6 +174,19 @@ function structure(resources: ViewResources, obstacle: Obstacle, site: WorldSite
     root.add(tent);
     part(resources, root, 'box', palette.bark, [0, height * 0.23, radius * 0.62], [radius * 0.34, height * 0.45, 0.035]);
     part(resources, root, 'box', palette.brass, [0, height * 0.45, 0], [0.08, height * 0.95, 0.08]);
+    return root;
+  }
+  if (!masonry && obstacle.variant % 3 === 2) {
+    for (let index = 0; index < 7; index += 1) {
+      const angle = -Math.PI * 0.72 + index / 6 * Math.PI * 1.44;
+      const x = Math.sin(angle) * radius * 0.73;
+      const z = Math.cos(angle) * radius * 0.73;
+      const stakeHeight = height * (0.52 + (index % 2) * 0.08);
+      part(resources, root, 'cylinder', palette.timber, [x, stakeHeight / 2, z], [radius * 0.34, stakeHeight, radius * 0.34]);
+      part(resources, root, 'cone', palette.timberLight, [x, stakeHeight + radius * 0.18, z], [radius * 0.34, radius * 0.36, radius * 0.34]);
+    }
+    part(resources, root, 'box', palette.bark, [0, height * 0.29, radius * 0.67], [radius * 1.32, 0.12, 0.13]);
+    part(resources, root, 'box', palette.timberLight, [0, height * 0.13, 0], [radius * 0.7, height * 0.26, radius * 0.8]);
     return root;
   }
 
@@ -299,6 +313,30 @@ function applyFoliageDither(resources: ViewResources, hero: THREE.Vector3): void
   }
 }
 
+function applyGroundGrain(resources: ViewResources): void {
+  for (const color of [palette.grass, palette.meadow, palette.road, palette.earth, palette.bank]) {
+    const material = resources.material(color, { side: THREE.FrontSide });
+    material.customProgramCacheKey = () => 'korovany-ground-grain-v1';
+    material.onBeforeCompile = (shader) => {
+      shader.vertexShader = `varying vec3 vGrainWorld;\n${shader.vertexShader}`.replace('#include <worldpos_vertex>', `
+        #include <worldpos_vertex>
+        vec4 grainPosition = vec4(transformed, 1.0);
+        #ifdef USE_INSTANCING
+          grainPosition = instanceMatrix * grainPosition;
+        #endif
+        vGrainWorld = (modelMatrix * grainPosition).xyz;
+      `);
+      shader.fragmentShader = `varying vec3 vGrainWorld;\n${shader.fragmentShader}`.replace('#include <color_fragment>', `
+        #include <color_fragment>
+        vec2 grainCell = floor(vGrainWorld.xz * 5.0);
+        float grain = fract(sin(dot(grainCell, vec2(12.9898, 78.233))) * 43758.5453);
+        float patches = sin(vGrainWorld.x * 0.43 + sin(vGrainWorld.z * 0.23)) * sin(vGrainWorld.z * 0.37);
+        diffuseColor.rgb *= 0.965 + grain * 0.065 + patches * 0.025;
+      `);
+    };
+  }
+}
+
 export function createWorldScenery(resources: ViewResources, world: WorldBlueprint): WorldScenery {
   const group = new THREE.Group();
   const structures = new StaticBatch(resources);
@@ -348,12 +386,12 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
     }
   }
   for (const site of world.sites) {
-    structures.add('ring', site.kind === 'home' ? palette.brass : palette.earth,
+    structures.add('zone-ring', site.kind === 'home' ? palette.brass : palette.earth,
       [site.x, 0.022, site.z], [site.radius * 2, 1, site.radius * 2], [0, 0, 0], false);
     const support = world.obstacles.filter((obstacle) => obstacle.kind === 'wall')
       .sort((a, b) => Math.hypot(a.x - site.x, a.z - site.z) - Math.hypot(b.x - site.x, b.z - site.z))[0];
     if (support && Math.hypot(support.x - site.x, support.z - site.z) < site.radius + 12) {
-      structures.add('box', palette.bark, [support.x, support.height + 0.45, support.z], [0.09, 1.5, 0.09]);
+      structures.add('box', palette.bark, [support.x, (support.height + 1.2) / 2, support.z], [0.09, support.height + 1.2, 0.09]);
       flagAnchors.set(site.id, new THREE.Vector3(support.x + 0.46, support.height + 0.8, support.z));
     } else {
       // A floating heraldic marker is presentation, not an invented solid building.
@@ -376,6 +414,20 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
       if (index % 13 === 0) decoration.add('sphere', palette.parchment, [point.x, height, point.z], [0.1, 0.075, 0.1], [0, 0, 0], false);
     }
   }
+  const narrowRiverX = river.maxX - river.minX < river.maxZ - river.minZ;
+  for (let index = 0; index < 150; index += 1) {
+    const side = index % 2 === 0 ? -1 : 1;
+    const along = random();
+    const point = {
+      x: narrowRiverX ? (side < 0 ? river.minX - 1.55 : river.maxX + 1.55) : bounds.minX + along * width,
+      z: narrowRiverX ? bounds.minZ + along * depth : (side < 0 ? river.minZ - 1.55 : river.maxZ + 1.55),
+    };
+    if (!isDressingAllowed(world, point)) continue;
+    const height = 0.48 + random() * 0.37;
+    decoration.add('box', palette.moss, [point.x, height / 2, point.z], [0.045, height, 0.045], [0.06, 0, side * 0.1], false);
+    decoration.add('cylinder', palette.bark, [point.x - side * height * 0.05, height, point.z],
+      [0.075, 0.22, 0.075], [0.06, 0, side * 0.1], false);
+  }
   // The horizon is outside authoritative world bounds, never a false obstacle in a lane.
   for (let index = 0; index < 34; index += 1) {
     const angle = index / 34 * Math.PI * 2;
@@ -392,6 +444,7 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
   group.add(detailGroup);
   const detailMeshes = decoration.finish(detailGroup);
   applyFoliageDither(resources, heroPosition);
+  applyGroundGrain(resources);
 
   return {
     group,

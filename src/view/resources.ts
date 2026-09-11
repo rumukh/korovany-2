@@ -5,6 +5,15 @@ export class ViewResources {
   private readonly geometries = new Map<string, THREE.BufferGeometry>();
   private readonly materials = new Map<string, THREE.Material>();
   private readonly textures = new Set<THREE.Texture>();
+  private shadowDepth: THREE.MeshDepthMaterial | undefined;
+
+  depthMaterial(): THREE.MeshDepthMaterial {
+    if (!this.shadowDepth) {
+      this.shadowDepth = this.ownMaterial('shared-shadow-depth',
+        new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }));
+    }
+    return this.shadowDepth;
+  }
 
   geometry<T extends THREE.BufferGeometry>(key: string, create: () => T): THREE.BufferGeometry {
     const existing = this.geometries.get(key);
@@ -63,6 +72,7 @@ export class ViewResources {
     this.geometries.clear();
     this.materials.clear();
     this.textures.clear();
+    this.shadowDepth = undefined;
   }
 }
 

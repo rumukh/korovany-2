@@ -27,7 +27,11 @@ view.render(campaign.snapshot(), frameSeconds);
 
 The shell owns RAF, keyboard/pointer/wheel input, pause, canvas layout and recovery
 UI. WebGL 2 creation/context-loss errors are explicit exceptions. There are no
-global input handlers or additional animation loops.
+global input handlers or additional animation loops. The initial camera looks
+toward positive Z, into the campaign from the southern home. Normal disposal does
+not force a context loss, so the shell can reuse its canvas. Keeping one view and
+passing a new run's snapshot also safely rebuilds scenery without recreating the
+WebGL renderer.
 
 Road widths, water and bridge rectangles, site positions and solid scenery come
 from `WorldBlueprint`. Buildings are constrained to real circular wall obstacles.
@@ -41,3 +45,8 @@ snapshot-driven windups, health and capture/supply states. Combat cosmetics use
 the bounded snapshot effect list and deduplicated event IDs; spark bursts and
 visible corpses have fixed caps. No presentation entity participates in rules,
 and no fake quest, target, actor or pickup is created.
+
+Shadow depth materials are game-owned as well as visible materials, so changing
+runs releases their shader programs rather than retaining Three's implicit shadow
+materials. Outpost ownership and deliveries change their heraldry; fortress
+heraldry distinguishes locked, unlocked and defeated states without a false gate.

@@ -104,6 +104,8 @@ class Presentation {
   private convoy: WagonModel | undefined;
   private convoyBar: HealthBar | undefined;
   private convoyCargo: THREE.Group | undefined;
+  private fortressFlag: THREE.Mesh | undefined;
+  private fortressRing: THREE.Mesh | undefined;
   private lastTick = -1;
   private lastPlayerX = 0;
   private lastPlayerZ = 0;
@@ -120,9 +122,9 @@ class Presentation {
     this.scenery = createWorldScenery(this.resources, world);
     this.scene.add(this.scenery.group);
     this.effects = new WorldEffects(this.resources, this.scene);
-    const skyLight = new THREE.HemisphereLight('#d3e2d6', '#8d805b', 1.8);
+    const skyLight = new THREE.HemisphereLight('#d3e2d6', '#8d805b', 1.55);
     this.scene.add(skyLight);
-    this.sun = new THREE.DirectionalLight(palette.sun, 2.65);
+    this.sun = new THREE.DirectionalLight(palette.sun, 2.1);
     this.sun.castShadow = true;
     this.sun.shadow.mapSize.set(2048, 2048);
     this.sun.shadow.camera.left = -27;
@@ -135,6 +137,22 @@ class Presentation {
     this.sun.shadow.normalBias = 0.08;
     this.sun.shadow.radius = 3;
     this.scene.add(this.sun, this.sun.target);
+    const fortress = world.sites.find((site) => site.kind === 'fortress');
+    if (fortress) {
+      const anchor = this.scenery.flagAnchors.get(fortress.id);
+      if (anchor) {
+        this.fortressFlag = new THREE.Mesh(shapeGeometry(this.resources, 'cloth'),
+          this.resources.material(palette.villain, { side: THREE.DoubleSide }));
+        this.fortressFlag.position.copy(anchor);
+        this.fortressFlag.scale.set(1.7, 1.2, 1);
+        this.scene.add(this.fortressFlag);
+      }
+      this.fortressRing = new THREE.Mesh(shapeGeometry(this.resources, 'zone-ring'),
+        this.resources.material(palette.villain, { unlit: true, opacity: 0.45, depthWrite: false }));
+      this.fortressRing.position.set(fortress.x, 0.04, fortress.z);
+      this.fortressRing.scale.set(fortress.radius * 2, 1, fortress.radius * 2);
+      this.scene.add(this.fortressRing);
+    }
   }
 
   setQuality(low: boolean): void {
@@ -167,8 +185,9 @@ class Presentation {
     flag.position.copy(anchor);
     flag.scale.set(1.4, 0.93, 1);
     flag.castShadow = true;
+    flag.customDepthMaterial = this.resources.depthMaterial();
     this.scene.add(flag);
-    const ring = new THREE.Mesh(shapeGeometry(this.resources, 'ring'),
+    const ring = new THREE.Mesh(shapeGeometry(this.resources, 'zone-ring'),
       this.resources.material(palette.hostile, { unlit: true, opacity: 0.34, depthWrite: false }));
     ring.position.set(post.x, 0.04, post.z);
     ring.scale.set(post.captureRadius * 2, 1, post.captureRadius * 2);
@@ -241,6 +260,14 @@ class Presentation {
     });
     this.scenery.heroPosition.set(snapshot.player.x, 1.15, snapshot.player.z);
     this.scenery.update(this.cosmeticTime, reducedMotion);
+    const fortressColor = snapshot.fortress.bossDefeated ? palette.teal : snapshot.fortress.unlocked ? palette.brass : palette.villain;
+    if (this.fortressFlag) {
+      this.fortressFlag.material = this.resources.material(fortressColor, { side: THREE.DoubleSide });
+      this.fortressFlag.rotation.y = reducedMotion ? 0 : Math.sin(this.cosmeticTime * 1.35) * 0.12;
+    }
+    if (this.fortressRing) {
+      this.fortressRing.material = this.resources.material(fortressColor, { unlit: true, opacity: 0.45, depthWrite: false });
+    }
     // A player-centred shadow frustum preserves detail without a map-sized shadow texture.
     const shadowX = Math.round(snapshot.player.x * 8) / 8;
     const shadowZ = Math.round(snapshot.player.z * 8) / 8;
@@ -359,7 +386,7 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
   }
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 1;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const camera = new FollowCamera(canvas);
