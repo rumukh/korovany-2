@@ -34,11 +34,35 @@ passing a new run's snapshot also safely rebuilds scenery without recreating the
 WebGL renderer.
 
 Road widths, water and bridge rectangles, site positions and solid scenery come
-from `WorldBlueprint`. Buildings are constrained to real circular wall obstacles.
-Grass and pebbles are excluded from roads, sites, water and blockers. Horizon
-mountains are outside the map. The bridge has a level traversable deck; rails are
-over solid water outside its exact walkable rectangle. Foliage uses a
-screen-space dither cutaway around the hero's sightline.
+from `WorldBlueprint`. `generateWorld(seed, 1)` preserves the original 140-metre
+world and its save hashes. The default version 2 is 980 metres square (49 times
+the area), with eight bilingual regions and 24 authored locations connected by
+road loops and three river crossings. The original six military sites and their
+structures remain in place. Every exploration location has a matching road-node
+ID; NPCs can stand within three metres of its centre without hitting scenery.
+
+Buildings are constrained to real circular wall obstacles, including the new
+inns, archives, wells, bell frames, antler shrines, glass ribs and star instruments.
+Regional ground, masonry, roofs and foliage distinguish the eight landscapes.
+Blank ledgers, struck-out names and abandoned record shelves reinforce the
+Unwritten Road narrative without inventing interactive presentation entities.
+Grass and pebbles are excluded from roads, locations, water and blockers. Horizon
+mountains stay outside the map. All bridges have level traversable decks; rails
+are over solid water outside their exact walkable rectangles. Regional foliage
+uses a screen-space dither cutaway around the hero's sightline.
+
+Expanded solid scenery is capped at 1,400 authoritative obstacles. Structures
+and cosmetic dressing are instanced in 140-metre cells, with local bounding
+spheres for frustum culling and a 190-metre hero-centred cell visibility range.
+Geometry and materials are shared across cells. Low quality removes the entire
+dressing layer, not the authoritative landmarks. Instance buffers are released
+when the world mirror is disposed.
+
+The sky dome follows `scenery.heroPosition` in `scenery.update()`, including
+teleports to the map corners. The existing 290-metre camera far plane encloses
+the 240-metre dome at the maximum 40-metre follow distance. Fog remains local
+(48-158 metres), and the existing player-centred shadow frustum follows the hero
+instead of stretching one shadow texture over the full map.
 
 Actors and projectiles are keyed by authoritative IDs, with faction silhouettes,
 snapshot-driven windups, health and capture/supply states. Combat cosmetics use

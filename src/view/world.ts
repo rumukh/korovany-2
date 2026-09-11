@@ -3,6 +3,8 @@ import type { Bounds, Obstacle, Vec2, WorldBlueprint, WorldSite } from '../game/
 import { palette } from './palette';
 import { beam, joint, part, StaticBatch } from './primitives';
 import { seededRandom, ViewResources } from './resources';
+import { locationStructure, regionThemes, themeAt, type RegionTheme } from './region-scenery';
+import { WorldChunks } from './world-chunks';
 
 export interface WorldScenery {
   group: THREE.Group;
@@ -30,6 +32,7 @@ export function insideBounds(point: Vec2, bounds: Bounds, margin = 0): boolean {
 export function isDressingAllowed(world: WorldBlueprint, point: Vec2): boolean {
   if (!insideBounds(point, world.bounds, -1) || insideBounds(point, world.river, 1.4)) return false;
   if (world.sites.some((site) => Math.hypot(site.x - point.x, site.z - point.z) < site.radius + 1)) return false;
+  if (world.exploration?.locations.some(place => Math.hypot(place.x - point.x, place.z - point.z) < place.radius)) return false;
   if (world.obstacles.some((obstacle) => Math.hypot(obstacle.x - point.x, obstacle.z - point.z) < obstacle.radius + 0.5)) return false;
   for (const edge of world.roads.edges) {
     const start = world.roads.nodes.find((node) => node.id === edge.from);
@@ -81,7 +84,10 @@ function makeSky(resources: ViewResources): THREE.Mesh {
       }
     `,
   }));
-  return new THREE.Mesh(geometry, material);
+  const sky = new THREE.Mesh(geometry, material);
+  sky.name = 'world-sky';
+  sky.frustumCulled = false;
+  return sky;
 }
 
 function makeWater(resources: ViewResources, bounds: Bounds): { mesh: THREE.Mesh; time: { value: number } } {
@@ -121,25 +127,26 @@ function makeWater(resources: ViewResources, bounds: Bounds): { mesh: THREE.Mesh
   return { mesh, time };
 }
 
-function tree(resources: ViewResources, obstacle: Obstacle): THREE.Group {
+function tree(resources: ViewResources, obstacle: Obstacle, theme?: RegionTheme): THREE.Group {
   const root = new THREE.Group();
   root.position.set(obstacle.x, 0, obstacle.z);
   root.rotation.y = obstacle.variant * 0.7;
   const radius = obstacle.radius;
   const height = obstacle.height;
+  const leaves = theme?.foliage ?? [palette.leafDark, palette.leaf, palette.leafLight];
   part(resources, root, 'cone', palette.bark, [0, height * 0.27, 0], [radius * 1.45, height * 0.55, radius * 1.45]);
   part(resources, root, 'rock', palette.moss, [0, 0.09, 0], [radius * 1.98, 0.25, radius * 1.98]);
   if (obstacle.variant % 3 !== 0) {
     for (let tier = 0; tier < 3; tier += 1) {
       const width = radius * (3.05 - tier * 0.69);
-      part(resources, root, 'cone', tier === 0 ? palette.leafDark : tier === 1 ? palette.leaf : palette.leafLight,
+      part(resources, root, 'cone', leaves[tier]!,
         [0, height * (0.43 + tier * 0.19), 0], [width, height * 0.48, width], [0, tier * 0.35, 0]);
     }
   } else {
     beam(resources, root, [0, height * 0.33, 0], [radius * 0.7, height * 0.64, 0], radius * 0.25, palette.bark);
     for (let crown = 0; crown < 3; crown += 1) {
       const angle = crown * Math.PI * 2 / 3;
-      part(resources, root, 'rock', crown === 0 ? palette.leafLight : palette.leaf,
+      part(resources, root, 'rock', crown === 0 ? leaves[2]! : leaves[1]!,
         [Math.sin(angle) * radius * 0.75, height * (0.64 + crown * 0.04), Math.cos(angle) * radius * 0.6],
         [radius * 2.6, height * 0.6, radius * 2.4], [0.1, angle, 0.12]);
     }
@@ -287,7 +294,7 @@ function addBridge(bridge: Bounds, world: WorldBlueprint, batch: StaticBatch): v
 }
 
 function applyFoliageDither(resources: ViewResources, hero: THREE.Vector3): void {
-  for (const color of [palette.leaf, palette.leafLight, palette.leafDark]) {
+  for (const color of new Set([palette.leaf, palette.leafLight, palette.leafDark, ...Object.values(regionThemes).flatMap(theme => theme.foliage)])) {
     const material = resources.material(color, { side: THREE.FrontSide });
     material.customProgramCacheKey = () => 'korovany-foliage-v1';
     material.onBeforeCompile = (shader) => {
@@ -314,7 +321,8 @@ function applyFoliageDither(resources: ViewResources, hero: THREE.Vector3): void
 }
 
 function applyGroundGrain(resources: ViewResources): void {
-  for (const color of [palette.grass, palette.meadow, palette.road, palette.earth, palette.bank]) {
+  for (const color of new Set([palette.grass, palette.meadow, palette.road, palette.earth, palette.bank,
+    ...Object.values(regionThemes).flatMap(theme => [theme.ground, theme.patches])])) {
     const material = resources.material(color, { side: THREE.FrontSide });
     material.customProgramCacheKey = () => 'korovany-ground-grain-v1';
     material.onBeforeCompile = (shader) => {
@@ -341,6 +349,8 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
   const group = new THREE.Group();
   const structures = new StaticBatch(resources);
   const decoration = new StaticBatch(resources);
+  const chunks = world.exploration ? new WorldChunks(resources, 'world-structures') : undefined;
+  const detailChunks = world.exploration ? new WorldChunks(resources, 'world-dressing') : undefined;
   const random = seededRandom(worldSeed(world.seed));
   const heroPosition = new THREE.Vector3();
   const flagAnchors = new Map<string, THREE.Vector3>();
@@ -349,16 +359,18 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
   const depth = bounds.maxZ - bounds.minZ;
   const centerX = (bounds.minX + bounds.maxX) / 2;
   const centerZ = (bounds.minZ + bounds.maxZ) / 2;
-  group.add(makeSky(resources));
+  const sky = makeSky(resources);
+  group.add(sky);
   structures.add('box', palette.earth, [centerX, -0.84, centerZ], [width, 1.6, depth]);
   structures.add('box', palette.meadow, [centerX, -0.047, centerZ], [width, 0.014, depth], [0, 0, 0], false);
-  for (const biome of world.biomes) {
+  for (const biome of world.exploration?.regions ?? world.biomes) {
     const area = biome.bounds;
     const bx = Math.max(bounds.minX, area.minX);
     const ex = Math.min(bounds.maxX, area.maxX);
     const bz = Math.max(bounds.minZ, area.minZ);
     const ez = Math.min(bounds.maxZ, area.maxZ);
-    const color = biome.kind === 'forest' ? palette.grass : biome.kind === 'mountains' ? '#a7aa91' : palette.meadow;
+    const color = 'id' in biome ? regionThemes[biome.id]?.ground ?? palette.meadow
+      : biome.kind === 'forest' ? palette.grass : biome.kind === 'mountains' ? '#a7aa91' : palette.meadow;
     if (ex > bx && ez > bz) structures.add('box', color, [(bx + ex) / 2, -0.037, (bz + ez) / 2], [ex - bx, 0.006, ez - bz], [0, 0, 0], false);
   }
   const river = world.river;
@@ -370,19 +382,26 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
   for (const bridge of world.bridges) addBridge(bridge, world, structures);
 
   for (const obstacle of world.obstacles) {
+    const batch = chunks?.at(obstacle) ?? structures;
+    const theme = world.exploration ? themeAt(world, obstacle) : undefined;
     if (obstacle.kind === 'tree') {
-      structures.append(tree(resources, obstacle));
+      batch.append(tree(resources, obstacle, theme));
     } else if (obstacle.kind === 'rock') {
       const scale = obstacle.radius * 1.94;
-      structures.add('rock', obstacle.variant % 2 === 0 ? palette.stone : palette.slateLight,
+      batch.add('rock', theme?.stone ?? (obstacle.variant % 2 === 0 ? palette.stone : palette.slateLight),
         [obstacle.x, obstacle.height * 0.42, obstacle.z], [scale, obstacle.height, scale], [0, obstacle.variant * 0.61, 0]);
-      structures.add('rock', palette.moss, [obstacle.x, 0.04, obstacle.z], [obstacle.radius * 1.99, 0.12, obstacle.radius * 1.99], [0, obstacle.variant * 0.61, 0]);
+      batch.add('rock', theme?.patches ?? palette.moss, [obstacle.x, 0.04, obstacle.z], [obstacle.radius * 1.99, 0.12, obstacle.radius * 1.99], [0, obstacle.variant * 0.61, 0]);
     } else {
+      const place = world.exploration?.locations.find(candidate => obstacle.id.startsWith(`${candidate.id}-building-`));
+      if (place && theme) {
+        batch.append(locationStructure(resources, obstacle, place, theme));
+        continue;
+      }
       const site = world.sites.reduce<WorldSite | undefined>((nearest, candidate) => {
         if (!nearest) return candidate;
         return Math.hypot(candidate.x - obstacle.x, candidate.z - obstacle.z) < Math.hypot(nearest.x - obstacle.x, nearest.z - obstacle.z) ? candidate : nearest;
       }, undefined);
-      structures.append(structure(resources, obstacle, site));
+      batch.append(structure(resources, obstacle, site));
     }
   }
   for (const site of world.sites) {
@@ -399,19 +418,25 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
     }
   }
 
-  for (let index = 0; index < 1300; index += 1) {
+  for (let index = 0; index < (world.exploration ? 6500 : 1300); index += 1) {
     const point = { x: bounds.minX + random() * width, z: bounds.minZ + random() * depth };
     if (!isDressingAllowed(world, point)) continue;
+    const batch = detailChunks?.at(point) ?? decoration;
+    const theme = world.exploration ? themeAt(world, point) : undefined;
     const angle = random() * Math.PI * 2;
     if (index % 6 === 0) {
       const size = 0.12 + random() * 0.18;
-      decoration.add('rock', palette.stoneLight, [point.x, 0.03, point.z], [size, size * 0.35, size], [0, angle, 0], false);
+      batch.add('rock', theme?.stone ?? palette.stoneLight, [point.x, 0.03, point.z], [size, size * 0.35, size], [0, angle, 0], false);
     } else {
       const height = 0.15 + random() * 0.28;
-      const color = index % 3 === 0 ? palette.moss : '#969b59';
-      decoration.add('cone', color, [point.x, height / 2, point.z], [0.095, height, 0.095], [0.14, angle, 0.2], false);
-      decoration.add('cone', color, [point.x + 0.12, height * 0.43, point.z], [0.07, height * 0.85, 0.07], [-0.25, angle, -0.24], false);
-      if (index % 13 === 0) decoration.add('sphere', palette.parchment, [point.x, height, point.z], [0.1, 0.075, 0.1], [0, 0, 0], false);
+      const color = theme?.foliage[2] ?? (index % 3 === 0 ? palette.moss : '#969b59');
+      batch.add('cone', color, [point.x, height / 2, point.z], [0.095, height, 0.095], [0.14, angle, 0.2], false);
+      batch.add('cone', color, [point.x + 0.12, height * 0.43, point.z], [0.07, height * 0.85, 0.07], [-0.25, angle, -0.24], false);
+      if (index % 13 === 0) batch.add('sphere', palette.parchment, [point.x, height, point.z], [0.1, 0.075, 0.1], [0, 0, 0], false);
+    }
+    if (theme && index % 4 === 0) {
+      const size = 5 + random() * 9;
+      batch.add('disc', theme.patches, [point.x, -0.029, point.z], [size, 0.004, size * 0.7], [0, angle, 0], false);
     }
   }
   const narrowRiverX = river.maxX - river.minX < river.maxZ - river.minZ;
@@ -423,9 +448,10 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
       z: narrowRiverX ? bounds.minZ + along * depth : (side < 0 ? river.minZ - 1.55 : river.maxZ + 1.55),
     };
     if (!isDressingAllowed(world, point)) continue;
+    const batch = detailChunks?.at(point) ?? decoration;
     const height = 0.48 + random() * 0.37;
-    decoration.add('box', palette.moss, [point.x, height / 2, point.z], [0.045, height, 0.045], [0.06, 0, side * 0.1], false);
-    decoration.add('cylinder', palette.bark, [point.x - side * height * 0.05, height, point.z],
+    batch.add('box', palette.moss, [point.x, height / 2, point.z], [0.045, height, 0.045], [0.06, 0, side * 0.1], false);
+    batch.add('cylinder', palette.bark, [point.x - side * height * 0.05, height, point.z],
       [0.075, 0.22, 0.075], [0.06, 0, side * 0.1], false);
   }
   // The horizon is outside authoritative world bounds, never a false obstacle in a lane.
@@ -439,10 +465,13 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
       [x, height * 0.3 - 3, z], [21 + random() * 12, height, 20 + random() * 10], [0, angle, 0], false);
     if (index % 3 === 0) structures.add('cone', '#cad2bb', [x, height * 0.61 - 3, z], [7.5, height * 0.37, 7], [0, angle, 0], false);
   }
-  const staticMeshes = structures.finish(group);
+  const staticMeshes = [...structures.finish(group), ...(chunks?.finish(group) ?? [])];
   const detailGroup = new THREE.Group();
+  detailGroup.name = 'world-details';
   group.add(detailGroup);
-  const detailMeshes = decoration.finish(detailGroup);
+  const detailMeshes = [...decoration.finish(detailGroup), ...(detailChunks?.finish(detailGroup) ?? [])];
+  chunks?.update(heroPosition);
+  detailChunks?.update(heroPosition);
   applyFoliageDither(resources, heroPosition);
   applyGroundGrain(resources);
 
@@ -452,6 +481,9 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
     flagAnchors,
     update(time, reducedMotion): void {
       water.time.value = reducedMotion ? 0 : time;
+      sky.position.set(heroPosition.x, 0, heroPosition.z);
+      chunks?.update(heroPosition);
+      detailChunks?.update(heroPosition);
     },
     setQuality(low): void {
       detailGroup.visible = !low;
