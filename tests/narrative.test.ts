@@ -77,6 +77,9 @@ describe('narrative input and starter contract', () => {
     const game = createCampaign({ seed: 'dialogue', faction: 'guard' });
     expect(game.serialize().version).toBe(2);
     expect(narrative(game).interaction).toMatchObject({ kind: 'talk', targetId: 'mara', enabled: true });
+    const mara = narrative(game).npcs.find(n => n.id === 'mara')!;
+    expect(dist(mara, game.snapshot().convoy)).toBeGreaterThan(game.snapshot().convoy.radius + 0.95);
+    expect(dist(mara, game.snapshot().player)).toBeLessThan(4.25);
     expect(narrative(game).summary.en).toContain('cart addressed');
     expect(narrative(game).summary.en).toContain('Mara');
     expect(narrative(game).summary.en).not.toContain('First capture');

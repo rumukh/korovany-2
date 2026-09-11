@@ -118,7 +118,8 @@ function npcPosition(world: WorldBlueprint, npc: StoryNpc): Vec2 {
   const at = location(world, npc.locationId);
   const index = NPCS.filter(n => n.locationId === npc.locationId).findIndex(n => n.id === npc.id);
   // Locations reserve a 3m approach area; try alternate local offsets explicitly if scenery changes.
-  const offsets = [{ x: 0, z: 2 }, { x: -2, z: 0 }, { x: 2, z: 0 }, { x: 0, z: -2 }];
+  const first = npc.id === 'mara' ? { x: 2.5, z: 1.5 } : { x: 0, z: 2 };
+  const offsets = [first, { x: -2, z: 0 }, { x: 2, z: 0 }, { x: 0, z: -2 }];
   for (let i = 0; i < offsets.length; i++) {
     const offset = offsets[(index + i) % offsets.length]!;
     const position = { x: at.x + offset.x, z: at.z + offset.z };
