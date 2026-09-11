@@ -7,6 +7,7 @@
   "workspaces": ["vendor/aegis-engine/packages/*"],
   "scripts": {
     "engine:build": "tsc -b vendor/aegis-engine/packages/cli",
+    "lock:canonicalize": "node scripts/canonicalise-lockfile.mjs --write",
     "postinstall": "npm run engine:build",
     "dev": "vite --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
