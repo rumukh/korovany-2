@@ -1,13 +1,13 @@
 import {
   createCampaign, restoreCampaign, createProfile, restoreProfile, claimRewards,
   purchaseMetaUpgrade, metaUpgradeCost, MAX_UPGRADE_LEVEL,
-  type GameSession, type GameSnapshot, type GameInput as CampaignInput, type MetaProfile, type Vec2,
+  type GameSession, type GameSnapshot, type GameInput as CampaignInput, type MetaProfile, type RunRewards, type UpgradeId, type Vec2,
 } from "./game";
 import { createGameView, type GameView } from "./view";
 import { Soundscape } from "./audio/soundscape";
 import { GameInput } from "./ui/input";
 import { GameShell, type Overlay, type ShellAction, type ShellState } from "./ui/shell";
-import { BrowserStorage, defaultSettings, parseSettings, storageKeys } from "./ui/storage";
+import { BrowserStorage, DirtySave, defaultSettings, parseSettings, storageKeys } from "./ui/storage";
 import { parseChart } from "./ui/atlas";
 import { translate } from "./ui/locale";
 import "./style.css";
@@ -56,7 +56,9 @@ let hudElapsed = 0;
 let lastSaveTick = snapshot?.tick ?? 0;
 let lastEvent = snapshot?.events.at(-1)?.id ?? 0;
 let rewardSaved = true;
-let profileDirty = false;
+const pendingRewards = new Map<string, RunRewards>();
+const campaignSave = new DirtySave(storage, storageKeys.campaign);
+const atlasSave = new DirtySave(storage, storageKeys.atlas);
 let running = false;
 let atTitle = true;
 let disposed = false;
@@ -88,19 +90,57 @@ function refresh(rebuild = true): void {
   shell?.setState(state(), rebuild);
 }
 
+function reconcileProfile(): boolean {
+  const latest = storage.read(storageKeys.profile, restored(restoreProfile));
+  if (latest.status === "error" && latest.issue !== "corrupt") return false;
+  profile = latest.status === "ok" ? latest.value : createProfile();
+  for (const rewards of pendingRewards.values()) profile = claimRewards(profile, rewards);
+  return true;
+}
+
+function saveRewards(): boolean {
+  if (!pendingRewards.size) return true;
+  const readable = reconcileProfile();
+  if (!readable) {
+    for (const rewards of pendingRewards.values()) profile = claimRewards(profile, rewards);
+  }
+  rewardSaved = readable && storage.writeIfUnchanged(storageKeys.profile, profile) === "saved";
+  if (rewardSaved) pendingRewards.clear();
+  return rewardSaved;
+}
+
+function buyMetaUpgrade(id: UpgradeId): void {
+  if (!saveRewards() || !reconcileProfile()) {
+    refresh();
+    return;
+  }
+  if (profile.upgrades[id] >= MAX_UPGRADE_LEVEL || profile.renown < metaUpgradeCost(profile.upgrades[id])) {
+    shell?.warn("profileChanged");
+    refresh();
+    return;
+  }
+  const purchased = purchaseMetaUpgrade(profile, id);
+  if (storage.writeIfUnchanged(storageKeys.profile, purchased) === "saved") profile = purchased;
+  refresh();
+}
+
 function saveCampaign(notify = false): boolean {
-  if (!campaign || !shell) return true;
-  const saved = storage.write(storageKeys.campaign, campaign.serialize());
-  const chartSaved = storage.write(storageKeys.atlas, shell.atlas.serialize());
-  if (profileDirty) {
-    const savedProfile = storage.write(storageKeys.profile, profile);
-    if (savedProfile) profileDirty = false;
-    rewardSaved = savedProfile;
+  const rewardsSaved = saveRewards();
+  if (!campaign || !shell) return rewardsSaved;
+  const currentCampaign = campaign;
+  const currentShell = shell;
+  const result = campaignSave.flush(() => currentCampaign.serialize());
+  const saved = result === "saved" || result === "unchanged";
+  const chartResult = saved ? atlasSave.flush(() => currentShell.atlas.serialize()) : "error";
+  const chartSaved = chartResult === "saved" || chartResult === "unchanged";
+  if (result === "conflict") {
+    freeze();
+    if (!atTitle) shell.show("pause");
   }
   lastSaveTick = snapshot?.tick ?? 0;
-  if (notify && saved && chartSaved && !profileDirty) shell.announce("saved");
+  if (notify && saved && chartSaved && rewardsSaved) shell.announce("saved");
   refresh(false);
-  return saved && chartSaved && !profileDirty;
+  return saved && chartSaved && rewardsSaved;
 }
 
 function freeze(): void {
@@ -121,7 +161,10 @@ function changeOverlay(overlay: Overlay): void {
   if (overlay === "menu") atTitle = true;
   else if (overlay === null) atTitle = false;
   shell?.show(overlay);
-  if (overlay === null && campaign && snapshot?.phase === "playing") {
+  if (overlay === null && campaignSave.conflicted) {
+    shell?.warn("storage.conflict");
+    shell?.show("pause");
+  } else if (overlay === null && campaign && snapshot?.phase === "playing") {
     running = true;
     input?.setEnabled(true);
     sound.setActive(true);
@@ -156,13 +199,8 @@ function finish(): void {
   freeze();
   atTitle = false;
   if (snapshot.rewards) {
-    const alreadyClaimed = profile.completedRuns.includes(snapshot.rewards.runId);
-    profile = claimRewards(profile, snapshot.rewards);
-    if (!alreadyClaimed) {
-      profileDirty = true;
-      rewardSaved = storage.write(storageKeys.profile, profile);
-      profileDirty = !rewardSaved;
-    } else rewardSaved = !profileDirty;
+    pendingRewards.set(snapshot.rewards.runId, snapshot.rewards);
+    saveRewards();
   }
   shell?.update(snapshot);
   saveCampaign();
@@ -178,14 +216,22 @@ function begin(sameSeed?: boolean): void {
     shell.warn("seedRequired");
     return;
   }
-  if (campaign && snapshot?.phase === "playing" &&
+  if (((campaign && snapshot?.phase === "playing") || storage.unchanged(storageKeys.campaign) === false) &&
     !window.confirm(translate(settings.language, "overwrite"))) return;
   freeze();
+  // An explicit new campaign may replace the latest record, not a stale tab's baseline.
+  storage.read(storageKeys.campaign, restored(restoreCampaign));
+  storage.read(storageKeys.atlas, parseChart);
+  reconcileProfile();
   campaign = createCampaign({
     seed: selectedSeed.trim(), faction: selectedFaction,
     upgrades: profile.upgrades, runId: crypto.randomUUID(),
   });
   snapshot = campaign.snapshot();
+  campaignSave.adopt();
+  atlasSave.adopt();
+  campaignSave.markDirty();
+  atlasSave.markDirty();
   rendererFor(snapshot);
   lastAim = { x: Math.sin(snapshot.player.heading), z: Math.cos(snapshot.player.heading) };
   lastEvent = snapshot.events.at(-1)?.id ?? 0;
@@ -205,14 +251,49 @@ function resume(): void {
   else finish();
 }
 
+function continueLatest(): void {
+  const unchanged = storage.unchanged(storageKeys.campaign);
+  if (campaignSave.dirty && unchanged !== false) {
+    resume();
+    return;
+  }
+  if (campaignSave.dirty && !window.confirm(translate(settings.language, "loadLatest"))) return;
+  const latest = storage.read(storageKeys.campaign, restored(restoreCampaign));
+  if (latest.status === "error") return;
+  campaign = latest.status === "ok" ? latest.value : null;
+  snapshot = campaign?.snapshot() ?? null;
+  campaignSave.adopt();
+  atlasSave.adopt();
+  const chart = storage.read(storageKeys.atlas, parseChart);
+  if (chart.status === "ok") shell?.atlas.restore(chart.value);
+  reconcileProfile();
+  if (snapshot) {
+    lastEvent = snapshot.events.at(-1)?.id ?? 0;
+    lastSaveTick = snapshot.tick;
+    shell?.update(snapshot);
+  }
+  refresh(false);
+  if (campaign) resume();
+  else {
+    shell?.warn("storage.conflict");
+    shell?.show("menu");
+  }
+}
+
 function dispatch(action: ShellAction): void {
   if (disposed || (fatal && action.type !== "reload")) return;
   try {
     switch (action.type) {
       case "start": begin(action.sameSeed); break;
-      case "continue":
+      case "continue": continueLatest(); break;
       case "resume": resume(); break;
-      case "overlay": changeOverlay(action.overlay); break;
+      case "overlay":
+        if (action.overlay === "records") {
+          reconcileProfile();
+          refresh(false);
+        }
+        changeOverlay(action.overlay);
+        break;
       case "save": saveCampaign(true); break;
       case "title":
         if (!saveCampaign() && !window.confirm(translate(settings.language, "leaveUnsaved"))) break;
@@ -243,9 +324,7 @@ function dispatch(action: ShellAction): void {
         refresh();
         break;
       case "metaUpgrade":
-        profile = purchaseMetaUpgrade(profile, action.id);
-        profileDirty = !storage.write(storageKeys.profile, profile);
-        refresh();
+        buyMetaUpgrade(action.id);
         break;
       case "upgrade":
         if (!snapshot?.shop.some((item) => item.id === action.id && item.available)) {
@@ -254,11 +333,11 @@ function dispatch(action: ShellAction): void {
           break;
         }
         resume();
-        queued = { ...queued, upgrade: action.id };
+        if (running) queued = { ...queued, upgrade: action.id };
         break;
       case "convoy":
         resume();
-        queued = { ...queued, convoy: action.order };
+        if (running) queued = { ...queued, convoy: action.order };
         break;
       case "reload": window.location.reload(); break;
     }
@@ -343,6 +422,8 @@ function frame(time: number): void {
       accumulator += delta;
       while (accumulator >= STEP) {
         campaign.step(sampleInput());
+        campaignSave.markDirty();
+        atlasSave.markDirty();
         accumulator -= STEP;
         snapshot = campaign.snapshot();
         if (snapshot.phase !== "playing") break;
@@ -407,6 +488,18 @@ window.addEventListener("pagehide", () => {
   if (running) changeOverlay("pause");
   else freeze();
   saveCampaign();
+}, { signal: lifecycle.signal });
+window.addEventListener("storage", (event) => {
+  if (event.key === storageKeys.campaign && !atTitle && storage.unchanged(storageKeys.campaign) === false) {
+    campaignSave.conflicted = true;
+    freeze();
+    shell?.warn("storage.conflict");
+    shell?.show("pause");
+  }
+  if (event.key === storageKeys.profile && !pendingRewards.size) {
+    reconcileProfile();
+    refresh(shell?.overlay === "records");
+  }
 }, { signal: lifecycle.signal });
 
 Object.defineProperty(window, "korovany", {

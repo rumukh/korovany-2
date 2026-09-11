@@ -6,7 +6,8 @@ export interface Settings {
   muted: boolean;
 }
 
-export type StorageIssue = "unavailable" | "corrupt" | "write";
+export type StorageIssue = "unavailable" | "corrupt" | "write" | "conflict";
+export type WriteResult = "saved" | "conflict" | "error";
 export type ReadResult<T> =
   | { status: "ok"; value: T }
   | { status: "missing" }
@@ -43,6 +44,8 @@ export function parseSettings(value: unknown): Settings | null {
 }
 
 export class BrowserStorage {
+  private readonly baselines = new Map<string, string | null>();
+
   constructor(private readonly report: (issue: StorageIssue, key: string) => void) {}
 
   read<T>(key: string, validate: (value: unknown) => T | null): ReadResult<T> {
@@ -53,6 +56,7 @@ export class BrowserStorage {
       this.report("unavailable", key);
       return { status: "error", issue: "unavailable" };
     }
+    this.baselines.set(key, raw);
     if (raw === null) return { status: "missing" };
     let value: unknown;
     try {
@@ -79,6 +83,33 @@ export class BrowserStorage {
     }
   }
 
+  unchanged(key: string): boolean | null {
+    try {
+      const current = window.localStorage.getItem(key);
+      return this.baselines.has(key) && current === this.baselines.get(key);
+    } catch {
+      this.report("unavailable", key);
+      return null;
+    }
+  }
+
+  writeIfUnchanged(key: string, value: unknown): WriteResult {
+    try {
+      const next = JSON.stringify(value);
+      const current = window.localStorage.getItem(key);
+      if (!this.baselines.has(key) || current !== this.baselines.get(key)) {
+        this.report("conflict", key);
+        return "conflict";
+      }
+      if (next !== current) window.localStorage.setItem(key, next);
+      this.baselines.set(key, next);
+      return "saved";
+    } catch {
+      this.report("write", key);
+      return "error";
+    }
+  }
+
   remove(key: string): boolean {
     try {
       window.localStorage.removeItem(key);
@@ -87,5 +118,31 @@ export class BrowserStorage {
       this.report("write", key);
       return false;
     }
+  }
+
+}
+
+/** Loading or previewing a record never makes this tab a writer. */
+export class DirtySave {
+  dirty = false;
+  conflicted = false;
+
+  constructor(private readonly storage: BrowserStorage, private readonly key: string) {}
+
+  markDirty(): void {
+    this.dirty = true;
+  }
+
+  adopt(): void {
+    this.dirty = false;
+    this.conflicted = false;
+  }
+
+  flush(value: () => unknown): WriteResult | "unchanged" {
+    if (!this.dirty) return "unchanged";
+    const result = this.storage.writeIfUnchanged(this.key, value());
+    if (result === "saved") this.dirty = false;
+    if (result === "conflict") this.conflicted = true;
+    return result;
   }
 }

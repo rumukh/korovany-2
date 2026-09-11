@@ -7,7 +7,7 @@ import {
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
 import { closeOwnedBrowser } from "../vendor/aegis-engine/packages/render-three/src/testing/browser-lifecycle";
-import type { GameSnapshot } from "../src/game";
+import { claimRewards, createCampaign, createProfile, type GameSnapshot, type MetaProfile } from "../src/game";
 
 interface Inspection {
   snapshot: GameSnapshot | null;
@@ -16,6 +16,7 @@ interface Inspection {
   settings: { language: string; quality: string; reducedMotion: boolean; muted: boolean };
   audio: { state: string; active: boolean; muted: boolean; voices: number };
   moveBasis: { forward: { x: number; z: number }; right: { x: number; z: number } };
+  profile: MetaProfile;
 }
 
 describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell controls", () => {
@@ -24,6 +25,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
   let cdp: CdpSession;
   let origin: string;
   const captures = process.env.KOROVANY_CAPTURE_DIR;
+  const pages = new Set<CdpSession>();
 
   async function inspect(): Promise<Inspection> {
     return evaluate(cdp, "window.korovany.inspect()");
@@ -65,6 +67,25 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     await until(cdp, `performance.timeOrigin !== ${timeOrigin} && Boolean(window.korovany) && window.korovany.inspect().overlay === 'menu'`, Boolean, 30_000);
   }
 
+  async function newTab(): Promise<CdpSession> {
+    if (!browser) throw new Error("Browser is not running.");
+    const page = await openPage(browser.port, origin, { width: 1440, height: 900 });
+    pages.add(page);
+    await until(page, "Boolean(window.korovany) && window.korovany.inspect().overlay === 'menu'", Boolean, 30_000);
+    return page;
+  }
+
+  async function activate(page: CdpSession): Promise<void> {
+    cdp = page;
+    await cdp.send("Page.bringToFront");
+  }
+
+  async function closeTab(page: CdpSession): Promise<void> {
+    await page.send("Page.close");
+    page.close();
+    pages.delete(page);
+  }
+
   beforeAll(async () => {
     if (captures) await mkdir(captures, { recursive: true });
     server = await createServer({ configFile: false, server: { host: "127.0.0.1", port: 0 } });
@@ -75,11 +96,12 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     expect((await fetch(origin)).status).toBe(200);
     browser = await launchBrowser({ viewport: { width: 1440, height: 900 } });
     cdp = await openPage(browser.port, origin, { width: 1440, height: 900 });
+    pages.add(cdp);
     await until(cdp, "Boolean(window.korovany)", Boolean, 30_000);
   }, 60_000);
 
   afterAll(async () => {
-    cdp?.close();
+    for (const page of pages) page.close();
     if (browser) {
       await closeOwnedBrowser(browser);
       await rm(browser.profile, { recursive: true, force: true });
@@ -240,4 +262,87 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     expect(await evaluate(cdp, "localStorage.getItem('korovany2:campaign')")).toBe(saved);
     await capture("webgl-recovery");
   }, 60_000);
+
+  it("never rolls back a newer save when an untouched stale title tab closes and loads latest on Continue", async () => {
+    await reload();
+    await clickSelector('[data-action="continue"]');
+    await tap("Escape");
+    await clickSelector('[data-action="title"]');
+    const original = await inspect();
+    const owner = cdp;
+    const untouched = await newTab();
+    expect((await evaluate<Inspection>(untouched, "window.korovany.inspect()")).snapshot?.tick).toBe(original.snapshot?.tick);
+    await activate(owner);
+    await clickSelector('[data-action="continue"]');
+    await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= (original.snapshot?.tick ?? 0) + 40, 20_000);
+    await tap("Escape");
+    const advanced = await inspect();
+    const advancedRaw = await evaluate<string>(cdp, "localStorage.getItem('korovany2:campaign')");
+    await closeTab(owner);
+    await activate(untouched);
+    expect((await inspect()).snapshot?.tick).toBe(original.snapshot?.tick);
+    expect(await evaluate(cdp, "localStorage.getItem('korovany2:campaign')")).toBe(advancedRaw);
+    await closeTab(untouched);
+    cdp = await newTab();
+    expect((await inspect()).snapshot?.tick).toBe(advanced.snapshot?.tick);
+    expect(await evaluate(cdp, "localStorage.getItem('korovany2:campaign')")).toBe(advancedRaw);
+
+    const first = cdp;
+    const staleContinue = await newTab();
+    await activate(first);
+    await clickSelector('[data-action="continue"]');
+    await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= (advanced.snapshot?.tick ?? 0) + 35, 20_000);
+    await tap("Escape");
+    const freshest = await inspect();
+    await activate(staleContinue);
+    await clickSelector('[data-action="continue"]');
+    expect((await inspect()).snapshot?.runId).toBe(freshest.snapshot?.runId);
+    expect((await inspect()).snapshot?.tick).toBeGreaterThanOrEqual(freshest.snapshot?.tick ?? 0);
+    await tap("Escape");
+    await closeTab(first);
+  }, 90_000);
+
+  it("protects a different run from a dirty active tab and merges ledger purchases against the latest profile", async () => {
+    await clickSelector('[data-action="title"]');
+    const background = await newTab();
+    const active = cdp;
+    await activate(active);
+    await clickSelector('[data-action="continue"]');
+    const start = await inspect();
+    await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= (start.snapshot?.tick ?? 0) + 25, 20_000);
+    const replacement = createCampaign({ seed: "concurrent-road", faction: "elf", runId: "ui-concurrent-new-run" }).serialize();
+    const replacementRaw = JSON.stringify(replacement);
+    // A separate document writes a valid new-run save while the active page still has unsaved ticks.
+    await evaluate(background, `localStorage.setItem('korovany2:campaign', ${JSON.stringify(replacementRaw)})`);
+    await until(active, "window.korovany.inspect().running", (running: boolean) => !running, 15_000);
+    expect((await inspect()).overlay).toBe("pause");
+    expect((await inspect()).snapshot?.runId).not.toBe(replacement.runId);
+    expect(await evaluate(cdp, "document.querySelector('.warnings').textContent.includes('вкладка')")).toBe(true);
+    await clickSelector('[data-action="save"]');
+    expect(await evaluate(cdp, "localStorage.getItem('korovany2:campaign')")).toBe(replacementRaw);
+    await closeTab(active);
+    await activate(background);
+    await clickSelector('[data-action="continue"]');
+    expect((await inspect()).snapshot?.runId).toBe(replacement.runId);
+    await tap("Escape");
+    await clickSelector('[data-action="title"]');
+
+    const funded = claimRewards(createProfile(), { runId: "ui-profile-fixture", renown: 100, victory: false, claimed: false });
+    await evaluate(cdp, `localStorage.setItem('korovany2:profile', ${JSON.stringify(JSON.stringify(funded))})`);
+    const ledgerFirst = cdp;
+    const ledgerSecond = await newTab();
+    await activate(ledgerFirst);
+    await clickSelector('[data-action="open-records"]');
+    await clickSelector('.upgrade-row:nth-child(1) button');
+    expect((await inspect()).profile.upgrades.damage).toBe(1);
+    await activate(ledgerSecond);
+    await clickSelector('[data-action="open-records"]');
+    await clickSelector('.upgrade-row:nth-child(2) button');
+    const combined = (await inspect()).profile;
+    expect(combined.renown).toBe(40);
+    expect(combined.upgrades).toEqual({ damage: 1, vitality: 1, logistics: 0 });
+    expect(combined.completedRuns).toEqual(["ui-profile-fixture"]);
+    await closeTab(ledgerFirst);
+    expect(await evaluate(cdp, "JSON.parse(localStorage.getItem('korovany2:profile'))")).toEqual(combined);
+  }, 90_000);
 });
