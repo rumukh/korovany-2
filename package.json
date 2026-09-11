@@ -1,0 +1,30 @@
+{
+  "name": "korovany-ii",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "workspaces": ["vendor/aegis-engine/packages/*"],
+  "scripts": {
+    "engine:build": "tsc -b vendor/aegis-engine/packages/cli",
+    "postinstall": "npm run engine:build",
+    "dev": "vite --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run engine:build && npm run typecheck && vite build",
+    "test": "vitest run",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@aegis/core": "0.0.0",
+    "@aegis/content": "0.0.0",
+    "@aegis/harness": "0.0.0",
+    "three": "~0.169.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/three": "~0.169.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.0",
+    "vitest": "^3.2.0"
+  }
+}

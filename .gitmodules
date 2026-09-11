@@ -1,0 +1,3 @@
+[submodule "vendor/aegis-engine"]
+	path = vendor/aegis-engine
+	url = https://github.com/rumukh/aegis-engine.git
