@@ -1,5 +1,6 @@
 import type { EntitySnapshot, WorldSnapshot } from '@aegis/core';
 import { FACTIONS } from './config';
+import { narrativeResolved, validateNarrativeState } from './narrative';
 import { assertRecord, boundedNumber, validatedUpgrades } from './profile';
 import { Combatant, type ActorData, type CampaignData } from './state';
 import type { GameInput, WorldBlueprint } from './types';
@@ -70,8 +71,11 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
   const raw = resources.KorovanyCampaign;
   assertRecord(raw, 'Campaign resource');
   assertRecord(raw.convoy, 'convoy');
+  const { narrative: _initialNarrative, ...baseInitial } = initial;
+  const { narrative: rawNarrative, ...baseRaw } = raw;
+  if (blueprint.version === 1 && Object.hasOwn(raw, 'narrative')) throw new Error('Legacy save contains narrative state');
   const template: CampaignData = {
-    ...initial,
+    ...baseInitial,
     convoy: { ...initial.convoy, destination: raw.convoy.destination === null ? null : '',
       route: [{ x: 0, z: 0 }] },
     pickups: [{ id: '', kind: 'coin', x: 0, z: 0, amount: 1 }],
@@ -81,8 +85,10 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     events: [{ id: 1, tick: 0, kind: 'attack', key: '', x: 0, z: 0, amount: 0, targetId: '' }],
     rewards: raw.rewards === null ? null : { runId: '', claimed: false, renown: 0, victory: false },
   };
-  shape(raw, template, 'campaign');
-  const s = raw;
+  shape(baseRaw, template, 'campaign');
+  const s = baseRaw;
+  if (blueprint.version === 2) s.narrative = validateNarrativeState(rawNarrative, blueprint, s);
+  if (input.narrative || (s.narrative?.dialogue && Object.keys(input).length > 0)) throw new Error('Saved conversation contains stale intent');
   same(s.seed, initial.seed, 'seed'); same(s.runId, initial.runId, 'run ID');
   same(s.faction, initial.faction, 'faction'); same(s.worldId, blueprint.id, 'world ID');
   oneOf(s.phase, ['playing', 'victory', 'defeat'], 'phase');
@@ -120,7 +126,7 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     return distance(point, projectSegment(point, a, b)) < 0.01;
   });
   if (!onRoad(cart) || !isWalkable(blueprint, cart, cart.radius)) throw new Error('Convoy is off the road');
-  if (cart.route.length > 16 || cart.route.some(point => !onRoad(point))) throw new Error('Invalid convoy path');
+  if (cart.route.length > blueprint.roads.nodes.length + 1 || cart.route.some(point => !onRoad(point))) throw new Error('Invalid convoy path');
   const path = [cart, ...cart.route];
   for (let i = 1; i < path.length; i++) {
     const a = path[i - 1]!, b = path[i]!;
@@ -160,7 +166,8 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
   if (Math.hypot(s.dodgeDirection.x, s.dodgeDirection.z) > 1.00001) throw new Error('Invalid dodge vector');
   if (s.pickups.length > 40 || s.projectiles.length > 96 || s.effects.length > 48 || s.events.length > 32) throw new Error('Transient limits exceeded');
   const point = (at: { x: number; z: number }): void => {
-    boundedNumber(at.x, 'position.x', -71, 71); boundedNumber(at.z, 'position.z', -71, 71);
+    boundedNumber(at.x, 'position.x', blueprint.bounds.minX - 1, blueprint.bounds.maxX + 1);
+    boundedNumber(at.z, 'position.z', blueprint.bounds.minZ - 1, blueprint.bounds.maxZ + 1);
   };
   for (const item of s.pickups) {
     point(item); oneOf(item.kind, ['coin', 'health', 'supply'], 'pickup kind');
@@ -206,9 +213,10 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     transientIds.add(Number(id[2]));
   }
   if ((s.phase === 'playing') !== (s.rewards === null)) throw new Error('Inconsistent terminal rewards');
-  if (s.phase === 'playing' && (p.hp === 0 || s.fortress.bossDefeated)) throw new Error('Invalid playing outcome');
+  if (s.phase === 'playing' && (p.hp === 0 || (s.fortress.bossDefeated && narrativeResolved(s)))) throw new Error('Invalid playing outcome');
   if (s.phase === 'defeat' && (p.hp !== 0 || p.state !== 'dead')) throw new Error('Invalid defeat');
-  if (s.phase === 'victory' && (p.hp <= 0 || !s.fortress.bossDefeated || !s.fortress.unlocked)) throw new Error('Invalid victory');
+  if (s.phase === 'victory' && (p.hp <= 0 || !s.fortress.bossDefeated || !s.fortress.unlocked || !narrativeResolved(s))) throw new Error('Invalid victory');
+  if (s.phase !== 'playing' && s.narrative?.dialogue) throw new Error('Terminal save contains an open conversation');
   if (s.rewards) {
     same(s.rewards.runId, s.runId, 'reward run ID'); same(s.rewards.claimed, false, 'reward claim');
     same(s.rewards.victory, s.phase === 'victory', 'reward outcome');

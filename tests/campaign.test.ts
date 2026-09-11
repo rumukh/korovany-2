@@ -1,9 +1,12 @@
 import { describe, expect, test } from 'vitest';
 import {
-  claimRewards, createCampaign, createProfile, findRoadRoute, generateWorld, isWalkable,
-  purchaseMetaUpgrade, restoreCampaign, restoreProfile, type FactionId,
+  claimRewards, createCampaign as createVersionedCampaign, createProfile, findRoadRoute, generateWorld, isWalkable,
+  purchaseMetaUpgrade, restoreCampaign, restoreProfile, type CampaignOptions, type FactionId,
 } from '../src/game';
 import { advance, CampaignDriver, dist } from './driver';
+
+// Preserve the original military-only acceptance unchanged; narrative.test.ts covers v2 conquest and all story endings.
+const createCampaign = (options: CampaignOptions) => createVersionedCampaign({ ...options, worldVersion: 1 });
 
 describe('seeded connected campaign world', () => {
   test('deterministic, diverse, and every graph route crosses only walkable bridge geometry', () => {

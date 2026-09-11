@@ -1,5 +1,6 @@
 import type { System, TickContext, World } from '@aegis/core';
 import { EMPTY_UPGRADES, FACTIONS, MAX_UPGRADE_LEVEL } from './config';
+import { discoverNarrative, narrativeResolved } from './narrative';
 import { actors, campaign, Combatant, Intent, type ActorData, type CampaignData } from './state';
 import type {
   EffectSnapshot, EventKind, GameInput, InteractionSnapshot, ObjectiveSnapshot, ShopItem,
@@ -135,6 +136,21 @@ export function interaction(s: CampaignData, world: WorldBlueprint): Interaction
     return { kind: 'locked', key: 'interaction.locked', targetId: 'fortress', progress: 0, enabled: false };
   }
   return null;
+}
+
+export function resolveOutcome(world: World, s: CampaignData): void {
+  if (s.phase !== 'playing') return;
+  // Mutual lethal combat is a defeat; a narrative decision cannot reverse a death.
+  if (s.player.hp <= 0) { s.phase = 'defeat'; s.player.state = 'dead'; }
+  else if (s.fortress.bossDefeated && narrativeResolved(s)) s.phase = 'victory';
+  if (s.phase !== 'playing') {
+    if (s.narrative) s.narrative.dialogue = null;
+    s.rewards = {
+      runId: s.runId, claimed: false, victory: s.phase === 'victory',
+      renown: (s.phase === 'victory' ? 60 : 5) + s.outposts.filter(p => p.owner === 'player').length * 10 + Math.floor(s.player.kills / 3),
+    };
+    emit(world, s, s.phase, `event.${s.phase}`, s.player, s.rewards.renown, s.runId);
+  }
 }
 
 export function campaignSystems(blueprint: WorldBlueprint): System[] {
@@ -462,16 +478,8 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
       name: 'KorovanyOutcome', phase: 'cleanup',
       run(ctx) {
         const { s } = state(ctx);
-        // Mutual lethal combat is a defeat; death cannot be reversed by a later pickup.
-        if (s.player.hp <= 0) { s.phase = 'defeat'; s.player.state = 'dead'; }
-        else if (s.fortress.bossDefeated) s.phase = 'victory';
-        if (s.phase !== 'playing') {
-          s.rewards = {
-            runId: s.runId, claimed: false, victory: s.phase === 'victory',
-            renown: (s.phase === 'victory' ? 60 : 5) + s.outposts.filter(p => p.owner === 'player').length * 10 + Math.floor(s.player.kills / 3),
-          };
-          emit(ctx.world, s, s.phase, `event.${s.phase}`, s.player, s.rewards.renown, s.runId);
-        }
+        discoverNarrative(s, blueprint);
+        resolveOutcome(ctx.world, s);
         for (const row of ctx.world.query({ has: [Combatant] })) {
           if (row.get(Combatant).deadTime > 8) ctx.world.despawn(row.entity);
         }

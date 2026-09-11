@@ -6,7 +6,7 @@ configuration and these implemented functions:
 ```ts
 createCampaign(options: CampaignOptions): GameSession
 restoreCampaign(save: unknown): GameSession
-generateWorld(seed: string | number): WorldBlueprint
+generateWorld(seed: string | number, version?: 1 | 2): WorldBlueprint
 isWalkable(world: WorldBlueprint, point: Vec2, radius?: number): boolean
 findRoadRoute(world: WorldBlueprint, from: Vec2, destination: string): Vec2[]
 createProfile(): MetaProfile
@@ -24,7 +24,14 @@ The shell owns title/faction/seed selection, settings, RU/EN localization, camer
 keyboard/pointer conversion to world-space directions, pause, fixed 60 Hz
 accumulation with a frame cap, save storage and metadata persistence. `step` takes
 held attack/sprint/interact; dodge/special/convoy/upgrade are one-shot pulses.
-Pause means not calling `step`. Neither renderer nor shell may mutate live rules.
+Pause means not calling combat `step`. Neither renderer nor shell may mutate live rules.
+The exception is `step({ narrative: command })`: it is a paused transaction and
+never increments the tick or advances movement, timers, projectiles, RNG, the
+convoy or hostile AI. Narrative input is exclusive of combat input. Valid
+transactions clear the Aegis intent resource, including refused stale choices.
+An open conversation also blocks ordinary combat ticks until a `close` command
+or the offered `leave` choice. The shell may therefore submit dialogue and
+journal commands while its fixed-step loop is paused.
 `snapshot` returns an independent plain object. Its world is immutable by contract
 for the lifetime of that run; renderer can cache scenery by `world.id`.
 
@@ -46,6 +53,66 @@ permanent softlock. A wreck takes five held seconds to restore half its health;
 further repair is continuous. Home and captured posts heal the hero while
 interacting if there are no nearby enemies. A post takes three held seconds to
 capture after its three defenders are dead; partial uncontested progress persists.
+
+New campaigns default to world version 2. `CampaignOptions.worldVersion: 1`
+explicitly creates the original military-only campaign. Saves use the blueprint
+version and restore that exact generator, preserving v1 geometry and hashes.
+`GameSnapshot.version` remains the presentation protocol version 1, not the
+world/save version. `GameSnapshot.narrative` is absent for v1, present for v2.
+
+## The Unwritten Road
+
+The v2 campaign keeps the conquest intact and adds five sequential main chapters,
+eight independent three-stage branching local quests, and twenty authored NPCs
+across the eight regions. Main chapter completion opens the next investigation;
+side quests may be done in any order. Investigations require actual proximity
+inspection of ruins, shrines and relevant landmarks, not just talking through a
+list of choices. Three mutually exclusive final settlements are available after
+the main investigation and military supply prerequisites. A choice can be made
+before the commander dies, or postponed while resolving local stories.
+
+V2 victory requires **both** a chosen final settlement and the defeated fortress
+commander. Boss death alone does not freeze an unresolved story. Final choice
+after boss death completes the expedition without a combat tick; choosing first
+leaves the world playable until the boss dies. Defeat and terminal reward rules
+otherwise remain unchanged. V1 boss victory is unchanged.
+
+Public `NarrativeInput` commands are `talk`, `choose`, `close`, `inspect`, `track`
+and `travel`, with exact fields in `narrative-types.ts`. Map T/talk to
+`narrative.interaction`; held E remains military capture/repair/transfer/rest.
+NPCs near Roadward are available immediately. Dialogue has repeatable local,
+belief and campaign topics as well as gated quest replies. `leave` explicitly
+defers a decision. Decisions change civic reputation, future dialogue and the
+final epilogue; the military faction selected at creation is a separate system.
+
+The snapshot is authoritative: render both languages from localized fields,
+only offer returned choices, respect their `enabled` and `reason`, and show
+`notice` after rejected or stale commands. Unknown well-formed IDs and stale
+proximity/choice commands get localized notices without progression. Malformed
+command structures throw before any mutation. A quest's `targetId` points to its
+speaker when discovered, otherwise that speaker's location, so map tracking
+does not depend on guessing an undiscovered NPC's coordinates. The `summary`
+explains remaining military/story obligations even after the commander dies.
+
+Locations are discovered on proximity. Travel requires a discovered eligible
+stop at both ends, the hero within 7m of the departure road node, the convoy
+within 7m of both hero and node, full convoy health, and no living enemy or
+incoming hostile projectile within 26m of either body or the destination.
+The destination must have an actual local road node and collision-safe space
+for both bodies. Travel relocates both, preserves cargo/health/timers, clears
+the convoy route and orders it to hold. It cannot rescue an ambushed cart,
+abandon the convoy or travel to undiscovered/non-travel locations.
+
+Narrative state lives inside Aegis's `KorovanyCampaign` resource. A bounded
+ordered journal of authored action IDs derives quest stages, exclusive outcomes,
+reputation and facts; a checked one-time reward ledger matches completions.
+Only IDs, discovery, current dialogue/topic, tracking and a notice code are saved,
+not translated prose. Restoration rejects unknown IDs, duplicate/out-of-order
+actions, contradictory branches, missing evidence discoveries, invalid topics,
+out-of-range open conversations, stale intent and bypassed military gates.
+Conversations survive exact save/resume without advancing time.
+
+## Simulation and persistence
 
 Convoy commands cycle hold/follow/return; explicit `destination` may be any road
 node ID (including home and post IDs). It follows the connected road graph,
@@ -82,5 +149,8 @@ coin pickups do not expire; the finite roster bounds them without deleting cargo
 `npm test` runs the game tests and presenter tests under `src/view`. Campaign
 acceptance drives normal public input through all three factions, including
 capture, raid, supply, reinforcements, victory, defeat, wreck recovery and exact
-save/resume. `npm run lock:canonicalize` normalizes only the root game lockfile
+save/resume on explicit v1 worlds. Narrative acceptance drives public v2 input
+through every authored branch, all three endings, both orders of story/military
+victory, late side quests, corrupt saves and travel prerequisites.
+`npm run lock:canonicalize` normalizes only the root game lockfile
 after a proxied dependency update; root `.npmrc` retains the corporate registry.

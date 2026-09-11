@@ -2,7 +2,7 @@
  * Public presentation contract. Distances are metres, time is seconds except tick counters.
  * Ground plane is world X/Z, Y is up; heading is atan2(x, z) radians (0 faces +Z).
  * Snapshots are independent plain JSON values; changing them never changes the session.
- * Rules advance only through step(), exactly 1/60 second per call. No wall-clock is read.
+ * Combat steps advance 1/60 second. Narrative commands are paused transactions. No wall-clock is read.
  */
 import type { ExplorationWorld, NarrativeInput, NarrativeSnapshot } from './narrative-types';
 export type * from './narrative-types';
@@ -25,6 +25,8 @@ export interface CampaignOptions {
   upgrades?: Partial<Upgrades>;
   /** Shell should persist a unique run ID, e.g. crypto.randomUUID(); default is seed/faction. */
   runId?: string;
+  /** New runs default to v2; explicit v1 retains the original military-only campaign. */
+  worldVersion?: 1 | 2;
 }
 
 export interface GameInput {
@@ -44,6 +46,7 @@ export interface GameInput {
   convoy?: 'cycle' | 'hold' | 'follow' | 'return' | { destination: string };
   /** One-shot in-run purchase; requires proximity to home or a captured post. */
   upgrade?: UpgradeId;
+  /** Exclusive paused command: do not combine with held combat/movement input. */
   narrative?: NarrativeInput;
 }
 
@@ -255,7 +258,7 @@ export interface CampaignSave {
   engine: unknown;
 }
 export interface GameSession {
-  /** Advances one fixed tick; terminal sessions are frozen. Input is validated before mutation. */
+  /** Combat advances one tick; narrative commands never tick. Terminal sessions are frozen. */
   step(input?: GameInput): void;
   snapshot(): GameSnapshot;
   serialize(): CampaignSave;

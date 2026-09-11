@@ -1,7 +1,8 @@
 import { createSchedule, createSimulation, createWorld, type World } from '@aegis/core';
 import { FACTIONS, TICK_RATE } from './config';
 import { assertRecord, boundedNumber, validatedUpgrades } from './profile';
-import { campaignSystems, createActor, interaction, objective, shopItems } from './rules';
+import { applyNarrative, createNarrative, discoverNarrative, narrativeSnapshot, pauseNarrative, validateNarrativeInput } from './narrative';
+import { campaignSystems, createActor, interaction, objective, resolveOutcome, shopItems } from './rules';
 import { actors, campaign, Campaign, Intent, type CampaignData } from './state';
 import type { CampaignOptions, CampaignSave, FactionId, GameInput, GameSession, GameSnapshot, Vec2, WorldBlueprint } from './types';
 import { generateWorld, normalizeSeed } from './world';
@@ -22,8 +23,12 @@ function inputVector(value: unknown, label: string): Vec2 {
 export function validateInput(value: unknown): GameInput {
   assertRecord(value, 'Input');
   const result: GameInput = {};
-  const names = ['move', 'aim', 'attack', 'sprint', 'interact', 'dodge', 'special', 'convoy', 'upgrade'];
+  const names = ['move', 'aim', 'attack', 'sprint', 'interact', 'dodge', 'special', 'convoy', 'upgrade', 'narrative'];
   if (Object.keys(value).some(k => !names.includes(k))) throw new Error('Unknown input command');
+  if (value.narrative !== undefined) {
+    if (Object.keys(value).some(k => k !== 'narrative' && value[k] !== undefined)) throw new Error('Narrative commands cannot include combat input');
+    return { narrative: validateNarrativeInput(value.narrative) };
+  }
   if (value.move !== undefined) result.move = inputVector(value.move, 'move');
   if (value.aim !== undefined) result.aim = inputVector(value.aim, 'aim');
   for (const key of ['attack', 'sprint', 'interact', 'dodge', 'special'] as const) {
@@ -83,6 +88,7 @@ function initialState(options: CampaignOptions, blueprint: WorldBlueprint): Camp
     fortress: { id: 'fortress', x: fortress.x, z: fortress.z, unlocked: false, bossId: 'boss', bossDefeated: false, reinforcementWaves: 0 },
     rewards: null, raidComplete: false, eventSequence: 0, transientSequence: 0, spawnSequence: 0,
     followTimer: 0, convoyWeaponTimer: 0, reinforcementTimer: 0, dodgeDirection: { x: 0, z: 1 },
+    ...(blueprint.version === 2 ? { narrative: createNarrative(blueprint) } : {}),
   };
 }
 
@@ -94,6 +100,19 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
     step(input: GameInput = {}) {
       if (campaign(world).phase !== 'playing') return;
       const valid = validateInput(input);
+      const s = campaign(world);
+      if (valid.narrative) {
+        if (!s.narrative) throw new Error('Narrative commands are not supported by legacy campaigns');
+        world.setResource(Intent, {});
+        applyNarrative(s, blueprint, actors(world), valid.narrative);
+        resolveOutcome(world, s);
+        return;
+      }
+      if (s.narrative?.dialogue) {
+        world.setResource(Intent, {});
+        pauseNarrative(s);
+        return;
+      }
       world.setResource(Intent, valid);
       simulation.step();
     },
@@ -115,12 +134,13 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
         pickups: s.pickups, projectiles, effects: s.effects, events: s.events,
         objective: objective(s), fortress: s.fortress, interaction: interaction(s, blueprint),
         shop: shopItems(s, blueprint), rewards: s.rewards,
+        ...(s.narrative ? { narrative: narrativeSnapshot(s, blueprint, actors(world)) } : {}),
       });
     },
     serialize(): CampaignSave {
       const s = campaign(world);
       return {
-        namespace: 'korovany2:campaign', version: 1, seed: s.seed, faction: s.faction,
+        namespace: 'korovany2:campaign', version: blueprint.version, seed: s.seed, faction: s.faction,
         runId: s.runId, worldId: blueprint.id, engine: world.snapshot(),
       };
     },
@@ -146,8 +166,10 @@ function populateActors(world: World, data: CampaignData, blueprint: WorldBluepr
 
 export function createCampaign(options: CampaignOptions): GameSession {
   assertRecord(options, 'Campaign options');
-  const blueprint = generateWorld(options.seed);
+  if (options.worldVersion !== undefined && options.worldVersion !== 1 && options.worldVersion !== 2) throw new Error('Unsupported world version');
+  const blueprint = generateWorld(options.seed, options.worldVersion ?? 2);
   const data = initialState(options, blueprint);
+  discoverNarrative(data, blueprint);
   const world = createWorld({ seed: `korovany2:simulation:${blueprint.seed}` });
   world.setResource(Campaign, data);
   world.setResource(Intent, {});
@@ -157,11 +179,11 @@ export function createCampaign(options: CampaignOptions): GameSession {
 
 export function restoreCampaign(save: unknown): GameSession {
   assertRecord(save, 'Campaign save');
-  if (save.namespace !== 'korovany2:campaign' || save.version !== 1) throw new Error('Unsupported campaign save');
+  if (save.namespace !== 'korovany2:campaign' || (save.version !== 1 && save.version !== 2)) throw new Error('Unsupported campaign save');
   if (typeof save.seed !== 'string' || normalizeSeed(save.seed) !== save.seed) throw new Error('Invalid saved seed');
   validateFaction(save.faction);
   if (typeof save.runId !== 'string' || !save.runId || save.runId.length > 128) throw new Error('Invalid saved run ID');
-  const blueprint = generateWorld(save.seed);
+  const blueprint = generateWorld(save.seed, save.version);
   if (save.worldId !== blueprint.id) throw new Error('Saved world does not match the seed/version');
   const template = initialState({ seed: save.seed, faction: save.faction, runId: save.runId }, blueprint);
   const world = createWorld({ seed: `korovany2:simulation:${save.seed}` });
