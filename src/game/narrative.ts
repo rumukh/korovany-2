@@ -313,6 +313,22 @@ function militaryText(s: CampaignData): LocalizedText {
     'The commander is defeated. The expedition remains open until you choose the road\'s future at the Last Archive. Finish any side investigations before that final choice.',
     'Командир побеждён. Экспедиция продолжается до выбора будущего дороги в Последнем архиве. Завершите побочные расследования до последнего решения.');
 }
+function summaryText(s: CampaignData, p: StoryProgress, current: StoryQuest | undefined): LocalizedText {
+  if (!current) return s.fortress.bossDefeated ? text(
+    'The commander is defeated and the road has a future. Your settlement remembers the decisions that brought it here.',
+    'Командир побеждён, у дороги есть будущее. Ваше соглашение сохранит память о решениях, которые к нему привели.') : text(
+    'The road\'s future is chosen. Defeat the fortress commander to secure it and complete the expedition. Local investigations remain open until then.',
+    'Будущее дороги выбрано. Победите командира крепости, чтобы защитить его и завершить экспедицию. До этого местные расследования остаются открыты.');
+  const q = p.quests.get(current.id)!;
+  const objective = current.stages[q.count]!.objective;
+  const finalChoice = current.id === 'unwritten-road' && q.count === current.stages.length - 1;
+  const lines = [current.description, objective];
+  if (finalChoice) lines.push(militaryText(s));
+  else if (s.fortress.bossDefeated) lines.unshift(text(
+    'The commander is defeated, but the investigation is unfinished. Continue the journal before choosing the road\'s future.',
+    'Командир побеждён, но расследование не окончено. Продолжите записи в журнале, прежде чем выбирать будущее дороги.'));
+  return text(lines.map(line => line.en).join('\n\n'), lines.map(line => line.ru).join('\n\n'));
+}
 function contextText(p: StoryProgress, npc: StoryNpc): LocalizedText {
   const own = [...p.quests.values()].filter(q => completed(q) && q.quest.stages.at(-1)?.at === npc.id);
   const main = [...p.quests.values()].filter(q => q.quest.kind === 'main' && completed(q)).at(-1);
@@ -414,7 +430,7 @@ export function narrativeSnapshot(s: CampaignData, world: WorldBlueprint, enemie
   return {
     title: text('THE UNWRITTEN ROAD', 'НЕНАПИСАННАЯ ДОРОГА'),
     chapter: current?.title ?? ENDINGS[p.ending!],
-    summary: militaryText(s),
+    summary: summaryText(s, p, current),
     npcs, quests: QUESTS.map(quest => questSnapshot(p, p.quests.get(quest.id)!, state.discovered)), dialogue,
     trackedQuestId: state.trackedQuestId, discovered: [...state.discovered],
     reputation: CIVIC_FACTIONS.map(f => ({ ...f, value: p.reputation[f.id] })),
