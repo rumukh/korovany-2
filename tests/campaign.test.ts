@@ -8,9 +8,9 @@ import { advance, CampaignDriver, dist } from './driver';
 describe('seeded connected campaign world', () => {
   test('deterministic, diverse, and every graph route crosses only walkable bridge geometry', () => {
     for (let seed = 0; seed < 24; seed++) {
-      const world = generateWorld(seed);
-      expect(generateWorld(seed)).toEqual(world);
-      expect(generateWorld(seed + 1).id).not.toBe(world.id);
+      const world = generateWorld(seed, 1);
+      expect(generateWorld(seed, 1)).toEqual(world);
+      expect(generateWorld(seed + 1, 1).id).not.toBe(world.id);
       expect(world.obstacles.filter(o => o.kind === 'wall')).toHaveLength(20);
       for (const from of world.roads.nodes) for (const to of world.roads.nodes) {
         const route = [from, ...findRoadRoute(world, from, to.id)];

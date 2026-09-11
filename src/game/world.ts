@@ -1,5 +1,6 @@
 import { createPrng } from '@aegis/core';
 import type { Bounds, RoadNode, Vec2, WorldBlueprint } from './types';
+import { expandWorld } from './world-expansion';
 
 export function normalizeSeed(seed: string | number): string {
   if ((typeof seed !== 'string' && typeof seed !== 'number') ||
@@ -50,7 +51,14 @@ export function moveWithCollision(world: WorldBlueprint, body: Vec2, dx: number,
   }
 }
 
-export function generateWorld(seed: string | number): WorldBlueprint {
+export function generateWorld(seed: string | number, version: 1 | 2 = 2): WorldBlueprint {
+  if (version !== 1 && version !== 2) throw new Error('Unsupported world version');
+  const legacy = generateLegacyWorld(seed);
+  return version === 1 ? legacy : expandWorld(legacy);
+}
+
+// Keep this generator and its serialization order unchanged for existing saves.
+function generateLegacyWorld(seed: string | number): WorldBlueprint {
   const text = normalizeSeed(seed);
   const rng = createPrng(`korovany2:world:${text}`);
   const westZ = rng.int(-30, -18), eastZ = rng.int(20, 31), quarryZ = rng.int(21, 33);
