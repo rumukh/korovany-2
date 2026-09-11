@@ -1,0 +1,42 @@
+export const palette = {
+  parchment: '#efe6d2',
+  ink: '#151e1b',
+  brass: '#c9a45a',
+  teal: '#427b74',
+  ember: '#b75845',
+  grass: '#a6ae6b',
+  meadow: '#b9b77d',
+  earth: '#b9a073',
+  road: '#d3bc8e',
+  bank: '#918a65',
+  water: '#568e99',
+  waterLight: '#91bcc0',
+  moss: '#617d49',
+  leaf: '#397159',
+  leafLight: '#699162',
+  leafDark: '#295546',
+  bark: '#665541',
+  timber: '#997849',
+  timberLight: '#bc9964',
+  iron: '#3c4849',
+  steel: '#8faaa9',
+  slate: '#4d667b',
+  slateLight: '#758c98',
+  stone: '#9b9f8a',
+  stoneLight: '#c3c0a0',
+  skin: '#d6af7c',
+  elf: '#477a55',
+  guard: '#456985',
+  villain: '#7f3648',
+  hostile: '#a65945',
+  sun: '#ffe1a1',
+  fog: '#b6cbba',
+} as const;
+
+export type ViewFaction = 'elf' | 'guard' | 'villain';
+
+export const factionColors: Record<ViewFaction, string> = {
+  elf: palette.elf,
+  guard: palette.guard,
+  villain: palette.villain,
+};
