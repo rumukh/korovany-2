@@ -4,6 +4,9 @@
  * Snapshots are independent plain JSON values; changing them never changes the session.
  * Rules advance only through step(), exactly 1/60 second per call. No wall-clock is read.
  */
+import type { ExplorationWorld, NarrativeInput, NarrativeSnapshot } from './narrative-types';
+export type * from './narrative-types';
+
 export type FactionId = 'elf' | 'guard' | 'villain';
 export type Phase = 'playing' | 'victory' | 'defeat';
 export type ActorKind = 'soldier' | 'archer' | 'captain' | 'boss' | 'caravan';
@@ -41,6 +44,7 @@ export interface GameInput {
   convoy?: 'cycle' | 'hold' | 'follow' | 'return' | { destination: string };
   /** One-shot in-run purchase; requires proximity to home or a captured post. */
   upgrade?: UpgradeId;
+  narrative?: NarrativeInput;
 }
 
 export interface PlayerSnapshot extends Position {
@@ -160,7 +164,7 @@ export interface WorldSite extends Vec2 {
   radius: number;
 }
 export interface WorldBlueprint {
-  version: 1;
+  version: 1 | 2;
   seed: string;
   id: string;
   bounds: Bounds;
@@ -172,6 +176,7 @@ export interface WorldBlueprint {
   sites: WorldSite[];
   /** Visual biome regions; not additional collision. */
   biomes: { kind: 'forest' | 'countryside' | 'mountains'; bounds: Bounds }[];
+  exploration?: ExplorationWorld;
 }
 
 export interface ObjectiveSnapshot {
@@ -236,12 +241,13 @@ export interface GameSnapshot {
   interaction: InteractionSnapshot | null;
   shop: ShopItem[];
   rewards: RunRewards | null;
+  narrative?: NarrativeSnapshot;
 }
 
 /** Opaque JSON save; restoreCampaign accepts unknown and rejects invalid/corrupt saves. */
 export interface CampaignSave {
   namespace: 'korovany2:campaign';
-  version: 1;
+  version: 1 | 2;
   seed: string;
   faction: FactionId;
   runId: string;
