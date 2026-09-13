@@ -207,6 +207,12 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     await clickSelector('[data-action="title"]');
     await cdp.send("Emulation.setDeviceMetricsOverride", { width: 430, height: 900, deviceScaleFactor: 1, mobile: false });
     await capture("title-en-narrow");
+    expect(await evaluate(cdp, `(() => {
+      const button = document.querySelector(".language-button");
+      button.scrollIntoView({block:"center"});
+      const rect = button.getBoundingClientRect();
+      return button.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+    })()`)).toBe(true);
     await clickSelector(".language-button");
     expect(await evaluate(cdp, "document.documentElement.lang")).toBe("ru");
     await capture("title-ru-narrow");

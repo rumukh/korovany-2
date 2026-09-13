@@ -5,6 +5,7 @@ import {
 } from "./game";
 import { createGameView, type GameView } from "./view";
 import { Soundscape } from "./audio/soundscape";
+import { AudioPresentation } from "./audio/presentation";
 import { GameInput } from "./ui/input";
 import { GameShell, type Overlay, type ShellAction, type ShellState } from "./ui/shell";
 import { BrowserStorage, DirtySave, defaultSettings, parseSettings, storageKeys } from "./ui/storage";
@@ -66,8 +67,10 @@ let fatal = false;
 let raf = 0;
 let cameraDrag: { x: number; y: number } | null = null;
 const lifecycle = new AbortController();
-const sound = new Soundscape(() => shell?.warn("audioFailure"));
-sound.configure(settings.muted);
+const sound = new Soundscape(() => shell?.warn("audioFailure"), (line) => shell?.caption(line));
+const audio = new AudioPresentation(sound);
+sound.configure(settings.muted, settings.audio);
+audio.sync(snapshot, "menu", true, settings.language);
 
 function newSeed(): string {
   const values = new Uint32Array(1);
@@ -136,6 +139,7 @@ function saveCampaign(notify = false): boolean {
   if (result === "conflict") {
     freeze();
     if (!atTitle) shell.show("pause");
+    audio.sync(snapshot, shell.overlay, atTitle, settings.language);
   }
   lastSaveTick = snapshot?.tick ?? 0;
   if (notify && saved && chartSaved && rewardsSaved) shell.announce("saved");
@@ -143,14 +147,14 @@ function saveCampaign(notify = false): boolean {
   return saved && chartSaved && rewardsSaved;
 }
 
-function freeze(): void {
+function freeze(silence = true): void {
   running = false;
   input?.setEnabled(false);
   queued = {};
   cameraDrag = null;
   accumulator = 0;
   lastFrame = null;
-  sound.setActive(false);
+  if (silence) sound.setActive(false);
 }
 
 function narrativeOverlay(): "dialogue" | "inspection" | null {
@@ -161,7 +165,7 @@ function narrativeOverlay(): "dialogue" | "inspection" | null {
 function changeOverlay(overlay: Overlay): void {
   if (fatal) return;
   const wasRunning = running;
-  freeze();
+  freeze(false);
   if (wasRunning) saveCampaign();
   if (overlay === "menu") atTitle = true;
   else if (overlay === null || overlay === "dialogue" || overlay === "inspection") atTitle = false;
@@ -173,8 +177,8 @@ function changeOverlay(overlay: Overlay): void {
   if (overlay === null && campaign && snapshot?.phase === "playing") {
     running = true;
     input?.setEnabled(true);
-    sound.setActive(true);
   }
+  audio.sync(snapshot, overlay, atTitle, settings.language);
 }
 
 function rendererFor(next: GameSnapshot): void {
@@ -202,7 +206,7 @@ function updatePreview(): void {
 
 function finish(): void {
   if (!snapshot || snapshot.phase === "playing") return;
-  freeze();
+  freeze(false);
   atTitle = false;
   if (snapshot.rewards) {
     pendingRewards.set(snapshot.rewards.runId, snapshot.rewards);
@@ -212,6 +216,7 @@ function finish(): void {
   saveCampaign();
   refresh(false);
   shell?.show("terminal");
+  audio.sync(snapshot, "terminal", false, settings.language);
 }
 
 function begin(sameSeed?: boolean): void {
@@ -234,6 +239,7 @@ function begin(sameSeed?: boolean): void {
     upgrades: profile.upgrades, runId: crypto.randomUUID(),
   });
   snapshot = campaign.snapshot();
+  audio.reset(snapshot);
   campaignSave.adopt();
   atlasSave.adopt();
   campaignSave.markDirty();
@@ -275,6 +281,7 @@ function continueLatest(): void {
   if (chart.status === "ok") shell?.atlas.restore(chart.value);
   reconcileProfile();
   if (snapshot) {
+    audio.reset(snapshot);
     lastEvent = snapshot.events.at(-1)?.id ?? 0;
     lastSaveTick = snapshot.tick;
     shell?.update(snapshot);
@@ -283,13 +290,14 @@ function continueLatest(): void {
   if (campaign) resume();
   else {
     shell?.warn("storage.conflict");
-    shell?.show("menu");
+    changeOverlay("menu");
   }
 }
 
 function dispatch(action: ShellAction): void {
   if (disposed || (fatal && action.type !== "reload")) return;
   try {
+    if (action.type !== "settings" && action.type !== "seed") sound.cue("click");
     switch (action.type) {
       case "start": begin(action.sameSeed); break;
       case "continue": continueLatest(); break;
@@ -322,14 +330,17 @@ function dispatch(action: ShellAction): void {
         updatePreview();
         refresh();
         break;
-      case "settings":
+      case "settings": {
+        const languageChanged = settings.language !== action.settings.language;
         settings = action.settings;
         storage.write(storageKeys.settings, settings);
-        sound.configure(settings.muted);
+        sound.configure(settings.muted, settings.audio);
         view?.setQuality(settings.quality);
         view?.setReducedMotion(settings.reducedMotion);
-        refresh();
+        refresh(languageChanged);
+        audio.sync(snapshot, shell?.overlay ?? null, atTitle, settings.language);
         break;
+      }
       case "metaUpgrade":
         buyMetaUpgrade(action.id);
         break;
@@ -353,7 +364,11 @@ function dispatch(action: ShellAction): void {
           break;
         }
         const overlay = shell?.overlay ?? null;
-        freeze();
+        const command = action.command;
+        const dialogue = snapshot.narrative?.dialogue;
+        const selected = command.type === "choose" && command.npcId === dialogue?.npcId
+          ? dialogue.choices.find((choice) => choice.id === command.choiceId && choice.enabled)?.text : undefined;
+        freeze(false);
         campaign.step({ narrative: action.command });
         snapshot = campaign.snapshot();
         campaignSave.markDirty();
@@ -364,6 +379,9 @@ function dispatch(action: ShellAction): void {
         if (snapshot.phase !== "playing") finish();
         else if (!campaignSave.conflicted) changeOverlay(narrativeOverlay()
           ?? (overlay === "dialogue" || overlay === "inspection" ? null : overlay));
+        audio.sync(snapshot, shell?.overlay ?? null, atTitle, settings.language, {
+          player: selected, restart: command.type === "talk" || command.type === "inspect",
+        });
         break;
       }
       case "reload": window.location.reload(); break;
@@ -413,28 +431,22 @@ function sampleInput(): CampaignInput {
 }
 
 function events(next: GameSnapshot): void {
+  audio.update(next);
   let important = false;
   for (const event of next.events) {
     if (event.id <= lastEvent) continue;
     lastEvent = event.id;
     switch (event.kind) {
-      case "attack": sound.cue("attack"); break;
-      case "hurt": sound.cue("hit"); break;
-      case "ability": sound.cue("ability"); break;
-      case "capture": sound.cue("capture"); important = true; break;
-      case "delivery": sound.cue("delivery"); important = true; break;
-      case "victory": sound.cue("victory"); important = true; break;
-      case "defeat": sound.cue("defeat"); important = true; break;
+      case "capture":
+      case "delivery":
+      case "victory":
+      case "defeat":
       case "raid":
       case "upgrade":
       case "fortress": important = true; break;
     }
     if (!["attack", "hurt", "pickup"].includes(event.kind)) shell?.announce(event.key);
   }
-  const combat = next.actors.some((actor) => actor.hp > 0 &&
-    Math.hypot(actor.x - next.player.x, actor.z - next.player.z) < 24 &&
-    ["windup", "attack", "chase"].includes(actor.state));
-  sound.setCombat(combat);
   if (next.tick - lastSaveTick >= 600 || (important && next.tick - lastSaveTick >= 120)) saveCampaign();
 }
 
@@ -444,6 +456,7 @@ function stopForError(error: unknown, kind: "graphics" | "game"): void {
   freeze();
   if (raf) cancelAnimationFrame(raf);
   shell?.fail(kind);
+  audio.sync(snapshot, "fatal", atTitle, settings.language);
 }
 
 function frame(time: number): void {
@@ -496,11 +509,24 @@ if (snapshot) shell.update(snapshot);
 
 window.addEventListener("resize", () => view?.resize(), { signal: lifecycle.signal });
 window.addEventListener("pointerdown", (event) => {
-  if (event.isTrusted) void sound.unlock();
+  if (event.isTrusted && !document.hidden) {
+    audio.setFocused(true);
+    void sound.unlock();
+  }
 }, { signal: lifecycle.signal, capture: true });
 window.addEventListener("keydown", (event) => {
-  if (event.isTrusted) void sound.unlock();
+  if (event.isTrusted && !document.hidden) {
+    audio.setFocused(true);
+    void sound.unlock();
+  }
 }, { signal: lifecycle.signal, capture: true });
+// Native checkbox changes occur after click propagation; unlock after settings are applied.
+for (const type of ["input", "change"]) window.addEventListener(type, (event) => {
+  if (event.isTrusted && !document.hidden) void sound.unlock();
+}, { signal: lifecycle.signal });
+window.addEventListener("blur", () => audio.setFocused(false), { signal: lifecycle.signal });
+window.addEventListener("focus", () => audio.setFocused(!document.hidden), { signal: lifecycle.signal });
+document.addEventListener("visibilitychange", () => audio.setFocused(!document.hidden && document.hasFocus()), { signal: lifecycle.signal });
 shell.canvas.addEventListener("pointerdown", (event) => {
   if (!running || event.button !== 2) return;
   event.preventDefault();
@@ -525,6 +551,7 @@ shell.canvas.addEventListener("webglcontextlost", (event) => {
   stopForError(new Error("WebGL context lost"), "graphics");
 }, { signal: lifecycle.signal });
 window.addEventListener("pagehide", () => {
+  audio.setFocused(false);
   if (running) changeOverlay("pause");
   else freeze();
   saveCampaign();
@@ -535,6 +562,7 @@ window.addEventListener("storage", (event) => {
     freeze();
     shell?.warn("storage.conflict");
     shell?.show("pause");
+    audio.sync(snapshot, shell?.overlay ?? "pause", atTitle, settings.language);
   }
   if (event.key === storageKeys.profile && !pendingRewards.size) {
     reconcileProfile();
@@ -549,7 +577,7 @@ Object.defineProperty(window, "korovany", {
       snapshot: campaign?.snapshot() ?? null,
       overlay: shell?.overlay ?? null,
       running,
-      settings: { ...settings },
+      settings: { ...settings, audio: { ...settings.audio } },
       audio: sound.inspect(),
       profile: { ...profile, upgrades: { ...profile.upgrades }, completedRuns: [...profile.completedRuns] },
       viewWorldId,

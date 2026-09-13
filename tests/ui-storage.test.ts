@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { BrowserStorage, DirtySave, parseSettings, storageKeys } from "../src/ui/storage";
 import { parseChart } from "../src/ui/atlas";
 import { translate } from "../src/ui/locale";
+import { defaultMix, mixChannels } from "../src/audio/mix";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -29,6 +30,19 @@ describe("isolated browser persistence", () => {
     for (const key of Object.values(storageKeys)) expect(key.startsWith("korovany2")).toBe(true);
   });
 
+  it("upgrades old mixer-less settings and validates every persisted audio channel", () => {
+    const old = { language: "en", quality: "high", reducedMotion: false, muted: true };
+    expect(parseSettings(old)?.audio).toEqual(defaultMix());
+    const audio = { master: 0, music: 0.2, ambience: 0.4, effects: 0.6, voices: 1 };
+    expect(parseSettings({ ...old, audio })?.audio).toEqual(audio);
+    for (const channel of mixChannels) {
+      for (const invalid of [-0.1, 1.1, NaN, "1", null]) {
+        expect(parseSettings({ ...old, audio: { ...audio, [channel]: invalid } })).toBeNull();
+      }
+      expect(translate("en", `audio.${channel}`)).not.toBe(`audio.${channel}`);
+      expect(translate("ru", `audio.${channel}`)).not.toBe(`audio.${channel}`);
+    }
+  });
   it("bounds and validates the independently persisted visited atlas cells", () => {
     expect(parseChart({ runId: "journey", explored: [0, 783] })).not.toBeNull();
     expect(parseChart({ runId: "journey", explored: [784] })).toBeNull();

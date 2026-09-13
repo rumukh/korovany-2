@@ -1,9 +1,12 @@
+import { defaultMix, parseMix, type AudioMix } from "../audio/mix";
+
 export type Language = "ru" | "en";
 export interface Settings {
   language: Language;
   quality: "low" | "high";
   reducedMotion: boolean;
   muted: boolean;
+  audio: AudioMix;
 }
 
 export type StorageIssue = "unavailable" | "corrupt" | "write" | "conflict";
@@ -26,6 +29,7 @@ export function defaultSettings(): Settings {
     quality: "high",
     reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     muted: false,
+    audio: defaultMix(),
   };
 }
 
@@ -35,11 +39,14 @@ export function parseSettings(value: unknown): Settings | null {
   if ((fields.language !== "ru" && fields.language !== "en") ||
     (fields.quality !== "low" && fields.quality !== "high") ||
     typeof fields.reducedMotion !== "boolean" || typeof fields.muted !== "boolean") return null;
+  const audio = fields.audio === undefined ? defaultMix() : parseMix(fields.audio);
+  if (!audio) return null;
   return {
     language: fields.language,
     quality: fields.quality,
     reducedMotion: fields.reducedMotion,
     muted: fields.muted,
+    audio,
   };
 }
 

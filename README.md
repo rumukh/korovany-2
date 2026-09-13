@@ -48,7 +48,7 @@ driver, with isolated browser profiles and no additional test dependencies:
 
 ```powershell
 $env:KOROVANY_BROWSER = '1'
-npm test -- tests\ui-browser.test.ts tests\story-browser.test.ts
+npm test -- tests\ui-browser.test.ts tests\story-browser.test.ts tests\audio-browser.test.ts
 ```
 
 Set `AEGIS_BROWSER` to an executable path if the browser is not installed in a
@@ -154,6 +154,50 @@ Opening menus pauses the campaign. Browser focus loss pauses play and releases
 held controls. Once the atlas is open, Tab navigates its controls; use M or
 Escape to return to the road.
 
+## Audio
+
+The browser plays local compressed media from
+`public/audio/soundtrack/manifest.json` and `public/audio/voices/manifest.json`.
+There is no oscillator soundtrack or browser text-to-speech substitute. The first
+trusted click or key press unlocks audio; the title screen then plays its score.
+If a manifest, clip, decoder or autoplay permission is unavailable, a localized
+warning appears and the console identifies the failure. Dialogue remains readable
+and choices remain immediate. Reload after restoring missing files.
+
+Music crossfades between the road, mystery sites, combat and the fortress, with
+hysteresis to avoid switching at every border or combat lull. Eight regional
+ambience beds follow the player. Final scores start only after victory, not when
+merely agreeing on a plan; defeat plays its cue and then falls silent. Presentation
+effects use snapshot events and movement, with distance attenuation, stereo
+placement, rate limits and bounded polyphony. They do not change game rules.
+
+NPC dialogue, selected player responses, inspection narration and terminal
+epilogues look up exact RU/EN paragraph blocks in the voice manifest. Multiple
+clips for a paragraph play in order. Choosing again immediately cancels stale
+downloads and playback; reopening a conversation replays it. Voices duck the
+music, not the simulation: conversation and inspection overlays pause gameplay
+while audio continues. Their **Settings** control can change language or volume
+without closing the scene. Closing a reading scene cancels its narration.
+
+Settings provide independent **Master**, **Music**, **Ambience**, **Sound effects**
+and **Voices** sliders, as well as the existing mute switch. Old settings without
+mix levels load compatible defaults. Pause, mute, a hidden tab and window blur
+stop all playback; returning to a voiced scene resumes its current clip, or
+restarts the scene in the newly selected language. Text stays visible throughout.
+
+Long music and ambience beds are streamed (at most two streams per lane during
+crossfades). Short effects and speech are decoded lazily into a 24 MiB LRU cache;
+at most twelve effects, four ordinary effect downloads and two native decodes
+run concurrently. Speech is sequential; the full voice corpus is never prefetched.
+`window.korovany.inspect().audio` exposes transport, stream times, current subtitle,
+recent effect IDs, decoded duration, cache usage and failures for browser acceptance.
+It is read-only and provides no simulation controls.
+
+`tests/audio-browser.test.ts` serves test-only PCM fixtures over HTTP to exercise
+real browser media and Web Audio lifecycles; these fixtures are not shipped assets.
+Full soundtrack/voice acceptance additionally requires the generated manifests,
+their referenced media and the exhaustive voice catalogue coverage.
+
 ## Saves
 
 Campaign, profile, and settings are stored locally in the browser under the
@@ -178,7 +222,7 @@ a visible storage warning rather than silently loading a different campaign.
 | --- | --- |
 | `src/game` | Aegis ECS components, ordered systems, deterministic world, campaign rules, saves, and profile progression |
 | `src/view` | Procedural Three.js scenery, character animation, camera, and effects |
-| `src/ui`, `src/audio`, `src/main.ts` | Interface, localization, controls, browser lifecycle, and synthesized audio |
+| `src/ui`, `src/audio`, `src/main.ts` | Interface, localization, controls, browser lifecycle, and local-media audio |
 | `tests` | Headless game and integration coverage |
 | `vendor/aegis-engine` | Unmodified engine submodule |
 
@@ -203,6 +247,6 @@ deployment. Local builds do not require GitHub.
 Aegis packages declare MIT; Three.js is MIT. Runtime notices are included in
 [`public/THIRD_PARTY_NOTICES.txt`](public/THIRD_PARTY_NOTICES.txt) and copied into
 the production build. The engine remains pinned with its upstream provenance.
-The sequel uses newly authored procedural visuals and synthesized audio rather
+The sequel uses newly authored procedural visuals and original audio rather
 than copying the original game's implementation or asset library. No
 project-wide redistribution license is assigned here.

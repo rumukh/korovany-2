@@ -1,1 +1,26 @@
 @import url("./ui/journal.css");
+
+.audio-mixer { border: 0; padding: 0; margin: 1.5rem 0; min-width: 0; }
+.audio-setting { display: grid; grid-template-columns: minmax(7rem, 1fr) minmax(5rem, 1fr) 3rem; gap: .75rem; align-items: center; }
+.audio-setting input { width: 100%; accent-color: #d5b477; }
+.audio-setting output { text-align: right; font-variant-numeric: tabular-nums; }
+.voice-caption { position: fixed; z-index: 12; bottom: 1rem; left: 50%; transform: translateX(-50%); width: min(48rem, calc(100% - 2rem)); max-height: 20vh; overflow: auto; padding: .65rem 1rem; background: #101613f2; color: #f0ead8; border: 1px solid #d5b47780; border-radius: .4rem; pointer-events: none; white-space: pre-line; }
+.voice-caption p { margin: .25rem 0 0; }
+.voice-caption[hidden] { display: none; }
+.overlay-host:has(.dialogue-panel, .inspection-panel, .terminal-panel) { padding-bottom: max(8rem, 22vh); }
+
+.warnings:empty { display: none; }
+@media (max-width: 760px) {
+  #app:has(> .overlay-host:not([hidden])):has(> .warnings:not(:empty)) {
+    display: grid; grid-template-rows: minmax(0, 1fr) auto;
+  }
+  #app:has(> .warnings:not(:empty)) > .overlay-host:not([hidden]) {
+    position: relative; inset: auto; min-height: 0; grid-row: 1;
+  }
+  #app:has(> .overlay-host:not([hidden])) > .warnings:not(:empty) {
+    position: relative; inset: auto; grid-row: 2; margin: 12px; max-width: none; max-height: 30vh; overflow: auto;
+  }
+  #app:has(> .overlay-host:not([hidden])):has(> .warnings:not(:empty)) > .voice-caption {
+    bottom: calc(30vh + 2rem);
+  }
+}

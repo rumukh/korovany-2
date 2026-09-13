@@ -3,6 +3,8 @@ import { Atlas } from "./atlas";
 import { formatTime, translate } from "./locale";
 import type { Settings } from "./storage";
 import { dialogueContent, inspectionContent, journalContent, localText, questTarget, type QuestFilter } from "./story";
+import { mixChannels } from "../audio/mix";
+import type { SpeechLine } from "../audio/soundscape";
 
 export type Overlay = "menu" | "pause" | "map" | "journal" | "dialogue" | "inspection" | "settings" | "help" | "records" | "terminal" | "fatal" | null;
 export interface MetaOffer {
@@ -71,6 +73,7 @@ export class GameShell {
   private readonly overlayHost = element("div", "overlay-host");
   private readonly warnings = element("div", "warnings");
   private readonly live = element("div", "sr-only");
+  private readonly voiceCaption = element("div", "voice-caption");
   private readonly controller = new AbortController();
   private warningKeys: string[] = [];
   private snapshot: GameSnapshot | null = null;
@@ -92,7 +95,10 @@ export class GameShell {
     this.minimap.type = "button";
     this.minimap.addEventListener("click", () => dispatch({ type: "overlay", overlay: "map" }));
     this.hud.append(this.hudTop, this.minimap, this.hudBottom, this.controls);
-    root.replaceChildren(this.canvas, this.hud, this.overlayHost, this.warnings, this.live);
+    this.voiceCaption.hidden = true;
+    this.voiceCaption.setAttribute("aria-live", "polite");
+    this.voiceCaption.setAttribute("aria-atomic", "true");
+    root.replaceChildren(this.canvas, this.hud, this.overlayHost, this.warnings, this.live, this.voiceCaption);
     window.addEventListener("keydown", (event) => this.overlayKey(event), { signal: this.controller.signal });
     this.applyLanguage();
     this.buildControls();
@@ -168,6 +174,13 @@ export class GameShell {
       const feedback = this.overlayHost.querySelector(".save-feedback");
       if (feedback) feedback.textContent = this.t(key);
     }
+  }
+
+  caption(line: SpeechLine | null): void {
+    const alreadyOnScreen = ["dialogue", "inspection", "terminal"].includes(this.currentOverlay ?? "") && line?.speaker !== "player";
+    this.voiceCaption.hidden = line === null || alreadyOnScreen;
+    this.voiceCaption.replaceChildren();
+    if (line) this.voiceCaption.append(element("strong", "", line.label), element("p", "", line.text));
   }
 
   private renderWarnings(): void {
@@ -343,6 +356,9 @@ export class GameShell {
     else if (this.currentOverlay === "records") this.records(panel);
     else if (this.currentOverlay === "terminal") this.terminal(panel);
     else this.fatal(panel);
+    if (["dialogue", "inspection", "terminal"].includes(this.currentOverlay)) {
+      panel.append(this.button("settings", { type: "overlay", overlay: "settings" }, "button quiet"));
+    }
     this.overlayHost.append(panel);
     panel.focus({ preventScroll: true });
   }
@@ -568,6 +584,32 @@ export class GameShell {
       row.append(input);
       panel.append(row);
     }
+    const mixer = element("fieldset", "audio-mixer");
+    mixer.append(element("legend", "", this.t("audio.mixer")));
+    for (const channel of mixChannels) {
+      const row = element("label", "setting-row audio-setting", this.t(`audio.${channel}`));
+      const input = element("input");
+      input.type = "range";
+      input.min = "0";
+      input.max = "1";
+      input.step = "0.05";
+      input.value = String(this.state.settings.audio[channel]);
+      input.dataset.audioChannel = channel;
+      input.setAttribute("aria-label", this.t(`audio.${channel}`));
+      const output = element("output", "", `${Math.round(Number(input.value) * 100)}%`);
+      input.setAttribute("aria-valuetext", output.value);
+      input.addEventListener("input", () => {
+        const level = Number(input.value);
+        output.value = `${Math.round(level * 100)}%`;
+        input.setAttribute("aria-valuetext", output.value);
+        this.dispatch({ type: "settings", settings: {
+          ...this.state.settings, audio: { ...this.state.settings.audio, [channel]: level },
+        } });
+      });
+      row.append(input, output);
+      mixer.append(row);
+    }
+    panel.append(mixer);
     this.back(panel);
   }
 

@@ -63,7 +63,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     cdp = await openPage(browser.port, origin, { width: 1440, height: 1000 });
     await until(cdp, "Boolean(window.korovany)", Boolean, 30_000);
     const save = createCampaign({ seed: "story-browser", faction: "guard", runId: "story-browser-run" }).serialize();
-    const settings: Settings = { language: "en", quality: "high", reducedMotion: false, muted: false };
+    const settings: Omit<Settings, "audio"> = { language: "en", quality: "high", reducedMotion: false, muted: false };
     await evaluate(cdp, `(() => {
       localStorage.setItem(${JSON.stringify(storageKeys.campaign)}, ${JSON.stringify(JSON.stringify(save))});
       localStorage.setItem(${JSON.stringify(storageKeys.settings)}, ${JSON.stringify(JSON.stringify(settings))});
