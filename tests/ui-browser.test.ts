@@ -81,9 +81,20 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
   }
 
   async function closeTab(page: CdpSession): Promise<void> {
-    await page.send("Page.close");
+    if (!browser) throw new Error("Browser is not running.");
+    const { targetInfo } = await page.send<{ targetInfo: { targetId: string } }>("Target.getTargetInfo");
+    // Ask the browser to close the target, not a renderer whose reply socket is closing.
+    const response = await fetch(`http://127.0.0.1:${browser.port}/json/close/${targetInfo.targetId}`);
+    expect(response.ok).toBe(true);
     page.close();
     pages.delete(page);
+    const deadline = Date.now() + 30_000;
+    while (true) {
+      const targets = await (await fetch(`http://127.0.0.1:${browser.port}/json/list`)).json() as { id: string }[];
+      if (!targets.some(target => target.id === targetInfo.targetId)) break;
+      if (Date.now() >= deadline) throw new Error(`Browser did not close owned tab ${targetInfo.targetId}.`);
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
   }
 
   beforeAll(async () => {
