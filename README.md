@@ -58,6 +58,8 @@ directory.
 Browser-enabled runs execute test files sequentially: the engine's CDP launcher
 uses software WebGL, so concurrent renderers and simulation suites otherwise
 compete for CPU time. Ordinary headless unit-test runs remain parallel.
+Long gameplay waits keep their tick-count assertions but allow up to 60 seconds
+for software rendering. These functional scenarios are not GPU benchmarks.
 
 The production game is written to `dist`. Serve that directory over HTTP; opening
 `index.html` directly with `file://` is not supported. Assets use relative paths,
