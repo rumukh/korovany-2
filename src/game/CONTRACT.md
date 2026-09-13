@@ -29,8 +29,8 @@ The exception is `step({ narrative: command })`: it is a paused transaction and
 never increments the tick or advances movement, timers, projectiles, RNG, the
 convoy or hostile AI. Narrative input is exclusive of combat input. Valid
 transactions clear the Aegis intent resource, including refused stale choices.
-An open conversation also blocks ordinary combat ticks until a `close` command
-or the offered `leave` choice. The shell may therefore submit dialogue and
+An open conversation or inspection also blocks ordinary combat ticks until a
+`close` command (or the conversation's offered `leave` choice). The shell may therefore submit dialogue and
 journal commands while its fixed-step loop is paused.
 `snapshot` returns an independent plain object. Its world is immutable by contract
 for the lifetime of that run; renderer can cache scenery by `world.id`.
@@ -60,18 +60,33 @@ version and restore that exact generator, preserving v1 geometry and hashes.
 `GameSnapshot.version` remains the presentation protocol version 1, not the
 world/save version. `GameSnapshot.narrative` is absent for v1, present for v2.
 
-## The Unwritten Road
+## The Hollow Road
 
-The v2 campaign keeps the conquest intact and adds five sequential main chapters,
-eight independent three-stage branching local quests, and twenty authored NPCs
-across the eight regions. Main chapter completion opens the next investigation;
-side quests may be done in any order. Investigations require actual proximity
-inspection of ruins, shrines and relevant landmarks, not just talking through a
-list of choices. Three mutually exclusive final settlements are available after
-the main investigation and military supply prerequisites. A choice can be made
-before the commander dies, or postponed while resolving local stories.
+The expanded campaign keeps the conquest intact and adds five sequential main
+chapters, eight local quests with different investigation lengths and witnesses,
+and twenty authored NPCs across eight regions. Main chapter completion opens the
+next investigation; side quests may be started in any order. Inspecting a relevant
+location records the evidence and opens a paused reading scene. Inspection
+snapshots expose the location, title and full text; closing the scene does not
+remove its evidence from the journal. Revisiting a place cannot grant evidence or
+rewards twice.
 
-V2 victory requires **both** a chosen final settlement and the defeated fortress
+The story concerns a convoy's missing crew, a voice that imitates the dead, and
+Commander Raut's trade in protective black glass. It does not add monster combat,
+a day/night system or simulated village populations. Local outcomes are recorded
+narrative events; they change testimony, reputation and available final plans,
+not unimplemented combat bonuses.
+
+Three mutually exclusive final plans follow the investigation and military
+supply prerequisites. Three Bells additionally requires the `bell-mourn` and
+`stag-dependents` alliances. Its reply explains the missing decisions; refusing
+those alliances leaves the other two plans available. Prerequisites are checked
+both when choosing and chronologically when replaying a save. A player may agree
+on a plan before the commander dies, or postpone the choice to finish local work.
+The selected plan is explicitly a commitment, not a completed ritual. Its actual
+epilogue appears only after the commander's defeat.
+
+V2 victory requires **both** a chosen final plan and the defeated fortress
 commander. Boss death alone does not freeze an unresolved story. Final choice
 after boss death completes the expedition without a combat tick; choosing first
 leaves the world playable until the boss dies. Defeat and terminal reward rules
@@ -80,10 +95,17 @@ otherwise remain unchanged. V1 boss victory is unchanged.
 Public `NarrativeInput` commands are `talk`, `choose`, `close`, `inspect`, `track`
 and `travel`, with exact fields in `narrative-types.ts`. Map T/talk to
 `narrative.interaction`; held E remains military capture/repair/transfer/rest.
-NPCs near Roadward are available immediately. Dialogue has repeatable local,
-belief and campaign topics as well as gated quest replies. `leave` explicitly
-defers a decision. Decisions change civic reputation, future dialogue and the
-final epilogue; the military faction selected at creation is a separate system.
+NPCs near Roadward are available immediately. Each has authored questions about
+local matters and their own experience; only Mara, Ren and Elin offer the military
+status topic. If several quests need the same witness, the player chooses a quest
+topic before seeing its prompt and replies. A local topic never offers answers to
+an unseen quest prompt. Raw commands cannot bypass that topic selection.
+
+Every action separates the player's first-person journal entry from the NPC's
+spoken response. Revisited quest-givers respond to their own latest resolution,
+not to unrelated events elsewhere. Conditional stage prompts remember particular
+earlier choices. `leave` explicitly defers a decision. Civic reputation is separate
+from the military faction selected at creation.
 
 The snapshot is authoritative: render both languages from localized fields,
 only offer returned choices, respect their `enabled` and `reason`, and show
@@ -106,11 +128,18 @@ abandon the convoy or travel to undiscovered/non-travel locations.
 Narrative state lives inside Aegis's `KorovanyCampaign` resource. A bounded
 ordered journal of authored action IDs derives quest stages, exclusive outcomes,
 reputation and facts; a checked one-time reward ledger matches completions.
-Only IDs, discovery, current dialogue/topic, tracking and a notice code are saved,
-not translated prose. Restoration rejects unknown IDs, duplicate/out-of-order
-actions, contradictory branches, missing evidence discoveries, invalid topics,
-out-of-range open conversations, stale intent and bypassed military gates.
-Conversations survive exact save/resume without advancing time.
+Only IDs, discovery, current dialogue/topic, current inspection/evidence IDs,
+tracking and a notice code are saved, not translated prose. Restoration rejects
+unknown IDs, duplicate/out-of-order actions, contradictory branches, missing
+evidence discoveries, invalid topics, out-of-range scenes, simultaneous dialogue
+and inspection, stale intent and bypassed military/alliance gates. Both kinds of
+reading scene survive exact save/resume without advancing time.
+
+The Hollow Road uses narrative state version **2**, independently of the world
+and snapshot protocol versions. Previous story state is deliberately unsupported;
+start a new campaign rather than reinterpret old choices. Profile and settings
+storage are unchanged. Explicit military-only v1 worlds remain an independent
+simulation mode, not a migration path for the old story.
 
 ## Simulation and persistence
 

@@ -144,7 +144,10 @@ export function resolveOutcome(world: World, s: CampaignData): void {
   if (s.player.hp <= 0) { s.phase = 'defeat'; s.player.state = 'dead'; }
   else if (s.fortress.bossDefeated && narrativeResolved(s)) s.phase = 'victory';
   if (s.phase !== 'playing') {
-    if (s.narrative) s.narrative.dialogue = null;
+    if (s.narrative) {
+      s.narrative.dialogue = null;
+      s.narrative.inspection = null;
+    }
     s.rewards = {
       runId: s.runId, claimed: false, victory: s.phase === 'victory',
       renown: (s.phase === 'victory' ? 60 : 5) + s.outposts.filter(p => p.owner === 'player').length * 10 + Math.floor(s.player.kills / 3),

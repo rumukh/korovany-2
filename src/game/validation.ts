@@ -88,7 +88,9 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
   shape(baseRaw, template, 'campaign');
   const s = baseRaw;
   if (blueprint.version === 2) s.narrative = validateNarrativeState(rawNarrative, blueprint, s);
-  if (input.narrative || (s.narrative?.dialogue && Object.keys(input).length > 0)) throw new Error('Saved conversation contains stale intent');
+  if (input.narrative || ((s.narrative?.dialogue || s.narrative?.inspection) && Object.keys(input).length > 0)) {
+    throw new Error('Saved story scene contains stale intent');
+  }
   same(s.seed, initial.seed, 'seed'); same(s.runId, initial.runId, 'run ID');
   same(s.faction, initial.faction, 'faction'); same(s.worldId, blueprint.id, 'world ID');
   oneOf(s.phase, ['playing', 'victory', 'defeat'], 'phase');
@@ -216,7 +218,9 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
   if (s.phase === 'playing' && (p.hp === 0 || (s.fortress.bossDefeated && narrativeResolved(s)))) throw new Error('Invalid playing outcome');
   if (s.phase === 'defeat' && (p.hp !== 0 || p.state !== 'dead')) throw new Error('Invalid defeat');
   if (s.phase === 'victory' && (p.hp <= 0 || !s.fortress.bossDefeated || !s.fortress.unlocked || !narrativeResolved(s))) throw new Error('Invalid victory');
-  if (s.phase !== 'playing' && s.narrative?.dialogue) throw new Error('Terminal save contains an open conversation');
+  if (s.phase !== 'playing' && (s.narrative?.dialogue || s.narrative?.inspection)) {
+    throw new Error('Terminal save contains an open story scene');
+  }
   if (s.rewards) {
     same(s.rewards.runId, s.runId, 'reward run ID'); same(s.rewards.claimed, false, 'reward claim');
     same(s.rewards.victory, s.phase === 'victory', 'reward outcome');

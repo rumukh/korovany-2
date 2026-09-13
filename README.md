@@ -1,18 +1,25 @@
-# Korovany II: The Unwritten Road
+# Korovany II: The Hollow Road / Глухой тракт
 
 A standalone, single-player 3D action campaign built on
 [Aegis Engine](https://github.com/rumukh/aegis-engine), and a sequel to
 [Korovany](https://github.com/rumukh/korovany).
 
-Take the road as a forest elf, palace guard, or villain. Villages are vanishing
-from the toll ledgers, and the supply wagons no longer stop for people who
-officially do not exist. Investigate the missing names, listen to conflicting
-witnesses, and decide who should control the borderlands' roads.
+You are a captain hired to escort a convoy. Mara's wagons have returned with their
+grain but without their people. Hidden beneath the sacks is black ward-glass:
+the first evidence connecting the cargo to disappearances along the road.
+
+The Caller mimics the voices of the dead and draws people away from the road.
+Maintained bells and unbroken salt keep it out; answering a familiar voice can
+lead someone beyond that protection. Yet the fortress convoys still travel
+where other crews disappear. Follow the cargo, compare accounts and discover
+what makes those wagons different.
 
 An original branching narrative sits alongside the physical convoy campaign:
 fight for supply posts, raid a rival caravan, and escort cargo to open the final
-stronghold. Your conversations and investigations determine the road's future;
-military victory alone does not finish a new story campaign.
+stronghold. The supernatural threat is told through authored evidence and
+testimony, not a new monster-hunting mode or a dynamic night simulation.
+Choosing the finale is a plan, not an instant ending: its consequences appear
+only after the commander is defeated.
 
 ## Run locally
 
@@ -55,15 +62,17 @@ local: no account, backend, external font service, or asset CDN is required.
 
 ## The campaign
 
-Choose a faction and a world seed. Elves fight at range, guards can hold their
-ground with a bulwark, and villains excel at close-range cleaves.
+Choose a banner and a world seed. Woodland elves fight at range, palace guards
+can hold their ground with a bulwark, and the Iron company excels at close-range
+cleaves. These banners select the existing combat and convoy loadouts.
 
 1. Defeat the defenders at two of the three supply posts, then hold **E** inside
    the capture circle to claim them.
 2. Destroy the rival caravan and collect its supplies.
 3. Bring supplies to your convoy. Deliver 30 cargo to each of two captured posts;
    supplying the third also weakens the final reinforcements.
-4. Defeat the commander at the unlocked fortress.
+4. Defeat Commander Raut at the unlocked fortress. Complete the main
+   investigation and choose your finale plan to finish the campaign.
 
 The convoy follows actual roads and crosses the river at the bridge. Use its
 orders to move it, hold it safely behind the fighting, or send it home. A damaged
@@ -77,21 +86,39 @@ Russian is the default language; English is available in the game.
 
 ## The borderlands and their stories
 
-New campaigns explore a **980 x 980 metre** continuous world, **49 times the area**
+The campaign explores a **980 x 980 metre** continuous world, **49 times the area**
 of the original military map. Eight named regions contain 24 authored locations:
 settlements, inns, ruins, shrines and landmarks. Interconnected roads and three
-bridges connect the heartlands to Greenmarch, Fenlands, Saltcoast, Ashsteppe,
-Crownlands, Frostspine and Hollowvale. The original military sites remain in the
-heartlands.
+bridges connect The Heartlands / Срединные земли to Greenmarch / Зелёное
+пограничье, The Fens / Топи, The Salt Coast / Соляной берег, The Ash Steppe /
+Пепельная степь, Crownlands / Коронные земли, Frostspine / Инейный хребет and
+Hollowvale / Глухая долина. The original military sites remain in The Heartlands.
 
 The campaign has **five main chapters**, **eight branching side quests**, **20
-named NPCs**, and **three mutually exclusive endings**. Begin with Mara, the road
-keeper near your home convoy. **T** talks to a nearby resident
+named NPCs**, and **three mutually exclusive endings**. Begin with Mara at
+Roadward Inn / Трактовый двор, near your home convoy. **T** talks to a nearby resident
 or examines a landmark; the on-screen prompt tells you what is available.
-Conversations pause the simulation. Choose a response with the mouse or **1-9**;
-**Escape** leaves without selecting a response. Residents offer local stories,
+Conversations and inspections pause the simulation. Inspected evidence opens
+in a scrollable reading overlay, rather than only flashing in a HUD notice.
+Choose a dialogue response with the mouse or **1-9**; **Escape** leaves without
+selecting a response. In an inspection, **Continue** or **Escape** closes the
+reading panel and resumes play. Residents offer local stories,
 testimony and decisions with persistent consequences, not repeatable reward
 dispensers.
+
+<details>
+<summary>Ending requirements (spoilers)</summary>
+
+The three endings are **Three Bells / Три колокола**, **The Cloister's Prisoner /
+Узник скита**, and **Broken Glass / Разбитое стекло**. Three Bells requires
+the completed `bell-mourn` and `stag-dependents` side outcomes: the allies must
+actually be secured, not merely promised. The other two plans can be chosen
+without completing side quests. The final epilogue follows military victory.
+
+</details>
+
+Reputation tracks the Border Villages / Приграничные общины, Crown Garrison /
+Коронный гарнизон and Candlekeepers / Свечники.
 
 **J** opens the quest journal. It records objectives, testimony, outcomes and
 faction reputation. Track a quest to mark its destination on the atlas and show
@@ -116,7 +143,7 @@ unrestricted teleport out of combat.
 | Q | Dodge |
 | F | Faction ability |
 | E (hold) | Contextual capture, transfer, repair, or rest |
-| T | Talk to a nearby resident / examine a landmark |
+| T | Talk to a nearby resident / open an inspection reading panel |
 | J | Quest journal and tracking |
 | 1-9 | Select a dialogue response |
 | C | Cycle convoy orders |
@@ -136,8 +163,14 @@ rewards are claimed once per run ID. Clearing browser site data removes these
 saves; private browsing or blocked storage can prevent persistence.
 
 Story saves also retain discoveries, testimony, reputation, quest outcomes,
-tracked objectives and open conversations. Version-one saves keep their original
-world and military-only victory rules; a new campaign uses the expanded world.
+tracked objectives, open conversations and open inspections. Continuing a save
+with an open reading panel or conversation returns to that paused scene.
+
+This campaign uses **narrative version 2**. Earlier narrative saves are incompatible
+and are rejected, not migrated or automatically deleted. Start a new campaign to
+play The Hollow Road. This replaces the campaign record but retains the separate
+profile, permanent upgrades and settings. Damaged or unsupported records produce
+a visible storage warning rather than silently loading a different campaign.
 
 ## Architecture
 

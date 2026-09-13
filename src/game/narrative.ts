@@ -1,4 +1,4 @@
-import { CIVIC_FACTIONS, ENDINGS, NPCS, QUESTS, text, type CivicFaction, type EndingId,
+import { CIVIC_FACTIONS, ENDINGS, ENDING_EPILOGUES, NPCS, QUESTS, STORY_TITLE, text, type CivicFaction, type EndingId,
   type StoryAction, type StoryNpc, type StoryQuest, type StoryStage } from './narrative-data';
 import { assertRecord } from './profile';
 import type { ActorData, CampaignData } from './state';
@@ -19,6 +19,8 @@ const NOTICES = {
     'Этот ответ больше недоступен. Откройте текущий разговор и выберите предложенный ответ.'),
   conquest: text('First capture and supply two posts, and destroy the raiding caravan. The commander may be defeated before or after this choice.',
     'Сначала захватите и снабдите две заставы и уничтожьте вражеский караван. Командира можно победить до или после этого выбора.'),
+  allies: text('This plan needs allies you have not secured. The reply lists the required decisions and their quests.',
+    'Для этого плана не хватает союзников. Под ответом указаны задания и решения, которые обеспечат их помощь.'),
   source: text('Travel starts at a discovered road stop marked for fast travel. Stand within 7m of its road node.',
     'Переезд начинается у открытой дорожной стоянки с быстрым переездом. Встаньте не дальше 7 м от её дорожного узла.'),
   convoy: text('Bring the convoy within 7m of you and this road stop. The whole expedition travels together.',
@@ -33,18 +35,19 @@ const NOTICES = {
     'Вы с обозом прибыли вместе. Обоз получил приказ стоять.'),
   inspected: text('Place examined. New evidence, if relevant to an active investigation, is recorded in the journal.',
     'Место осмотрено. Новые улики для активных расследований записаны в журнал.'),
-  paused: text('Conversation paused the expedition. Close the dialogue to resume movement and combat.',
-    'Разговор приостановил экспедицию. Закройте диалог, чтобы продолжить движение и бой.'),
+  paused: text('Conversation or inspection paused the game. Close the scene to resume movement and combat.',
+    'Разговор или осмотр приостановил игру. Закройте сцену, чтобы продолжить движение и бой.'),
 } satisfies Record<string, LocalizedText>;
 type NoticeId = keyof typeof NOTICES;
 
 /** Only compact, validated IDs are saved; prose and derived quest state come from authored data. */
 export interface NarrativeState {
-  version: 1;
+  version: 2;
   journal: string[];
   rewardedQuestIds: string[];
   discovered: string[];
   dialogue: { npcId: string; topicId: string | null } | null;
+  inspection: { locationId: string; actionIds: string[] } | null;
   trackedQuestId: string | null;
   notice: NoticeId | null;
 }
@@ -57,8 +60,10 @@ interface StoryProgress {
   quests: Map<string, QuestProgress>;
   reputation: Record<CivicFaction, number>;
   ending: EndingId | null;
+  actions: Set<string>;
 }
 const QUEST_BY_ID = new Map(QUESTS.map(q => [q.id, q]));
+const QUEST_TOPICS = new Map(QUESTS.map(q => [`quest-${q.id}`, q.id]));
 const NPC_BY_ID = new Map(NPCS.map(n => [n.id, n]));
 const ACTION_BY_ID = new Map(QUESTS.flatMap(q => q.stages.flatMap((stage, index) =>
   stage.actions.map(action => [action.id, { quest: q, stage, index, action }] as const))));
@@ -75,22 +80,41 @@ function unlocked(progress: StoryProgress, quest: StoryQuest): boolean {
 function conquestReady(s: CampaignData): boolean {
   return s.raidComplete && s.outposts.filter(p => p.owner === 'player' && p.supplied).length >= 2;
 }
-function gate(action: StoryAction, s: CampaignData): NoticeId | null {
-  return action.gate === 'conquest' && !conquestReady(s) ? 'conquest' : null;
+function gate(action: StoryAction, s: CampaignData, journal = s.narrative?.journal ?? []): NoticeId | null {
+  if (action.gate === 'conquest' && !conquestReady(s)) return 'conquest';
+  return action.requiresActions?.some(id => !journal.includes(id)) ? 'allies' : null;
+}
+function gateText(action: StoryAction, s: CampaignData, reason: NoticeId): LocalizedText {
+  if (reason !== 'allies') return NOTICES[reason];
+  const journal = s.narrative!.journal;
+  const missing = action.requiresActions!.filter(id => !journal.includes(id)).map(id => {
+    const { quest, action: required } = ACTION_BY_ID.get(id)!;
+    const resolved = quest.stages.at(-1)!.actions.some(action => journal.includes(action.id));
+    return resolved ? text(
+      `${quest.title.en}: your decision ruled out this help. This plan is no longer available in this campaign.`,
+      `${quest.title.ru}: принятое решение исключило эту помощь. В этой кампании данный план уже недоступен.`) : text(
+      `${quest.title.en}: secure this agreement — ${required.text.en}`,
+      `${quest.title.ru}: договоритесь о помощи — ${required.text.ru}`);
+  });
+  return text(missing.map(line => line.en).join('\n'), missing.map(line => line.ru).join('\n'));
 }
 
 /** Replay makes branch exclusivity, ordering, reputation and completion rewards one source of truth. */
 function progress(state: NarrativeState): StoryProgress {
   const result: StoryProgress = {
     quests: new Map(QUESTS.map(quest => [quest.id, { quest, count: 0, entries: [] }])),
-    reputation: { commons: 0, registry: 0, lanterns: 0 }, ending: null,
+    reputation: { commons: 0, registry: 0, lanterns: 0 }, ending: null, actions: new Set(),
   };
   for (const id of state.journal) {
     const entry = ACTION_BY_ID.get(id);
     if (!entry) throw new Error('Unknown narrative journal entry');
     const q = result.quests.get(entry.quest.id)!;
     if (q.count !== entry.index || !unlocked(result, entry.quest)) throw new Error('Out-of-order or repeated narrative action');
+    if (entry.action.requiresActions?.some(id => !result.actions.has(id))) {
+      throw new Error('Narrative decision precedes its required allies');
+    }
     q.count++;
+    result.actions.add(id);
     q.entries.push(entry.action);
     for (const faction of CIVIC_FACTIONS) result.reputation[faction.id] += entry.action.reputation?.[faction.id] ?? 0;
     if (entry.action.ending) {
@@ -106,12 +130,26 @@ export function createNarrative(world: WorldBlueprint): NarrativeState {
   if (ACTION_BY_ID.size !== QUESTS.reduce((sum, q) => sum + q.stages.reduce((n, st) => n + st.actions.length, 0), 0)) {
     throw new Error('Duplicate authored narrative action');
   }
-  for (const npc of NPCS) npcPosition(world, npc);
+  for (const npc of NPCS) {
+    npcPosition(world, npc);
+    for (const reaction of npc.reactions ?? []) {
+      if (!ACTION_BY_ID.has(reaction.after)) throw new Error(`Unknown narrative reaction ${reaction.after}`);
+    }
+  }
   for (const quest of QUESTS) for (const stage of quest.stages) {
     if (stage.kind === 'inspect') location(world, stage.at);
     else if (!NPC_BY_ID.has(stage.at)) throw new Error(`Unknown narrative speaker ${stage.at}`);
+    for (const action of stage.actions) {
+      for (const required of action.requiresActions ?? []) {
+        if (!ACTION_BY_ID.has(required) || required === action.id) throw new Error(`Invalid narrative prerequisite ${required}`);
+      }
+    }
+    for (const variant of stage.variants ?? []) {
+      if (!ACTION_BY_ID.has(variant.after)) throw new Error(`Unknown narrative prompt condition ${variant.after}`);
+    }
   }
-  return { version: 1, journal: [], rewardedQuestIds: [], discovered: [], dialogue: null, trackedQuestId: 'missing-names', notice: null };
+  return { version: 2, journal: [], rewardedQuestIds: [], discovered: [], dialogue: null, inspection: null,
+    trackedQuestId: 'missing-names', notice: null };
 }
 
 function npcPosition(world: WorldBlueprint, npc: StoryNpc): Vec2 {
@@ -151,6 +189,32 @@ function availableStages(p: StoryProgress, npcId: string): { quest: StoryQuest; 
     const stage = quest.stages[q.count];
     return unlocked(p, quest) && stage?.kind === 'talk' && stage.at === npcId ? [{ quest, stage }] : [];
   });
+}
+function selectedStage(s: CampaignData, p: StoryProgress, npcId: string): { quest: StoryQuest; stage: StoryStage } | null {
+  const stages = availableStages(p, npcId);
+  const topic = s.narrative!.dialogue!.topicId;
+  if (topic === null) return stages.length === 1 ? stages[0]! : null;
+  const questId = QUEST_TOPICS.get(topic) ?? ACTION_BY_ID.get(topic)?.quest.id;
+  return stages.find(({ quest }) => quest.id === questId) ?? null;
+}
+function latestReaction<T extends { after: string }>(options: T[] | undefined, p: StoryProgress): T | undefined {
+  for (const id of [...p.actions].reverse()) {
+    const reaction = options?.find(reaction => reaction.after === id);
+    if (reaction) return reaction;
+  }
+  return undefined;
+}
+function stagePrompt(stage: StoryStage, p: StoryProgress): LocalizedText {
+  return latestReaction(stage.variants, p)?.prompt ?? stage.prompt;
+}
+function spokenPrompt(s: CampaignData, p: StoryProgress, stage: StoryStage): LocalizedText {
+  const prompt = stagePrompt(stage, p);
+  if (!stage.actions.some(action => action.ending)) return prompt;
+  const military = militaryText(s);
+  return text(`${prompt.en}\n\n${military.en}`, `${prompt.ru}\n\n${military.ru}`);
+}
+function hasWarTopic(npc: StoryNpc): boolean {
+  return npc.id === 'mara' || npc.id === 'ren' || npc.id === 'elin';
 }
 function finishAction(s: CampaignData, p: StoryProgress, quest: StoryQuest, action: StoryAction): void {
   const state = s.narrative!;
@@ -222,7 +286,7 @@ export function applyNarrative(s: CampaignData, world: WorldBlueprint, enemies: 
   if (!state) throw new Error('Narrative commands are not supported by legacy campaigns');
   const fail = (reason: NoticeId): void => { state.notice = reason; };
   state.notice = null;
-  if (input.type === 'close') { state.dialogue = null; return; }
+  if (input.type === 'close') { state.dialogue = null; state.inspection = null; return; }
   if (input.type === 'track') {
     if (input.questId !== null && !QUEST_BY_ID.has(input.questId)) { fail('unknown'); return; }
     state.trackedQuestId = input.questId;
@@ -241,6 +305,7 @@ export function applyNarrative(s: CampaignData, world: WorldBlueprint, enemies: 
     Object.assign(s.convoy, points.convoy, { mode: 'hold', destination: null, route: [] });
     s.followTimer = 0;
     state.dialogue = null;
+    state.inspection = null;
     fail('traveling');
     discoverNarrative(s, world);
     return;
@@ -252,11 +317,16 @@ export function applyNarrative(s: CampaignData, world: WorldBlueprint, enemies: 
     if (blocked) { fail(blocked); return; }
     discoverNarrative(s, world);
     state.dialogue = null;
-    for (const quest of QUESTS) {
+    const evidence = QUESTS.flatMap(quest => {
       const q = p.quests.get(quest.id)!;
       const stage = quest.stages[q.count];
-      if (unlocked(p, quest) && stage?.kind === 'inspect' && stage.at === at.id) finishAction(s, p, quest, stage.actions[0]!);
-    }
+      return unlocked(p, quest) && stage?.kind === 'inspect' && stage.at === at.id ?
+        [{ quest, action: stage.actions[0]! }] : [];
+    });
+    const blockedEvidence = evidence.map(({ action }) => gate(action, s)).find(reason => reason !== null);
+    if (blockedEvidence) { fail(blockedEvidence); return; }
+    for (const { quest, action } of evidence) finishAction(s, p, quest, action);
+    state.inspection = { locationId: at.id, actionIds: evidence.map(({ action }) => action.id) };
     fail('inspected');
     return;
   }
@@ -267,21 +337,29 @@ export function applyNarrative(s: CampaignData, world: WorldBlueprint, enemies: 
   if (input.type === 'talk') {
     discoverNarrative(s, world);
     state.dialogue = { npcId: npc.id, topicId: null };
+    state.inspection = null;
     return;
   }
   if (state.dialogue?.npcId !== npc.id) { fail('stale'); return; }
+  const questTopic = QUEST_TOPICS.get(input.choiceId);
+  if (questTopic) {
+    if (!availableStages(p, npc.id).some(({ quest }) => quest.id === questTopic)) { fail('stale'); return; }
+    state.dialogue.topicId = input.choiceId;
+    return;
+  }
   if (input.choiceId === 'topic-local' || input.choiceId === 'topic-belief' || input.choiceId === 'topic-war') {
+    if (input.choiceId === 'topic-war' && !hasWarTopic(npc)) { fail('stale'); return; }
     state.dialogue.topicId = input.choiceId;
     return;
   }
   if (input.choiceId === 'leave') { state.dialogue = null; return; }
-  const offered = availableStages(p, npc.id).flatMap(({ quest, stage }) =>
-    stage.actions.map(action => ({ quest, action }))).find(a => a.action.id === input.choiceId);
-  if (!offered) { fail('stale'); return; }
-  const locked = gate(offered.action, s);
+  const selected = selectedStage(s, p, npc.id);
+  const action = selected?.stage.actions.find(action => action.id === input.choiceId);
+  if (!selected || !action) { fail('stale'); return; }
+  const locked = gate(action, s);
   if (locked) { fail(locked); return; }
-  finishAction(s, p, offered.quest, offered.action);
-  state.dialogue.topicId = offered.action.id;
+  finishAction(s, p, selected.quest, action);
+  state.dialogue.topicId = action.id;
 }
 
 function inspectable(at: WorldLocation): boolean {
@@ -293,14 +371,19 @@ function questSnapshot(p: StoryProgress, q: QuestProgress, discovered: string[])
   const done = completed(q);
   const stage = quest.stages[q.count];
   const ready = unlocked(p, quest);
-  const previous = quest.requires ? QUEST_BY_ID.get(quest.requires)! : null;
-  const target = !ready && previous ? p.quests.get(previous.id)!.quest.stages[p.quests.get(previous.id)!.count] : stage;
+  let prerequisite = quest;
+  while (!unlocked(p, prerequisite)) prerequisite = QUEST_BY_ID.get(prerequisite.requires!)!;
+  const target = ready ? stage : prerequisite.stages[p.quests.get(prerequisite.id)!.count];
   const npc = target?.kind === 'talk' ? NPC_BY_ID.get(target.at)! : null;
   return {
-    id: quest.id, title: quest.title, description: quest.description, kind: quest.kind,
+    id: quest.id, title: quest.title,
+    description: ready ? quest.description : text(
+      'This part of the investigation has not begun. Follow the current lead before looking ahead.',
+      'Эта часть расследования ещё не началась. Сначала разберитесь с текущей зацепкой.'),
+    kind: quest.kind,
     status: done ? 'completed' : q.count > 0 ? 'active' : 'available',
-    objective: done ? text('Resolved. Your choice remains part of the road.', 'Завершено. Ваш выбор останется частью дороги.') :
-      !ready && previous ? text(`First resolve ${previous.title.en}.`, `Сначала завершите: ${previous.title.ru}.`) : stage!.objective,
+    objective: done ? text('Completed. The outcome is recorded below.', 'Задание завершено. Результат записан ниже.') :
+      !ready ? text(`First complete ${prerequisite.title.en}.`, `Сначала завершите: ${prerequisite.title.ru}.`) : stage!.objective,
     targetId: done ? null : npc && !discovered.includes(npc.locationId) ? npc.locationId : target?.at ?? null,
     entries: q.entries.map(a => a.entry), outcome: done ? q.entries.at(-1)!.entry : null,
   };
@@ -308,75 +391,73 @@ function questSnapshot(p: StoryProgress, q: QuestProgress, discovered: string[])
 function militaryText(s: CampaignData): LocalizedText {
   if (!conquestReady(s)) return NOTICES.conquest;
   if (!s.fortress.bossDefeated) return text(
-    'Two supplied posts and the broken raiding caravan make a settlement possible. The commander still holds the fortress. Resolve the final page whenever you are ready; both victories are required.',
-    'Две снабжённые заставы и разгромленный караван позволяют заключить соглашение. Командир ещё в крепости. Последнюю страницу можно решить, когда будете готовы; нужны обе победы.');
+    'The supply posts are ours and Raut has lost his caravan. He still holds the fortress. You can agree on a plan at the Old Cloister now, but cannot carry it out while he controls the glass.',
+    'Заставы снабжены, караван Раута разбит. Сам он ещё в крепости. План можно выбрать в Старом скиту уже сейчас, но исполнить его не выйдет, пока стекло у Раута.');
   return text(
-    'The commander is defeated. The expedition remains open until you choose the road\'s future at the Last Archive. Finish any side investigations before that final choice.',
-    'Командир побеждён. Экспедиция продолжается до выбора будущего дороги в Последнем архиве. Завершите побочные расследования до последнего решения.');
+    'Raut is defeated. Decide what to do with the glass at the Old Cloister. That decision will end the campaign: finish any local business before making it.',
+    'Раут побеждён. Осталось решить в Старом скиту, что делать со стеклом. Этот выбор завершит кампанию: закончите местные дела до разговора с Элином.');
 }
 function summaryText(s: CampaignData, p: StoryProgress, current: StoryQuest | undefined): LocalizedText {
   if (!current) return s.fortress.bossDefeated ? text(
-    'The commander is defeated and the road has a future. Your settlement remembers the decisions that brought it here.',
-    'Командир побеждён, у дороги есть будущее. Ваше соглашение сохранит память о решениях, которые к нему привели.') : text(
-    'The road\'s future is chosen. Defeat the fortress commander to secure it and complete the expedition. Local investigations remain open until then.',
-    'Будущее дороги выбрано. Победите командира крепости, чтобы защитить его и завершить экспедицию. До этого местные расследования остаются открыты.');
+    'Raut is dead. The people who agreed to help have carried out your plan. The account below records what followed.',
+    'Раут мёртв. Те, кто согласился помочь, исполнили ваш план. Ниже записано, что из этого вышло.') : text(
+    'The plan is agreed, not carried out. Defeat Raut at the fortress to complete the campaign. You can still finish local quests before that battle.',
+    'План согласован, но ещё не исполнен. Для завершения кампании победите Раута в крепости. До этого можно закончить местные задания.');
   const q = p.quests.get(current.id)!;
   const objective = current.stages[q.count]!.objective;
   const finalChoice = current.id === 'unwritten-road' && q.count === current.stages.length - 1;
   const lines = [current.description, objective];
   if (finalChoice) lines.push(militaryText(s));
   else if (s.fortress.bossDefeated) lines.unshift(text(
-    'The commander is defeated, but the investigation is unfinished. Continue the journal before choosing the road\'s future.',
-    'Командир побеждён, но расследование не окончено. Продолжите записи в журнале, прежде чем выбирать будущее дороги.'));
+    'Raut is defeated, but you still do not know enough to deal with the glass. Follow the investigation in the journal.',
+    'Раут побеждён, но вы ещё не знаете достаточно, чтобы разобраться со стеклом. Продолжите расследование по журналу.'));
   return text(lines.map(line => line.en).join('\n\n'), lines.map(line => line.ru).join('\n\n'));
 }
 function contextText(p: StoryProgress, npc: StoryNpc): LocalizedText {
-  const own = [...p.quests.values()].filter(q => completed(q) && q.quest.stages.at(-1)?.at === npc.id);
-  const main = [...p.quests.values()].filter(q => q.quest.kind === 'main' && completed(q)).at(-1);
-  const affected = own.at(-1) ?? main;
-  if (!affected) return npc.greeting;
-  const outcome = affected.entries.at(-1)!.entry;
-  const stance = p.reputation.commons > p.reputation.registry ? text(
-    'People say you hear households before offices.', 'Люди говорят, что вы слушаете семьи раньше контор.') :
-    p.reputation.registry > p.reputation.commons ? text(
-      'The clerks say you still believe the books can be repaired.', 'Писцы говорят, что вы ещё верите: книги можно исправить.') :
-      text('The borderland is watching what you choose to put in writing.', 'Пограничье смотрит, что вы решите записать.');
-  return text(`${npc.greeting.en}\n\n${outcome.en}\n\n${stance.en}`, `${npc.greeting.ru}\n\n${outcome.ru}\n\n${stance.ru}`);
+  const reaction = latestReaction(npc.reactions, p);
+  if (reaction) return reaction.text;
+  for (const id of [...p.actions].reverse()) {
+    const entry = ACTION_BY_ID.get(id)!;
+    if (entry.stage.at === npc.id && entry.index === entry.quest.stages.length - 1) return entry.action.response;
+  }
+  return npc.greeting;
 }
 function dialogueText(s: CampaignData, p: StoryProgress, npc: StoryNpc): LocalizedText {
   const topic = s.narrative!.dialogue!.topicId;
   if (topic === 'topic-local') return npc.local;
   if (topic === 'topic-belief') {
-    const context = contextText(p, npc);
-    return text(`${npc.belief.en}\n\n${context.en}`, `${npc.belief.ru}\n\n${context.ru}`);
+    return npc.belief;
   }
   if (topic === 'topic-war') return militaryText(s);
+  const selected = selectedStage(s, p, npc.id);
+  if (topic && QUEST_TOPICS.has(topic)) return spokenPrompt(s, p, selected!.stage);
   if (topic) {
     const action = ACTION_BY_ID.get(topic)!;
-    const next = availableStages(p, npc.id)[0]?.stage.prompt;
-    return next ? text(`${action.action.entry.en}\n\n${next.en}`, `${action.action.entry.ru}\n\n${next.ru}`) : action.action.entry;
+    const next = selected ? spokenPrompt(s, p, selected.stage) : null;
+    return next ? text(`${action.action.response.en}\n\n${next.en}`, `${action.action.response.ru}\n\n${next.ru}`) : action.action.response;
   }
-  const stages = availableStages(p, npc.id);
   const context = contextText(p, npc);
-  if (stages.length) return text(`${context.en}\n\n${stages[0]!.stage.prompt.en}`, `${context.ru}\n\n${stages[0]!.stage.prompt.ru}`);
+  if (selected) {
+    const prompt = spokenPrompt(s, p, selected.stage);
+    return text(`${context.en}\n\n${prompt.en}`, `${context.ru}\n\n${prompt.ru}`);
+  }
   return context;
 }
 function endingText(s: CampaignData, p: StoryProgress): LocalizedText | null {
   if (!p.ending) return null;
-  const root = p.quests.get('unwritten-road')!.entries.at(-1)!.entry;
+  const root = s.fortress.bossDefeated ? ENDING_EPILOGUES[p.ending] : p.quests.get('unwritten-road')!.entries.at(-1)!.entry;
   const notes = QUESTS.filter(q => q.kind === 'side').map(quest => {
     const q = p.quests.get(quest.id)!;
-    return completed(q) ? q.entries.at(-1)!.entry : text(
-      `${quest.title.en}: the dispute still waits for someone to hear it.`,
-      `${quest.title.ru}: спор ещё ждёт, когда его выслушают.`);
+    const outcome = completed(q) ? q.entries.at(-1)!.entry : quest.unresolved;
+    return text(`${quest.title.en}\n${outcome.en}`, `${quest.title.ru}\n${outcome.ru}`);
   });
   const mainChoices = QUESTS.filter(q => q.kind === 'main' && q.id !== 'unwritten-road')
     .map(q => p.quests.get(q.id)!.entries.at(-1)!.entry);
   const coda = s.fortress.bossDefeated ? text(
-    'With the commander defeated, your convoy carries the settlement beyond the archive. The road will remember both the people helped and the work left unfinished.',
-    'Командир побеждён, и обоз везёт решение за стены архива. Дорога запомнит и тех, кому помогли, и незавершённые дела.') : text(
-    'This future is chosen, not yet secured. Defeat the fortress commander to complete the expedition. You can still resolve side quests before that victory.',
-    'Это будущее выбрано, но ещё не защищено. Победите командира крепости, чтобы закончить экспедицию. До победы можно завершить побочные задания.');
+    'The convoy leaves the fortress. Those who survived still need food, escorts and a way home.',
+    'Обоз выходит из крепости. Тем, кто выжил, всё ещё нужны еда, охрана и дорога домой.') : text(
+    'This is the agreed plan, not its outcome. Defeat Raut to put it into effect. Local quests remain available until then.',
+    'Это согласованный план, а не его итог. Победите Раута, чтобы исполнить его. До этого местные задания остаются доступны.');
   const paragraphs = [ENDINGS[p.ending], root, ...mainChoices, ...notes, coda];
   return text(paragraphs.map(t => t.en).join('\n\n'), paragraphs.map(t => t.ru).join('\n\n'));
 }
@@ -387,10 +468,9 @@ export function narrativeSnapshot(s: CampaignData, world: WorldBlueprint, enemie
   const current = QUESTS.find(q => q.kind === 'main' && !completed(p.quests.get(q.id)!));
   const npcs: NpcSnapshot[] = NPCS.filter(n => state.discovered.includes(n.locationId)).map(npc => {
     const at = npcPosition(world, npc);
-    const done = [...p.quests.values()].some(q => completed(q) && q.quest.stages.at(-1)?.at === npc.id);
     return {
       ...at, heading: 0, id: npc.id, locationId: npc.locationId, name: npc.name, role: npc.role, faction: npc.faction,
-      activity: done ? text('Living with your decision; willing to discuss it', 'Живёт с вашим решением; готов обсудить его') : npc.activity,
+      activity: npc.activity,
       available: s.phase === 'playing' && interactionBlock(s, enemies, at, TALK_RADIUS) === null,
       questAvailable: availableStages(p, npc.id).length > 0,
     };
@@ -399,17 +479,22 @@ export function narrativeSnapshot(s: CampaignData, world: WorldBlueprint, enemie
   if (state.dialogue) {
     const npc = NPC_BY_ID.get(state.dialogue.npcId)!;
     const blocked = interactionBlock(s, enemies, npcPosition(world, npc), TALK_RADIUS);
-    const choices: DialogueChoice[] = availableStages(p, npc.id).flatMap(({ stage }) => stage.actions.map(a => {
+    const selected = selectedStage(s, p, npc.id);
+    const choices: DialogueChoice[] = (selected?.stage.actions ?? []).map(a => {
       const reason = blocked ?? gate(a, s);
-      return { id: a.id, text: a.text, enabled: reason === null, reason: reason ? NOTICES[reason] : null };
-    }));
+      return { id: a.id, text: a.text, enabled: reason === null, reason: reason ? gateText(a, s, reason) : null };
+    });
+    for (const { quest } of availableStages(p, npc.id)) {
+      if (quest.id === selected?.quest.id) continue;
+      choices.push({ id: `quest-${quest.id}`, text: quest.title, enabled: blocked === null, reason: blocked ? NOTICES[blocked] : null });
+    }
     for (const topic of [
-      { id: 'topic-local', text: text('Tell me about this place and its roads.', 'Расскажите об этом месте и его дорогах.') },
-      { id: 'topic-belief', text: text('What do you think of the people who govern the road?', 'Что вы думаете о тех, кто правит дорогой?') },
-      { id: 'topic-war', text: text('What still stands between this campaign and peace?', 'Что ещё отделяет этот поход от мира?') },
+      { id: 'topic-local', text: npc.localQuestion },
+      { id: 'topic-belief', text: npc.beliefQuestion },
+      ...(hasWarTopic(npc) ? [{ id: 'topic-war', text: text('What is left to do about the fortress?', 'Что осталось сделать с крепостью?') }] : []),
     ]) choices.push({ ...topic, enabled: blocked === null, reason: blocked ? NOTICES[blocked] : null });
     choices.push({
-      id: 'leave', text: text('Leave. I have other work before making any further decision.', 'Уйти. До следующего решения у меня есть другие дела.'),
+      id: 'leave', text: text('I need to go.', 'Мне пора.'),
       enabled: true, reason: null,
     });
     dialogue = { npcId: npc.id, name: npc.name, role: npc.role, text: dialogueText(s, p, npc), choices };
@@ -429,10 +514,18 @@ export function narrativeSnapshot(s: CampaignData, world: WorldBlueprint, enemie
     } : null;
   const travel = travelPlan(s, world, enemies);
   return {
-    title: text('THE UNWRITTEN ROAD', 'НЕНАПИСАННАЯ ДОРОГА'),
+    title: STORY_TITLE,
     chapter: current?.title ?? ENDINGS[p.ending!],
     summary: summaryText(s, p, current),
     npcs, quests: QUESTS.map(quest => questSnapshot(p, p.quests.get(quest.id)!, state.discovered)), dialogue,
+    inspection: state.inspection ? {
+      locationId: state.inspection.locationId,
+      title: location(world, state.inspection.locationId).name,
+      text: state.inspection.actionIds.length ? text(
+        state.inspection.actionIds.map(id => stagePrompt(ACTION_BY_ID.get(id)!.stage, p).en).join('\n\n'),
+        state.inspection.actionIds.map(id => stagePrompt(ACTION_BY_ID.get(id)!.stage, p).ru).join('\n\n'),
+      ) : location(world, state.inspection.locationId).description,
+    } : null,
     trackedQuestId: state.trackedQuestId, discovered: [...state.discovered],
     reputation: CIVIC_FACTIONS.map(f => ({ ...f, value: p.reputation[f.id] })),
     facts: state.journal.map(id => ACTION_BY_ID.get(id)!.action.entry),
@@ -466,8 +559,9 @@ export function validateNarrativeInput(value: unknown): NarrativeInput {
 
 export function validateNarrativeState(value: unknown, world: WorldBlueprint, s: CampaignData): NarrativeState {
   assertRecord(value, 'Narrative state');
-  const fields = ['version', 'journal', 'rewardedQuestIds', 'discovered', 'dialogue', 'trackedQuestId', 'notice'];
-  if (Object.keys(value).length !== fields.length || Object.keys(value).some(k => !fields.includes(k)) || value.version !== 1) {
+  if (value.version !== 2) throw new Error('Unsupported story version. Start a new campaign for The Hollow Road.');
+  const fields = ['version', 'journal', 'rewardedQuestIds', 'discovered', 'dialogue', 'inspection', 'trackedQuestId', 'notice'];
+  if (Object.keys(value).length !== fields.length || Object.keys(value).some(k => !fields.includes(k))) {
     throw new Error('Invalid narrative state fields/version');
   }
   const ids = (value: unknown, allowed: ReadonlySet<string>, label: string): string[] => {
@@ -496,17 +590,42 @@ export function validateNarrativeState(value: unknown, world: WorldBlueprint, s:
       throw new Error('Saved dialogue is outside interaction range');
     }
     if (d.topicId !== null && (typeof d.topicId !== 'string' ||
-      (!['topic-local', 'topic-belief', 'topic-war'].includes(d.topicId) &&
+      (!['topic-local', 'topic-belief', 'topic-war'].includes(d.topicId) && !QUEST_TOPICS.has(d.topicId) &&
        (!journal.includes(d.topicId) || ACTION_BY_ID.get(d.topicId)?.stage.at !== d.npcId)))) {
       throw new Error('Invalid saved dialogue topic');
     }
+    if (d.topicId === 'topic-war' && !hasWarTopic(npc)) throw new Error('This speaker has no military topic');
     dialogue = { npcId: d.npcId, topicId: d.topicId };
+  }
+  let inspection: NarrativeState['inspection'] = null;
+  if (value.inspection !== null) {
+    assertRecord(value.inspection, 'Inspection state');
+    const i = value.inspection;
+    if (Object.keys(i).sort().join(',') !== 'actionIds,locationId' || typeof i.locationId !== 'string') {
+      throw new Error('Invalid inspection fields');
+    }
+    const at = world.exploration!.locations.find(at => at.id === i.locationId);
+    if (dialogue || !at || !inspectable(at) || !discovered.includes(at.id) || distance(s.player, at) > INSPECT_RADIUS) {
+      throw new Error('Saved inspection is outside interaction range or overlaps dialogue');
+    }
+    const actionIds = ids(i.actionIds, new Set(journal), 'inspection evidence');
+    if (actionIds.some(id => {
+      const entry = ACTION_BY_ID.get(id)!;
+      return entry.stage.kind !== 'inspect' || entry.stage.at !== at.id;
+    }) || (actionIds.length && journal.slice(-actionIds.length).join(',') !== actionIds.join(','))) {
+      throw new Error('Saved inspection does not match the latest evidence');
+    }
+    inspection = { locationId: at.id, actionIds: [...actionIds] };
   }
   // The guards above establish these finite unions without trusting a deserialized object.
   const validNotice = Object.keys(NOTICES).find((key): key is NoticeId => key === notice) ?? null;
-  const state: NarrativeState = { version: 1, journal: [...journal], rewardedQuestIds: [...rewardedQuestIds], discovered: [...discovered],
-    dialogue, trackedQuestId: tracked, notice: validNotice };
+  const state: NarrativeState = { version: 2, journal: [...journal], rewardedQuestIds: [...rewardedQuestIds], discovered: [...discovered],
+    dialogue, inspection, trackedQuestId: tracked, notice: validNotice };
   const derived = progress(state);
+  if (dialogue?.topicId && QUEST_TOPICS.has(dialogue.topicId) &&
+      !availableStages(derived, dialogue.npcId).some(({ quest }) => quest.id === QUEST_TOPICS.get(dialogue.topicId!))) {
+    throw new Error('Saved quest topic is no longer available');
+  }
   const rewards = state.journal.flatMap(id => {
     const entry = ACTION_BY_ID.get(id)!;
     return entry.index === entry.quest.stages.length - 1 ? [entry.quest.id] : [];
@@ -517,7 +636,7 @@ export function validateNarrativeState(value: unknown, world: WorldBlueprint, s:
     const entry = ACTION_BY_ID.get(id)!;
     const at = entry.stage.kind === 'inspect' ? entry.stage.at : NPC_BY_ID.get(entry.stage.at)!.locationId;
     if (!discovered.includes(at)) throw new Error('Narrative evidence precedes location discovery');
-    if (gate(entry.action, s)) throw new Error('Narrative decision bypassed military prerequisites');
+    if (gate(entry.action, s, state.journal)) throw new Error('Narrative decision bypassed prerequisites');
   }
   return state;
 }

@@ -10,7 +10,7 @@ function fixture(): GameSnapshot {
   const snapshot = createCampaign({ seed: "residents", faction: "guard" }).snapshot();
   const copy = { en: "Road keeper", ru: "Road keeper RU" };
   const story: NarrativeSnapshot = {
-    title: copy, chapter: copy, summary: copy, dialogue: null, trackedQuestId: "witness",
+    title: copy, chapter: copy, summary: copy, dialogue: null, inspection: null, trackedQuestId: "witness",
     discovered: [], reputation: [], facts: [], ending: null, notice: null, interaction: null,
     travel: { available: false, reason: copy, destinations: [] },
     npcs: [{ id: "keeper", name: copy, role: copy, faction: "elf", locationId: "home", x: 1, z: -54,
@@ -34,10 +34,52 @@ describe("narrative presentation contract", () => {
 
   it("localizes narrative and interface text in both languages", () => {
     expect(localText({ en: "Witness", ru: "Testimony RU" }, "ru")).toBe("Testimony RU");
-    for (const key of ["journal", "dialogue", "guide", "travel", "active", "failed", "main", "side", "mapTarget"]) {
+    expect(translate("en", "subtitle")).toBe("The Hollow Road");
+    expect(translate("ru", "subtitle")).toBe("Глухой тракт");
+    for (const key of ["journal", "dialogue", "inspection", "inspectionHint", "continue", "guide", "travel", "active", "failed", "main", "side", "mapTarget", "unavailable"]) {
       expect(translate("en", `story.${key}`)).not.toBe(`story.${key}`);
       expect(translate("ru", `story.${key}`)).not.toBe(translate("en", `story.${key}`));
     }
+  });
+
+  it("uses the same canonical bilingual geography as the campaign", () => {
+    const world = createCampaign({ seed: "canonical-geography", faction: "guard" }).snapshot().world.exploration!;
+    expect(world.regions.map(({ id, name }) => [id, name.en, name.ru])).toEqual([
+      ["heartlands", "The Heartlands", "Срединные земли"],
+      ["greenmarch", "Greenmarch", "Зелёное пограничье"],
+      ["fenlands", "The Fens", "Топи"],
+      ["saltcoast", "The Salt Coast", "Соляной берег"],
+      ["ashsteppe", "The Ash Steppe", "Пепельная степь"],
+      ["crownlands", "Crownlands", "Коронные земли"],
+      ["frostspine", "Frostspine", "Инейный хребет"],
+      ["hollowvale", "Hollowvale", "Глухая долина"],
+    ]);
+    expect(world.locations.map(({ id, name }) => [id, name.en, name.ru])).toEqual([
+      ["roadward", "Roadward Inn", "Трактовый двор"],
+      ["greenhollow", "Greenhollow", "Зелёная лощина"],
+      ["old-orchard", "Old Orchard", "Старый сад"],
+      ["stag-shrine", "Stag Shrine", "Оленье святилище"],
+      ["thornwatch", "Thornwatch", "Терновый дозор"],
+      ["mirecross", "Mirecross", "Болотный брод"],
+      ["drowned-archive", "Drowned Archive", "Затопленный архив"],
+      ["reed-chapel", "Reed Chapel", "Камышовая часовня"],
+      ["lantern-ferry", "Lantern Ferry", "Фонарная переправа"],
+      ["saltmarket", "Saltmarket", "Соляной торг"],
+      ["tide-observatory", "Tide Observatory", "Приливная башня"],
+      ["wreckers-rest", "Wreckers' Rest", "Приют корабельщиков"],
+      ["cinderwell", "Cinderwell", "Углеземье"],
+      ["glass-quarry", "Glass Quarry", "Стеклянный карьер"],
+      ["ash-cairn", "Ash Cairn", "Пепельный курган"],
+      ["crownbridge", "Crownbridge", "Коронный мост"],
+      ["tax-vault", "Sealed Vault", "Опечатанный подвал"],
+      ["bell-foundry", "Bell Foundry", "Колокольный двор"],
+      ["high-pass", "High Pass", "Высокий перевал"],
+      ["star-monastery", "Star Monastery", "Звёздный монастырь"],
+      ["frozen-beacon", "Frozen Beacon", "Замёрзший маяк"],
+      ["hollow-village", "Hollow Village", "Глухая деревня"],
+      ["name-well", "Echo Well", "Колодец эха"],
+      ["last-archive", "Old Cloister", "Старый скит"],
+    ]);
   });
 
   it("mirrors noncombatants without changing simulation state and reuses their resources", () => {

@@ -44,8 +44,9 @@ ID; NPCs can stand within three metres of its centre without hitting scenery.
 Buildings are constrained to real circular wall obstacles, including the new
 inns, archives, wells, bell frames, antler shrines, glass ribs and star instruments.
 Regional ground, masonry, roofs and foliage distinguish the eight landscapes.
-Blank ledgers, struck-out names and abandoned record shelves reinforce the
-Unwritten Road narrative without inventing interactive presentation entities.
+The Hollow Road reuses these authored locations. Books and shelves remain
+scenery; evidence and supernatural encounters are presented as paused story
+scenes, not additional interactive meshes or monster actors.
 Grass and pebbles are excluded from roads, locations, water and blockers. Horizon
 mountains stay outside the map. All bridges have level traversable decks; rails
 are over solid water outside their exact walkable rectangles. Regional foliage

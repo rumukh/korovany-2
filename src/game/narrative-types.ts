@@ -51,6 +51,11 @@ export interface DialogueSnapshot {
   text: LocalizedText;
   choices: DialogueChoice[];
 }
+export interface InspectionSnapshot {
+  locationId: string;
+  title: LocalizedText;
+  text: LocalizedText;
+}
 export interface QuestSnapshot {
   id: string;
   title: LocalizedText;
@@ -69,6 +74,7 @@ export interface NarrativeSnapshot {
   npcs: NpcSnapshot[];
   quests: QuestSnapshot[];
   dialogue: DialogueSnapshot | null;
+  inspection: InspectionSnapshot | null;
   trackedQuestId: string | null;
   discovered: string[];
   reputation: { id: string; name: LocalizedText; value: number }[];

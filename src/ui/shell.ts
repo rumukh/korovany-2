@@ -2,9 +2,9 @@ import { FACTIONS, type FactionId, type GameEvent, type GameInput, type GameSnap
 import { Atlas } from "./atlas";
 import { formatTime, translate } from "./locale";
 import type { Settings } from "./storage";
-import { dialogueContent, journalContent, localText, questTarget, type QuestFilter } from "./story";
+import { dialogueContent, inspectionContent, journalContent, localText, questTarget, type QuestFilter } from "./story";
 
-export type Overlay = "menu" | "pause" | "map" | "journal" | "dialogue" | "settings" | "help" | "records" | "terminal" | "fatal" | null;
+export type Overlay = "menu" | "pause" | "map" | "journal" | "dialogue" | "inspection" | "settings" | "help" | "records" | "terminal" | "fatal" | null;
 export interface MetaOffer {
   id: UpgradeId;
   level: number;
@@ -324,7 +324,7 @@ export class GameShell {
       : this.currentOverlay === "pause" ? "paused"
         : this.currentOverlay === "terminal" ? (this.snapshot?.phase === "victory" ? "victory" : "defeat")
           : this.currentOverlay === "fatal" ? (this.fatalKind === "graphics" ? "graphicsFailure" : "gameFailure")
-            : this.currentOverlay === "journal" || this.currentOverlay === "dialogue" ? `story.${this.currentOverlay}` : this.currentOverlay;
+            : ["journal", "dialogue", "inspection"].includes(this.currentOverlay) ? `story.${this.currentOverlay}` : this.currentOverlay;
     panel.setAttribute("aria-label", this.t(headingKey));
     if (this.currentOverlay === "menu") this.menu(panel);
     else if (this.currentOverlay === "pause") this.pause(panel);
@@ -332,6 +332,12 @@ export class GameShell {
     else if (this.currentOverlay === "journal") this.questJournal(panel);
     else if (this.currentOverlay === "dialogue" && this.snapshot) panel.append(dialogueContent(this.snapshot, this.state.settings.language,
       (command) => this.dispatch({ type: "narrative", command })));
+    else if (this.currentOverlay === "inspection" && this.snapshot) {
+      panel.append(inspectionContent(this.snapshot, this.state.settings.language,
+        (command) => this.dispatch({ type: "narrative", command })),
+      this.button("pause", { type: "overlay", overlay: "pause" }, "button quiet inspection-pause"));
+      panel.setAttribute("aria-labelledby", "inspection-title");
+    }
     else if (this.currentOverlay === "settings") this.settings(panel);
     else if (this.currentOverlay === "help") this.help(panel);
     else if (this.currentOverlay === "records") this.records(panel);
@@ -648,7 +654,9 @@ export class GameShell {
       event.preventDefault();
       if (event.repeat) return;
       if (["settings", "help", "records"].includes(this.currentOverlay)) this.dispatch({ type: "overlay", overlay: this.returnOverlay });
-      else if (this.currentOverlay === "dialogue") this.dispatch({ type: "narrative", command: { type: "close" } });
+      else if (this.currentOverlay === "dialogue" || this.currentOverlay === "inspection") {
+        this.dispatch({ type: "narrative", command: { type: "close" } });
+      }
       else if (["pause", "map", "journal"].includes(this.currentOverlay)) this.dispatch({ type: "resume" });
       return;
     }

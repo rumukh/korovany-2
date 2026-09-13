@@ -298,6 +298,11 @@ kbd { font: 11px "Segoe UI", sans-serif; display: inline-grid; place-items: cent
 .choice-number { color: var(--brass); font-family: Georgia, serif; }
 .choice-reason { grid-column: 2; color: #dfbd95; }
 .conversation > .button { margin-top: 20px; }
+.inspection-panel { width: min(800px, 100%); border-top: 3px solid var(--brass); overflow-wrap: anywhere; }
+.inspection-text { margin: 26px 0; color: #e7e3ce; font: 19px/1.75 Georgia, serif; white-space: pre-line; }
+.inspection-text p + p { margin-top: 1em; }
+.inspection > .button { margin-top: 20px; }
+.inspection-pause { margin-top: 12px; }
 .map-scale { margin-top: 12px; }
 .region-caption { display: inline; margin-left: 16px; color: var(--brass); font: italic 16px Georgia, serif; }
 .region-lore { margin-top: 14px; max-width: 720px; }
@@ -307,7 +312,7 @@ kbd { font: 11px "Segoe UI", sans-serif; display: inline-grid; place-items: cent
   .quest-layout { grid-template-columns: 1fr; gap: 22px; }
   .quest-list { max-height: 230px; }
   .reputation-grid { grid-template-columns: 1fr; }
-  .dialogue-speech { font-size: 16px; }
+  .dialogue-speech, .inspection-text { font-size: 16px; }
   .dialogue-choice { padding: 12px; font-size: 13px; }
   .conversation-header { gap: 15px; }
   .speaker-seal { width: 52px; height: 65px; flex-basis: 52px; font-size: 30px; }

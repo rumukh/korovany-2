@@ -2,7 +2,9 @@ import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
-import { createCampaign, type GameSnapshot } from "../src/game";
+import { createCampaign, isWalkable, type GameSnapshot } from "../src/game";
+import { NPCS, QUESTS } from "../src/game/narrative-data";
+import { CampaignDriver } from "./driver";
 import { storageKeys, type Settings } from "../src/ui/storage";
 import {
   click, evaluate, launchBrowser, openPage, screenshot, until,
@@ -20,11 +22,15 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
   async function inspect(): Promise<Inspection> {
     return evaluate(cdp, "window.korovany.inspect()");
   }
+  async function visibleEvidence(): Promise<string> {
+    return evaluate(cdp, "[...document.querySelectorAll('.inspection-text p')].map(p => p.textContent).join('\\n\\n')");
+  }
   async function tap(code: string): Promise<void> {
     for (const type of ["keyDown", "keyUp"]) {
       await cdp.send("Input.dispatchKeyEvent", { type, code,
-        key: code.startsWith("Key") ? code.slice(3).toLowerCase() : code,
-        windowsVirtualKeyCode: code.startsWith("Key") ? code.charCodeAt(3) : code === "Escape" ? 27 : 9 });
+        key: code.startsWith("Key") ? code.slice(3).toLowerCase() : code.startsWith("Digit") ? code.slice(5) : code,
+        windowsVirtualKeyCode: code.startsWith("Key") ? code.charCodeAt(3)
+          : code.startsWith("Digit") ? code.charCodeAt(5) : code === "Escape" ? 27 : 9 });
     }
   }
   async function select(selector: string): Promise<void> {
@@ -148,4 +154,168 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     await tap("Tab");
     expect(await evaluate(cdp, "document.querySelector('.journal-panel').contains(document.activeElement)")).toBe(true);
   }, 90_000);
+
+  it("reads discovered evidence, stays paused through menus and reload, then resumes only after closing", async () => {
+    const game = createCampaign({ seed: "inspection-browser", faction: "guard", runId: "inspection-browser-run" });
+    const driver = new CampaignDriver(game);
+    const quest = QUESTS.find((entry) => entry.kind === "main")!;
+    const evidenceStage = quest.stages.find((stage) => stage.kind === "inspect")!;
+    for (const stage of quest.stages) {
+      if (stage === evidenceStage) break;
+      const npc = NPCS.find((entry) => entry.id === stage.at)!;
+      driver.toNode(npc.locationId);
+      game.step({ narrative: { type: "talk", npcId: npc.id } });
+      if (!game.snapshot().narrative!.dialogue!.choices.some((choice) => choice.id === stage.actions[0]!.id)) {
+        game.step({ narrative: { type: "choose", npcId: npc.id, choiceId: `quest-${quest.id}` } });
+      }
+      expect(game.snapshot().narrative!.dialogue!.choices.find((choice) => choice.id === stage.actions[0]!.id)?.enabled).toBe(true);
+      game.step({ narrative: { type: "choose", npcId: npc.id, choiceId: stage.actions[0]!.id } });
+      game.step({ narrative: { type: "close" } });
+    }
+    driver.toNode(evidenceStage.at);
+    const ready = game.snapshot();
+    const inspectAt = ready.world.exploration!.locations.find((place) => place.id === evidenceStage.at)!;
+    const nearestResident = (point: { x: number; z: number }) => Math.min(...ready.narrative!.npcs.map((npc) =>
+      Math.hypot(point.x - npc.x, point.z - npc.z)));
+    const readingSpot = Array.from({ length: 16 }, (_, index) => ({
+      x: inspectAt.x + Math.sin(index * Math.PI / 8) * 5,
+      z: inspectAt.z + Math.cos(index * Math.PI / 8) * 5,
+    })).filter(point => isWalkable(ready.world, point, ready.player.radius))
+      .sort((a, b) => nearestResident(b) - nearestResident(a))[0];
+    expect(readingSpot, "The inspection must have a walkable reading spot").toBeDefined();
+    if (!readingSpot) throw new Error("No walkable reading spot near the evidence");
+    driver.walk(readingSpot, 0.2);
+    expect(game.snapshot().narrative!.inspection).toBeNull();
+    expect(game.snapshot().narrative!.interaction).toMatchObject({ kind: "inspect", targetId: evidenceStage.at, enabled: true });
+    await evaluate(cdp, `(() => {
+      localStorage.setItem(${JSON.stringify(storageKeys.campaign)}, ${JSON.stringify(JSON.stringify(game.serialize()))});
+      localStorage.setItem(${JSON.stringify(storageKeys.settings)}, ${JSON.stringify(JSON.stringify({
+        language: "en", quality: "high", reducedMotion: false, muted: true,
+      }))});
+    })()`);
+    await cdp.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+    await reload();
+    await select('[data-action="continue"]');
+    await until(cdp, "window.korovany.inspect().snapshot.narrative.interaction?.kind", (kind: string) => kind === "inspect", 15_000);
+    const before = await inspect();
+    await tap("KeyT");
+    await until(cdp, "window.korovany.inspect().overlay", (overlay: string) => overlay === "inspection", 15_000);
+    const reading = await inspect();
+    const evidence = reading.snapshot.narrative!.inspection!;
+    expect(evidence.locationId).toBe(evidenceStage.at);
+    expect(evidence.text.en).toBe(evidenceStage.prompt.en);
+    expect(reading.snapshot.narrative!.facts.length).toBeGreaterThan(before.snapshot.narrative!.facts.length);
+    expect(reading.running).toBe(false);
+    expect(await evaluate(cdp, "document.querySelector('.inspection h2').textContent")).toBe(evidence.title.en);
+    expect(await visibleEvidence()).toBe(evidence.text.en);
+    expect(await evaluate(cdp, "document.querySelector('.inspection-panel').getAttribute('aria-labelledby')")).toBe("inspection-title");
+    await capture("inspection-en");
+    await tap("Tab");
+    expect(await evaluate(cdp, "document.querySelector('.inspection-panel').contains(document.activeElement)")).toBe(true);
+    for (const code of ["KeyW", "KeyT", "Digit1"]) await tap(code);
+    await evaluate(cdp, "new Promise(resolve => setTimeout(resolve, 250))");
+    expect((await inspect()).snapshot.tick).toBe(reading.snapshot.tick);
+    expect((await inspect()).snapshot.narrative!.inspection).toEqual(evidence);
+
+    await select('[data-action="open-pause"]');
+    await select('[data-action="open-map"]');
+    await select('[data-action="resume"]');
+    expect((await inspect()).overlay).toBe("inspection");
+    expect((await inspect()).running).toBe(false);
+    await select('[data-action="open-pause"]');
+    await select('[data-action="save"]');
+    await select('[data-action="open-settings"]');
+    await evaluate(cdp, `(() => {
+      const language = document.querySelector('select[aria-label="Language"]');
+      language.value = 'ru';
+      language.dispatchEvent(new Event('change', {bubbles:true}));
+    })()`);
+    await select('[data-action="open-pause"]');
+    await select('[data-action="resume"]');
+    expect(await visibleEvidence()).toBe(evidence.text.ru);
+    await capture("inspection-ru");
+    await select('[data-action="open-pause"]');
+    await select('[data-action="title"]');
+    expect((await inspect()).overlay).toBe("menu");
+    expect((await inspect()).running).toBe(false);
+    await select('[data-action="continue"]');
+    expect((await inspect()).overlay).toBe("inspection");
+    await reload();
+    await select('[data-action="continue"]');
+    expect((await inspect()).overlay).toBe("inspection");
+    expect((await inspect()).running).toBe(false);
+    expect((await inspect()).snapshot.tick).toBe(reading.snapshot.tick);
+    expect((await inspect()).snapshot.narrative!.inspection).toEqual(evidence);
+    expect(await visibleEvidence()).toBe(evidence.text.ru);
+
+    await select('[data-action="close-inspection"]');
+    expect((await inspect()).snapshot.narrative!.inspection).toBeNull();
+    expect((await inspect()).running).toBe(true);
+    await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick > reading.snapshot.tick + 5, 15_000);
+    expect((await inspect()).snapshot.player.x).toBe(reading.snapshot.player.x);
+    expect((await inspect()).snapshot.player.z).toBe(reading.snapshot.player.z);
+    await tap("KeyT");
+    await until(cdp, "window.korovany.inspect().overlay", (overlay: string) => overlay === "inspection", 15_000);
+    const revisited = await inspect();
+    const place = revisited.snapshot.world.exploration!.locations.find((location) => location.id === evidenceStage.at)!;
+    expect(revisited.snapshot.narrative!.inspection!.text).toEqual(place.description);
+    expect(await visibleEvidence()).toBe(place.description.ru);
+    await tap("Escape");
+    expect((await inspect()).snapshot.narrative!.inspection).toBeNull();
+    expect((await inspect()).running).toBe(true);
+    await tap("Escape");
+  }, 120_000);
+
+  it("renders long bilingual inspection paragraphs safely and displays a journal outcome only once", async () => {
+    const results = await evaluate<{
+      language: string; paragraphs: number; literal: boolean; scrolls: boolean;
+      fits: boolean; close: unknown; history: number; outcomes: number; notices: number;
+    }[]>(cdp, `(async () => {
+      const { inspectionContent, journalContent } = await import('/src/ui/story.ts');
+      const results = [];
+      for (const language of ['en', 'ru']) {
+        const snapshot = window.korovany.inspect().snapshot;
+        const line = language === 'en' ? 'Salt lies beneath the bell rope.' : 'Под колокольной верёвкой рассыпана соль.';
+        const text = Array.from({length:24}, () => line.repeat(8)).join('\\n\\n') + '\\n\\n<em>Evidence is text</em>';
+        snapshot.narrative.inspection = {locationId:'old-orchard', title:{en:'Old Orchard', ru:'Старый сад'}, text:{en:text, ru:text}};
+        const commands = [];
+        const root = inspectionContent(snapshot, language, command => commands.push(command));
+        const host = document.createElement('div');
+        host.className = 'overlay-host';
+        const panel = document.createElement('section');
+        panel.className = 'panel inspection-panel';
+        panel.style.width = '340px';
+        panel.style.height = '420px';
+        panel.append(root);
+        host.append(panel);
+        document.body.append(host);
+        try {
+          root.querySelector('[data-action="close-inspection"]').click();
+          const quest = snapshot.narrative.quests[0];
+          const outcome = {en:'The villagers now keep the bell.', ru:'Теперь жители сами следят за колоколом.'};
+          quest.status = 'completed';
+          quest.entries = [{en:'The bell was repaired.', ru:'Колокол починили.'}, outcome];
+          quest.outcome = outcome;
+          snapshot.narrative.ending = outcome;
+          snapshot.narrative.notice = outcome;
+          const journal = journalContent(snapshot, language, quest.id, 'completed', () => {}, () => {}, () => {});
+          results.push({language,
+            paragraphs: root.querySelectorAll('.inspection-text p').length,
+            literal: root.textContent.includes('<em>Evidence is text</em>') && !root.querySelector('em'),
+            scrolls: panel.scrollHeight > panel.clientHeight,
+            fits: panel.scrollWidth <= panel.clientWidth,
+            close: commands[0],
+            history: journal.querySelectorAll('.quest-history li').length,
+            outcomes: journal.querySelectorAll('.quest-outcome').length,
+            notices: journal.querySelectorAll('.story-notice').length});
+        } finally { host.remove(); }
+      }
+      return results;
+    })()`);
+    expect(results).toHaveLength(2);
+    for (const result of results) expect(result).toMatchObject({
+      paragraphs: 25, literal: true, scrolls: true, fits: true,
+      close: { type: "close" }, history: 1, outcomes: 1, notices: 0,
+    });
+  }, 30_000);
 });

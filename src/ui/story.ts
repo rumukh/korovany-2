@@ -65,6 +65,25 @@ export function dialogueContent(snapshot: GameSnapshot, language: Language, comm
   return root;
 }
 
+export function inspectionContent(snapshot: GameSnapshot, language: Language, command: (input: NarrativeInput) => void): HTMLElement {
+  const root = node("article", "inspection");
+  const inspection = snapshot.narrative?.inspection;
+  if (!inspection) return root;
+  const title = node("h2", "", localText(inspection.title, language));
+  title.id = "inspection-title";
+  root.setAttribute("aria-labelledby", title.id);
+  root.dataset.location = inspection.locationId;
+  const evidence = node("div", "inspection-text");
+  for (const paragraph of localText(inspection.text, language).split(/\n\s*\n/).filter((part) => part.trim())) {
+    evidence.append(node("p", "", paragraph));
+  }
+  const hint = node("p", "small muted", translate(language, "story.inspectionHint"));
+  const close = button(translate(language, "story.continue"), () => command({ type: "close" }), "button primary");
+  close.dataset.action = "close-inspection";
+  root.append(node("p", "eyebrow", translate(language, "story.inspection")), title, evidence, hint, close);
+  return root;
+}
+
 export type QuestFilter = "active" | "completed" | "all";
 
 export function journalContent(
@@ -81,7 +100,7 @@ export function journalContent(
   const t = (key: string) => translate(language, `story.${key}`);
   const text = (value: LocalizedText) => localText(value, language);
   if (!story) {
-    root.append(node("p", "guide-copy", t("legacy")));
+    root.append(node("p", "guide-copy", t("unavailable")));
     return root;
   }
   root.append(node("p", "eyebrow", text(story.chapter)), node("h2", "", text(story.title)),
@@ -128,13 +147,15 @@ export function journalContent(
       track.dataset.action = "track-quest";
       detail.append(track);
     }
-    if (selected.entries.length) {
+    const outcome = selected.outcome ? text(selected.outcome) : null;
+    const history = selected.entries.filter((entry) => text(entry) !== outcome);
+    if (history.length) {
       detail.append(node("h3", "", t("entries")));
       const entries = node("ol", "quest-history");
-      for (const entry of selected.entries) entries.append(node("li", "", text(entry)));
+      for (const entry of history) entries.append(node("li", "", text(entry)));
       detail.append(entries);
     }
-    if (selected.outcome) detail.append(node("p", "quest-outcome", text(selected.outcome)));
+    if (outcome) detail.append(node("p", "quest-outcome", outcome));
   }
   layout.append(list, detail);
   root.append(layout);
@@ -155,7 +176,12 @@ export function journalContent(
     for (const fact of story.facts) facts.append(node("p", "guide-copy", text(fact)));
     root.append(facts);
   }
-  if (story.ending) root.append(node("p", "quest-outcome", text(story.ending)));
-  if (story.notice) root.append(node("p", "story-notice", text(story.notice)));
+  if (story.ending && (!selected?.outcome || text(story.ending) !== text(selected.outcome))) {
+    root.append(node("p", "quest-outcome", text(story.ending)));
+  }
+  if (story.notice && (!selected?.outcome || text(story.notice) !== text(selected.outcome)) &&
+    (!story.ending || text(story.notice) !== text(story.ending))) {
+    root.append(node("p", "story-notice", text(story.notice)));
+  }
   return root;
 }

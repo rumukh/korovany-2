@@ -108,7 +108,7 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
         resolveOutcome(world, s);
         return;
       }
-      if (s.narrative?.dialogue) {
+      if (s.narrative?.dialogue || s.narrative?.inspection) {
         world.setResource(Intent, {});
         pauseNarrative(s);
         return;

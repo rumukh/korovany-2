@@ -153,18 +153,24 @@ function freeze(): void {
   sound.setActive(false);
 }
 
+function narrativeOverlay(): "dialogue" | "inspection" | null {
+  if (snapshot?.narrative?.dialogue) return "dialogue";
+  return snapshot?.narrative?.inspection ? "inspection" : null;
+}
+
 function changeOverlay(overlay: Overlay): void {
   if (fatal) return;
   const wasRunning = running;
   freeze();
   if (wasRunning) saveCampaign();
   if (overlay === "menu") atTitle = true;
-  else if (overlay === null) atTitle = false;
-  shell?.show(overlay);
+  else if (overlay === null || overlay === "dialogue" || overlay === "inspection") atTitle = false;
   if (overlay === null && campaignSave.conflicted) {
     shell?.warn("storage.conflict");
-    shell?.show("pause");
-  } else if (overlay === null && campaign && snapshot?.phase === "playing") {
+    overlay = "pause";
+  } else if (overlay === null) overlay = narrativeOverlay();
+  shell?.show(overlay);
+  if (overlay === null && campaign && snapshot?.phase === "playing") {
     running = true;
     input?.setEnabled(true);
     sound.setActive(true);
@@ -248,7 +254,7 @@ function resume(): void {
   rendererFor(snapshot);
   lastAim = { x: Math.sin(snapshot.player.heading), z: Math.cos(snapshot.player.heading) };
   shell?.update(snapshot);
-  if (snapshot.phase === "playing") changeOverlay(snapshot.narrative?.dialogue ? "dialogue" : null);
+  if (snapshot.phase === "playing") changeOverlay(null);
   else finish();
 }
 
@@ -356,8 +362,8 @@ function dispatch(action: ShellAction): void {
         events(snapshot);
         saveCampaign();
         if (snapshot.phase !== "playing") finish();
-        else if (!campaignSave.conflicted) changeOverlay(snapshot.narrative?.dialogue ? "dialogue"
-          : overlay === "dialogue" ? null : overlay);
+        else if (!campaignSave.conflicted) changeOverlay(narrativeOverlay()
+          ?? (overlay === "dialogue" || overlay === "inspection" ? null : overlay));
         break;
       }
       case "reload": window.location.reload(); break;
@@ -466,9 +472,9 @@ function frame(time: number): void {
           hudElapsed = 0;
         }
         if (snapshot.phase !== "playing") finish();
-        else if (snapshot.narrative?.dialogue) {
+        else if (narrativeOverlay()) {
           shell?.update(snapshot);
-          changeOverlay("dialogue");
+          changeOverlay(narrativeOverlay());
         }
       }
     }

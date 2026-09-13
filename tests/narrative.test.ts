@@ -1,10 +1,11 @@
 import { beforeAll, describe, expect, test } from 'vitest';
 import { createCampaign, restoreCampaign, type CampaignSave, type GameSession, type NarrativeInput } from '../src/game';
-import { NPCS, QUESTS } from '../src/game/narrative-data';
+import { ENDINGS, ENDING_EPILOGUES, NPCS, QUESTS } from '../src/game/narrative-data';
 import { advance, CampaignDriver, dist } from './driver';
 
 function command(game: GameSession, input: NarrativeInput): void { game.step({ narrative: input }); }
 function narrative(game: GameSession) { return game.snapshot().narrative!; }
+const yieldRunner = () => new Promise<void>(resolve => setImmediate(resolve));
 function resource(save: CampaignSave): Record<string, unknown> {
   // Corruption tests intentionally manipulate untrusted wire values, never active sessions.
   const engine = save.engine as { resources: { KorovanyCampaign: Record<string, unknown> } };
@@ -24,15 +25,25 @@ class StoryDriver extends CampaignDriver {
     expect(narrative(this.game).dialogue?.npcId).toBe(id);
   }
   choose(id: string): void {
+    const quest = QUESTS.find(q => q.stages.some(stage => stage.actions.some(action => action.id === id)));
+    if (quest && !narrative(this.game).dialogue!.choices.some(c => c.id === id)) this.topic(quest.id);
     const dialogue = narrative(this.game).dialogue!;
     expect(dialogue.choices.find(c => c.id === id)?.enabled, `${dialogue.npcId}: ${id}`).toBe(true);
     command(this.game, { type: 'choose', npcId: dialogue.npcId, choiceId: id });
     expect(narrative(this.game).notice).toBeNull();
   }
+  topic(id: string): void {
+    const dialogue = narrative(this.game).dialogue!;
+    const topic = `quest-${id}`;
+    if (dialogue.choices.some(choice => choice.id === topic)) {
+      command(this.game, { type: 'choose', npcId: dialogue.npcId, choiceId: topic });
+    }
+  }
   inspect(id: string): void {
     this.visit(id);
     command(this.game, { type: 'inspect', locationId: id });
     expect(narrative(this.game).notice?.en).toContain('Place examined');
+    expect(narrative(this.game).inspection?.locationId).toBe(id);
   }
   quest(id: string, branch = 0): void {
     const quest = QUESTS.find(q => q.id === id)!;
@@ -63,12 +74,21 @@ describe('narrative input and starter contract', () => {
     const side = QUESTS.filter(q => q.kind === 'side');
     expect(side.length).toBeGreaterThanOrEqual(8);
     expect(side.every(q => q.stages.length >= 3 && q.stages.some(s => s.actions.length >= 2))).toBe(true);
+    expect(new Set(side.map(q => q.stages.length)).size).toBeGreaterThanOrEqual(3);
+    expect(side.filter(q => new Set(q.stages.filter(s => s.kind === 'talk').map(s => s.at)).size > 1).length).toBeGreaterThanOrEqual(3);
     expect(new Set(NPCS.map(n => n.id)).size).toBeGreaterThanOrEqual(16);
+    expect(new Set(NPCS.map(n => n.greeting.ru)).size).toBe(NPCS.length);
+    for (const npc of NPCS) for (const line of [
+      npc.greeting, npc.localQuestion, npc.local, npc.beliefQuestion, npc.belief, ...(npc.reactions?.map(r => r.text) ?? []),
+    ]) {
+      expect(line.en.trim()).not.toBe('');
+      expect(line.ru).toMatch(/[А-Яа-яЁё]/);
+    }
     for (const quest of QUESTS) {
-      for (const line of [quest.title, quest.description, ...quest.stages.flatMap(s => [
-        s.objective, s.prompt, ...s.actions.flatMap(a => [a.text, a.entry]),
+      for (const line of [quest.title, quest.description, quest.unresolved, ...quest.stages.flatMap(s => [
+        s.objective, s.prompt, ...(s.variants?.map(v => v.prompt) ?? []), ...s.actions.flatMap(a => [a.text, a.entry, a.response]),
       ])]) {
-        expect(line.en.length).toBeGreaterThan(10);
+        expect(line.en.trim()).not.toBe('');
         expect(line.ru).toMatch(/[А-Яа-яЁё]/);
       }
     }
@@ -80,9 +100,13 @@ describe('narrative input and starter contract', () => {
     const mara = narrative(game).npcs.find(n => n.id === 'mara')!;
     expect(dist(mara, game.snapshot().convoy)).toBeGreaterThan(game.snapshot().convoy.radius + 0.95);
     expect(dist(mara, game.snapshot().player)).toBeLessThan(4.25);
-    expect(narrative(game).summary.en).toContain('cart addressed');
+    expect(narrative(game).summary.en).toMatch(/convoy|wagon|cart/i);
     expect(narrative(game).summary.en).toContain('Mara');
     expect(narrative(game).summary.en).not.toContain('First capture');
+    const finalChapter = narrative(game).quests.find(q => q.id === 'unwritten-road')!;
+    expect(finalChapter.targetId).toBe('mara');
+    expect(finalChapter.objective.en).toContain(QUESTS[0]!.title.en);
+    expect(finalChapter.description.en).not.toBe(QUESTS.find(q => q.id === 'unwritten-road')!.description.en);
     const before = game.snapshot();
     game.step({ attack: true, move: { x: 0, z: 0 } });
     const tick = game.snapshot().tick;
@@ -101,7 +125,8 @@ describe('narrative input and starter contract', () => {
     for (const session of [game, resumed]) {
       session.step({ attack: true, move: { x: 1, z: 1 }, special: true, convoy: 'follow' });
       expect(session.snapshot().tick).toBe(tick);
-      expect(narrative(session).notice?.en).toContain('Conversation paused');
+      expect(narrative(session).notice?.en).toContain('paused the game');
+      command(session, { type: 'choose', npcId: 'mara', choiceId: 'quest-missing-names' });
       command(session, { type: 'choose', npcId: 'mara', choiceId: 'names-start' });
       expect(narrative(session).quests.find(q => q.id === 'missing-names')?.status).toBe('active');
       command(session, { type: 'close' });
@@ -137,6 +162,25 @@ describe('narrative input and starter contract', () => {
     expect(narrative(game).quests.every(q => q.status === 'available')).toBe(true);
     expect(game.snapshot().tick).toBe(0);
   });
+  test('choosing a local topic does not offer unseen quest answers or accept them by ID', () => {
+    const game = createCampaign({ seed: 'topic-boundary', faction: 'guard' });
+    command(game, { type: 'talk', npcId: 'mara' });
+    command(game, { type: 'choose', npcId: 'mara', choiceId: 'topic-local' });
+    const before = narrative(game);
+    expect(before.dialogue!.choices.some(c => c.id === 'names-start')).toBe(false);
+    expect(before.dialogue!.choices.some(c => c.id === 'quest-missing-names')).toBe(true);
+    command(game, { type: 'choose', npcId: 'mara', choiceId: 'names-start' });
+    expect(narrative(game).notice?.en).toContain('no longer available');
+    expect(narrative(game).facts).toEqual(before.facts);
+    command(game, { type: 'choose', npcId: 'mara', choiceId: 'quest-missing-names' });
+    expect(narrative(game).dialogue!.text.ru).toBe(QUESTS[0]!.stages[0]!.prompt.ru);
+    expect(restoreCampaign(game.serialize()).snapshot()).toEqual(game.snapshot());
+    command(game, { type: 'choose', npcId: 'mara', choiceId: 'names-start' });
+    const action = QUESTS[0]!.stages[0]!.actions[0]!;
+    expect(narrative(game).dialogue!.text.ru).toBe(action.response.ru);
+    expect(narrative(game).facts.at(-1)!.ru).toBe(action.entry.ru);
+    expect(action.response.ru).not.toBe(action.entry.ru);
+  });
   test('legacy runs have no narrative, keep their original world hash and reject narrative without mutation', () => {
     const legacy = createCampaign({ seed: 'legacy-story', faction: 'guard', worldVersion: 1 });
     expect(legacy.snapshot().narrative).toBeUndefined();
@@ -150,12 +194,65 @@ describe('narrative input and starter contract', () => {
 });
 
 describe('narrative persistence and travel boundaries', () => {
+  test('an examination is a readable, paused, saved scene; repeated inspections grant nothing', () => {
+    const game = createCampaign({ seed: 'reading-evidence', faction: 'guard' });
+    const bot = new StoryDriver(game);
+    bot.talk('mara'); bot.choose('names-start');
+    bot.talk('toman'); bot.choose('names-witness');
+    bot.visit('old-orchard');
+    const before = game.snapshot();
+    command(game, { type: 'inspect', locationId: 'old-orchard' });
+    const examined = game.snapshot();
+    const scene = examined.narrative!.inspection!;
+    expect(scene.text.ru).toBe(QUESTS[0]!.stages.find(stage => stage.kind === 'inspect')!.prompt.ru);
+    expect(scene.title.ru).toBe(examined.world.exploration!.locations.find(l => l.id === 'old-orchard')!.name.ru);
+    expect(examined.tick).toBe(before.tick);
+    expect(examined.actors).toEqual(before.actors);
+    expect(examined.player).toEqual(before.player);
+    expect(examined.convoy).toEqual(before.convoy);
+    expect(restoreCampaign(game.serialize()).snapshot()).toEqual(examined);
+    game.step({ attack: true, move: { x: 1, z: 0 }, convoy: 'follow' });
+    expect(game.snapshot().tick).toBe(examined.tick);
+    expect(narrative(game).inspection).toEqual(scene);
+    for (const inspection of [
+      { locationId: 'name-well', actionIds: ['names-stones'] },
+      { locationId: 'old-orchard', actionIds: ['names-start'] },
+      { locationId: 'old-orchard', actionIds: ['names-stones', 'names-stones'] },
+      { locationId: 'old-orchard', actionIds: ['road-index'] },
+    ]) {
+      const save = game.serialize();
+      (resource(save).narrative as Record<string, unknown>).inspection = inspection;
+      expect(() => restoreCampaign(save)).toThrow();
+    }
+    const staleIntent = game.serialize();
+    (staleIntent.engine as { resources: Record<string, unknown> }).resources.KorovanyIntent = { attack: true };
+    expect(() => restoreCampaign(staleIntent)).toThrow(/stale intent/);
+    const facts = narrative(game).facts;
+    bot.close();
+    expect(narrative(game).inspection).toBeNull();
+    command(game, { type: 'inspect', locationId: 'old-orchard' });
+    expect(narrative(game).facts).toEqual(facts);
+    expect(narrative(game).inspection!.text).toEqual(examined.world.exploration!.locations.find(l => l.id === 'old-orchard')!.description);
+    bot.close();
+    game.step();
+    expect(game.snapshot().tick).toBe(examined.tick + 1);
+  });
+  test('previous story saves are rejected explicitly without modifying them', () => {
+    const game = createCampaign({ seed: 'old-story', faction: 'guard' });
+    const save = game.serialize();
+    const n = resource(save).narrative as Record<string, unknown>;
+    n.version = 1;
+    delete n.inspection;
+    const original = structuredClone(save);
+    expect(() => restoreCampaign(save)).toThrow(/Unsupported story version/);
+    expect(save).toEqual(original);
+  });
   test('tampered state rejects duplicate actions, out-of-order chapters, invented evidence and inconsistent dialogues', () => {
     const game = createCampaign({ seed: 'corrupt-story', faction: 'guard' });
     command(game, { type: 'talk', npcId: 'mara' });
     command(game, { type: 'choose', npcId: 'mara', choiceId: 'names-start' });
     for (const edit of [
-      (n: Record<string, unknown>) => { n.version = 2; },
+      (n: Record<string, unknown>) => { n.version = 1; },
       (n: Record<string, unknown>) => { n.extra = true; },
       (n: Record<string, unknown>) => { n.journal = ['names-start', 'names-start']; },
       (n: Record<string, unknown>) => { n.journal = ['river-start']; },
@@ -168,6 +265,8 @@ describe('narrative persistence and travel boundaries', () => {
       (n: Record<string, unknown>) => { n.rewardedQuestIds = ['missing-names']; },
       (n: Record<string, unknown>) => { n.dialogue = { npcId: 'elin', topicId: null }; },
       (n: Record<string, unknown>) => { n.dialogue = { npcId: 'mara', topicId: 'river-open' }; },
+      (n: Record<string, unknown>) => { n.dialogue = { npcId: 'mara', topicId: 'quest-river-record' }; },
+      (n: Record<string, unknown>) => { n.inspection = { locationId: 'old-orchard', actionIds: [] }; },
     ]) {
       const saved = structuredClone(game.serialize());
       edit(resource(saved).narrative as Record<string, unknown>);
@@ -184,8 +283,10 @@ describe('narrative persistence and travel boundaries', () => {
     expect(restoreCampaign(game.serialize()).serialize()).toEqual(game.serialize());
   });
 
-  describe('the full Unwritten Road through public input', () => {
+  describe('the full Hollow Road through public input', () => {
     let ready: CampaignSave;
+    let withoutBells: CampaignSave;
+    let rememberedChoices = 0;
     beforeAll(async () => {
       const game = createCampaign({ seed: 'authored-borderland', faction: 'guard', runId: 'story-acceptance' });
       const bot = new StoryDriver(game);
@@ -194,6 +295,13 @@ describe('narrative persistence and travel boundaries', () => {
           if (stage.kind === 'inspect') bot.inspect(stage.at);
           else {
             bot.talk(stage.at);
+            bot.topic(quest.id);
+            const journal = (resource(game.serialize()).narrative as { journal: string[] }).journal;
+            const remembered = [...journal].reverse().flatMap(id => stage.variants?.filter(v => v.after === id) ?? [])[0];
+            if (remembered) {
+              expect(narrative(game).dialogue!.text.ru).toContain(remembered.prompt.ru);
+              rememberedChoices++;
+            }
             if (stage.actions.length > 1) {
               const fork = game.serialize(), baseline = game.snapshot().player.coins;
               const outcomes = new Set<string>(), reputations = new Set<string>();
@@ -210,6 +318,7 @@ describe('narrative persistence and travel boundaries', () => {
                 expect(branch.snapshot().player.coins).toBe(paid);
                 expect(narrative(branch).notice?.en).toContain('no longer available');
                 expect(restoreCampaign(branch.serialize()).snapshot()).toEqual(branch.snapshot());
+                if (action.id === 'bell-road') withoutBells = branch.serialize();
                 const corrupt = structuredClone(branch.serialize());
                 const n = resource(corrupt).narrative as { rewardedQuestIds: string[] };
                 n.rewardedQuestIds.pop();
@@ -222,7 +331,7 @@ describe('narrative persistence and travel boundaries', () => {
           }
           expect(restoreCampaign(game.serialize()).snapshot()).toEqual(game.snapshot());
           // Long public-input journeys must yield so Vitest can acknowledge worker RPC messages.
-          await new Promise<void>(resolve => setImmediate(resolve));
+          await yieldRunner();
         }
         expect(narrative(game).quests.find(q => q.id === quest.id)?.status).toBe('completed');
         bot.close();
@@ -244,7 +353,7 @@ describe('narrative persistence and travel boundaries', () => {
       }
       bot.choose('leave');
       expect(narrative(game).quests.find(q => q.id === 'unwritten-road')?.status).toBe('active');
-      await new Promise<void>(resolve => setImmediate(resolve));
+      await yieldRunner();
       bot.conquest(false);
       expect(game.snapshot().fortress.bossDefeated).toBe(false);
       command(game, { type: 'travel', locationId: 'hollow-village' });
@@ -253,8 +362,19 @@ describe('narrative persistence and travel boundaries', () => {
       expect(narrative(game).dialogue!.choices.filter(c => c.id.startsWith('ending-')).every(c => c.enabled)).toBe(true);
       ready = game.serialize();
     }, 240_000);
+    test('later witnesses respond specifically to earlier decisions', () => {
+      expect(rememberedChoices).toBeGreaterThanOrEqual(3);
+    });
+    test('Mara learns what happened to the drivers instead of repeating the opening request', () => {
+      const game = restoreCampaign(ready), bot = new StoryDriver(game);
+      bot.talk('mara');
+      const mara = NPCS.find(npc => npc.id === 'mara')!;
+      expect(narrative(game).dialogue!.text).toEqual(mara.reactions!.find(r => r.after === 'road-names')!.text);
+      expect(narrative(game).dialogue!.text).not.toEqual(mara.greeting);
+      expect(restoreCampaign(game.serialize()).snapshot()).toEqual(game.snapshot());
+    });
 
-    for (const ending of ['commons', 'compact', 'cinder']) {
+    for (const ending of ['commons', 'compact', 'cinder'] as const) {
       test(`${ending}: explicit, mutually exclusive finale, unique rewards and exact paused resume`, () => {
         const game = restoreCampaign(ready);
         const before = game.snapshot();
@@ -263,8 +383,9 @@ describe('narrative persistence and travel boundaries', () => {
         expect(after.phase).toBe('playing');
         expect(after.tick).toBe(before.tick);
         expect(after.player.coins).toBe(before.player.coins + 50);
-        expect(story.ending?.en).toContain(ending === 'commons' ? 'Road of Witnesses' : ending === 'compact' ? 'Winter Compact' : 'Road Without Ink');
-        expect(story.ending?.en).toContain('dispute still waits');
+        expect(story.ending?.en).toContain(ENDINGS[ending].en);
+        expect(story.ending?.en).not.toContain(ENDING_EPILOGUES[ending].en);
+        expect(story.ending?.en).toContain(QUESTS.find(q => q.id === 'borrowed-name')!.unresolved.en);
         expect(story.dialogue!.choices.some(c => c.id.startsWith('ending-'))).toBe(false);
         for (const id of ['commons', 'compact', 'cinder']) command(game, { type: 'choose', npcId: 'elin', choiceId: `ending-${id}` });
         expect(game.snapshot().player.coins).toBe(after.player.coins);
@@ -274,26 +395,72 @@ describe('narrative persistence and travel boundaries', () => {
         expect(restored.serialize()).toEqual(game.serialize());
       });
     }
-    test('boss death first leaves investigation playable; side quests can precede the final decision', () => {
+    test('a refused bell alliance closes only its finale, and cannot be bypassed by a command', async () => {
+      const game = restoreCampaign(withoutBells), bot = new StoryDriver(game);
+      bot.talk('ada'); bot.choose('road-start');
+      await yieldRunner();
+      bot.inspect('name-well');
+      await yieldRunner();
+      bot.inspect('last-archive');
+      await yieldRunner();
+      bot.conquest(false);
+      await yieldRunner();
+      bot.talk('elin');
+      const choices = narrative(game).dialogue!.choices;
+      const bells = choices.find(choice => choice.id === 'ending-commons')!;
+      expect(bells.enabled).toBe(false);
+      expect(bells.reason!.en).toContain(QUESTS.find(q => q.id === 'bell-metal')!.title.en);
+      expect(bells.reason!.en).toContain('no longer available');
+      expect(choices.find(choice => choice.id === 'ending-compact')!.enabled).toBe(true);
+      expect(choices.find(choice => choice.id === 'ending-cinder')!.enabled).toBe(true);
+      const before = game.snapshot();
+      command(game, { type: 'choose', npcId: 'elin', choiceId: 'ending-commons' });
+      expect(narrative(game).notice?.en).toContain('allies');
+      expect(narrative(game).ending).toBeNull();
+      expect(game.snapshot().player).toEqual(before.player);
+      expect(game.snapshot().tick).toBe(before.tick);
+      expect(restoreCampaign(game.serialize()).snapshot()).toEqual(game.snapshot());
+      bot.choose('ending-compact');
+      expect(narrative(game).ending!.en).toContain(ENDINGS.compact.en);
+    }, 120_000);
+    test('saved finale cannot acquire its required allies retroactively', () => {
+      const game = restoreCampaign(ready);
+      command(game, { type: 'choose', npcId: 'elin', choiceId: 'ending-commons' });
+      const save = game.serialize();
+      const n = resource(save).narrative as { journal: string[] };
+      n.journal.splice(n.journal.indexOf('bell-mourn'), 1);
+      n.journal.push('bell-mourn');
+      expect(() => restoreCampaign(save)).toThrow(/required allies/);
+    });
+    test('boss death first leaves investigation playable; side quests can precede the final decision', async () => {
       const game = restoreCampaign(ready), bot = new StoryDriver(game);
       bot.close(); bot.toNode('fortress'); bot.fight('fortress');
+      await yieldRunner();
       expect(game.snapshot().fortress.bossDefeated).toBe(true);
       expect(game.snapshot().phase).toBe('playing');
       expect(game.snapshot().rewards).toBeNull();
       expect(restoreCampaign(game.serialize()).snapshot()).toEqual(game.snapshot());
       bot.quest('borrowed-name', 1);
+      await yieldRunner();
       bot.talk('mila');
+      const borrowed = QUESTS.find(q => q.id === 'borrowed-name')!.stages.at(-1)!.actions[1]!;
+      expect(narrative(game).dialogue!.text.en).toBe(borrowed.response.en);
       command(game, { type: 'choose', npcId: 'mila', choiceId: 'topic-belief' });
-      expect(narrative(game).dialogue!.text.en).toContain('public disguise');
+      expect(narrative(game).dialogue!.text.en).toBe(NPCS.find(n => n.id === 'mila')!.belief.en);
       bot.talk('elin');
+      expect(narrative(game).dialogue!.text.ru).toContain('Раут побеждён');
+      expect(narrative(game).dialogue!.text.ru).not.toContain('Сначала нужно');
+      expect(narrative(game).dialogue!.choices.filter(c => c.id.startsWith('ending-'))
+        .every(c => !c.text.ru.includes('Когда Раут'))).toBe(true);
       const before = game.snapshot();
       command(game, { type: 'choose', npcId: 'elin', choiceId: 'ending-commons' });
       const final = game.snapshot();
       expect(final.tick).toBe(before.tick);
       expect(final.phase).toBe('victory');
       expect(final.rewards?.victory).toBe(true);
-      expect(final.narrative!.ending!.en).not.toContain('dispute still waits');
-      expect(final.narrative!.ending!.en).toContain('public disguise');
+      expect(final.narrative!.ending!.en).not.toContain(QUESTS.find(q => q.id === 'borrowed-name')!.unresolved.en);
+      expect(final.narrative!.ending!.en).toContain(borrowed.entry.en);
+      expect(final.narrative!.ending!.en).toContain(ENDING_EPILOGUES.commons.en);
       expect(final.narrative!.dialogue).toBeNull();
       const save = game.serialize();
       game.step({ narrative: { type: 'travel', locationId: 'roadward' } });
@@ -301,16 +468,17 @@ describe('narrative persistence and travel boundaries', () => {
       expect(game.serialize()).toEqual(save);
       expect(restoreCampaign(save).snapshot()).toEqual(final);
     });
-    test('finale first permits local work, then military victory completes the campaign', () => {
+    test('finale first permits local work, then military victory completes the campaign', async () => {
       const game = restoreCampaign(ready), bot = new StoryDriver(game);
       bot.choose('ending-cinder');
       const before = narrative(game).ending!.en;
       bot.quest('borrowed-name', 0);
+      await yieldRunner();
       expect(narrative(game).ending!.en).not.toBe(before);
-      expect(narrative(game).ending!.en).toContain('chosen kin');
+      expect(narrative(game).ending!.en).toContain(QUESTS.find(q => q.id === 'borrowed-name')!.stages.at(-1)!.actions[0]!.entry.en);
       bot.toNode('fortress'); bot.fight('fortress');
       expect(game.snapshot().phase).toBe('victory');
-      expect(narrative(game).ending!.en).toContain('Road Without Ink');
+      expect(narrative(game).ending!.en).toContain(ENDING_EPILOGUES.cinder.en);
       expect(restoreCampaign(game.serialize()).snapshot()).toEqual(game.snapshot());
     });
   });
