@@ -1,4 +1,4 @@
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
@@ -6,7 +6,7 @@ import {
   click, evaluate, launchBrowser, openPage, screenshot, until,
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeOwnedBrowser } from "../vendor/aegis-engine/packages/render-three/src/testing/browser-lifecycle";
+import { closeTestBrowser } from "./browser-cleanup";
 import { claimRewards, createCampaign, createProfile, type GameSnapshot, type MetaProfile } from "../src/game";
 
 interface Inspection {
@@ -113,12 +113,12 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
 
   afterAll(async () => {
     for (const page of pages) page.close();
-    if (browser) {
-      await closeOwnedBrowser(browser);
-      await rm(browser.profile, { recursive: true, force: true });
+    try {
+      if (browser) await closeTestBrowser(browser);
+    } finally {
+      await server?.close();
     }
-    await server?.close();
-  }, 30_000);
+  }, 60_000);
 
   it("plays through actual inputs, pauses without leaking keys, saves, reloads, and localizes the atlas", async () => {
     expect((await inspect()).overlay).toBe("menu");

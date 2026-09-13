@@ -1,11 +1,11 @@
-import { mkdir, rm } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createServer, type ViteDevServer } from 'vite';
 import {
   evaluate, launchBrowser, openPage, screenshot, until, type CdpSession, type LaunchedBrowser,
 } from '../vendor/aegis-engine/packages/render-three/src/browser';
-import { closeOwnedBrowser } from '../vendor/aegis-engine/packages/render-three/src/testing/browser-lifecycle';
+import { closeTestBrowser } from './browser-cleanup';
 
 const preview = `<!doctype html><html><head><link rel="icon" href="data:,"><style>
 html,body {margin:0;overflow:hidden;background:#b6cbba} canvas {display:block}
@@ -157,12 +157,12 @@ describe.runIf(process.env.KOROVANY_WORLD_BROWSER === '1')('expanded world WebGL
 
   afterAll(async () => {
     cdp?.close();
-    if (browser) {
-      await closeOwnedBrowser(browser);
-      await rm(browser.profile, { recursive: true, force: true });
+    try {
+      if (browser) await closeTestBrowser(browser);
+    } finally {
+      await server?.close();
     }
-    await server?.close();
-  }, 30_000);
+  }, 60_000);
 
   test('renders every regional look and distant landmark without shader errors or resource growth', async () => {
     if (!cdp) throw new Error('World browser was not initialized');
