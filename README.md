@@ -55,10 +55,36 @@ Set `AEGIS_BROWSER` to an executable path if the browser is not installed in a
 standard location. `KOROVANY_CAPTURE_DIR` optionally selects a screenshot output
 directory.
 
+Browser-enabled runs execute test files sequentially: the engine's CDP launcher
+uses software WebGL, so concurrent renderers and simulation suites otherwise
+compete for CPU time. Ordinary headless unit-test runs remain parallel.
+Long gameplay waits keep their tick-count assertions but allow up to 60 seconds
+for software rendering. These functional scenarios are not GPU benchmarks.
+
 The production game is written to `dist`. Serve that directory over HTTP; opening
 `index.html` directly with `file://` is not supported. Assets use relative paths,
 so the same build works at a site root or under `/korovany-2/`. Runtime assets are
 local: no account, backend, external font service, or asset CDN is required.
+
+## Frontier graphics
+
+Seven original generated materials cover soil, masonry, oak boards, slate,
+bark, linen and natural rock. Their 21 local 512 x 512 lossless WebP maps provide
+color, tangent-space normals and roughness. Ground detail is mapped in world
+metres, so it does not stretch across the kilometre-wide landscape.
+
+The presentation combines detailed architecture and equipment, clustered tree
+crowns, denser meadow grass, a layered mountain sky, reflective river ripples,
+warm directional light and cool atmospheric haze. High quality adds HDR bloom
+and antialiased postprocessing; low quality releases those render targets,
+disables shadows and ground dressing, and uses simpler tree crowns. Both retain
+the generated textures. Camera orbit now supports a lower landscape view.
+
+Material provenance and hashes live in `public/textures/frontier/manifest*.json`.
+`scripts/prepare-frontier-textures.py` is the offline atlas-processing utility
+(Pillow and NumPy); running or building the game does not require Python or an
+image-generation service. Normal/roughness maps are artistically derived from
+the generated images, not measured scans.
 
 ## The campaign
 

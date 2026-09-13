@@ -8,6 +8,8 @@ import { part, shapeGeometry } from './primitives';
 import { ViewResources } from './resources';
 import { WorldResidents } from './residents';
 import { createWorldScenery, type WorldScenery } from './world';
+import { lightWorld, positionSun, skyEnvironment } from './atmosphere';
+import { WorldPostprocessing } from './postprocessing';
 
 export type { GroundPoint, MovementBasis } from './camera';
 export type ViewQuality = 'low' | 'high';
@@ -95,11 +97,12 @@ function createTell(resources: ViewResources, parent: THREE.Object3D): { group: 
 
 class Presentation {
   readonly scene = new THREE.Scene();
-  readonly resources = new ViewResources();
+  readonly resources: ViewResources;
   readonly scenery: WorldScenery;
   readonly sun: THREE.DirectionalLight;
   readonly effects: WorldEffects;
   readonly residents: WorldResidents;
+  readonly environment: THREE.WebGLRenderTarget;
   private readonly actorVisuals = new Map<string, ActorVisual>();
   private readonly postVisuals = new Map<string, PostVisual>();
   private hero: ActorModel | undefined;
@@ -118,34 +121,22 @@ class Presentation {
   private convoySpeed = 0;
   private cosmeticTime = 0;
 
-  constructor(readonly world: WorldBlueprint) {
-    this.scene.background = new THREE.Color(palette.fog);
-    this.scene.fog = new THREE.Fog(palette.fog, 48, 158);
+  constructor(readonly world: WorldBlueprint, renderer: THREE.WebGLRenderer, environment?: THREE.WebGLRenderTarget) {
+    this.resources = new ViewResources(new THREE.TextureLoader(), renderer.capabilities.getMaxAnisotropy());
     this.scenery = createWorldScenery(this.resources, world);
     this.scene.add(this.scenery.group);
+    this.environment = environment ?? skyEnvironment(renderer, this.scenery.group);
+    this.scene.environment = this.environment.texture;
+    this.scene.environmentIntensity = 0.55;
     this.effects = new WorldEffects(this.resources, this.scene);
     this.residents = new WorldResidents(this.resources, this.scene);
-    const skyLight = new THREE.HemisphereLight('#d3e2d6', '#8d805b', 1.55);
-    this.scene.add(skyLight);
-    this.sun = new THREE.DirectionalLight(palette.sun, 2.1);
-    this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(2048, 2048);
-    this.sun.shadow.camera.left = -27;
-    this.sun.shadow.camera.right = 27;
-    this.sun.shadow.camera.top = 27;
-    this.sun.shadow.camera.bottom = -27;
-    this.sun.shadow.camera.near = 1;
-    this.sun.shadow.camera.far = 115;
-    this.sun.shadow.bias = -0.00035;
-    this.sun.shadow.normalBias = 0.08;
-    this.sun.shadow.radius = 3;
-    this.scene.add(this.sun, this.sun.target);
+    this.sun = lightWorld(this.scene);
     const fortress = world.sites.find((site) => site.kind === 'fortress');
     if (fortress) {
       const anchor = this.scenery.flagAnchors.get(fortress.id);
       if (anchor) {
         this.fortressFlag = new THREE.Mesh(shapeGeometry(this.resources, 'cloth'),
-          this.resources.material(palette.villain, { side: THREE.DoubleSide }));
+          this.resources.material(palette.villain, { side: THREE.DoubleSide, surface: 'cloth' }));
         this.fortressFlag.position.copy(anchor);
         this.fortressFlag.scale.set(1.7, 1.2, 1);
         this.scene.add(this.fortressFlag);
@@ -182,7 +173,7 @@ class Presentation {
 
   private makePost(post: OutpostSnapshot): PostVisual {
     const flag = new THREE.Mesh(shapeGeometry(this.resources, 'cloth'),
-      this.resources.material(factionColors[post.faction], { side: THREE.DoubleSide }));
+      this.resources.material(factionColors[post.faction], { side: THREE.DoubleSide, surface: 'cloth' }));
     const anchor = this.scenery.flagAnchors.get(post.id);
     if (!anchor) throw new Error(`Outpost ${post.id} is missing from its world blueprint.`);
     flag.position.copy(anchor);
@@ -210,6 +201,7 @@ class Presentation {
   }
 
   update(snapshot: Readonly<GameSnapshot>, dt: number, camera: THREE.Camera, reducedMotion: boolean): void {
+    this.resources.assertTextures();
     this.cosmeticTime += dt;
     if (!this.hero) {
       this.hero = createActor(this.resources, 'hero', snapshot.faction, true);
@@ -231,7 +223,7 @@ class Presentation {
         const anchor = this.scenery.flagAnchors.get(home.id);
         if (anchor) {
           const flag = new THREE.Mesh(shapeGeometry(this.resources, 'cloth'),
-            this.resources.material(factionColors[snapshot.faction], { side: THREE.DoubleSide }));
+            this.resources.material(factionColors[snapshot.faction], { side: THREE.DoubleSide, surface: 'cloth' }));
           flag.position.copy(anchor);
           flag.scale.set(1.4, 0.93, 1);
           this.scene.add(flag);
@@ -265,18 +257,14 @@ class Presentation {
     this.scenery.update(this.cosmeticTime, reducedMotion);
     const fortressColor = snapshot.fortress.bossDefeated ? palette.teal : snapshot.fortress.unlocked ? palette.brass : palette.villain;
     if (this.fortressFlag) {
-      this.fortressFlag.material = this.resources.material(fortressColor, { side: THREE.DoubleSide });
+      this.fortressFlag.material = this.resources.material(fortressColor, { side: THREE.DoubleSide, surface: 'cloth' });
       this.fortressFlag.rotation.y = reducedMotion ? 0 : Math.sin(this.cosmeticTime * 1.35) * 0.12;
     }
     if (this.fortressRing) {
       this.fortressRing.material = this.resources.material(fortressColor, { unlit: true, opacity: 0.45, depthWrite: false });
     }
     // A player-centred shadow frustum preserves detail without a map-sized shadow texture.
-    const shadowX = Math.round(snapshot.player.x * 8) / 8;
-    const shadowZ = Math.round(snapshot.player.z * 8) / 8;
-    this.sun.position.set(shadowX - 32, 48, shadowZ + 24);
-    this.sun.target.position.set(shadowX, 0, shadowZ);
-    this.sun.target.updateMatrixWorld();
+    positionSun(this.sun, snapshot.player.x, snapshot.player.z);
 
     if (this.convoy && this.convoyBar && this.convoyCargo) {
       this.convoy.root.position.set(snapshot.convoy.x, 0.08, snapshot.convoy.z);
@@ -349,7 +337,7 @@ class Presentation {
         this.postVisuals.set(post.id, visual);
       }
       const color = post.owner === 'player' ? palette.teal : factionColors[post.faction];
-      visual.flag.material = this.resources.material(color, { side: THREE.DoubleSide });
+      visual.flag.material = this.resources.material(color, { side: THREE.DoubleSide, surface: 'cloth' });
       visual.flag.rotation.y = reducedMotion ? 0 : Math.sin(this.cosmeticTime * 1.35 + post.x) * 0.12;
       visual.ring.material = this.resources.material(post.owner === 'player' ? palette.teal : palette.hostile,
         { unlit: true, opacity: 0.34, depthWrite: false });
@@ -395,7 +383,9 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const camera = new FollowCamera(canvas);
-  let presentation = new Presentation(blueprint);
+  let presentation = new Presentation(blueprint, renderer);
+  const environment = presentation.environment;
+  let postprocessing: WorldPostprocessing | undefined;
   let quality: ViewQuality = options.quality ?? 'high';
   let reducedMotion = options.reducedMotion ?? false;
   let disposed = false;
@@ -416,10 +406,19 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality === 'low' ? 1 : 1.75));
     renderer.setSize(width, height, false);
     camera.resize(width, height);
+    postprocessing?.resize(width, height, renderer.getPixelRatio());
   }
   function applyQuality(): void {
     presentation.setQuality(quality === 'low');
     renderer.shadowMap.enabled = quality !== 'low';
+    if (quality === 'low') {
+      postprocessing?.dispose();
+      postprocessing = undefined;
+    } else if (!postprocessing) {
+      postprocessing = new WorldPostprocessing(renderer, presentation.scene, camera.camera);
+      const size = renderer.getSize(new THREE.Vector2());
+      postprocessing.resize(size.x, size.y, renderer.getPixelRatio());
+    }
   }
   function onContextLost(event: Event): void {
     event.preventDefault();
@@ -439,8 +438,10 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
       assertUsable();
       if (!Number.isFinite(dt) || dt < 0) throw new Error('View frame time must be a finite nonnegative number.');
       if (snapshot.world.id !== presentation.world.id || (runId !== undefined && (runId !== snapshot.runId || faction !== snapshot.faction || snapshot.tick < lastTick))) {
+        postprocessing?.dispose();
+        postprocessing = undefined;
         presentation.dispose();
-        presentation = new Presentation(snapshot.world);
+        presentation = new Presentation(snapshot.world, renderer, environment);
         camera.reset();
         applyQuality();
       }
@@ -450,7 +451,8 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
       const frameDt = Math.min(dt, 0.1);
       camera.update(snapshot.player, frameDt);
       presentation.update(snapshot, frameDt, camera.camera, reducedMotion);
-      renderer.render(presentation.scene, camera.camera);
+      if (postprocessing) postprocessing.render();
+      else renderer.render(presentation.scene, camera.camera);
     },
     getMoveBasis: () => camera.getMoveBasis(),
     screenToWorld: (clientX, clientY) => camera.screenToWorld(clientX, clientY),
@@ -481,6 +483,8 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
       canvas.removeEventListener('webglcontextlost', onContextLost);
       canvas.removeEventListener('webglcontextrestored', onContextRestored);
       presentation.dispose();
+      postprocessing?.dispose();
+      environment.dispose();
       renderer.dispose();
     },
   };

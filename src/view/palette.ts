@@ -4,8 +4,8 @@ export const palette = {
   brass: '#c9a45a',
   teal: '#427b74',
   ember: '#b75845',
-  grass: '#a6ae6b',
-  meadow: '#b9b77d',
+  grass: '#789264',
+  meadow: '#92956b',
   earth: '#b9a073',
   road: '#d3bc8e',
   bank: '#918a65',
@@ -30,7 +30,7 @@ export const palette = {
   villain: '#7f3648',
   hostile: '#a65945',
   sun: '#ffe1a1',
-  fog: '#b6cbba',
+  fog: '#a8bdc4',
 } as const;
 
 export type ViewFaction = 'elf' | 'guard' | 'villain';

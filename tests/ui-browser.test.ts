@@ -1,4 +1,4 @@
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
@@ -6,7 +6,7 @@ import {
   click, evaluate, launchBrowser, openPage, screenshot, until,
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeOwnedBrowser } from "../vendor/aegis-engine/packages/render-three/src/testing/browser-lifecycle";
+import { closeTestBrowser } from "./browser-cleanup";
 import { claimRewards, createCampaign, createProfile, type GameSnapshot, type MetaProfile } from "../src/game";
 
 interface Inspection {
@@ -26,6 +26,8 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
   let origin: string;
   const captures = process.env.KOROVANY_CAPTURE_DIR;
   const pages = new Set<CdpSession>();
+  // SwiftShader may spend seconds per frame; the game caps catch-up at six ticks.
+  const gameplayTimeout = 60_000;
 
   async function inspect(): Promise<Inspection> {
     return evaluate(cdp, "window.korovany.inspect()");
@@ -81,9 +83,20 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
   }
 
   async function closeTab(page: CdpSession): Promise<void> {
-    await page.send("Page.close");
+    if (!browser) throw new Error("Browser is not running.");
+    const { targetInfo } = await page.send<{ targetInfo: { targetId: string } }>("Target.getTargetInfo");
+    // Ask the browser to close the target, not a renderer whose reply socket is closing.
+    const response = await fetch(`http://127.0.0.1:${browser.port}/json/close/${targetInfo.targetId}`);
+    expect(response.ok).toBe(true);
     page.close();
     pages.delete(page);
+    const deadline = Date.now() + 30_000;
+    while (true) {
+      const targets = await (await fetch(`http://127.0.0.1:${browser.port}/json/list`)).json() as { id: string }[];
+      if (!targets.some(target => target.id === targetInfo.targetId)) break;
+      if (Date.now() >= deadline) throw new Error(`Browser did not close owned tab ${targetInfo.targetId}.`);
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
   }
 
   beforeAll(async () => {
@@ -102,12 +115,12 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
 
   afterAll(async () => {
     for (const page of pages) page.close();
-    if (browser) {
-      await closeOwnedBrowser(browser);
-      await rm(browser.profile, { recursive: true, force: true });
+    try {
+      if (browser) await closeTestBrowser(browser);
+    } finally {
+      await server?.close();
     }
-    await server?.close();
-  }, 30_000);
+  }, 60_000);
 
   it("plays through actual inputs, pauses without leaking keys, saves, reloads, and localizes the atlas", async () => {
     expect((await inspect()).overlay).toBe("menu");
@@ -135,7 +148,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     start = await inspect();
     await press("KeyW", true);
     const beforeMove = start.snapshot?.player;
-    await until(cdp, `window.korovany.inspect().snapshot.tick`, (tick: number) => tick >= (start.snapshot?.tick ?? 0) + 30, 20_000);
+    await until(cdp, `window.korovany.inspect().snapshot.tick`, (tick: number) => tick >= (start.snapshot?.tick ?? 0) + 30, gameplayTimeout);
     await press("KeyW", false);
     const moved = await inspect();
     expect(Math.hypot((moved.snapshot?.player.x ?? 0) - (beforeMove?.x ?? 0), (moved.snapshot?.player.z ?? 0) - (beforeMove?.z ?? 0))).toBeGreaterThan(0.5);
@@ -201,6 +214,17 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
 
     await tap("Escape");
     await clickSelector('[data-action="open-settings"]');
+    for (const quality of ["low", "high", "low", "high"]) {
+      await evaluate(cdp, `(() => {
+        const select = document.querySelectorAll('.settings-panel select')[1];
+        select.value = ${JSON.stringify(quality)};
+        select.dispatchEvent(new Event('change', {bubbles:true}));
+        return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      })()`);
+      expect((await inspect()).settings.quality).toBe(quality);
+      expect((await inspect()).overlay).toBe("settings");
+      expect((await inspect()).snapshot?.runId).toBe(saved.snapshot?.runId);
+    }
     await clickSelector('input[type="checkbox"]:last-child');
     expect((await inspect()).settings.muted).toBe(true);
     await clickSelector('.settings-panel [data-action="open-pause"]');
@@ -216,7 +240,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     await capture("atlas-ru-narrow");
     expect(await evaluate(cdp, "document.querySelector('.map-panel').scrollWidth <= document.querySelector('.map-panel').clientWidth")).toBe(true);
     expect(await evaluate(cdp, "Object.keys(window.korovany).join(',')")).toBe("inspect");
-  }, 120_000);
+  }, 240_000);
 
   it("surfaces corrupt and blocked storage without crashing or claiming a save exists", async () => {
     const corruption = await cdp.send<{ identifier: string }>("Page.addScriptToEvaluateOnNewDocument", {
@@ -274,7 +298,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     expect((await evaluate<Inspection>(untouched, "window.korovany.inspect()")).snapshot?.tick).toBe(original.snapshot?.tick);
     await activate(owner);
     await clickSelector('[data-action="continue"]');
-    await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= (original.snapshot?.tick ?? 0) + 40, 20_000);
+    await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= (original.snapshot?.tick ?? 0) + 40, gameplayTimeout);
     await tap("Escape");
     const advanced = await inspect();
     const advancedRaw = await evaluate<string>(cdp, "localStorage.getItem('korovany2:campaign')");
@@ -291,7 +315,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     const staleContinue = await newTab();
     await activate(first);
     await clickSelector('[data-action="continue"]');
-    await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= (advanced.snapshot?.tick ?? 0) + 35, 20_000);
+    await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= (advanced.snapshot?.tick ?? 0) + 35, gameplayTimeout);
     await tap("Escape");
     const freshest = await inspect();
     await activate(staleContinue);
@@ -300,7 +324,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     expect((await inspect()).snapshot?.tick).toBeGreaterThanOrEqual(freshest.snapshot?.tick ?? 0);
     await tap("Escape");
     await closeTab(first);
-  }, 90_000);
+  }, 240_000);
 
   it("protects a different run from a dirty active tab and merges ledger purchases against the latest profile", async () => {
     await clickSelector('[data-action="title"]');
@@ -309,7 +333,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     await activate(active);
     await clickSelector('[data-action="continue"]');
     const start = await inspect();
-    await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= (start.snapshot?.tick ?? 0) + 25, 20_000);
+    await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= (start.snapshot?.tick ?? 0) + 25, gameplayTimeout);
     const replacement = createCampaign({ seed: "concurrent-road", faction: "elf", runId: "ui-concurrent-new-run" }).serialize();
     const replacementRaw = JSON.stringify(replacement);
     // A separate document writes a valid new-run save while the active page still has unsaved ticks.
@@ -344,5 +368,5 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     expect(combined.completedRuns).toEqual(["ui-profile-fixture"]);
     await closeTab(ledgerFirst);
     expect(await evaluate(cdp, "JSON.parse(localStorage.getItem('korovany2:profile'))")).toEqual(combined);
-  }, 90_000);
+  }, 240_000);
 });
