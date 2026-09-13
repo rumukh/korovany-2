@@ -201,6 +201,17 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
 
     await tap("Escape");
     await clickSelector('[data-action="open-settings"]');
+    for (const quality of ["low", "high", "low", "high"]) {
+      await evaluate(cdp, `(() => {
+        const select = document.querySelectorAll('.settings-panel select')[1];
+        select.value = ${JSON.stringify(quality)};
+        select.dispatchEvent(new Event('change', {bubbles:true}));
+        return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      })()`);
+      expect((await inspect()).settings.quality).toBe(quality);
+      expect((await inspect()).overlay).toBe("settings");
+      expect((await inspect()).snapshot?.runId).toBe(saved.snapshot?.runId);
+    }
     await clickSelector('input[type="checkbox"]:last-child');
     expect((await inspect()).settings.muted).toBe(true);
     await clickSelector('.settings-panel [data-action="open-pause"]');
