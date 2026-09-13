@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "production": "korovany2-hollow-road-20260913",
+  "model": "acestep-v15-xl-sft",
+  "planner": "acestep-5Hz-lm-1.7B",
+  "steps": 50,
+  "cues": [
+    {
+      "id": "title",
+      "duration": 120,
+      "crossfade": 4,
+      "loop": true,
+      "seed": 9132601,
+      "bpm": 72,
+      "key": "D minor",
+      "meter": "4/4",
+      "prompt": "Original instrumental title music for a dark borderland folk mystery, intimate and patient, human warmth held against an uncertain road. A memorable rising three-note protective-bell motif is answered by a low bowed viola melody over dry plucked cittern and wooden frame-drum taps. Small acoustic string ensemble, breathy wooden flute used sparingly, resonant iron bells rather than bright glockenspiel. Begin with the plucked road figure already moving, introduce the viola theme, broaden gently into interwoven strings and a measured walking pulse, then return to the spare opening texture with the pulse still alive. Weathered wood, bow grain, natural room air, restrained low end, warm close recording, wide but coherent stereo, generous melodic breathing room. Entirely instrumental, no voice or choir, no electronic dance beat, no trailer impacts. End on a sustained open fifth with continuous plucked motion suitable for a clean loop."
+    },
+    {
+      "id": "road",
+      "duration": 150,
+      "crossfade": 4,
+      "loop": true,
+      "seed": 9132602,
+      "bpm": 84,
+      "key": "D minor",
+      "meter": "6/8",
+      "prompt": "Original instrumental travelling music for a wagon convoy crossing wet borderland pastures and old bridges. A lilting dry cittern ostinato and muted plucked low strings carry a patient walking rhythm, with brushed frame drum, small wooden clacks and occasional harness-like iron bell. Bowed viola unfolds a modest modal melody, answered by a distant wooden flute; a rising three-note bell figure quietly recalls shelter and maintained road wards. Small acoustic folk chamber ensemble, earthy and alert without urgency, weathered intimate room sound, no glossy orchestra or electronic percussion. Develop through a lighter plucked middle passage and a warm string answer, never become heroic bombast. Entirely instrumental with no voices or choir. Keep a steady rolling pulse and return to the opening open-string texture at the end, still moving for seamless road exploration."
+    },
+    {
+      "id": "mystery",
+      "duration": 120,
+      "crossfade": 4,
+      "loop": true,
+      "seed": 9132603,
+      "bpm": 60,
+      "key": "D minor",
+      "meter": "4/4",
+      "prompt": "Original instrumental investigation underscore for black ward-glass, missing convoy crews and a deserted borderland archive. Quiet close bowed viola harmonics, a low cello open fifth, isolated dry cittern questions and softly rubbed resonant glass. Sparse wooden taps suggest thought rather than a beat; a low protective iron bell sounds rarely and decays naturally. Let an incomplete three-note modal phrase move between plucked strings and viola, gather a gentle dissonance in the middle, then thin back to the original open fifth. Restrained folk chamber mystery, fragile material textures, spacious natural room, plenty of silence between gestures but a continuous soft string floor. No voices, whispers, choir, jump scares, synthetic horror risers or huge impacts. Fully instrumental, unresolved and contemplative, finish in the same sustained texture for an edit-clean loop."
+    },
+    {
+      "id": "combat",
+      "duration": 120,
+      "crossfade": 4,
+      "loop": true,
+      "seed": 9132604,
+      "bpm": 116,
+      "key": "D minor",
+      "meter": "4/4",
+      "prompt": "Original instrumental tactical skirmish music for a grounded borderland convoy battle. Taut short bowed viola and cello figures, dry low cittern strumming, interlocking wooden stick percussion and deep leather frame drums. A clipped three-note minor theme passes between low strings and a narrow higher fiddle line. Urgent but disciplined acoustic folk chamber ensemble, clear rhythmic attacks and breathing space for game impacts, firm bass without sub-bass excess. Alternate a driving rhythmic statement with a lean stalking passage, then rebuild the same pulse without cinematic crescendo overload. Protective iron bell punctuation only at structural turns. No brass fanfare, electric guitar, electronic drums, choir or vocals. Maintain the final rhythmic pattern through the ending so it can cycle into the opening without a terminal hit."
+    },
+    {
+      "id": "fortress",
+      "duration": 120,
+      "crossfade": 4,
+      "loop": true,
+      "seed": 9132605,
+      "bpm": 92,
+      "key": "D minor",
+      "meter": "4/4",
+      "prompt": "Original instrumental fortress approach and commander confrontation score in a dark borderland folk world. Weighty bowed cellos, rough viola double stops, low plucked strings, slow tightly disciplined frame-drum and woodblock march. A bronze foundry bell toll opens space around an austere descending minor phrase; high string harmonics reveal black ward-glass beneath the military order. Intimate small ensemble made imposing through register and restraint, dry foreground percussion against stone-room string resonance. Build from measured threat to a denser contrapuntal middle, then retain momentum in a spare low-string final section. No choir, speech, brass spectacle, modern beat or giant trailer impacts. Instrumental throughout. End with the march and low open-string pattern continuing for a clean sustained combat loop."
+    },
+    {
+      "id": "ending-commons",
+      "duration": 90,
+      "crossfade": 0,
+      "loop": false,
+      "seed": 9132606,
+      "bpm": 70,
+      "key": "D major",
+      "meter": "6/8",
+      "prompt": "Original instrumental epilogue for Three Bells: border villages restore shared protection after a costly journey. Three different warm iron bells answer each other over dry cittern arpeggios and a tender bowed viola melody. Small acoustic folk string ensemble, low cello, very soft brushed frame drum, a little wooden flute. The familiar rising three-note shelter motif now resolves into a modest warm major harmony. Begin quietly, let the instruments answer as neighbours rather than a grand orchestra, open into one restrained luminous statement, then let percussion fall away and close with an unhurried resolved strings-and-bell cadence and complete natural decay. Weathered intimate recording, relief with remembered loss, never triumphalist. Entirely instrumental, no singing or choir."
+    },
+    {
+      "id": "ending-compact",
+      "duration": 90,
+      "crossfade": 0,
+      "loop": false,
+      "seed": 9132607,
+      "bpm": 62,
+      "key": "D minor",
+      "meter": "4/4",
+      "prompt": "Original instrumental epilogue for The Cloister's Prisoner: survival purchased through an uneasy binding compact. A solitary bowed viola sings a narrow modal melody over low cello open strings and carefully spaced dry cittern notes. Soft iron bell and rubbed glass harmonics reply without resolving the question. Small acoustic folk chamber arrangement, cold stone-room resonance, human bow texture and restrained low dynamics, no pulse beyond an occasional muted wooden tap. Introduce the shelter motif with its last note altered, develop a brief warmer middle, then withdraw into a dignified ambiguous open-fifth cadence, complete natural bell and string decay. No jump scare, huge swell, electronic beat, voice or choir; entirely instrumental, thoughtful and bittersweet rather than evil."
+    },
+    {
+      "id": "ending-cinder",
+      "duration": 90,
+      "crossfade": 0,
+      "loop": false,
+      "seed": 9132608,
+      "bpm": 66,
+      "key": "D minor",
+      "meter": "4/4",
+      "prompt": "Original instrumental epilogue for Broken Glass: the old protection is shattered and survivors face a bare uncertain road. Dry solitary cittern, a low bowed cello lament, grainy viola harmonics and a few small struck glass tones fading into room air. Sparse hollow wooden percussion enters only in the middle, supporting a stoic modal melody rather than celebration. Transform the rising three-note shelter motif into a falling answer, broaden briefly with close acoustic strings, then leave the plucked instrument alone to make a quiet final cadence with complete natural decay. Ash-dry intimate folk chamber sound, mournful yet resolute, restrained and human. No explosive destruction effects, choir, vocals or modern electronic beat; entirely instrumental."
+    }
+  ]
+}
