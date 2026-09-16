@@ -2,11 +2,14 @@
 import argparse
 import html
 import json
+import shutil
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from xml.etree import ElementTree
 
 from prepare import HERE, digest, load, save
+from recognition import recognize_once
 
 
 def validate_approval(lock, approval):
@@ -35,7 +38,9 @@ def validate_segment(segment, sp):
         raise RuntimeError(f"Missing pronunciation markup: {segment['id']}")
 
 
-def produce(root, output, approval_path, engine, skill):
+def produce(root, output, approval_path, engine, skill, workers=1):
+    if not 1 <= workers <= 8:
+        raise RuntimeError("Speech production permits between one and eight bounded workers.")
     if output.is_relative_to(HERE.parents[1]):
         raise RuntimeError("Lossless production masters must remain outside the repository.")
     sys.path.insert(0, str(skill / "scripts"))
@@ -57,8 +62,7 @@ def produce(root, output, approval_path, engine, skill):
     region, key, credential_source = sp.get_speech_resource(manifest["backend"])
     if region != audition_report["region"]:
         raise RuntimeError("Speech resource region changed since engine probe.")
-    receipts = []
-    for segment in manifest["segments"]:
+    def render(segment):
         identifier = segment["id"]
         validate_segment(segment, sp)
         receipt_path = output / "receipts" / f"{identifier}.json"
@@ -80,8 +84,7 @@ def produce(root, output, approval_path, engine, skill):
             for path_field, hash_field in (("raw_path", "raw_sha256"), ("final_path", "final_sha256"), ("ssml_path", "ssml_sha256")):
                 if digest(receipt[path_field]) != receipt[hash_field]:
                     raise RuntimeError(f"Previously produced audio changed: {identifier}")
-            receipts.append(receipt)
-            continue
+            return receipt
         if raw_path.exists() and not request_path.exists():
             raise RuntimeError(f"Raw master has no request provenance: {identifier}")
         save(request_path, request)
@@ -93,7 +96,6 @@ def produce(root, output, approval_path, engine, skill):
         audition = next((s for s in audition_report["segments"] if s["id"] == identifier), None)
         if not raw_path.exists():
             if audition and Path(audition["ssml_path"]).read_text(encoding="utf-8") == segment["ssml"]:
-                import shutil
                 if digest(audition["raw_path"]) != audition["raw_sha256"]:
                     raise RuntimeError(f"Audition master changed: {identifier}")
                 raw_path.parent.mkdir(parents=True, exist_ok=True)
@@ -101,11 +103,42 @@ def produce(root, output, approval_path, engine, skill):
             else:
                 sp.synthesize(region, key, segment["ssml"], raw_path)
         final_path.parent.mkdir(parents=True, exist_ok=True)
-        duration, fit_factor, fit_ok = sp.conform_audio(raw_path, final_path, None, 1.0)
-        assessment = sp.assess(region, key, manifest["language"], final_path, segment["text"])
-        transcription = sp.transcribe(region, key, manifest["language"], final_path)
+        reuse_audition = audition and digest(raw_path) == audition["raw_sha256"] and Path(audition["ssml_path"]).read_text(encoding="utf-8") == segment["ssml"]
+        if reuse_audition:
+            if digest(audition["final_path"]) != audition["final_sha256"]:
+                raise RuntimeError(f"Audition conformed master changed: {identifier}")
+            shutil.copyfile(audition["final_path"], final_path)
+            duration, fit_factor, fit_ok = audition["duration_seconds"], audition["fit_factor"], audition["checks"]["timing"]
+            assessment = {key: audition[key] for key in ("assessment_transcription", "accuracy_score", "fluency_score", "completeness_score")}
+            transcription = audition["transcription"]
+            recognition = {"decision": "RECOGNIZED", "transcription": transcription}
+            targets = audition["target_occurrences"]
+        else:
+            if not final_path.exists():
+                duration, fit_factor, fit_ok = sp.conform_audio(raw_path, final_path, None, 1.0)
+            else:
+                duration, fit_factor, fit_ok = sp.media_duration(final_path), 1.0, True
+            assessment_path = output / "assessment" / f"{identifier}.json"
+            if assessment_path.exists():
+                cached = load(assessment_path)
+                if cached["audio_sha256"] != digest(final_path):
+                    raise RuntimeError(f"Assessment master changed: {identifier}")
+                assessment = cached["result"]
+            else:
+                assessment = sp.assess(region, key, manifest["language"], final_path, segment["text"])
+                save(assessment_path, {"audio_sha256": digest(final_path), "result": assessment})
+            recognition_path = output / "recognition" / f"{identifier}.json"
+            if recognition_path.exists():
+                cached = load(recognition_path)
+                if cached["audio_sha256"] != digest(final_path):
+                    raise RuntimeError(f"Independent ASR master changed: {identifier}")
+                recognition = cached["result"]
+            else:
+                recognition = recognize_once(region, key, manifest["language"], final_path)
+                save(recognition_path, {"audio_sha256": digest(final_path), "result": recognition})
+            transcription = recognition["transcription"]
+            targets = sp.target_occurrence_results(assessment, segment["target_words"])
         waveform = sp.waveform_metrics(final_path)
-        targets = sp.target_occurrence_results(assessment, segment["target_words"])
         quality = manifest["quality"]
         checks = {
             "markup": True, "timing": fit_ok and fit_factor == 1.0,
@@ -115,19 +148,39 @@ def produce(root, output, approval_path, engine, skill):
             "target_pronunciation": all(t["accuracy_score"] is not None and t["accuracy_score"] >= quality["min_target_word_accuracy"] for t in targets),
             "not_clipped": waveform["clipped_sample_fraction"] == 0,
             "nonempty": duration >= 0.15 and waveform["peak"] > 0.001,
+            "independent_asr": recognition["decision"] == "RECOGNIZED",
         }
         receipt = {
             "id": identifier, "speaker": segment["speaker"], "voice": segment["voice"], "text": segment["text"],
             "source_sha256": segment["sourceSha256"], "raw_path": str(raw_path), "final_path": str(final_path),
+            "reused_audition": bool(reuse_audition),
             "ssml_path": str(ssml_path), "raw_sha256": digest(raw_path), "final_sha256": digest(final_path),
             "ssml_sha256": digest(ssml_path), "duration_seconds": duration, "fit_factor": fit_factor,
             "required_ipa": segment["required_ipa"], "target_words": segment["target_words"],
-            "target_occurrences": targets, **assessment, "transcription": transcription,
+            "target_occurrences": targets, **assessment, "transcription": transcription, "independent_recognition": recognition,
             "waveform": waveform, "checks": checks, "decision": "PASS" if all(checks.values()) else "NEEDS_REVIEW",
         }
         save(receipt_path, receipt)
-        receipts.append(receipt)
-        print(f"{engine} {len(receipts)}/{len(manifest['segments'])} {identifier} {receipt['decision']}", flush=True)
+        return receipt
+
+    receipts, errors = [], []
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(render, segment): segment["id"] for segment in manifest["segments"]}
+        for future in as_completed(futures):
+            identifier = futures[future]
+            try:
+                receipt = future.result()
+            except (RuntimeError, OSError) as error:
+                errors.append({"id": identifier, "error": str(error)})
+                print(f"{engine} {identifier} ERROR: {error}", flush=True)
+                continue
+            receipts.append(receipt)
+            print(f"{engine} {len(receipts)}/{len(manifest['segments'])} {identifier} {receipt['decision']}", flush=True)
+    if errors:
+        save(output / f"failed-requests-{engine}.json", errors)
+        raise RuntimeError(f"{engine}: {len(errors)} failed requests; persisted successful masters and receipts, see failed-requests report.")
+    by_id = {item["id"]: item for item in receipts}
+    receipts = [by_id[segment["id"]] for segment in manifest["segments"]]
     failed = [item["id"] for item in receipts if item["decision"] != "PASS"]
     report = {
         "schema_version": "1.0", "provider": "azure-speech", "region": region, "credential_source": credential_source,
@@ -148,6 +201,7 @@ if __name__ == "__main__":
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--approval", type=Path, required=True)
     parser.add_argument("--engine", required=True)
+    parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--skill-root", type=Path, default=Path.home() / ".copilot" / "skills" / "speech-production")
     args = parser.parse_args()
-    produce(args.prepared_dir.resolve(), args.output_dir.resolve(), args.approval.resolve(), args.engine, args.skill_root.resolve())
+    produce(args.prepared_dir.resolve(), args.output_dir.resolve(), args.approval.resolve(), args.engine, args.skill_root.resolve(), args.workers)

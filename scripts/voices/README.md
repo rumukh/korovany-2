@@ -82,11 +82,19 @@ human listening. An engine with an ignored sentinel cannot proceed.
 ```
 
 Repeat for each engine in `cast.json`. Requests and receipts are hash-bound and
-resumable. Identical audition masters are reused. No automatic resynthesis or
+resumable. `--workers 2` runs bounded independent requests; the maximum is eight
+workers per process. Receipts are emitted immediately and final reports retain
+manifest order. Failed request IDs are recorded explicitly for a later resume.
+Identical audition masters **and their assessment** are reused. New assessment
+results are cached before independent transcription so a network interruption
+does not discard completed work. No automatic resynthesis or
 score chasing occurs. There is no time compression; maximum fit factor is
 1.0. Raw 24 kHz mono PCM and conformed lossless masters stay outside the repo.
 To repair an actual bad segment, use a new revision rather than overwriting
 the approved evidence.
+
+Run `python scripts\voices\test_pipeline.py` for offline approval/concurrency/
+resume regression checks. These use a mock backend, not Azure.
 
 Acoustic scoring uses the existing film-assessment CPU implementation:
 
@@ -96,6 +104,26 @@ Acoustic scoring uses the existing film-assessment CPU implementation:
 
 NISQA is a listening aid, not a stress, acting or semantic verdict. It does not
 run on GPU or assess game-music balance.
+
+`qa_corpus.py` checks every persisted master/SSML hash, preserves automated
+flags, and builds playable review and whole-block representative indexes.
+Its approval carry-forward applies only to byte-identical audition masters.
+`metric_evidence.py` corrects one proven bookkeeping issue offline: an English
+target such as `Raut` assessed as the exact source possessive `Raut's` is not a
+missing name. Original scores/checks remain in the correction record; the
+unchanged minimum target score still applies. No new audio is made.
+`transcribe_flags.py` supports one cached full-file Azure ASR pass when a
+single-utterance result appears incomplete. A repeated recognition result is
+evidence, not an automatic pronunciation or human-listening approval.
+
+`freeze_review.py --qa-dir <qa> --asr-dir <asr> --production-dir <masters>
+--output-dir <new-review>` freezes listening indices, corroboration, retained
+metrics, and all final master hashes. The final review lock can bind an informed
+human decision accepting unchanged recordings with disclosed metric limitations;
+that is not a claim that every raw flag was individually heard or automatically
+passed. `record_release.py --review-dir <frozen-review> --decision <relayed-human.json>
+--output <release-review.json>` requires that explicit decision and verifies its
+lock before generating hash-bound acceptance records.
 
 ## Publish and assert coverage
 
@@ -112,8 +140,16 @@ false alarm can be retained via `--review <review.json>`, containing
 The review is recorded separately; an automated failure is never relabeled
 automated PASS.
 
+While an informed release decision is pending, `publish.py --stage-only` may
+encode and decode-check clips **outside the repository**. It writes only
+`staging-index.json`, never a runtime manifest or final provenance. After approval,
+normal publishing with `--review <release-review.json> --staged-dir <staging-public>`
+validates and copies the exact staged Oggs without synthesizing or re-encoding.
+The normal publish guard still applies to every retained metric flag.
+
 Deployment uses 24 kHz mono Vorbis quality 3, fully decoded and duration-checked.
-The runtime manifest is published last. The provenance manifest records
+Existing hash-addressed Oggs are verified and reused on resume, never blindly
+re-encoded. The runtime manifest is published last. The provenance manifest records
 source/cast approval, master/delivery formats, retained limitations and every
 clip hash. Commit only scripts, compact metadata and compressed deployment
 assets; never commit the external WAV masters or cloud credentials.
