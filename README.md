@@ -187,6 +187,13 @@ music, not the simulation: conversation and inspection overlays pause gameplay
 while audio continues. Their **Settings** control can change language or volume
 without closing the scene. Closing a reading scene cancels its narration.
 
+The full voice bank contains 698 localized blocks (349 per language) in 2,265
+sentence-sized clips: approximately 107 minutes across all branches, not one
+playthrough. All 20 NPCs, the player and the narrator have recorded parts.
+Delivery is local 24 kHz mono Ogg Vorbis; lossless masters and production receipts
+are retained separately. Human release acceptance of documented speech-metric
+flags is recorded distinctly from automated passes.
+
 Settings provide independent **Master**, **Music**, **Ambience**, **Sound effects**
 and **Voices** sliders, as well as the existing mute switch. Old settings without
 mix levels load compatible defaults. Pause, mute, a hidden tab and window blur

@@ -15,6 +15,8 @@ import { closeOwnedBrowser } from "../vendor/aegis-engine/packages/render-three/
 interface Decoded {
   src: string;
   channels: number;
+  nativeSampleRate: number;
+  primingSeconds: number;
   duration: number;
   peak: number;
   rms: number;
@@ -47,6 +49,13 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("shipped Ogg audio under a 
       if (!response.ok) throw new Error(src + ": HTTP " + response.status);
       const bytes = await response.arrayBuffer();
       if (String.fromCharCode(...new Uint8Array(bytes, 0, 4)) !== "OggS") throw new Error(src + ": not shipped Ogg");
+      const header = new Uint8Array(bytes, 0, Math.min(bytes.byteLength, 512));
+      const identification = [1,118,111,114,98,105,115];
+      const start = header.findIndex((_, index) => identification.every((byte, offset) => header[index + offset] === byte));
+      if (start < 0 || start + 30 > header.length) throw new Error(src + ": missing Vorbis identification");
+      const vorbis = new DataView(bytes, start);
+      const nativeSampleRate = vorbis.getUint32(12, true);
+      const shortBlock = 2 ** (vorbis.getUint8(28) & 15);
       const decoder = new OfflineAudioContext(2, 1, 48000);
       const buffer = await decoder.decodeAudioData(bytes);
       let peak = 0, squared = 0;
@@ -57,14 +66,17 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("shipped Ogg audio under a 
           squared += sample * sample;
         }
       }
-      return {src,channels:buffer.numberOfChannels,duration:buffer.duration,peak,
+      return {src,channels:buffer.numberOfChannels,nativeSampleRate,
+        primingSeconds:shortBlock/2/nativeSampleRate,duration:buffer.duration,peak,
         rms:Math.sqrt(squared/(buffer.length*buffer.numberOfChannels))};
     })()`);
   }
 
-  function audible(decoded: Decoded, duration: number, channels: number): void {
+  function audible(decoded: Decoded, duration: number, channels: number, nativeSampleRate: number): void {
     expect(decoded.channels, decoded.src).toBe(channels);
-    expect(Math.abs(decoded.duration - duration), decoded.src).toBeLessThanOrEqual(256 / 48000);
+    expect(decoded.nativeSampleRate, decoded.src).toBe(nativeSampleRate);
+    // Decoders may omit the initial half short block; measure it at the source rate, not the resampled rate.
+    expect(Math.abs(decoded.duration - duration), decoded.src).toBeLessThanOrEqual(decoded.primingSeconds + 1 / nativeSampleRate);
     expect(decoded.peak, decoded.src).toBeGreaterThan(0.00001);
     expect(decoded.peak, decoded.src).toBeLessThan(1);
     expect(decoded.rms, decoded.src).toBeGreaterThan(0.000001);
@@ -109,7 +121,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("shipped Ogg audio under a 
     expect(soundtrack.ambience).toHaveLength(8);
     expect(soundtrack.sfx).toHaveLength(24);
     for (const [group, channels] of [[soundtrack.music, 2], [soundtrack.ambience, 2], [soundtrack.sfx, 1]] as const) {
-      for (const asset of group) audible(await decode(asset.src), asset.duration, channels);
+      for (const asset of group) audible(await decode(asset.src), asset.duration, channels, 48000);
     }
   }, 180_000);
 
@@ -122,7 +134,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("shipped Ogg audio under a 
     for (const language of ["ru", "en"]) {
       expect([...manifest.values()].filter((entry) => entry.language === language)).toHaveLength(349);
     }
-    for (const clip of clips) audible(await decode(clip.src), clip.duration, 1);
+    for (const clip of clips) audible(await decode(clip.src), clip.duration, 1, 24000);
   }, 600_000);
 
   it("plays real ending music and terminal cues through the production transport", async () => {
@@ -189,8 +201,9 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("shipped Ogg audio under a 
           language, quality: "low", reducedMotion: true, muted: false, audio: defaultMix(),
         }))});
       })()`);
+      const previousPage = await evaluate<number>(cdp, "performance.timeOrigin");
       await cdp.send("Page.navigate", { url: origin });
-      await until(cdp, "Boolean(window.korovany)", Boolean, 60_000);
+      await until(cdp, `performance.timeOrigin !== ${previousPage} && Boolean(window.korovany)`, Boolean, 60_000);
       expect((await inspect()).state).toBe("locked");
       await select('[data-action="continue"]');
       await until(cdp, `window.korovany.inspect().audio.speaking && window.korovany.inspect().audio.subtitle?.language === "${language}"`,
