@@ -4,6 +4,35 @@ This directory owns speech assets only. Story text remains in the narrative
 data and snapshot renderer. No browser speech fallback or placeholder public
 manifest is generated.
 
+## Released recording
+
+The final recording was explicitly approved on 2026-09-16: "Approve the final
+recording with the documented flags; integrate it". This separate informed
+release covers the unchanged frozen recording, not merely the earlier cast
+auditions. The provenance distinguishes receipt capture time from the unavailable
+exact user-message timestamp.
+
+The shipped corpus contains **698 blocks / 2,265 clips**, with 349 blocks per
+language and all 20 NPCs plus player/narrator. Its unique spoken duration is
+6,417.392448 seconds (about 107 minutes); the Ogg payload is 48,229,701 bytes.
+Seventy previously auditioned segment masters were reused verbatim.
+No final-release resynthesis or time compression was performed.
+
+The recording retains **227 automated flags**, including eight previously
+approved audition segments and 219 new flags accepted in the final release.
+They are not relabeled automated PASS, and release acceptance does not claim
+that every flagged line was individually heard. Thirty-two exact English
+possessive-token bookkeeping corrections preserve the original evidence.
+Short Russian words/names, function-word alignment, and spoken chapter numbers
+remain recognition caveats. CPU acoustic scoring covered 44 speaker/language
+representative blocks: Russian Ivet scored about 3.90 MOS, while the other 43
+scored above 4.7. These scores do not certify words, stress, or acting.
+
+`public\audio\voices\provenance.json` records the exact human release response,
+frozen review-lock hash, retained flags, source/cast approval, and every Ogg
+SHA-256. Line-sized lossless masters, SSML, assessment receipts, frozen listening
+indices, and complete master hashes remain in the external production archive.
+
 ## Inventory and runtime contract
 
 Run `node scripts\voices\export.mjs <external-output-directory>` after installing
