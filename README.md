@@ -171,6 +171,14 @@ merely agreeing on a plan; defeat plays its cue and then falls silent. Presentat
 effects use snapshot events and movement, with distance attenuation, stereo
 placement, rate limits and bounded polyphony. They do not change game rules.
 
+The score contains eight original instrumental compositions totaling 15 minutes,
+eight 32-second regional loops and 24 distinct effects. Production captions,
+source hashes, mastering details and reproduction instructions are retained in
+[`scripts/audio`](scripts/audio/README.md). Voice casting, pronunciation and
+exact narrative coverage are documented in [`scripts/voices`](scripts/voices/README.md).
+The shipped files play offline from the game's HTTP server; synthesis services
+are production tools, not runtime dependencies.
+
 NPC dialogue, selected player responses, inspection narration and terminal
 epilogues look up exact RU/EN paragraph blocks in the voice manifest. Multiple
 clips for a paragraph play in order. Choosing again immediately cancels stale
@@ -195,8 +203,20 @@ It is read-only and provides no simulation controls.
 
 `tests/audio-browser.test.ts` serves test-only PCM fixtures over HTTP to exercise
 real browser media and Web Audio lifecycles; these fixtures are not shipped assets.
-Full soundtrack/voice acceptance additionally requires the generated manifests,
-their referenced media and the exhaustive voice catalogue coverage.
+`tests/audio-assets-browser.test.ts` instead fully decodes every shipped Ogg file
+in Chromium, checks channel count, duration, audibility and headroom, then exercises
+real terminal cues, all three ending scores, and RU/EN conversations with their
+selected player responses. It serves assets beneath a URL prefix to cover
+subdirectory deployment. Run it only with both complete audio banks present:
+
+```powershell
+$env:KOROVANY_BROWSER = '1'
+npm test -- tests\audio-assets-browser.test.ts --maxWorkers=1 --no-file-parallelism
+```
+
+The separate `tests/voice-catalogue.test.ts` checks exact narrative coverage across
+authored branches and outcomes. Browser decoding and speech metrics complement
+human listening; they do not establish acting quality or correct lexical stress.
 
 ## Saves
 
