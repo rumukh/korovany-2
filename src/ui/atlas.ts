@@ -163,7 +163,7 @@ export class Atlas {
       if (!miniature && !namedSettlement && (local || width <= 200)) label(t(site.nameKey), x(site.x), z(site.z) - 4 * scale);
     }
     for (const npc of snapshot.narrative?.npcs ?? []) {
-      if (!npc.available || Math.hypot(npc.x - snapshot.player.x, npc.z - snapshot.player.z) > 38) continue;
+      if (Math.hypot(npc.x - snapshot.player.x, npc.z - snapshot.player.z) > 38) continue;
       const marker = svg("circle", { cx: x(npc.x), cy: z(npc.z), r: 0.85 * scale,
         fill: npc.questAvailable ? "#dba935" : "#398080", stroke: "#efe6d2", "stroke-width": 0.3 * scale, "data-npc": npc.id });
       const title = svg("title", {});

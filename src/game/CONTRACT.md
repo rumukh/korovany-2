@@ -116,6 +116,11 @@ speaker when discovered, otherwise that speaker's location, so map tracking
 does not depend on guessing an undiscovered NPC's coordinates. The `summary`
 explains remaining military/story obligations even after the commander dies.
 
+`npcs` includes residents at discovered locations regardless of talk range or
+nearby threats. `NpcSnapshot.available` means conversation is currently allowed:
+the campaign is playing, the hero is within 4.25m, and both are safe. It is not a
+visibility flag; world and map presenters apply their own draw distances.
+
 Locations are discovered on proximity. Travel requires a discovered eligible
 stop at both ends, the hero within 7m of the departure road node, the convoy
 within 7m of both hero and node, full convoy health, and no living enemy or

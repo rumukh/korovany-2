@@ -94,7 +94,7 @@ export class WorldResidents {
         this.scene.add(person.root);
       }
       const distance = Math.hypot(npc.x - snapshot.player.x, npc.z - snapshot.player.z);
-      person.root.visible = npc.available && distance < 120;
+      person.root.visible = distance < 120;
       if (!person.root.visible) continue;
       person.root.position.set(npc.x, 0.06, npc.z);
       person.root.rotation.y = distance < 8

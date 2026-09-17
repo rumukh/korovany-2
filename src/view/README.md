@@ -84,6 +84,12 @@ the bounded snapshot effect list and deduplicated event IDs; spark bursts and
 visible corpses have fixed caps. No presentation entity participates in rules,
 and no fake quest, target, actor or pickup is created.
 
+Residents at discovered locations remain visible within the 120-metre world
+draw range, with overhead markers within 32 metres and atlas/minimap markers
+within 38 metres. These ranges are independent of `NpcSnapshot.available`,
+which only permits conversation within 4.25 metres when it is safe. Walking
+away or entering danger does not remove residents or their nearby map markers.
+
 Shadow depth materials are game-owned as well as visible materials, so changing
 runs releases their shader programs rather than retaining Three's implicit shadow
 materials. Outpost ownership and deliveries change their heraldry; fortress

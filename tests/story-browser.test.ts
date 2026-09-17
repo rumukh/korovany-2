@@ -19,6 +19,8 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
   let server: ViteDevServer;
   let browser: LaunchedBrowser;
   let cdp: CdpSession;
+  // SwiftShader can take seconds per frame while the game caps simulation catch-up.
+  const gameplayTimeout = 60_000;
 
   async function inspect(): Promise<Inspection> {
     return evaluate(cdp, "window.korovany.inspect()");
@@ -26,13 +28,15 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
   async function visibleEvidence(): Promise<string> {
     return evaluate(cdp, "[...document.querySelectorAll('.inspection-text p')].map(p => p.textContent).join('\\n\\n')");
   }
+  async function press(code: string, down: boolean): Promise<void> {
+    await cdp.send("Input.dispatchKeyEvent", { type: down ? "keyDown" : "keyUp", code,
+      key: code.startsWith("Key") ? code.slice(3).toLowerCase() : code.startsWith("Digit") ? code.slice(5) : code,
+      windowsVirtualKeyCode: code.startsWith("Key") ? code.charCodeAt(3)
+        : code.startsWith("Digit") ? code.charCodeAt(5) : code === "Escape" ? 27 : 9 });
+  }
   async function tap(code: string): Promise<void> {
-    for (const type of ["keyDown", "keyUp"]) {
-      await cdp.send("Input.dispatchKeyEvent", { type, code,
-        key: code.startsWith("Key") ? code.slice(3).toLowerCase() : code.startsWith("Digit") ? code.slice(5) : code,
-        windowsVirtualKeyCode: code.startsWith("Key") ? code.charCodeAt(3)
-          : code.startsWith("Digit") ? code.charCodeAt(5) : code === "Escape" ? 27 : 9 });
-    }
+    await press(code, true);
+    await press(code, false);
   }
   async function select(selector: string): Promise<void> {
     const point = await evaluate<{ x: number; y: number }>(cdp, `(() => {
@@ -79,6 +83,34 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     }
   }, 60_000);
 
+  it("shows discovered NPC map markers beyond talk range, including when conversation is blocked", async () => {
+    const snapshot = createCampaign({ seed: "resident-map-range", faction: "guard" }).snapshot();
+    const markers = await evaluate<{ distance: number; available: boolean; visible: boolean[] }[]>(cdp, `(async () => {
+      const { Atlas } = await import('/src/ui/atlas.ts');
+      const atlas = new Atlas();
+      const snapshot = ${JSON.stringify(snapshot)};
+      const npc = snapshot.narrative.npcs.find(person => person.id === 'mara');
+      const results = [];
+      for (const available of [false, true]) {
+        npc.available = available;
+        for (const distance of [0, 4.25, 4.26, 10, 32, 38, 38.01, 120]) {
+          snapshot.player.x = npc.x + distance;
+          snapshot.player.z = npc.z;
+          results.push({ distance, available, visible: [[false, false], [false, true], [true, false]]
+            .map(([miniature, local]) => Boolean(atlas.draw(snapshot, 'en', miniature, local).querySelector('[data-npc="mara"]'))) });
+        }
+      }
+      snapshot.narrative.npcs = [];
+      results.push({distance: 0, available: false, visible: [Boolean(atlas.draw(snapshot, 'en').querySelector('[data-npc]'))]});
+      return results;
+    })()`);
+    const absent = markers.pop()!;
+    expect(absent.visible).toEqual([false]);
+    for (const result of markers) {
+      expect(result.visible, `${result.distance}m, available: ${result.available}`).toEqual(Array(3).fill(result.distance <= 38));
+    }
+  });
+
   it("opens a live NPC conversation, preserves it across reload, and closes without leaking movement", async () => {
     await select('[data-action="continue"]');
     await until(cdp, "Boolean(window.korovany.inspect().snapshot.narrative?.interaction?.kind === 'talk')", Boolean, 20_000);
@@ -86,6 +118,27 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     expect(before.snapshot.world.exploration?.regions.length).toBeGreaterThanOrEqual(8);
     expect(before.snapshot.narrative?.npcs.some((npc) => npc.id === before.snapshot.narrative?.interaction?.targetId)).toBe(true);
     await capture("residents-at-roadward");
+    const distanceFromMara = `(() => {
+      const snapshot = window.korovany.inspect().snapshot;
+      const npc = snapshot.narrative.npcs.find(person => person.id === 'mara');
+      return Math.hypot(npc.x - snapshot.player.x, npc.z - snapshot.player.z);
+    })()`;
+    for (const [code, away] of [["KeyS", true], ["KeyW", false]] as const) {
+      await press(code, true);
+      try {
+        await until(cdp, distanceFromMara, (distance: number) => away ? distance >= 10 : distance <= 3.5, gameplayTimeout);
+      } finally {
+        await press(code, false);
+      }
+      if (away) {
+        const distant = await inspect();
+        expect(distant.snapshot.narrative!.npcs.find(npc => npc.id === "mara")?.available).toBe(false);
+        expect(distant.snapshot.narrative!.interaction?.targetId).not.toBe("mara");
+        await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= distant.snapshot.tick + 60, gameplayTimeout);
+        expect(await evaluate(cdp, `Boolean(document.querySelector('.minimap [data-npc="mara"]'))`)).toBe(true);
+        await capture("residents-beyond-talk-range");
+      }
+    }
     await tap("KeyT");
     await until(cdp, "window.korovany.inspect().overlay", (value: string) => value === "dialogue", 15_000);
     const talking = await inspect();
@@ -109,7 +162,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick > talking.snapshot.tick + 5, 20_000);
     expect((await inspect()).snapshot.player.x).toBe(position.x);
     expect((await inspect()).snapshot.player.z).toBe(position.z);
-  }, 90_000);
+  }, 210_000);
 
   it("tracks authored quests on a paused journal and switches between local and regional navigation", async () => {
     await tap("KeyJ");

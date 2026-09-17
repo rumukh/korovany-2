@@ -35,6 +35,7 @@ export interface NpcSnapshot extends Position {
   faction: FactionId;
   locationId: string;
   activity: LocalizedText;
+  /** Conversation eligibility (phase, proximity and safety), not world or map visibility. */
   available: boolean;
   questAvailable: boolean;
 }
