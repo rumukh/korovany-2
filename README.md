@@ -58,6 +58,18 @@ directory.
 Browser-enabled runs execute test files sequentially: the engine's CDP launcher
 uses software WebGL, so concurrent renderers and simulation suites otherwise
 compete for CPU time. Ordinary headless unit-test runs remain parallel.
+CI builds the site, runs unit tests and runs four browser-file shards on separate
+runners concurrently. Deployment requires every job to succeed; no browser
+assertions, audio clips or narrative branches are omitted. Each browser runner
+still runs only one test file at a time. `KOROVANY_TEST_SUITE=unit` or `browser`
+selects those same groups locally, and Vitest's `--shard=1/4` selects a shard.
+Without the selector, `npm test` retains its full-suite behavior.
+The separate world-visual benchmark remains opt-in via `KOROVANY_WORLD_BROWSER=1`;
+its normally skipped file is not allocated a release browser shard.
+
+Browser reloads wait for a new document loader and application readiness.
+Only execution-context replacement during the requested navigation is retried
+within the original deadline; renderer crashes and application errors still fail.
 Long gameplay waits keep their tick-count assertions but allow up to 60 seconds
 for software rendering. These functional scenarios are not GPU benchmarks.
 

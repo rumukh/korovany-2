@@ -12,6 +12,7 @@ import {
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
 import { closeTestBrowser } from "./browser-cleanup";
 import { waitForSpeech } from "./browser-audio";
+import { navigateTestPage } from "./browser-navigation";
 
 interface Decoded {
   src: string;
@@ -139,8 +140,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("shipped Ogg audio under a 
   }, 600_000);
 
   it("plays real ending music and terminal cues through the production transport", async () => {
-    await cdp.send("Page.navigate", { url: new URL("media-check.html", origin).href });
-    await until(cdp, "Boolean(document.querySelector('#unlock'))", Boolean, 30_000);
+    await navigateTestPage(cdp, new URL("media-check.html", origin).href, "document.querySelector('#unlock')");
     const snapshot = createCampaign({ seed: "audio-terminal", faction: "guard", runId: "audio-terminal" }).snapshot();
     await evaluate(cdp, `(async () => {
       const {Soundscape} = await import(${JSON.stringify(`${base}src/audio/soundscape.ts`)});
@@ -202,9 +202,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("shipped Ogg audio under a 
           language, quality: "low", reducedMotion: true, muted: false, audio: defaultMix(),
         }))});
       })()`);
-      const previousPage = await evaluate<number>(cdp, "performance.timeOrigin");
-      await cdp.send("Page.navigate", { url: origin });
-      await until(cdp, `performance.timeOrigin !== ${previousPage} && Boolean(window.korovany)`, Boolean, 60_000);
+      await navigateTestPage(cdp, origin, "window.korovany", 60_000);
       expect((await inspect()).state).toBe("locked");
       await select('[data-action="continue"]');
       let audio = await waitForSpeech(cdp, interaction.targetId, language, 30_000);

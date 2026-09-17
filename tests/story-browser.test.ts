@@ -11,6 +11,7 @@ import {
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
 import { closeTestBrowser } from "./browser-cleanup";
+import { reloadTestPage } from "./browser-navigation";
 
 interface Inspection { snapshot: GameSnapshot; overlay: string | null; running: boolean }
 
@@ -47,9 +48,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     if (process.env.KOROVANY_CAPTURE_DIR) await screenshot(cdp, join(process.env.KOROVANY_CAPTURE_DIR, `${name}.png`));
   }
   async function reload(): Promise<void> {
-    const origin = await evaluate<number>(cdp, "performance.timeOrigin");
-    await cdp.send("Page.reload");
-    await until(cdp, `performance.timeOrigin !== ${origin} && Boolean(window.korovany) && window.korovany.inspect().overlay === 'menu'`, Boolean, 30_000);
+    await reloadTestPage(cdp);
   }
 
   beforeAll(async () => {

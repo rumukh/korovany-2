@@ -7,6 +7,7 @@ import {
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
 import { closeTestBrowser } from "./browser-cleanup";
+import { reloadTestPage } from "./browser-navigation";
 import { claimRewards, createCampaign, createProfile, type GameSnapshot, type MetaProfile } from "../src/game";
 
 interface Inspection {
@@ -64,9 +65,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
   }
 
   async function reload(): Promise<void> {
-    const timeOrigin = await evaluate<number>(cdp, "performance.timeOrigin");
-    await cdp.send("Page.reload");
-    await until(cdp, `performance.timeOrigin !== ${timeOrigin} && Boolean(window.korovany) && window.korovany.inspect().overlay === 'menu'`, Boolean, 30_000);
+    await reloadTestPage(cdp);
   }
 
   async function newTab(): Promise<CdpSession> {

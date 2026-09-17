@@ -1,8 +1,18 @@
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
+
+const suite = process.env.KOROVANY_TEST_SUITE;
+if (suite && suite !== 'unit' && suite !== 'browser') throw new Error(`Unknown test suite: ${suite}`);
+const browserFiles = 'tests/*-browser.test.ts';
+const exclude = [...configDefaults.exclude];
+if (suite === 'unit') exclude.push(browserFiles);
+if (suite === 'browser' && process.env.KOROVANY_WORLD_BROWSER !== '1') {
+  exclude.push('tests/world-browser.test.ts');
+}
 
 export default defineConfig({
   test: {
-    include: ['tests/**/*.test.ts', 'src/view/**/*.test.ts'],
+    include: suite === 'browser' ? [browserFiles] : ['tests/**/*.test.ts', 'src/view/**/*.test.ts'],
+    exclude,
     environment: 'node',
     testTimeout: 120_000,
     // SwiftShader browsers must not compete with each other or simulation suites.

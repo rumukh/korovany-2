@@ -10,6 +10,7 @@ import {
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
 import { closeTestBrowser } from "./browser-cleanup";
 import { waitForSpeech } from "./browser-audio";
+import { navigateTestPage, reloadTestPage } from "./browser-navigation";
 
 interface Inspection {
   snapshot: GameSnapshot;
@@ -87,9 +88,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("actual browser audio trans
     await click(cdp, point.x, point.y);
   }
   async function reload() {
-    const origin = await evaluate<number>(cdp, "performance.timeOrigin");
-    await cdp.send("Page.reload");
-    await until(cdp, `performance.timeOrigin !== ${origin} && Boolean(window.korovany)`, Boolean, 30_000);
+    await reloadTestPage(cdp, "window.korovany");
   }
   async function language(value: "ru" | "en") {
     await evaluate(cdp, `(() => {
@@ -129,8 +128,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("actual browser audio trans
         ${JSON.stringify(storageKeys.settings)}, ${JSON.stringify(JSON.stringify({
           language: "en", quality: "low", reducedMotion: true, muted: false, audio: defaultMix(),
         }))});` });
-    await cdp.send("Page.navigate", { url: origin });
-    await until(cdp, "Boolean(window.korovany)", Boolean, 60_000);
+    await navigateTestPage(cdp, origin, "window.korovany", 60_000);
   }, 120_000);
 
   afterAll(async () => {
