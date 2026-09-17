@@ -1,0 +1,33 @@
+{
+  "generator": "Azure OpenAI gpt-image-2",
+  "source": "Original generated frontier material; no third-party reference assets",
+  "sourceSize": [
+    1024,
+    1024
+  ],
+  "sourceSha256": "3d76840d1d36acdf46ea74c20c3b767d56e74d2a12c2c111926734f89a3903a7",
+  "processing": "Seam blending, neutral albedo, artistic luminance-derived OpenGL normals and roughness",
+  "surfaces": [
+    "rock"
+  ],
+  "maps": [
+    {
+      "file": "rock-color.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "7bfc3f7ab471f88657855525387937fbcfb7790fe148017167e5df64c000dcef"
+    },
+    {
+      "file": "rock-normal.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "809a62fac9454775f245911bfe6d1dba460aba45533f2fed820bded5a7601414"
+    },
+    {
+      "file": "rock-roughness.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "6d1fdc18ef2257f420b4ebfd0eba059c475250a1cefa02cd16907434cd66c49d"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
@@ -10,7 +10,7 @@ import {
   click, evaluate, launchBrowser, openPage, screenshot, until,
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeOwnedBrowser } from "../vendor/aegis-engine/packages/render-three/src/testing/browser-lifecycle";
+import { closeTestBrowser } from "./browser-cleanup";
 
 interface Inspection { snapshot: GameSnapshot; overlay: string | null; running: boolean }
 
@@ -73,12 +73,12 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
 
   afterAll(async () => {
     cdp?.close();
-    if (browser) {
-      await closeOwnedBrowser(browser);
-      await rm(browser.profile, { recursive: true, force: true });
+    try {
+      if (browser) await closeTestBrowser(browser);
+    } finally {
+      await server?.close();
     }
-    await server?.close();
-  }, 30_000);
+  }, 60_000);
 
   it("opens a live NPC conversation, preserves it across reload, and closes without leaking movement", async () => {
     await select('[data-action="continue"]');

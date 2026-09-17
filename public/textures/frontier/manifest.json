@@ -1,0 +1,128 @@
+{
+  "generator": "Azure OpenAI gpt-image-2",
+  "source": "Original six-surface frontier material atlas; no third-party reference assets",
+  "sourceSize": [
+    1536,
+    1024
+  ],
+  "sourceSha256": "db60270da50b45429dbd1563912a119bb01fd92b567f44213e308d050a2bcf2a",
+  "processing": "Seam blending, neutral albedo, artistic luminance-derived OpenGL normals and roughness",
+  "surfaces": [
+    "ground",
+    "stone",
+    "wood",
+    "roof",
+    "bark",
+    "cloth"
+  ],
+  "maps": [
+    {
+      "file": "ground-color.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "6009ae32be653757f885d2f4f8151897c47fbd5b6705c4a0fbf190a89ee1ed5f"
+    },
+    {
+      "file": "ground-normal.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "33da6ab71f51f10ca6d35a282f3831ae1ca5b9fc7796e185d6094977e12acd39"
+    },
+    {
+      "file": "ground-roughness.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "683c9b68ae951abf4223328fdc1914c99926267385dd602c10442b1df47a320c"
+    },
+    {
+      "file": "stone-color.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "b53172945d6a3e5f443d77945683ab2fae3c2b549913bc20fc7985adad062bc0"
+    },
+    {
+      "file": "stone-normal.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "04d344bc44f3ca3d513613544fa3b11ac598dfa66159b36227e7f62e14046948"
+    },
+    {
+      "file": "stone-roughness.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "0a343f20e5ac36b70dd965382c5eb82dbca1a5f26fbac5f4fd8e0677dbc86881"
+    },
+    {
+      "file": "wood-color.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "76b3715e29fb65b3e047fc0107bf054e86dca8251d0fda079f111daacd488c27"
+    },
+    {
+      "file": "wood-normal.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "3f82b13019af26735f226755bc6bbd58a8b6d7231d87141e9237b67f04c996ad"
+    },
+    {
+      "file": "wood-roughness.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "35fc8cfe025f564bc7e76637129a5382de8b1e9eb898a027019fe8fcbcf0d5b4"
+    },
+    {
+      "file": "roof-color.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "61ed98a62b3d519f71fa322f93d41121cabe3e64bd83c508d9cb043d5950e611"
+    },
+    {
+      "file": "roof-normal.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "ca02975f92b95b7f01f8c3fee9036e6488c87ec84e37f9879c8290aafed4a360"
+    },
+    {
+      "file": "roof-roughness.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "3f3347d4016c209f36e4911a40bd5d1203da0187f244a7b2b7c3a03d184fe650"
+    },
+    {
+      "file": "bark-color.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "c2d314b489d50c5e6a96436dfc9491b6a5449df9cadd7eb815e1b83774561657"
+    },
+    {
+      "file": "bark-normal.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "b2da6a3705ce938cf3728b485df6602ced75480dca63a020fc2c728c8a5b0401"
+    },
+    {
+      "file": "bark-roughness.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "59f5a80a6c13de1c632e6c6370ca03efc7110003a955e20f7607255e0f82890a"
+    },
+    {
+      "file": "cloth-color.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "22f42a8bf6d18fd4893e388ad6500decbe2b520ba6a8c272f26494357bb34c92"
+    },
+    {
+      "file": "cloth-normal.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "b684c6e46f87d4188094338435f983c234b9f2cc170c5518d7d10954cdadc084"
+    },
+    {
+      "file": "cloth-roughness.webp",
+      "width": 512,
+      "height": 512,
+      "sha256": "3f143ae8c8c1f99f562f9d410fb55d130362f9055a796ae419c56102cfe53b9c"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import { readFile, rm } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
 import { createCampaign, type GameSnapshot } from "../src/game";
@@ -10,7 +10,7 @@ import { storageKeys } from "../src/ui/storage";
 import {
   click, evaluate, launchBrowser, openPage, until, type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeOwnedBrowser } from "../vendor/aegis-engine/packages/render-three/src/testing/browser-lifecycle";
+import { closeTestBrowser } from "./browser-cleanup";
 
 interface Decoded {
   src: string;
@@ -109,12 +109,12 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("shipped Ogg audio under a 
 
   afterAll(async () => {
     cdp?.close();
-    if (browser) {
-      await closeOwnedBrowser(browser);
-      await rm(browser.profile, { recursive: true, force: true });
+    try {
+      if (browser) await closeTestBrowser(browser);
+    } finally {
+      await server?.close();
     }
-    await server?.close();
-  }, 30_000);
+  }, 60_000);
 
   it("fully decodes every shipped score, regional loop and effect in Chromium", async () => {
     expect(soundtrack.music).toHaveLength(8);

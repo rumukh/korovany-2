@@ -1,4 +1,3 @@
-import { rm } from "node:fs/promises";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
 import { createCampaign, type GameSnapshot, type LocalizedText } from "../src/game";
@@ -9,7 +8,7 @@ import { storageKeys, type Settings } from "../src/ui/storage";
 import {
   click, evaluate, launchBrowser, openPage, until, type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeOwnedBrowser } from "../vendor/aegis-engine/packages/render-three/src/testing/browser-lifecycle";
+import { closeTestBrowser } from "./browser-cleanup";
 
 interface Inspection {
   snapshot: GameSnapshot;
@@ -135,12 +134,12 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("actual browser audio trans
 
   afterAll(async () => {
     cdp?.close();
-    if (browser) {
-      await closeOwnedBrowser(browser);
-      await rm(browser.profile, { recursive: true, force: true });
+    try {
+      if (browser) await closeTestBrowser(browser);
+    } finally {
+      await server?.close();
     }
-    await server?.close();
-  }, 30_000);
+  }, 60_000);
 
   it("unlocks actual streamed media via a trusted click and exposes five persistent accessible mixer controls", async () => {
     expect((await inspect()).audio.state).toBe("locked");

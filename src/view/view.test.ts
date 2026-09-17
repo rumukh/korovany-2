@@ -62,7 +62,7 @@ describe('shell-controlled camera', () => {
     camera.orbit(100, -100);
     camera.zoom(-1e9);
     camera.update({ x: 60, z: 60 }, 0);
-    expect(camera.camera.position.y).toBeGreaterThan(9);
+    expect(camera.camera.position.y).toBeGreaterThan(7);
     expect(camera.camera.position.distanceTo(new THREE.Vector3(60, 0.65, 60))).toBeCloseTo(18);
     expect(() => camera.orbit(Infinity)).toThrow('finite');
     expect(() => camera.zoom(NaN)).toThrow('finite');

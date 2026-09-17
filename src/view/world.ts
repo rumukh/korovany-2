@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { Bounds, Obstacle, Vec2, WorldBlueprint, WorldSite } from '../game/types';
 import { palette } from './palette';
-import { beam, joint, part, StaticBatch } from './primitives';
+import { beam, joint, part, shapeGeometry, StaticBatch } from './primitives';
 import { seededRandom, ViewResources } from './resources';
 import { locationStructure, regionThemes, themeAt, type RegionTheme } from './region-scenery';
 import { WorldChunks } from './world-chunks';
@@ -55,8 +55,8 @@ function makeSky(resources: ViewResources): THREE.Mesh {
     side: THREE.BackSide,
     depthWrite: false,
     uniforms: {
-      zenith: { value: new THREE.Color('#6eabb5') },
-      horizon: { value: new THREE.Color('#e7d9ac') },
+      zenith: { value: new THREE.Color('#61889f') },
+      horizon: { value: new THREE.Color(palette.fog) },
     },
     vertexShader: `
       varying vec3 vDirection;
@@ -69,15 +69,41 @@ function makeSky(resources: ViewResources): THREE.Mesh {
       uniform vec3 zenith;
       uniform vec3 horizon;
       varying vec3 vDirection;
+      float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float noise(vec2 p) {
+        vec2 i = floor(p), f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x),
+          mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+      }
+      float fbm(vec2 p) {
+        float value = 0.0, amplitude = 0.5;
+        for (int i = 0; i < 4; i++) {
+          value += noise(p) * amplitude;
+          p = p * 2.03 + vec2(13.1, 7.7);
+          amplitude *= 0.5;
+        }
+        return value;
+      }
       void main() {
         vec3 direction = normalize(vDirection);
         float elevation = max(0.0, direction.y);
         vec3 color = mix(horizon, zenith, smoothstep(0.0, 0.85, elevation));
-        float sun = pow(max(0.0, dot(direction, normalize(vec3(-0.6, 0.7, 0.35)))), 34.0);
-        color += vec3(0.12, 0.09, 0.035) * sun;
-        float cloud = sin(direction.x * 33.0 + direction.z * 17.0 + direction.y * 63.0);
-        cloud = smoothstep(0.93, 1.0, cloud) * smoothstep(0.14, 0.23, elevation) * (1.0 - smoothstep(0.45, 0.65, elevation));
-        color = mix(color, horizon, cloud * 0.28);
+        float sunAngle = max(0.0, dot(direction, normalize(vec3(-40.0, 38.0, 32.0))));
+        color += vec3(0.45, 0.24, 0.09) * pow(sunAngle, 12.0);
+        color += vec3(2.5, 1.9, 1.1) * smoothstep(0.9993, 0.9998, sunAngle);
+        vec2 cloudUv = direction.xz / max(0.16, direction.y + 0.16);
+        float cloud = smoothstep(0.43, 0.73, fbm(cloudUv * 1.8));
+        cloud *= smoothstep(0.035, 0.2, elevation);
+        color = mix(color, vec3(0.93, 0.87, 0.73), cloud * 0.8);
+        // Distant painted ridgelines are sky, never traversable world geometry.
+        float ridge = 0.035 + fbm(direction.xz * 8.0) * 0.15;
+        float mountains = 1.0 - smoothstep(ridge - 0.005, ridge + 0.005, direction.y);
+        vec3 mountainColor = mix(vec3(0.29, 0.39, 0.44), horizon, 0.56);
+        float snow = smoothstep(ridge - 0.025, ridge, direction.y) * step(0.13, ridge);
+        mountainColor = mix(mountainColor, vec3(0.72, 0.77, 0.74), snow * 0.5);
+        color = mix(color, mountainColor, mountains * smoothstep(-0.08, 0.07, direction.y));
+        color = mix(horizon, color, smoothstep(-0.06, 0.035, direction.y));
         gl_FragColor = vec4(color, 1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -92,36 +118,41 @@ function makeSky(resources: ViewResources): THREE.Mesh {
 
 function makeWater(resources: ViewResources, bounds: Bounds): { mesh: THREE.Mesh; time: { value: number } } {
   const time = { value: 0 };
-  const material = resources.ownMaterial('river-water', new THREE.ShaderMaterial({
-    uniforms: {
-      time,
-      deep: { value: new THREE.Color(palette.water) },
-      light: { value: new THREE.Color(palette.waterLight) },
-    },
-    vertexShader: `
-      varying vec3 vWorld;
-      void main() {
-        vec4 world = modelMatrix * vec4(position, 1.0);
-        vWorld = world.xyz;
-        gl_Position = projectionMatrix * viewMatrix * world;
-      }
-    `,
-    fragmentShader: `
-      varying vec3 vWorld;
-      uniform float time;
-      uniform vec3 deep;
-      uniform vec3 light;
-      void main() {
-        float wave = sin(vWorld.x * 2.8 + sin(vWorld.z * 0.52) * 1.6 - time * 1.1);
-        float streak = smoothstep(0.93, 1.0, wave) * (0.3 + 0.7 * sin(vWorld.z * 0.48 + vWorld.x * 0.08) * sin(vWorld.z * 0.48 + vWorld.x * 0.08));
-        vec3 color = mix(deep, light, streak * 0.52 + 0.12 * sin(vWorld.z * 0.15));
-        gl_FragColor = vec4(color, 1.0);
-        #include <tonemapping_fragment>
-        #include <colorspace_fragment>
-      }
-    `,
+  const material = resources.ownMaterial('river-water', new THREE.MeshPhysicalMaterial({
+    color: '#365f66', roughness: 0.24, metalness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.18,
   }));
+  material.customProgramCacheKey = () => 'frontier-water-v2';
+  material.onBeforeCompile = shader => {
+    shader.uniforms.waterTime = time;
+    shader.uniforms.waterBounds = { value: new THREE.Vector4(bounds.minX, bounds.maxX, bounds.minZ, bounds.maxZ) };
+    shader.vertexShader = `varying vec3 vWaterWorld;\n${shader.vertexShader}`.replace('#include <worldpos_vertex>', `
+      #include <worldpos_vertex>
+      vWaterWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;
+    `);
+    shader.fragmentShader = `varying vec3 vWaterWorld;
+      uniform float waterTime;
+      uniform vec4 waterBounds;\n${shader.fragmentShader}`
+      .replace('#include <normal_fragment_maps>', `
+        #include <normal_fragment_maps>
+        float wave = sin(vWaterWorld.x * 1.7 + vWaterWorld.z * 0.8 - waterTime * 0.9);
+        float ripple = sin(vWaterWorld.z * 3.1 - vWaterWorld.x * 1.3 + waterTime * 1.2);
+        normal = normalize(mat3(viewMatrix) * normalize(vec3(wave * 0.075, 1.0, ripple * 0.055)));
+      `).replace('#include <clearcoat_normal_fragment_maps>', `
+        #include <clearcoat_normal_fragment_maps>
+        clearcoatNormal = normal;
+      `).replace('#include <color_fragment>', `
+        #include <color_fragment>
+        float bank = min(min(vWaterWorld.x - waterBounds.x, waterBounds.y - vWaterWorld.x),
+                         min(vWaterWorld.z - waterBounds.z, waterBounds.w - vWaterWorld.z));
+        float shallows = 1.0 - smoothstep(0.1, 1.5, bank);
+        float foam = (1.0 - smoothstep(0.04, 0.32, bank)) *
+          smoothstep(0.25, 0.8, sin(vWaterWorld.x * 5.0 + vWaterWorld.z * 3.0 + waterTime));
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.22, 0.34, 0.29), shallows * 0.5);
+        diffuseColor.rgb += foam * vec3(0.22, 0.24, 0.19);
+      `);
+  };
   const mesh = new THREE.Mesh(resources.geometry('water-plane', () => new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2)), material);
+  mesh.receiveShadow = true;
   mesh.position.set((bounds.minX + bounds.maxX) / 2, 0.03, (bounds.minZ + bounds.maxZ) / 2);
   mesh.scale.set(bounds.maxX - bounds.minX, 1, bounds.maxZ - bounds.minZ);
   return { mesh, time };
@@ -134,21 +165,33 @@ function tree(resources: ViewResources, obstacle: Obstacle, theme?: RegionTheme)
   const radius = obstacle.radius;
   const height = obstacle.height;
   const leaves = theme?.foliage ?? [palette.leafDark, palette.leaf, palette.leafLight];
-  part(resources, root, 'cone', palette.bark, [0, height * 0.27, 0], [radius * 1.45, height * 0.55, radius * 1.45]);
+  part(resources, root, 'cone', palette.bark, [0, height * 0.32, 0], [radius * 0.66, height * 0.64, radius * 0.66]);
   part(resources, root, 'rock', palette.moss, [0, 0.09, 0], [radius * 1.98, 0.25, radius * 1.98]);
+  for (let branch = 0; branch < 4; branch++) {
+    const angle = branch * 2.4;
+    beam(resources, root, [Math.sin(angle) * radius * 0.83, 0.04, Math.cos(angle) * radius * 0.83],
+      [0, height * 0.13, 0], radius * 0.18, palette.bark);
+  }
   if (obstacle.variant % 3 !== 0) {
-    for (let tier = 0; tier < 3; tier += 1) {
-      const width = radius * (3.05 - tier * 0.69);
-      part(resources, root, 'cone', leaves[tier]!,
-        [0, height * (0.43 + tier * 0.19), 0], [width, height * 0.48, width], [0, tier * 0.35, 0]);
+    for (let tier = 0; tier < 5; tier += 1) {
+      const width = radius * (3.1 - tier * 0.46);
+      part(resources, root, 'foliage', leaves[Math.min(2, Math.floor(tier / 2))]!,
+        [0, height * (0.38 + tier * 0.12), 0], [width * 0.65, height * 0.38, width * 0.65], [0, tier * 0.63, 0.025]);
+      for (let spray = 0; spray < 4; spray++) {
+        const angle = spray * Math.PI / 2 + tier * 1.7;
+        part(resources, root, 'foliage', leaves[tier % 3]!,
+          [Math.sin(angle) * width * 0.28, height * (0.3 + tier * 0.12), Math.cos(angle) * width * 0.28],
+          [width * 0.61, height * 0.18, width * 0.45], [0, angle, -0.18]);
+      }
     }
   } else {
-    beam(resources, root, [0, height * 0.33, 0], [radius * 0.7, height * 0.64, 0], radius * 0.25, palette.bark);
-    for (let crown = 0; crown < 3; crown += 1) {
-      const angle = crown * Math.PI * 2 / 3;
-      part(resources, root, 'rock', crown === 0 ? leaves[2]! : leaves[1]!,
-        [Math.sin(angle) * radius * 0.75, height * (0.64 + crown * 0.04), Math.cos(angle) * radius * 0.6],
-        [radius * 2.6, height * 0.6, radius * 2.4], [0.1, angle, 0.12]);
+    for (let crown = 0; crown < 8; crown += 1) {
+      const angle = crown * 2.4;
+      const y = height * (0.58 + (crown % 3) * 0.1);
+      const x = Math.sin(angle) * radius * 1.05, z = Math.cos(angle) * radius * 0.9;
+      if (crown < 4) beam(resources, root, [0, height * 0.3, 0], [x, y, z], radius * 0.15, palette.bark);
+      part(resources, root, 'foliage', leaves[crown % 3]!,
+        [x, y, z], [radius * 2, height * 0.38, radius * 1.9], [0.1, angle, 0.12]);
     }
   }
   return root;
@@ -240,21 +283,16 @@ function addRoads(world: WorldBlueprint, batch: StaticBatch): void {
     const from = world.roads.nodes.find((node) => node.id === edge.from);
     const to = world.roads.nodes.find((node) => node.id === edge.to);
     if (!from || !to) throw new Error(`Road edge references an unknown node: ${edge.from} -> ${edge.to}`);
-    const length = Math.hypot(to.x - from.x, to.z - from.z);
+    const length = Math.hypot(to.x - from.x, to.z - from.z) + edge.width * 0.5;
     const heading = Math.atan2(to.x - from.x, to.z - from.z);
     const midpoint: [number, number, number] = [(from.x + to.x) / 2, 0.004, (from.z + to.z) / 2];
-    batch.add('box', palette.earth, midpoint, [edge.width + 0.32, 0.006, length], [0, heading, 0], false);
-    batch.add('box', palette.road, [midpoint[0], 0.012, midpoint[2]], [edge.width, 0.006, length], [0, heading, 0], false);
+    batch.add('box', palette.earth, midpoint, [edge.width + 0.32, 0.006, length], [0, heading, 0], false, 'ground');
+    batch.add('box', palette.road, [midpoint[0], 0.012, midpoint[2]], [edge.width, 0.006, length], [0, heading, 0], false, 'ground');
     for (const side of [-1, 1]) {
       batch.add('box', '#c6ae81',
         [midpoint[0] + Math.cos(heading) * side * 0.58, 0.017, midpoint[2] - Math.sin(heading) * side * 0.58],
-        [0.055, 0.004, length], [0, heading, 0], false);
+        [0.12, 0.004, length], [0, heading, 0], false, 'ground');
     }
-  }
-  for (const node of world.roads.nodes) {
-    const edges = world.roads.edges.filter((edge) => edge.from === node.id || edge.to === node.id);
-    const width = Math.max(0, ...edges.map((edge) => edge.width));
-    if (width > 0) batch.add('disc', palette.road, [node.x, 0.015, node.z], [width, 0.006, width], [0, 0, 0], false);
   }
 }
 
@@ -296,7 +334,7 @@ function addBridge(bridge: Bounds, world: WorldBlueprint, batch: StaticBatch): v
 function applyFoliageDither(resources: ViewResources, hero: THREE.Vector3): void {
   for (const color of new Set([palette.leaf, palette.leafLight, palette.leafDark, ...Object.values(regionThemes).flatMap(theme => theme.foliage)])) {
     const material = resources.material(color, { side: THREE.FrontSide });
-    material.customProgramCacheKey = () => 'korovany-foliage-v1';
+    material.customProgramCacheKey = () => 'korovany-foliage-v2';
     material.onBeforeCompile = (shader) => {
       shader.uniforms.heroPosition = { value: hero };
       shader.vertexShader = `varying vec3 vFoliageWorld;\n${shader.vertexShader}`.replace('#include <worldpos_vertex>', `
@@ -315,6 +353,11 @@ function applyFoliageDither(resources: ViewResources, hero: THREE.Vector3): void
         float cutaway = (1.0 - smoothstep(1.2, 2.5, distanceToSight)) * step(0.0, alongSight) * (1.0 - step(1.03, alongSight));
         float pattern = fract(dot(floor(gl_FragCoord.xy), vec2(0.75487766, 0.56984029)));
         if (pattern < cutaway * 0.92) discard;
+      `).replace('#include <color_fragment>', `
+        #include <color_fragment>
+        vec3 leafCell = floor(vFoliageWorld * 14.0);
+        float leafNoise = fract(sin(dot(leafCell, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+        diffuseColor.rgb *= 0.8 + leafNoise * 0.35;
       `);
     };
   }
@@ -323,23 +366,29 @@ function applyFoliageDither(resources: ViewResources, hero: THREE.Vector3): void
 function applyGroundGrain(resources: ViewResources): void {
   for (const color of new Set([palette.grass, palette.meadow, palette.road, palette.earth, palette.bank,
     ...Object.values(regionThemes).flatMap(theme => [theme.ground, theme.patches])])) {
-    const material = resources.material(color, { side: THREE.FrontSide });
-    material.customProgramCacheKey = () => 'korovany-ground-grain-v1';
-    material.onBeforeCompile = (shader) => {
-      shader.vertexShader = `varying vec3 vGrainWorld;\n${shader.vertexShader}`.replace('#include <worldpos_vertex>', `
+    const material = resources.material(color, { side: THREE.FrontSide, surface: 'ground' });
+    const groundUv = material.onBeforeCompile;
+    material.customProgramCacheKey = () => `korovany-ground-grain-v2:${color === palette.road}`;
+    material.onBeforeCompile = (shader, renderer) => {
+      groundUv.call(material, shader, renderer);
+      shader.vertexShader = `varying vec3 vGrainWorld;\nvarying float vRoadEdge;\n${shader.vertexShader}`.replace('#include <worldpos_vertex>', `
         #include <worldpos_vertex>
         vec4 grainPosition = vec4(transformed, 1.0);
+        float roadWidth = 1.0;
         #ifdef USE_INSTANCING
           grainPosition = instanceMatrix * grainPosition;
+          roadWidth = length(instanceMatrix[0].xyz);
         #endif
         vGrainWorld = (modelMatrix * grainPosition).xyz;
+        vRoadEdge = (0.5 - abs(position.x)) * roadWidth;
       `);
-      shader.fragmentShader = `varying vec3 vGrainWorld;\n${shader.fragmentShader}`.replace('#include <color_fragment>', `
+      shader.fragmentShader = `varying vec3 vGrainWorld;\nvarying float vRoadEdge;\n${shader.fragmentShader}`.replace('#include <color_fragment>', `
         #include <color_fragment>
         vec2 grainCell = floor(vGrainWorld.xz * 5.0);
         float grain = fract(sin(dot(grainCell, vec2(12.9898, 78.233))) * 43758.5453);
         float patches = sin(vGrainWorld.x * 0.43 + sin(vGrainWorld.z * 0.23)) * sin(vGrainWorld.z * 0.37);
-        diffuseColor.rgb *= 0.965 + grain * 0.065 + patches * 0.025;
+        diffuseColor.rgb *= 0.94 + grain * 0.06 + patches * 0.09;
+        ${color === palette.road ? 'if (vRoadEdge < 0.05 + grain * 0.22) discard;' : ''}
       `);
     };
   }
@@ -360,9 +409,13 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
   const centerX = (bounds.minX + bounds.maxX) / 2;
   const centerZ = (bounds.minZ + bounds.maxZ) / 2;
   const sky = makeSky(resources);
+  const rockGeometry = shapeGeometry(resources, 'rock');
+  rockGeometry.computeBoundingBox();
+  if (!rockGeometry.boundingBox) throw new Error('Rock geometry has no bounds.');
+  const rockGroundOffset = -rockGeometry.boundingBox.min.y;
   group.add(sky);
-  structures.add('box', palette.earth, [centerX, -0.84, centerZ], [width, 1.6, depth]);
-  structures.add('box', palette.meadow, [centerX, -0.047, centerZ], [width, 0.014, depth], [0, 0, 0], false);
+  structures.add('box', palette.earth, [centerX, -0.84, centerZ], [width, 1.6, depth], [0, 0, 0], false, 'ground');
+  structures.add('box', palette.meadow, [centerX, -0.047, centerZ], [width, 0.014, depth], [0, 0, 0], false, 'ground');
   for (const biome of world.exploration?.regions ?? world.biomes) {
     const area = biome.bounds;
     const bx = Math.max(bounds.minX, area.minX);
@@ -371,11 +424,11 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
     const ez = Math.min(bounds.maxZ, area.maxZ);
     const color = 'id' in biome ? regionThemes[biome.id]?.ground ?? palette.meadow
       : biome.kind === 'forest' ? palette.grass : biome.kind === 'mountains' ? '#a7aa91' : palette.meadow;
-    if (ex > bx && ez > bz) structures.add('box', color, [(bx + ex) / 2, -0.037, (bz + ez) / 2], [ex - bx, 0.006, ez - bz], [0, 0, 0], false);
+    if (ex > bx && ez > bz) structures.add('box', color, [(bx + ex) / 2, -0.037, (bz + ez) / 2], [ex - bx, 0.006, ez - bz], [0, 0, 0], false, 'ground');
   }
   const river = world.river;
   structures.add('box', palette.bank, [(river.minX + river.maxX) / 2, -0.019, (river.minZ + river.maxZ) / 2],
-    [river.maxX - river.minX + 0.55, 0.006, river.maxZ - river.minZ + 0.55], [0, 0, 0], false);
+    [river.maxX - river.minX + 0.55, 0.006, river.maxZ - river.minZ + 0.55], [0, 0, 0], false, 'ground');
   addRoads(world, structures);
   const water = makeWater(resources, river);
   group.add(water.mesh);
@@ -389,8 +442,7 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
     } else if (obstacle.kind === 'rock') {
       const scale = obstacle.radius * 1.94;
       batch.add('rock', theme?.stone ?? (obstacle.variant % 2 === 0 ? palette.stone : palette.slateLight),
-        [obstacle.x, obstacle.height * 0.42, obstacle.z], [scale, obstacle.height, scale], [0, obstacle.variant * 0.61, 0]);
-      batch.add('rock', theme?.patches ?? palette.moss, [obstacle.x, 0.04, obstacle.z], [obstacle.radius * 1.99, 0.12, obstacle.radius * 1.99], [0, obstacle.variant * 0.61, 0]);
+        [obstacle.x, obstacle.height * rockGroundOffset - 0.035, obstacle.z], [scale, obstacle.height, scale], [0, obstacle.variant * 0.61, 0], true, 'rock');
     } else {
       const place = world.exploration?.locations.find(candidate => obstacle.id.startsWith(`${candidate.id}-building-`));
       if (place && theme) {
@@ -418,7 +470,7 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
     }
   }
 
-  for (let index = 0; index < (world.exploration ? 6500 : 1300); index += 1) {
+  for (let index = 0; index < (world.exploration ? 28000 : 1700); index += 1) {
     const point = { x: bounds.minX + random() * width, z: bounds.minZ + random() * depth };
     if (!isDressingAllowed(world, point)) continue;
     const batch = detailChunks?.at(point) ?? decoration;
@@ -428,15 +480,10 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
       const size = 0.12 + random() * 0.18;
       batch.add('rock', theme?.stone ?? palette.stoneLight, [point.x, 0.03, point.z], [size, size * 0.35, size], [0, angle, 0], false);
     } else {
-      const height = 0.15 + random() * 0.28;
+      const height = 0.22 + random() * 0.32;
       const color = theme?.foliage[2] ?? (index % 3 === 0 ? palette.moss : '#969b59');
-      batch.add('cone', color, [point.x, height / 2, point.z], [0.095, height, 0.095], [0.14, angle, 0.2], false);
-      batch.add('cone', color, [point.x + 0.12, height * 0.43, point.z], [0.07, height * 0.85, 0.07], [-0.25, angle, -0.24], false);
+      batch.add('grass', color, [point.x, 0, point.z], [0.85, height, 0.85], [0, angle, 0], false);
       if (index % 13 === 0) batch.add('sphere', palette.parchment, [point.x, height, point.z], [0.1, 0.075, 0.1], [0, 0, 0], false);
-    }
-    if (theme && index % 4 === 0) {
-      const size = 5 + random() * 9;
-      batch.add('disc', theme.patches, [point.x, -0.029, point.z], [size, 0.004, size * 0.7], [0, angle, 0], false);
     }
   }
   const narrowRiverX = river.maxX - river.minX < river.maxZ - river.minZ;
@@ -466,12 +513,24 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
     if (index % 3 === 0) structures.add('cone', '#cad2bb', [x, height * 0.61 - 3, z], [7.5, height * 0.37, 7], [0, angle, 0], false);
   }
   const staticMeshes = [...structures.finish(group), ...(chunks?.finish(group) ?? [])];
+  const foliageGeometry = shapeGeometry(resources, 'foliage');
+  const distantFoliage = resources.geometry('distant-foliage', () => new THREE.IcosahedronGeometry(0.5, 0));
+  const foliageMeshes = staticMeshes.filter(mesh => mesh.geometry === foliageGeometry);
+  let lowQuality = false;
+  const updateFoliage = (): void => {
+    for (const mesh of foliageMeshes) {
+      const center = mesh.boundingSphere?.center;
+      const distant = center && Math.hypot(center.x - heroPosition.x, center.z - heroPosition.z) > 95;
+      mesh.geometry = lowQuality || distant ? distantFoliage : foliageGeometry;
+    }
+  };
   const detailGroup = new THREE.Group();
   detailGroup.name = 'world-details';
   group.add(detailGroup);
   const detailMeshes = [...decoration.finish(detailGroup), ...(detailChunks?.finish(detailGroup) ?? [])];
   chunks?.update(heroPosition);
   detailChunks?.update(heroPosition);
+  updateFoliage();
   applyFoliageDither(resources, heroPosition);
   applyGroundGrain(resources);
 
@@ -487,6 +546,8 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
     },
     setQuality(low): void {
       detailGroup.visible = !low;
+      lowQuality = low;
+      updateFoliage();
     },
     dispose(): void {
       for (const mesh of [...staticMeshes, ...detailMeshes]) mesh.dispose();

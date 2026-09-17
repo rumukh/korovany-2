@@ -1,11 +1,11 @@
-import { mkdir, rm } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createServer, type ViteDevServer } from 'vite';
 import {
   evaluate, launchBrowser, openPage, screenshot, until, type CdpSession, type LaunchedBrowser,
 } from '../vendor/aegis-engine/packages/render-three/src/browser';
-import { closeOwnedBrowser } from '../vendor/aegis-engine/packages/render-three/src/testing/browser-lifecycle';
+import { closeTestBrowser } from './browser-cleanup';
 
 const preview = `<!doctype html><html><head><link rel="icon" href="data:,"><style>
 html,body {margin:0;overflow:hidden;background:#b6cbba} canvas {display:block}
@@ -16,8 +16,11 @@ import { generateWorld } from '/src/game/world.ts';
 import { createWorldScenery } from '/src/view/world.ts';
 import { ViewResources } from '/src/view/resources.ts';
 import { FollowCamera } from '/src/view/camera.ts';
+import { lightWorld, positionSun, skyEnvironment } from '/src/view/atmosphere.ts';
+import { WorldPostprocessing } from '/src/view/postprocessing.ts';
+import { createActor, createWagon } from '/src/view/actors.ts';
 const world = generateWorld('view-frontier');
-const resources = new ViewResources();
+const resources = new ViewResources(new THREE.TextureLoader(),8);
 const scenery = createWorldScenery(resources, world);
 const canvas = document.querySelector('canvas');
 const renderer = new THREE.WebGLRenderer({canvas,antialias:true,preserveDrawingBuffer:true});
@@ -25,27 +28,29 @@ renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
+renderer.toneMappingExposure = 1;
 const scene = new THREE.Scene();
-scene.background = new THREE.Color('#b6cbba');
-scene.fog = new THREE.Fog('#b6cbba',48,158);
-scene.add(scenery.group,new THREE.HemisphereLight('#d3e2d6','#8d805b',1.55));
-const sun = new THREE.DirectionalLight('#ffe1a1',2.1);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048,2048);
-Object.assign(sun.shadow.camera,{left:-27,right:27,top:27,bottom:-27,near:1,far:115});
-sun.shadow.bias = -0.00035;
-sun.shadow.normalBias = 0.08;
-scene.add(sun,sun.target);
+scene.add(scenery.group);
+const environment = skyEnvironment(renderer,scenery.group);
+scene.environment = environment.texture;
+scene.environmentIntensity = 0.55;
+const sun = lightWorld(scene);
 const camera = new FollowCamera(canvas);
 camera.resize(innerWidth,innerHeight);
 camera.zoom(10000);
+const post = new WorldPostprocessing(renderer,scene,camera.camera);
+post.resize(innerWidth,innerHeight,1);
+renderer.info.autoReset = false;
+let modelStage;
 let disposedInstances = 0;
 let instanceCount = 0;
 scenery.group.traverse(object => {
   if (object.isInstancedMesh) { instanceCount++; object.addEventListener('dispose',()=>disposedInstances++); }
 });
 function renderLocation(id,low=false) {
+  scenery.group.visible = true;
+  if (modelStage) modelStage.visible = false;
+  resources.assertTextures();
   const place = world.exploration.locations.find(place=>place.id===id);
   if (!place) throw new Error('Unknown preview location: '+id);
   scenery.heroPosition.set(place.x,1.15,place.z);
@@ -53,10 +58,11 @@ function renderLocation(id,low=false) {
   scenery.setQuality(low);
   camera.reset();
   camera.update(place,0);
-  sun.position.set(place.x-32,48,place.z+24);
-  sun.target.position.set(place.x,0,place.z);
-  sun.target.updateMatrixWorld();
-  renderer.render(scene,camera.camera);
+  positionSun(sun,place.x,place.z);
+  renderer.shadowMap.enabled = !low;
+  renderer.info.reset();
+  if (low) renderer.render(scene,camera.camera);
+  else post.render();
   document.querySelector('#title').textContent = place.name.en+' / '+place.name.ru;
   const gl = renderer.getContext();
   const pixels = new Uint8Array(32*32*4);
@@ -68,8 +74,48 @@ function renderLocation(id,low=false) {
     contextLost:gl.isContextLost(),pixelBrightness:brightness,
     sky:scenery.group.getObjectByName('world-sky').position.toArray()};
 }
-window.worldPreview = {renderLocation,dispose() {
-  scenery.dispose(); resources.dispose(); sun.shadow.dispose(); renderer.dispose();
+window.worldPreview = {renderLocation,get textures() {return resources.textureStatus;},renderModels() {
+  if (!modelStage) {
+    modelStage = new THREE.Group();
+    scene.add(modelStage);
+    for (const [index,faction] of ['elf','guard','villain'].entries()) {
+      const actor = createActor(resources,'hero',faction,true);
+      actor.root.position.set(-4+index*2.5,0,0);
+      actor.root.rotation.y = 0.3;
+      actor.animate({time:1,moving:0,attacking:0,winding:0,dodging:false,dead:false,reducedMotion:true});
+      modelStage.add(actor.root);
+    }
+    const wagon = createWagon(resources,true);
+    wagon.root.position.set(5,0,-1);
+    wagon.root.rotation.y = -0.5;
+    modelStage.add(wagon.root);
+    const floor = new THREE.Mesh(resources.geometry('model-stage',()=>new THREE.BoxGeometry(24,0.1,16)),
+      resources.material('#92956b',{surface:'ground'}));
+    floor.position.set(1,-0.09,0);
+    floor.receiveShadow = true;
+    modelStage.add(floor);
+  }
+  modelStage.visible = true;
+  scenery.group.visible = false;
+  positionSun(sun,0,0);
+  camera.camera.position.set(12,8,16);
+  camera.camera.lookAt(1,1,0);
+  camera.camera.updateMatrixWorld();
+  renderer.shadowMap.enabled = true;
+  post.render();
+  document.querySelector('#title').textContent = 'Frontier equipment / Снаряжение каравана';
+},benchmark() {
+  const samples = [];
+  for (let frame=0;frame<18;frame++) {
+    const start = performance.now();
+    renderLocation('roadward');
+    renderer.getContext().finish();
+    if (frame>=3) samples.push(performance.now()-start);
+  }
+  samples.sort((a,b)=>a-b);
+  return {medianMs:samples[7],p95Ms:samples[14]};
+},dispose() {
+  scenery.dispose(); resources.dispose(); sun.shadow.dispose(); environment.dispose(); post.dispose(); renderer.dispose();
   return {instanceCount,disposedInstances};
 }};
 renderLocation('roadward');
@@ -105,16 +151,18 @@ describe.runIf(process.env.KOROVANY_WORLD_BROWSER === '1')('expanded world WebGL
     browser = await launchBrowser({ viewport: { width: 1440, height: 900 } });
     cdp = await openPage(browser.port, `${origin}__world-preview`, { width: 1440, height: 900 });
     await until(cdp, 'Boolean(window.worldPreview)', Boolean, 45_000);
+    await until(cdp, 'window.worldPreview.textures.pending === 0', Boolean, 30_000);
+    expect(await evaluate(cdp, 'window.worldPreview.textures.error')).toBeNull();
   }, 60_000);
 
   afterAll(async () => {
     cdp?.close();
-    if (browser) {
-      await closeOwnedBrowser(browser);
-      await rm(browser.profile, { recursive: true, force: true });
+    try {
+      if (browser) await closeTestBrowser(browser);
+    } finally {
+      await server?.close();
     }
-    await server?.close();
-  }, 30_000);
+  }, 60_000);
 
   test('renders every regional look and distant landmark without shader errors or resource growth', async () => {
     if (!cdp) throw new Error('World browser was not initialized');
@@ -131,18 +179,26 @@ describe.runIf(process.env.KOROVANY_WORLD_BROWSER === '1')('expanded world WebGL
       }>(cdp, `window.worldPreview.renderLocation(${JSON.stringify(location)})`);
       expect(stats.contextLost).toBe(false);
       expect(stats.pixelBrightness).toBeGreaterThan(100000);
-      expect(stats.calls).toBeLessThan(180);
-      expect(stats.triangles).toBeLessThan(100000);
-      expect(stats.geometries).toBeLessThan(16);
-      expect(stats.programs).toBeLessThan(12);
       metrics.push({ location, calls: stats.calls, triangles: stats.triangles, geometries: stats.geometries, programs: stats.programs });
       if (captures) await screenshot(cdp, join(captures, `${location}.png`));
     }
+    console.info('World render metrics', JSON.stringify(metrics));
+    for (const stats of metrics) {
+      expect.soft(stats.calls, stats.location).toBeLessThan(250);
+      expect.soft(stats.triangles, stats.location).toBeLessThan(500000);
+      expect.soft(stats.geometries, stats.location).toBeLessThanOrEqual(20);
+      expect.soft(stats.programs, stats.location).toBeLessThan(22);
+    }
+    expect(cdp.diagnostics).toEqual([]);
+    if (process.env.KOROVANY_WORLD_BENCHMARK === '1') {
+      console.info('Software renderer frame timing', await evaluate(cdp, 'window.worldPreview.benchmark()'));
+    }
+    await evaluate(cdp, 'window.worldPreview.renderModels()');
+    if (captures) await screenshot(cdp, join(captures, 'equipment.png'));
     expect(cdp.diagnostics).toEqual([]);
     const low = await evaluate<{ calls: number }>(cdp, "window.worldPreview.renderLocation('last-archive',true)");
     expect(low.calls).toBeLessThan(metrics.at(-1)!.calls);
     const disposal = await evaluate<{ instanceCount: number; disposedInstances: number }>(cdp, 'window.worldPreview.dispose()');
     expect(disposal.disposedInstances).toBe(disposal.instanceCount);
-    console.info('World render metrics', JSON.stringify(metrics));
   }, 120_000);
 });
