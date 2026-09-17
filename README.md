@@ -233,6 +233,8 @@ run concurrently. Speech is sequential; the full voice corpus is never prefetche
 `window.korovany.inspect().audio` exposes transport, stream times, current subtitle,
 recent effect IDs, decoded duration, cache usage and failures for browser acceptance.
 It is read-only and provides no simulation controls.
+The `speaking` flag includes speech loading; browser checks wait for a live voice
+source as well as the expected speaker and language, not just a subtitle or effect.
 
 `tests/audio-browser.test.ts` serves test-only PCM fixtures over HTTP to exercise
 real browser media and Web Audio lifecycles; these fixtures are not shipped assets.

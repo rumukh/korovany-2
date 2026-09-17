@@ -9,6 +9,7 @@ import {
   click, evaluate, launchBrowser, openPage, until, type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
 import { closeTestBrowser } from "./browser-cleanup";
+import { waitForSpeech } from "./browser-audio";
 
 interface Inspection {
   snapshot: GameSnapshot;
@@ -172,13 +173,13 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("actual browser audio trans
     await evaluate(cdp, `localStorage.setItem(${JSON.stringify(storageKeys.campaign)}, ${JSON.stringify(JSON.stringify(saved))})`);
     await reload();
     await select('[data-action="continue"]');
-    await until(cdp, "window.korovany.inspect().audio.voices > 0 && window.korovany.inspect().audio.subtitle?.speaker !== 'player'", Boolean, 20_000);
+    await waitForSpeech(cdp, npcId, "en", 20_000);
     const talking = await inspect();
     expect(talking.overlay).toBe("dialogue");
     expect(talking.running).toBe(false);
     expect(talking.audio.active).toBe(true);
     await select(`[data-choice="${choice.id}"]`);
-    await until(cdp, "window.korovany.inspect().audio.subtitle?.speaker === 'player' && window.korovany.inspect().audio.speaking", Boolean, 20_000);
+    await waitForSpeech(cdp, "player", "en", 20_000);
     expect((await inspect()).snapshot.narrative?.dialogue?.text).toEqual(response.text);
     expect((await inspect()).snapshot.tick).toBe(talking.snapshot.tick);
     expect(await evaluate(cdp, "!document.querySelector('.voice-caption').hidden")).toBe(true);
@@ -194,7 +195,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("actual browser audio trans
     expect(resumed.audio.active, JSON.stringify(resumed.audio)).toBe(true);
     expect(resumed.audio.failures).toEqual([]);
     expect(resumed.settings.language).toBe("ru");
-    await until(cdp, "window.korovany.inspect().audio.subtitle?.language === 'ru' && window.korovany.inspect().audio.voices > 0", Boolean, 20_000);
+    await waitForSpeech(cdp, npcId, "ru", 20_000);
     expect((await inspect()).snapshot.tick).toBe(talking.snapshot.tick);
     expect((await inspect()).audio.failures).toEqual([]);
     expect((await inspect()).audio.cacheBytes).toBeLessThanOrEqual(24 * 1024 * 1024);

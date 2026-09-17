@@ -11,6 +11,7 @@ import {
   click, evaluate, launchBrowser, openPage, until, type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
 import { closeTestBrowser } from "./browser-cleanup";
+import { waitForSpeech } from "./browser-audio";
 
 interface Decoded {
   src: string;
@@ -206,17 +207,13 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("shipped Ogg audio under a 
       await until(cdp, `performance.timeOrigin !== ${previousPage} && Boolean(window.korovany)`, Boolean, 60_000);
       expect((await inspect()).state).toBe("locked");
       await select('[data-action="continue"]');
-      await until(cdp, `window.korovany.inspect().audio.speaking && window.korovany.inspect().audio.subtitle?.language === "${language}"`,
-        Boolean, 30_000);
-      let audio = await inspect();
+      let audio = await waitForSpeech(cdp, interaction.targetId, language, 30_000);
       expect(audio.subtitle?.speaker).toBe(interaction.targetId);
       expect(audio.lastDecoded?.src).toMatch(/\.ogg$/);
       expect(audio.failures).toEqual([]);
       await select(`[data-choice="${choice.id}"]`);
-      await until(cdp, "window.korovany.inspect().audio.subtitle?.speaker === 'player' && window.korovany.inspect().audio.speaking",
-        Boolean, 30_000);
-      await until(cdp, `window.korovany.inspect().audio.subtitle?.speaker === "${interaction.targetId}" && window.korovany.inspect().audio.speaking`,
-        Boolean, 60_000);
+      await waitForSpeech(cdp, "player", language, 30_000);
+      await waitForSpeech(cdp, interaction.targetId, language, 60_000);
       expect(await evaluate(cdp, "window.korovany.inspect().snapshot.tick")).toBe(initial.tick);
       expect(await evaluate(cdp, "window.korovany.inspect().running")).toBe(false);
       audio = await inspect();

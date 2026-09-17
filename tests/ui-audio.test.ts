@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Soundscape, type SpeechLine } from "../src/audio/soundscape";
 import { defaultMix } from "../src/audio/mix";
 import { paragraphs, parseSoundtrack, parseVoices, voiceKey } from "../src/audio/manifest";
+import { isSpeechPlaying } from "./browser-audio";
 
 class Param {
   value = 0;
@@ -285,6 +286,39 @@ describe("gesture-unlocked media transport", () => {
 });
 
 describe("cancellable bilingual speech", () => {
+  it.each([false, true])("waits for decoded voice playback, not speech loading or subtitles (effect=%s)", async (effect) => {
+    const sound = make();
+    sound.setActive(true);
+    await sound.unlock();
+    if (effect) sound.cue("click");
+    await flush();
+    const context = Context.instances[0]!;
+    const pending = deferred<{ length: number; numberOfChannels: number }>();
+    context.decodeAudioData.mockReturnValueOnce(pending.promise);
+    sound.speak("en", [line()]);
+    await flush();
+    const loading = sound.inspect();
+    expect(loading.speaking).toBe(true);
+    expect(loading.subtitle?.text).toBe("Hello");
+    expect(loading.lastDecoded?.src).toBe(effect ? "audio/soundtrack/click.ogg" : undefined);
+    expect(loading.voices).toBe(Number(effect));
+    expect(loading.effects).toBe(Number(effect));
+    expect(isSpeechPlaying(loading, "mara", "en")).toBe(false);
+
+    pending.resolve({ length: 48_000, numberOfChannels: 1 });
+    await flush();
+    const playing = sound.inspect();
+    expect(playing.voices).toBe(Number(effect) + 1);
+    expect(playing.effects).toBe(Number(effect));
+    expect(playing.lastDecoded?.src).toBe("audio/voices/mara-en-Hello-0.ogg");
+    expect(isSpeechPlaying(playing, "mara", "en")).toBe(true);
+    expect(isSpeechPlaying(playing, "player", "en")).toBe(false);
+    expect(isSpeechPlaying(playing, "mara", "ru")).toBe(false);
+    context.sources.at(-1)?.end();
+    await flush();
+    expect(isSpeechPlaying(sound.inspect(), "mara", "en")).toBe(false);
+  });
+
   it("queues selected player and all response clips, ducks music, and does not repeat refreshed text", async () => {
     const caption = vi.fn();
     const sound = make(vi.fn(), caption);
