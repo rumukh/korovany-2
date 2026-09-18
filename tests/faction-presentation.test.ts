@@ -1,6 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { createServer, type ViteDevServer } from "vite";
 import { createCampaign, FACTION_CAMPAIGNS, type CampaignSave, type FactionId, type GameSnapshot } from "../src/game";
@@ -321,36 +321,44 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
     await cdp.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
   }, 120_000);
 
-  it("starts the chosen home campaign, restores its identity and does not turn a continued guard run into the menu's new selection", async () => {
-    const { cdp, select, tap, reload, capture } = await fixture("continuation");
-    await select('[data-faction="guard"]');
-    await select('[data-action="start"]');
-    await until(cdp, "window.korovany.inspect().running", Boolean, 30_000);
-    await tap("Escape");
-    const started = await evaluate<GameSnapshot>(cdp, "window.korovany.inspect().snapshot");
-    expect(started.faction).toBe("guard");
-    expect(started.campaign!.identity.homeLocationId).toBe("crownbridge");
-    await select('[data-action="save"]');
-    await reload();
-    expect(await evaluate(cdp, "document.querySelector('.campaign-introduction').dataset.campaign")).toBe("guard");
-    await select('[data-faction="villain"]');
-    expect(await evaluate(cdp, "document.querySelector('.saved-campaign').textContent")).toContain(FACTION_CAMPAIGNS.guard.name.ru);
-    await select('[data-action="continue"]');
-    await until(cdp, "window.korovany.inspect().running", Boolean, 30_000);
-    await tap("KeyJ");
-    const paused = await evaluate<{ snapshot: GameSnapshot; running: boolean }>(cdp, "window.korovany.inspect()");
-    expect(paused.running).toBe(false);
-    expect(paused.snapshot.runId).toBe(started.runId);
-    expect(paused.snapshot.faction).toBe("guard");
-    expect(await evaluate(cdp, "document.querySelector('.campaign-briefing').dataset.campaign")).toBe("guard");
-    await evaluate(cdp, "new Promise(resolve => setTimeout(resolve, 150))");
-    expect(await evaluate(cdp, "window.korovany.inspect().snapshot.tick")).toBe(paused.snapshot.tick);
-    await capture("faction-journal-ru");
-    await tap("Escape");
-    await tap("Escape");
-    await select('[data-action="title"]');
-    expect(await evaluate(cdp, "document.querySelector('.campaign-introduction').dataset.campaign")).toBe("guard");
-  }, 90_000);
+  describe("saved campaign identity", () => {
+    let continuation: Awaited<ReturnType<typeof fixture>>;
+
+    beforeEach(async () => {
+      continuation = await fixture("continuation");
+    }, 90_000);
+
+    it("starts the chosen home campaign, restores its identity and does not turn a continued guard run into the menu's new selection", async () => {
+      const { cdp, select, tap, reload, capture } = continuation;
+      await select('[data-faction="guard"]');
+      await select('[data-action="start"]');
+      await until(cdp, "window.korovany.inspect().running", Boolean, 30_000);
+      await tap("Escape");
+      const started = await evaluate<GameSnapshot>(cdp, "window.korovany.inspect().snapshot");
+      expect(started.faction).toBe("guard");
+      expect(started.campaign!.identity.homeLocationId).toBe("crownbridge");
+      await select('[data-action="save"]');
+      await reload();
+      expect(await evaluate(cdp, "document.querySelector('.campaign-introduction').dataset.campaign")).toBe("guard");
+      await select('[data-faction="villain"]');
+      expect(await evaluate(cdp, "document.querySelector('.saved-campaign').textContent")).toContain(FACTION_CAMPAIGNS.guard.name.ru);
+      await select('[data-action="continue"]');
+      await until(cdp, "window.korovany.inspect().running", Boolean, 30_000);
+      await tap("KeyJ");
+      const paused = await evaluate<{ snapshot: GameSnapshot; running: boolean }>(cdp, "window.korovany.inspect()");
+      expect(paused.running).toBe(false);
+      expect(paused.snapshot.runId).toBe(started.runId);
+      expect(paused.snapshot.faction).toBe("guard");
+      expect(await evaluate(cdp, "document.querySelector('.campaign-briefing').dataset.campaign")).toBe("guard");
+      await evaluate(cdp, "new Promise(resolve => setTimeout(resolve, 150))");
+      expect(await evaluate(cdp, "window.korovany.inspect().snapshot.tick")).toBe(paused.snapshot.tick);
+      await capture("faction-journal-ru");
+      await tap("Escape");
+      await tap("Escape");
+      await select('[data-action="title"]');
+      expect(await evaluate(cdp, "document.querySelector('.campaign-introduction').dataset.campaign")).toBe("guard");
+    }, 90_000);
+  });
 
   it("presents the actual villain campaign at its Old Fort home", async () => {
     const fresh = createCampaign({ seed: "old-fort-identity", faction: "villain", runId: "actual-villain-start" }).serialize();

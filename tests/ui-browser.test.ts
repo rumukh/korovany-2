@@ -165,21 +165,62 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     await tap("KeyC");
     await until(cdp, "window.korovany.inspect().snapshot.convoy.mode", (mode: string) => mode !== moved.snapshot?.convoy.mode, 15_000);
 
-    await press("KeyW", true);
-    await tap("Escape");
-    const paused = await inspect();
-    expect(paused.overlay).toBe("pause");
-    expect(paused.running).toBe(false);
-    expect(paused.audio.active).toBe(false);
-    expect(paused.audio.voices).toBe(0);
-    await evaluate(cdp, "new Promise(resolve => setTimeout(resolve, 250))");
-    expect((await inspect()).snapshot?.tick).toBe(paused.snapshot?.tick);
-    await tap("Escape");
-    await press("KeyW", false);
-    start = await inspect();
-    await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= (start.snapshot?.tick ?? 0) + 8, 15_000);
-    expect((await inspect()).snapshot?.player.x).toBeCloseTo(start.snapshot?.player.x ?? 0, 4);
-    expect((await inspect()).snapshot?.player.z).toBeCloseTo(start.snapshot?.player.z ?? 0, 4);
+    // Bound only pause/resume timing's pixel cost; keep the same aspect, high quality and desktop layout checks.
+    await cdp.send("Emulation.setDeviceMetricsOverride", { width: 720, height: 450, deviceScaleFactor: 1, mobile: false });
+    try {
+      await until(cdp, "document.querySelector('canvas').width === 720 && document.querySelector('canvas').height === 450", Boolean, 15_000);
+      expect((await inspect()).settings.quality).toBe("high");
+      await press("KeyW", true);
+      await tap("Escape");
+      const paused = await inspect();
+      expect(paused.overlay).toBe("pause");
+      expect(paused.running).toBe(false);
+      expect(paused.audio.active).toBe(false);
+      expect(paused.audio.voices).toBe(0);
+      await evaluate(cdp, "new Promise(resolve => setTimeout(resolve, 250))");
+      expect((await inspect()).snapshot?.tick).toBe(paused.snapshot?.tick);
+      await evaluate(cdp, `(() => {
+        const probe = { frames: 0, last: performance.now(), maxGap: 0, id: 0 };
+        const sample = time => {
+          probe.frames++;
+          probe.maxGap = Math.max(probe.maxGap, time - probe.last);
+          probe.last = time;
+          probe.id = requestAnimationFrame(sample);
+        };
+        probe.id = requestAnimationFrame(sample);
+        window.uiResumeProbe = probe;
+      })()`);
+      const resumedAt = Date.now();
+      await tap("Escape");
+      await press("KeyW", false);
+      start = await inspect();
+      const tickSamples: { tick: number; wallMs: number }[] = [];
+      try {
+        expect(start.overlay).toBeNull();
+        expect(start.running).toBe(true);
+        await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => {
+          if (tickSamples.at(-1)?.tick !== tick) tickSamples.push({ tick, wallMs: Date.now() - resumedAt });
+          return tick >= (start.snapshot?.tick ?? 0) + 8;
+        }, 15_000);
+      } finally {
+        const resumed = await evaluate(cdp, `(() => {
+          const state = window.korovany.inspect(), probe = window.uiResumeProbe;
+          cancelAnimationFrame(probe.id);
+          delete window.uiResumeProbe;
+          return { tick: state.snapshot.tick, phase: state.snapshot.phase, overlay: state.overlay, running: state.running,
+            focused: document.hasFocus(), visibility: document.visibilityState, activeElement: document.activeElement?.tagName,
+            quality: state.settings.quality, width: document.querySelector('canvas').width, height: document.querySelector('canvas').height,
+            frames: probe.frames, maxFrameGapMs: probe.maxGap, lastFrameAgoMs: performance.now() - probe.last };
+        })()`);
+        console.info("UI resume tick boundary", JSON.stringify({ startTick: start.snapshot?.tick, wallMs: Date.now() - resumedAt, tickSamples, resumed }));
+      }
+      expect((await inspect()).snapshot?.player.x).toBeCloseTo(start.snapshot?.player.x ?? 0, 4);
+      expect((await inspect()).snapshot?.player.z).toBeCloseTo(start.snapshot?.player.z ?? 0, 4);
+    } finally {
+      await cdp.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+      await until(cdp, "document.querySelector('canvas').width === 1440 && document.querySelector('canvas').height === 900", Boolean, 15_000);
+    }
+    expect((await inspect()).settings.quality).toBe("high");
 
     await tap("Tab");
     expect((await inspect()).overlay).toBe("map");
