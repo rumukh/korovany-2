@@ -1,4 +1,4 @@
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
@@ -11,7 +11,8 @@ import {
   click, evaluate, launchBrowser, openPage, screenshot, until,
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeOwnedBrowser } from "../vendor/aegis-engine/packages/render-three/src/testing/browser-lifecycle";
+import { closeTestBrowser } from "./browser-cleanup";
+import { reloadTestPage } from "./browser-navigation";
 
 interface Inspection { snapshot: GameSnapshot; overlay: string | null; running: boolean }
 const cases = (["elf", "guard", "villain"] as const).flatMap((faction) =>
@@ -48,9 +49,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("generated dialogue portrai
         language, quality: "low", reducedMotion: true, muted: true,
       }))});
     })()`);
-    const timeOrigin = await evaluate<number>(cdp, "performance.timeOrigin");
-    await cdp.send("Page.reload");
-    await until(cdp, `performance.timeOrigin !== ${timeOrigin} && Boolean(window.korovany) && window.korovany.inspect().overlay === 'menu'`, Boolean, 30_000);
+    await reloadTestPage(cdp);
     const point = await evaluate<{ x: number; y: number }>(cdp, `(() => {
       const button = document.querySelector('[data-action="continue"]');
       if (!button) throw new Error('Missing saved portrait conversation');
@@ -78,12 +77,12 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("generated dialogue portrai
 
   afterAll(async () => {
     cdp?.close();
-    if (browser) {
-      await closeOwnedBrowser(browser);
-      await rm(browser.profile, { recursive: true, force: true });
+    try {
+      if (browser) await closeTestBrowser(browser);
+    } finally {
+      await server?.close();
     }
-    await server?.close();
-  }, 30_000);
+  }, 60_000);
 
   it("fully decodes every unique web portrait at its real delivery dimensions", async () => {
     const ids = [...NPC_PORTRAIT_IDS, ...Object.values(PLAYER_PORTRAITS)];
@@ -150,7 +149,13 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("generated dialogue portrai
     await tap("Tab");
     expect(await evaluate(cdp, "document.activeElement === document.querySelector('.dialogue-panel button:not(:disabled)')")).toBe(true);
     await tap("Tab", true);
+    expect(await evaluate(cdp, "document.activeElement.dataset.action")).toBe("open-settings");
+    await tap("Tab", true);
     expect(await evaluate(cdp, "document.activeElement.dataset.action")).toBe("close-dialogue");
+    await tap("Tab");
+    expect(await evaluate(cdp, "document.activeElement.dataset.action")).toBe("open-settings");
+    await tap("Tab");
+    expect(await evaluate(cdp, "document.activeElement === document.querySelector('.dialogue-panel button:not(:disabled)')")).toBe(true);
     expect((await inspect()).snapshot.tick).toBe(before.snapshot.tick);
     const index = dialogue.choices.findIndex((choice) => choice.enabled);
     expect(index).toBeGreaterThanOrEqual(0);

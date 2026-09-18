@@ -16,6 +16,25 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: dist
+
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,16 +46,43 @@ jobs:
       - run: npm ci
       - run: npm test
         env:
-          KOROVANY_BROWSER: "1"
-      - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
-        if: github.ref == 'refs/heads/main'
+          KOROVANY_TEST_SUITE: unit
+
+  browser:
+    name: Browser ${{ matrix.shard }}/4
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: 1
+            files: tests/voice-assets-browser.test.ts
+          - shard: 2
+            files: tests/story-browser.test.ts tests/ui-browser.test.ts
+          - shard: 3
+            files: tests/audio-assets-browser.test.ts tests/audio-browser.test.ts tests/voice-browser.test.ts
+          - shard: 4
+            files: tests/faction-presentation.test.ts tests/portraits-browser.test.ts tests/world-browser.test.ts
+    steps:
+      - uses: actions/checkout@v4
         with:
-          path: dist
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test -- ${{ matrix.files }}
+        env:
+          KOROVANY_TEST_SUITE: browser
+          KOROVANY_BROWSER: "1"
+          KOROVANY_WORLD_BROWSER: "1"
+          KOROVANY_VOICE_ASSETS: "1"
 
   deploy:
     if: github.ref == 'refs/heads/main'
-    needs: build
+    needs: [build, unit, browser]
     runs-on: ubuntu-latest
     permissions:
       pages: write

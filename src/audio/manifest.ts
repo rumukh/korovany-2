@@ -1,3 +1,17 @@
+export interface AudioAsset {
+  id: string;
+  src: string;
+  duration: number;
+  loop: boolean;
+}
+
+export interface SoundtrackManifest {
+  version: 1;
+  music: AudioAsset[];
+  ambience: AudioAsset[];
+  sfx: AudioAsset[];
+}
+
 export interface VoiceEntry {
   id: string;
   speaker: string;
@@ -7,7 +21,7 @@ export interface VoiceEntry {
 }
 
 export function paragraphs(text: string): string[] {
-  return text.replace(/\r\n?/g, "\n").split(/\n\s*\n/).map(part => part.trim()).filter(Boolean);
+  return text.replace(/\r\n?/g, "\n").split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
 }
 
 export function voiceKey(speaker: string, language: string, text: string): string {
@@ -15,13 +29,43 @@ export function voiceKey(speaker: string, language: string, text: string): strin
 }
 
 function record(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid voice manifest object.");
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid audio manifest object.");
   return value as Record<string, unknown>;
 }
 
 function string(value: unknown): string {
-  if (typeof value !== "string" || !value.trim()) throw new Error("Empty voice manifest field.");
+  if (typeof value !== "string" || !value.trim()) throw new Error("Empty audio manifest field.");
   return value;
+}
+
+function duration(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) throw new Error("Invalid audio duration.");
+  return value;
+}
+
+function source(value: unknown, directory: string): string {
+  const src = string(value);
+  if (!src.startsWith(`audio/${directory}/`) || !/^[a-zA-Z0-9_./-]+\.(ogg|mp3|m4a|wav)$/.test(src) ||
+    src.split("/").some((part) => part === ".." || part === ".")) throw new Error(`Invalid local audio path: ${src}`);
+  return src;
+}
+
+export function parseSoundtrack(value: unknown): SoundtrackManifest {
+  const root = record(value);
+  if (root.version !== 1) throw new Error("Unsupported soundtrack manifest version.");
+  const category = (name: string): AudioAsset[] => {
+    const entries = root[name];
+    if (!Array.isArray(entries) || !entries.length) throw new Error(`Empty soundtrack category: ${name}`);
+    const ids = new Set<string>();
+    return entries.map((item) => {
+      const asset = record(item);
+      const id = string(asset.id);
+      if (ids.has(id) || typeof asset.loop !== "boolean") throw new Error(`Invalid or duplicate asset: ${id}`);
+      ids.add(id);
+      return { id, src: source(asset.src, "soundtrack"), duration: duration(asset.duration), loop: asset.loop };
+    });
+  };
+  return { version: 1, music: category("music"), ambience: category("ambience"), sfx: category("sfx") };
 }
 
 export function parseVoices(value: unknown): Map<string, VoiceEntry> {
@@ -39,14 +83,9 @@ export function parseVoices(value: unknown): Map<string, VoiceEntry> {
     if (result.has(key)) throw new Error(`Duplicate voice paragraph: ${key}`);
     result.set(key, {
       id: string(entry.id), speaker, language, text,
-      clips: entry.clips.map(value => {
+      clips: entry.clips.map((value) => {
         const clip = record(value);
-        const src = string(clip.src);
-        if (!src.startsWith("audio/voices/") || !/^[a-zA-Z0-9_./-]+\.(ogg|mp3|m4a|wav)$/.test(src) ||
-          src.split("/").some(part => part === ".." || part === ".")) throw new Error(`Invalid local voice path: ${src}`);
-        const duration = clip.duration;
-        if (typeof duration !== "number" || !Number.isFinite(duration) || duration <= 0) throw new Error("Invalid voice duration.");
-        return { src, duration };
+        return { src: source(clip.src, "voices"), duration: duration(clip.duration) };
       }),
     });
   }

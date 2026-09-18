@@ -2,8 +2,9 @@ import { FACTIONS, FACTION_CAMPAIGNS, type FactionId, type GameEvent, type GameI
 import { Atlas } from "./atlas";
 import { formatTime, translate } from "./locale";
 import type { Settings } from "./storage";
-import type { SpeechLine } from "../audio/speech";
 import { campaignContent, dialogueContent, inspectionContent, journalContent, localText, militaryObjective, questTarget, worldTarget, type QuestFilter } from "./story";
+import { mixChannels } from "../audio/mix";
+import type { SpeechLine } from "../audio/soundscape";
 
 export type Overlay = "menu" | "pause" | "map" | "journal" | "dialogue" | "inspection" | "settings" | "help" | "records" | "terminal" | "fatal" | null;
 export interface MetaOffer {
@@ -95,7 +96,9 @@ export class GameShell {
     this.minimap.type = "button";
     this.minimap.addEventListener("click", () => dispatch({ type: "overlay", overlay: "map" }));
     this.hud.append(this.hudTop, this.minimap, this.hudBottom, this.controls);
-    root.replaceChildren(this.canvas, this.hud, this.overlayHost, this.voiceCaption, this.warnings, this.live);
+    this.voiceCaption.setAttribute("aria-live", "polite");
+    this.voiceCaption.setAttribute("aria-atomic", "true");
+    root.replaceChildren(this.canvas, this.hud, this.overlayHost, this.warnings, this.live, this.voiceCaption);
     window.addEventListener("keydown", (event) => this.overlayKey(event), { signal: this.controller.signal });
     this.applyLanguage();
     this.buildControls();
@@ -185,7 +188,7 @@ export class GameShell {
     const alreadyOnScreen = ["dialogue", "inspection", "terminal"].includes(this.currentOverlay ?? "") && line?.speaker !== "player";
     this.voiceCaption.hidden = line === null || alreadyOnScreen;
     this.voiceCaption.replaceChildren();
-    if (line) this.voiceCaption.append(element("strong", "", line.label), element("span", "", line.text));
+    if (line) this.voiceCaption.append(element("strong", "", line.label), element("p", "", line.text));
   }
 
   private renderWarnings(): void {
@@ -658,6 +661,32 @@ export class GameShell {
       row.append(input);
       panel.append(row);
     }
+    const mixer = element("fieldset", "audio-mixer");
+    mixer.append(element("legend", "", this.t("audio.mixer")));
+    for (const channel of mixChannels) {
+      const row = element("label", "setting-row audio-setting", this.t(`audio.${channel}`));
+      const input = element("input");
+      input.type = "range";
+      input.min = "0";
+      input.max = "1";
+      input.step = "0.05";
+      input.value = String(this.state.settings.audio[channel]);
+      input.dataset.audioChannel = channel;
+      input.setAttribute("aria-label", this.t(`audio.${channel}`));
+      const output = element("output", "", `${Math.round(Number(input.value) * 100)}%`);
+      input.setAttribute("aria-valuetext", output.value);
+      input.addEventListener("input", () => {
+        const level = Number(input.value);
+        output.value = `${Math.round(level * 100)}%`;
+        input.setAttribute("aria-valuetext", output.value);
+        this.dispatch({ type: "settings", settings: {
+          ...this.state.settings, audio: { ...this.state.settings.audio, [channel]: level },
+        } });
+      });
+      row.append(input, output);
+      mixer.append(row);
+    }
+    panel.append(mixer);
     this.back(panel);
   }
 

@@ -5,14 +5,13 @@ import {
 } from "./game";
 import { createGameView, type GameView } from "./view";
 import { Soundscape } from "./audio/soundscape";
-import { SpeechPresentation, type SpeechSelection } from "./audio/presentation";
+import { AudioPresentation, type SpeechSelection } from "./audio/presentation";
 import { GameInput } from "./ui/input";
 import { GameShell, type Overlay, type ShellAction, type ShellState } from "./ui/shell";
 import { BrowserStorage, DirtySave, defaultSettings, parseSettings, storageKeys } from "./ui/storage";
 import { parseChart } from "./ui/atlas";
 import { translate } from "./ui/locale";
 import "./style.css";
-import "./audio/speech.css";
 
 const STEP = 1 / 60;
 const MAX_FRAME = 0.1;
@@ -68,12 +67,13 @@ let fatal = false;
 let raf = 0;
 let cameraDrag: { x: number; y: number } | null = null;
 const lifecycle = new AbortController();
-const sound = new Soundscape(() => shell?.warn("audioFailure"), line => shell?.caption(line));
-const speech = new SpeechPresentation(sound);
-sound.configure(settings.muted);
+const sound = new Soundscape(() => shell?.warn("audioFailure"), (line) => shell?.caption(line));
+const audio = new AudioPresentation(sound);
+sound.configure(settings.muted, settings.audio);
+audio.sync(snapshot, "menu", true, settings.language);
 
-function syncSpeech(selection?: SpeechSelection): void {
-  speech.sync(snapshot, shell ? shell.overlay : "menu", atTitle, settings.language, selection);
+function syncAudio(selection?: SpeechSelection): void {
+  audio.sync(snapshot, shell ? shell.overlay : "menu", atTitle, settings.language, selection);
 }
 
 function newSeed(): string {
@@ -143,7 +143,7 @@ function saveCampaign(notify = false): boolean {
   if (result === "conflict") {
     freeze();
     if (!atTitle) shell.show("pause");
-    syncSpeech();
+    syncAudio();
   }
   lastSaveTick = snapshot?.tick ?? 0;
   if (notify && saved && chartSaved && rewardsSaved) shell.announce("saved");
@@ -151,15 +151,14 @@ function saveCampaign(notify = false): boolean {
   return saved && chartSaved && rewardsSaved;
 }
 
-function freeze(): void {
+function freeze(silence = true): void {
   running = false;
   input?.setEnabled(false);
   queued = {};
   cameraDrag = null;
   accumulator = 0;
   lastFrame = null;
-  sound.setActive(false);
-  sound.setSpeechActive(false);
+  if (silence) sound.setActive(false);
 }
 
 function narrativeOverlay(): "dialogue" | "inspection" | null {
@@ -170,7 +169,7 @@ function narrativeOverlay(): "dialogue" | "inspection" | null {
 function changeOverlay(overlay: Overlay, selection?: SpeechSelection): void {
   if (fatal) return;
   const wasRunning = running;
-  freeze();
+  freeze(false);
   if (wasRunning) saveCampaign();
   if (overlay === "menu") atTitle = true;
   else if (overlay === null || overlay === "dialogue" || overlay === "inspection") atTitle = false;
@@ -182,9 +181,8 @@ function changeOverlay(overlay: Overlay, selection?: SpeechSelection): void {
   if (overlay === null && campaign && snapshot?.phase === "playing") {
     running = true;
     input?.setEnabled(true);
-    sound.setActive(true);
   }
-  syncSpeech(selection);
+  syncAudio(selection);
 }
 
 function rendererFor(next: GameSnapshot): void {
@@ -212,7 +210,7 @@ function updatePreview(): void {
 
 function finish(selection?: SpeechSelection): void {
   if (!snapshot || snapshot.phase === "playing") return;
-  freeze();
+  freeze(false);
   atTitle = false;
   if (snapshot.rewards) {
     pendingRewards.set(snapshot.rewards.runId, snapshot.rewards);
@@ -222,7 +220,7 @@ function finish(selection?: SpeechSelection): void {
   saveCampaign();
   refresh(false);
   shell?.show("terminal");
-  syncSpeech(selection);
+  syncAudio(selection);
 }
 
 function begin(sameSeed?: boolean): void {
@@ -245,7 +243,7 @@ function begin(sameSeed?: boolean): void {
     upgrades: profile.upgrades, runId: crypto.randomUUID(),
   });
   snapshot = campaign.snapshot();
-  speech.reset();
+  audio.reset(snapshot);
   campaignSave.adopt();
   atlasSave.adopt();
   campaignSave.markDirty();
@@ -284,13 +282,13 @@ function continueLatest(): void {
   if (latest.status === "error") return;
   campaign = latest.status === "ok" ? latest.value : null;
   snapshot = campaign?.snapshot() ?? null;
-  speech.reset();
   campaignSave.adopt();
   atlasSave.adopt();
   const chart = storage.read(storageKeys.atlas, parseChart);
   if (chart.status === "ok") shell?.atlas.restore(chart.value);
   reconcileProfile();
   if (snapshot) {
+    audio.reset(snapshot);
     lastEvent = snapshot.events.at(-1)?.id ?? 0;
     lastSaveTick = snapshot.tick;
     shell?.update(snapshot);
@@ -299,13 +297,14 @@ function continueLatest(): void {
   if (campaign) resume();
   else {
     shell?.warn("storage.conflict");
-    shell?.show("menu");
+    changeOverlay("menu");
   }
 }
 
 function dispatch(action: ShellAction): void {
   if (disposed || (fatal && action.type !== "reload")) return;
   try {
+    if (action.type !== "settings" && action.type !== "seed") sound.cue("click");
     switch (action.type) {
       case "start": begin(action.sameSeed); break;
       case "continue": continueLatest(); break;
@@ -338,15 +337,17 @@ function dispatch(action: ShellAction): void {
         updatePreview();
         refresh();
         break;
-      case "settings":
+      case "settings": {
+        const languageChanged = settings.language !== action.settings.language;
         settings = action.settings;
         storage.write(storageKeys.settings, settings);
-        sound.configure(settings.muted);
+        sound.configure(settings.muted, settings.audio);
         view?.setQuality(settings.quality);
         view?.setReducedMotion(settings.reducedMotion);
-        refresh();
-        syncSpeech();
+        refresh(languageChanged);
+        syncAudio();
         break;
+      }
       case "metaUpgrade":
         buyMetaUpgrade(action.id);
         break;
@@ -371,9 +372,10 @@ function dispatch(action: ShellAction): void {
         }
         const overlay = shell?.overlay ?? null;
         const command = action.command;
-        const selected = command.type === "choose" ? snapshot.narrative?.dialogue?.choices
-          .find(choice => choice.id === command.choiceId && choice.enabled)?.text : undefined;
-        freeze();
+        const dialogue = snapshot.narrative?.dialogue;
+        const selected = command.type === "choose" && command.npcId === dialogue?.npcId
+          ? dialogue.choices.find((choice) => choice.id === command.choiceId && choice.enabled)?.text : undefined;
+        freeze(false);
         campaign.step({ narrative: action.command });
         snapshot = campaign.snapshot();
         campaignSave.markDirty();
@@ -381,7 +383,10 @@ function dispatch(action: ShellAction): void {
         shell?.update(snapshot);
         events(snapshot);
         saveCampaign();
-        const selection = selected && !snapshot.narrative?.notice ? { player: selected } : undefined;
+        const selection: SpeechSelection = {
+          ...(selected && !snapshot.narrative?.notice ? { player: selected } : {}),
+          restart: command.type === "talk" || command.type === "inspect",
+        };
         if (snapshot.phase !== "playing") finish(selection);
         else if (!campaignSave.conflicted) changeOverlay(narrativeOverlay()
           ?? (overlay === "dialogue" || overlay === "inspection" ? null : overlay), selection);
@@ -434,18 +439,16 @@ function sampleInput(): CampaignInput {
 }
 
 function events(next: GameSnapshot): void {
+  audio.update(next);
   let important = false;
   for (const event of next.events) {
     if (event.id <= lastEvent) continue;
     lastEvent = event.id;
     switch (event.kind) {
-      case "attack": sound.cue("attack"); break;
-      case "hurt": sound.cue("hit"); break;
-      case "ability": sound.cue("ability"); break;
-      case "capture": sound.cue("capture"); important = true; break;
-      case "delivery": sound.cue("delivery"); important = true; break;
-      case "victory": sound.cue("victory"); important = true; break;
-      case "defeat": sound.cue("defeat"); important = true; break;
+      case "capture":
+      case "delivery":
+      case "victory":
+      case "defeat":
       case "raid":
       case "upgrade":
       case "fortress": important = true; break;
@@ -455,10 +458,6 @@ function events(next: GameSnapshot): void {
       else shell?.announce(event.key);
     }
   }
-  const combat = next.actors.some((actor) => actor.hp > 0 &&
-    Math.hypot(actor.x - next.player.x, actor.z - next.player.z) < 24 &&
-    ["windup", "attack", "chase"].includes(actor.state));
-  sound.setCombat(combat);
   if (next.tick - lastSaveTick >= 600 || (important && next.tick - lastSaveTick >= 120)) saveCampaign();
 }
 
@@ -468,7 +467,7 @@ function stopForError(error: unknown, kind: "graphics" | "game"): void {
   freeze();
   if (raf) cancelAnimationFrame(raf);
   shell?.fail(kind);
-  syncSpeech();
+  syncAudio();
 }
 
 function frame(time: number): void {
@@ -521,23 +520,24 @@ if (snapshot) shell.update(snapshot);
 
 window.addEventListener("resize", () => view?.resize(), { signal: lifecycle.signal });
 window.addEventListener("pointerdown", (event) => {
-  if (event.isTrusted) {
-    speech.setFocused(!document.hidden);
+  if (event.isTrusted && !document.hidden) {
+    audio.setFocused(true);
     void sound.unlock();
   }
 }, { signal: lifecycle.signal, capture: true });
 window.addEventListener("keydown", (event) => {
-  if (event.isTrusted) {
-    speech.setFocused(!document.hidden);
+  if (event.isTrusted && !document.hidden) {
+    audio.setFocused(true);
     void sound.unlock();
   }
 }, { signal: lifecycle.signal, capture: true });
-window.addEventListener("change", event => {
-  if (event.isTrusted) void sound.unlock();
+// Native checkbox changes occur after click propagation; unlock after settings are applied.
+for (const type of ["input", "change"]) window.addEventListener(type, (event) => {
+  if (event.isTrusted && !document.hidden) void sound.unlock();
 }, { signal: lifecycle.signal });
-window.addEventListener("blur", () => speech.setFocused(false), { signal: lifecycle.signal });
-window.addEventListener("focus", () => speech.setFocused(!document.hidden), { signal: lifecycle.signal });
-document.addEventListener("visibilitychange", () => speech.setFocused(!document.hidden), { signal: lifecycle.signal });
+window.addEventListener("blur", () => audio.setFocused(false), { signal: lifecycle.signal });
+window.addEventListener("focus", () => audio.setFocused(!document.hidden), { signal: lifecycle.signal });
+document.addEventListener("visibilitychange", () => audio.setFocused(!document.hidden && document.hasFocus()), { signal: lifecycle.signal });
 shell.canvas.addEventListener("pointerdown", (event) => {
   if (!running || event.button !== 2) return;
   event.preventDefault();
@@ -562,6 +562,7 @@ shell.canvas.addEventListener("webglcontextlost", (event) => {
   stopForError(new Error("WebGL context lost"), "graphics");
 }, { signal: lifecycle.signal });
 window.addEventListener("pagehide", () => {
+  audio.setFocused(false);
   if (running) changeOverlay("pause");
   else freeze();
   saveCampaign();
@@ -572,7 +573,7 @@ window.addEventListener("storage", (event) => {
     freeze();
     shell?.warn("storage.conflict");
     shell?.show("pause");
-    syncSpeech();
+    syncAudio();
   }
   if (event.key === storageKeys.profile && !pendingRewards.size) {
     reconcileProfile();
@@ -587,7 +588,7 @@ Object.defineProperty(window, "korovany", {
       snapshot: campaign?.snapshot() ?? null,
       overlay: shell?.overlay ?? null,
       running,
-      settings: { ...settings },
+      settings: { ...settings, audio: { ...settings.audio } },
       audio: sound.inspect(),
       profile: { ...profile, upgrades: { ...profile.upgrades }, completedRuns: [...profile.completedRuns] },
       viewWorldId,

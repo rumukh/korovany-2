@@ -51,17 +51,60 @@ driver, with isolated browser profiles and no additional test dependencies:
 
 ```powershell
 $env:KOROVANY_BROWSER = '1'
-npm test -- tests\ui-browser.test.ts tests\story-browser.test.ts tests\faction-presentation.test.ts
+$env:KOROVANY_WORLD_BROWSER = '1'
+$env:KOROVANY_VOICE_ASSETS = '1'
+$env:KOROVANY_TEST_SUITE = 'browser'
+npm test
 ```
 
 Set `AEGIS_BROWSER` to an executable path if the browser is not installed in a
 standard location. `KOROVANY_CAPTURE_DIR` optionally selects a screenshot output
 directory.
 
+Browser-enabled runs execute test files sequentially: the engine's CDP launcher
+uses software WebGL, so concurrent renderers and simulation suites otherwise
+compete for CPU time. Ordinary headless unit-test runs remain parallel.
+CI builds the site, runs unit tests and runs four balanced browser-file groups on
+separate runners concurrently. Deployment requires every job to succeed; no
+browser assertions, audio clips or narrative branches are omitted. Each browser
+runner still runs only one test file at a time. The workflow lists its groups
+explicitly, and a coverage test requires every browser suite to appear exactly
+once. `KOROVANY_TEST_SUITE=unit` or `browser` selects those categories locally.
+Without the selector, `npm test` retains its full-suite behavior.
+CI enables both the world-visual benchmark (`KOROVANY_WORLD_BROWSER=1`) and the
+complete shipped-voice checks (`KOROVANY_VOICE_ASSETS=1`). These remain opt-in for
+ordinary local runs; the example above enables the complete release coverage.
+
+Browser reloads wait for a new document loader and application readiness.
+Only execution-context replacement during the requested navigation is retried
+within the original deadline; renderer crashes and application errors still fail.
+Long gameplay waits keep their tick-count assertions but allow up to 60 seconds
+for software rendering. These functional scenarios are not GPU benchmarks.
+
 The production game is written to `dist`. Serve that directory over HTTP; opening
 `index.html` directly with `file://` is not supported. Assets use relative paths,
 so the same build works at a site root or under `/korovany-2/`. Runtime assets are
 local: no account, backend, external font service, or asset CDN is required.
+
+## Frontier graphics
+
+Seven original generated materials cover soil, masonry, oak boards, slate,
+bark, linen and natural rock. Their 21 local 512 x 512 lossless WebP maps provide
+color, tangent-space normals and roughness. Ground detail is mapped in world
+metres, so it does not stretch across the kilometre-wide landscape.
+
+The presentation combines detailed architecture and equipment, clustered tree
+crowns, denser meadow grass, a layered mountain sky, reflective river ripples,
+warm directional light and cool atmospheric haze. High quality adds HDR bloom
+and antialiased postprocessing; low quality releases those render targets,
+disables shadows and ground dressing, and uses simpler tree crowns. Both retain
+the generated textures. Camera orbit now supports a lower landscape view.
+
+Material provenance and hashes live in `public/textures/frontier/manifest*.json`.
+`scripts/prepare-frontier-textures.py` is the offline atlas-processing utility
+(Pillow and NumPy); running or building the game does not require Python or an
+image-generation service. Normal/roughness maps are artistically derived from
+the generated images, not measured scans.
 
 ## The campaign
 
@@ -135,20 +178,16 @@ reading panel and resumes play. Residents offer local stories,
 testimony and decisions with persistent consequences, not repeatable reward
 dispensers.
 
-Dialogue, player replies, inspections, military status and all nine epilogues
-have local Russian and English recordings: **1,332 bilingual blocks / 3,115
-unique Ogg clips**, about **158 minutes** of unique speech. The established
-20 NPC profiles plus player/narrator are preserved, using three Russian and four
-British English engine voices rather than claiming 22 different actors.
-Selected player replies play before NPC responses without advancing the paused
-simulation. Settings remain accessible during dialogue, inspection and endings;
-language changes replace the speech queue, and the existing sound toggle mutes
-speech, music and effects. There is no browser text-to-speech fallback.
+Conversations show **20 canonical NPC portraits** and a distinct player portrait
+for each faction. These original illustrations are shared across languages and
+use stable character identities across campaigns. The 23 local, 320 x 320 WebP
+images total about 313 KiB; production prompts, attribution and hashes are in
+`public/portraits/manifest.json`. See `scripts/portraits/README.md` for reproduction.
+Portrait loading failures never hide a speaker's name or dialogue choices.
 
-The complete recording was accepted with documented metric limitations on
-2026-09-18. Those flags remain in `public\audio\voices\provenance.json`, not
-relabeled automatic PASS. See `scripts\voices\README.md` for production,
-pronunciation, exact coverage and the separate human release records.
+Dialogue, player replies, inspections, military status and all nine epilogues
+have local Russian and English recordings. See **Audio** below for coverage,
+playback controls and the documented human release acceptance.
 
 <details>
 <summary>Ending requirements (spoilers)</summary>
@@ -210,6 +249,87 @@ Opening menus pauses the campaign. Browser focus loss pauses play and releases
 held controls. Once the atlas is open, Tab navigates its controls; use M or
 Escape to return to the road.
 
+## Audio
+
+The browser plays local compressed media from
+`public/audio/soundtrack/manifest.json` and `public/audio/voices/manifest.json`.
+There is no oscillator soundtrack or browser text-to-speech substitute. The first
+trusted click or key press unlocks audio; the title screen then plays its score.
+If a manifest, clip, decoder or autoplay permission is unavailable, a localized
+warning appears and the console identifies the failure. Dialogue remains readable
+and choices remain immediate. Reload after restoring missing files.
+
+Music crossfades between the road, mystery sites, combat and the fortress, with
+hysteresis to avoid switching at every border or combat lull. Eight regional
+ambience beds follow the player. Final scores start only after victory, never after a nonterminal conversation;
+defeat plays its cue and then falls silent. Presentation
+effects use snapshot events and movement, with distance attenuation, stereo
+placement, rate limits and bounded polyphony. They do not change game rules.
+
+The score contains eight original instrumental compositions totaling 15 minutes,
+eight 32-second regional loops and 24 distinct effects. Production captions,
+source hashes, mastering details and reproduction instructions are retained in
+[`scripts/audio`](scripts/audio/README.md). Voice casting, pronunciation and
+exact narrative coverage are documented in [`scripts/voices`](scripts/voices/README.md).
+The shipped files play offline from the game's HTTP server; synthesis services
+are production tools, not runtime dependencies.
+
+NPC dialogue, selected player responses, inspection narration and terminal
+epilogues look up exact RU/EN paragraph blocks in the voice manifest. Multiple
+clips for a paragraph play in order. Choosing again immediately cancels stale
+downloads and playback; reopening a conversation replays it. Voices duck the
+music, not the simulation: conversation and inspection overlays pause gameplay
+while audio continues. Their **Settings** control can change language or volume
+without closing the scene. Closing a reading scene cancels its narration.
+
+The full voice bank contains **1,332 localized blocks** (666 per language),
+with 3,772 segment references sharing **3,115 unique clips**: approximately
+158 minutes across all three campaigns, not one playthrough. All 20 NPCs,
+the player and the narrator have recorded parts. Their established profiles use
+three Russian and four British English engine voices, not 22 separate actors.
+Delivery is local 24 kHz mono Ogg Vorbis, about 67.55 MiB; lossless masters,
+pronunciation markup and production receipts are retained separately.
+
+The complete recording was accepted with documented metric limitations on
+2026-09-18. All 403 accepted-but-retained flags remain in
+`public/audio/voices/provenance.json`, distinctly from automatic passes.
+Acceptance covers the reviewed recording and does not claim that every flagged
+clip was individually heard. Production, exact coverage and hash-bound human
+release records are documented in `scripts/voices/README.md`.
+
+Settings provide independent **Master**, **Music**, **Ambience**, **Sound effects**
+and **Voices** sliders, as well as the existing mute switch. Old settings without
+mix levels load compatible defaults. Pause, mute, a hidden tab and window blur
+stop all playback; returning to a voiced scene resumes its current clip, or
+restarts the scene in the newly selected language. Text stays visible throughout.
+
+Long music and ambience beds are streamed (at most two streams per lane during
+crossfades). Short effects and speech are decoded lazily into a 24 MiB LRU cache;
+at most twelve effects, four ordinary effect downloads and two native decodes
+run concurrently. Speech is sequential; the full voice corpus is never prefetched.
+`window.korovany.inspect().audio` exposes transport, stream times, current subtitle,
+recent effect IDs, decoded duration, cache usage and failures for browser acceptance.
+It is read-only and provides no simulation controls.
+The `speaking` flag includes speech loading; browser checks wait for a live voice
+source as well as the expected speaker and language, not just a subtitle or effect.
+
+`tests/audio-browser.test.ts` serves test-only PCM fixtures over HTTP to exercise
+real browser media and Web Audio lifecycles; these fixtures are not shipped assets.
+`tests/audio-assets-browser.test.ts` instead fully decodes every shipped Ogg file
+in Chromium, checks channel count, duration, audibility and headroom, then exercises
+real terminal cues, all three ending scores, and RU/EN conversations with their
+selected player responses. It serves assets beneath a URL prefix to cover
+subdirectory deployment. Run it only with both complete audio banks present:
+
+```powershell
+$env:KOROVANY_BROWSER = '1'
+npm test -- tests\audio-assets-browser.test.ts --maxWorkers=1 --no-file-parallelism
+```
+
+The separate `tests/voice-catalogue.test.ts` checks exact narrative coverage across
+authored branches and outcomes. Browser decoding and speech metrics complement
+human listening; they do not establish acting quality or correct lexical stress.
+
 ## Saves
 
 Campaign, profile, and settings are stored locally in the browser under the
@@ -237,7 +357,7 @@ rules and saves; they do not acquire a faction story on restoration.
 | --- | --- |
 | `src/game` | Aegis ECS components, ordered systems, deterministic world, campaign rules, saves, and profile progression |
 | `src/view` | Procedural Three.js scenery, character animation, camera, and effects |
-| `src/ui`, `src/audio`, `src/main.ts` | Interface, localization, controls, browser lifecycle, and synthesized audio |
+| `src/ui`, `src/audio`, `src/main.ts` | Interface, localization, controls, browser lifecycle, and local-media audio |
 | `tests` | Headless game and integration coverage |
 | `vendor/aegis-engine` | Unmodified engine submodule |
 
@@ -262,6 +382,6 @@ deployment. Local builds do not require GitHub.
 Aegis packages declare MIT; Three.js is MIT. Runtime notices are included in
 [`public/THIRD_PARTY_NOTICES.txt`](public/THIRD_PARTY_NOTICES.txt) and copied into
 the production build. The engine remains pinned with its upstream provenance.
-The sequel uses newly authored procedural visuals and synthesized audio rather
+The sequel uses newly authored procedural visuals and original audio rather
 than copying the original game's implementation or asset library. No
 project-wide redistribution license is assigned here.

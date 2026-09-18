@@ -1,0 +1,249 @@
+{
+  "version": 1,
+  "music": [
+    {
+      "id": "title",
+      "src": "audio/soundtrack/music/title.ogg",
+      "duration": 120,
+      "loop": true
+    },
+    {
+      "id": "road",
+      "src": "audio/soundtrack/music/road.ogg",
+      "duration": 150,
+      "loop": true
+    },
+    {
+      "id": "mystery",
+      "src": "audio/soundtrack/music/mystery.ogg",
+      "duration": 120,
+      "loop": true
+    },
+    {
+      "id": "combat",
+      "src": "audio/soundtrack/music/combat.ogg",
+      "duration": 120,
+      "loop": true
+    },
+    {
+      "id": "fortress",
+      "src": "audio/soundtrack/music/fortress.ogg",
+      "duration": 120,
+      "loop": true
+    },
+    {
+      "id": "ending-commons",
+      "src": "audio/soundtrack/music/ending-commons.ogg",
+      "duration": 90,
+      "loop": false
+    },
+    {
+      "id": "ending-compact",
+      "src": "audio/soundtrack/music/ending-compact.ogg",
+      "duration": 90,
+      "loop": false
+    },
+    {
+      "id": "ending-cinder",
+      "src": "audio/soundtrack/music/ending-cinder.ogg",
+      "duration": 90,
+      "loop": false
+    }
+  ],
+  "ambience": [
+    {
+      "id": "heartlands",
+      "src": "audio/soundtrack/ambience/heartlands.ogg",
+      "duration": 32,
+      "loop": true
+    },
+    {
+      "id": "greenmarch",
+      "src": "audio/soundtrack/ambience/greenmarch.ogg",
+      "duration": 32,
+      "loop": true
+    },
+    {
+      "id": "fens",
+      "src": "audio/soundtrack/ambience/fens.ogg",
+      "duration": 32,
+      "loop": true
+    },
+    {
+      "id": "salt-coast",
+      "src": "audio/soundtrack/ambience/salt-coast.ogg",
+      "duration": 32,
+      "loop": true
+    },
+    {
+      "id": "ash-steppe",
+      "src": "audio/soundtrack/ambience/ash-steppe.ogg",
+      "duration": 32,
+      "loop": true
+    },
+    {
+      "id": "crownlands",
+      "src": "audio/soundtrack/ambience/crownlands.ogg",
+      "duration": 32,
+      "loop": true
+    },
+    {
+      "id": "frostspine",
+      "src": "audio/soundtrack/ambience/frostspine.ogg",
+      "duration": 32,
+      "loop": true
+    },
+    {
+      "id": "hollowvale",
+      "src": "audio/soundtrack/ambience/hollowvale.ogg",
+      "duration": 32,
+      "loop": true
+    }
+  ],
+  "sfx": [
+    {
+      "id": "attack-elf",
+      "src": "audio/soundtrack/sfx/attack-elf.ogg",
+      "duration": 0.62,
+      "loop": false
+    },
+    {
+      "id": "attack-guard",
+      "src": "audio/soundtrack/sfx/attack-guard.ogg",
+      "duration": 0.72,
+      "loop": false
+    },
+    {
+      "id": "attack-villain",
+      "src": "audio/soundtrack/sfx/attack-villain.ogg",
+      "duration": 0.9,
+      "loop": false
+    },
+    {
+      "id": "hit",
+      "src": "audio/soundtrack/sfx/hit.ogg",
+      "duration": 0.42,
+      "loop": false
+    },
+    {
+      "id": "kill",
+      "src": "audio/soundtrack/sfx/kill.ogg",
+      "duration": 1.12,
+      "loop": false
+    },
+    {
+      "id": "pickup",
+      "src": "audio/soundtrack/sfx/pickup.ogg",
+      "duration": 0.85,
+      "loop": false
+    },
+    {
+      "id": "capture",
+      "src": "audio/soundtrack/sfx/capture.ogg",
+      "duration": 2.8,
+      "loop": false
+    },
+    {
+      "id": "delivery",
+      "src": "audio/soundtrack/sfx/delivery.ogg",
+      "duration": 1.65,
+      "loop": false
+    },
+    {
+      "id": "raid",
+      "src": "audio/soundtrack/sfx/raid.ogg",
+      "duration": 2.1,
+      "loop": false
+    },
+    {
+      "id": "convoy",
+      "src": "audio/soundtrack/sfx/convoy.ogg",
+      "duration": 2.0,
+      "loop": false
+    },
+    {
+      "id": "repair",
+      "src": "audio/soundtrack/sfx/repair.ogg",
+      "duration": 1.75,
+      "loop": false
+    },
+    {
+      "id": "upgrade",
+      "src": "audio/soundtrack/sfx/upgrade.ogg",
+      "duration": 2.4,
+      "loop": false
+    },
+    {
+      "id": "ability-elf",
+      "src": "audio/soundtrack/sfx/ability-elf.ogg",
+      "duration": 1.8,
+      "loop": false
+    },
+    {
+      "id": "ability-guard",
+      "src": "audio/soundtrack/sfx/ability-guard.ogg",
+      "duration": 2.1,
+      "loop": false
+    },
+    {
+      "id": "ability-villain",
+      "src": "audio/soundtrack/sfx/ability-villain.ogg",
+      "duration": 1.9,
+      "loop": false
+    },
+    {
+      "id": "fortress",
+      "src": "audio/soundtrack/sfx/fortress.ogg",
+      "duration": 4.2,
+      "loop": false
+    },
+    {
+      "id": "victory",
+      "src": "audio/soundtrack/sfx/victory.ogg",
+      "duration": 4.5,
+      "loop": false
+    },
+    {
+      "id": "defeat",
+      "src": "audio/soundtrack/sfx/defeat.ogg",
+      "duration": 3.6,
+      "loop": false
+    },
+    {
+      "id": "click",
+      "src": "audio/soundtrack/sfx/click.ogg",
+      "duration": 0.14,
+      "loop": false
+    },
+    {
+      "id": "step-dirt",
+      "src": "audio/soundtrack/sfx/step-dirt.ogg",
+      "duration": 0.38,
+      "loop": false
+    },
+    {
+      "id": "step-stone",
+      "src": "audio/soundtrack/sfx/step-stone.ogg",
+      "duration": 0.32,
+      "loop": false
+    },
+    {
+      "id": "dodge",
+      "src": "audio/soundtrack/sfx/dodge.ogg",
+      "duration": 0.68,
+      "loop": false
+    },
+    {
+      "id": "discover",
+      "src": "audio/soundtrack/sfx/discover.ogg",
+      "duration": 2.0,
+      "loop": false
+    },
+    {
+      "id": "inspect",
+      "src": "audio/soundtrack/sfx/inspect.ogg",
+      "duration": 0.9,
+      "loop": false
+    }
+  ]
+}

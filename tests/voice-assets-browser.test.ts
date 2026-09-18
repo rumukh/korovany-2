@@ -1,4 +1,4 @@
-import { readFile, rm } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
@@ -11,7 +11,9 @@ import { createVoiceCatalogue, factions, hashText, journalBefore, scene, voiceSt
 import {
   click, evaluate, launchBrowser, openPage, until, type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeOwnedBrowser } from "../vendor/aegis-engine/packages/render-three/src/testing/browser-lifecycle";
+import { closeTestBrowser } from "./browser-cleanup";
+import { navigateTestPage } from "./browser-navigation";
+import { isSpeechPlaying } from "./browser-audio";
 
 type AudioState = ReturnType<Soundscape["inspect"]>;
 interface Decoded {
@@ -35,13 +37,11 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1" && process.env.KOROVANY_VOIC
       await click(cdp, point.x, point.y);
     }
     async function navigate(url: string, ready: string): Promise<void> {
-      const previous = await evaluate<number>(cdp, "performance.timeOrigin");
-      await cdp.send("Page.navigate", { url });
-      await until(cdp, `performance.timeOrigin !== ${previous} && Boolean(${ready})`, Boolean, 60_000);
+      await navigateTestPage(cdp, url, ready, 60_000);
     }
-    async function playing(expression: string, speaker: string, language: "ru" | "en"): Promise<AudioState["speech"]> {
-      return until<AudioState["speech"]>(cdp, expression,
-        state => state.playing && state.subtitle?.speaker === speaker && state.subtitle.language === language, 45_000);
+    async function playing(expression: string, speaker: string, language: "ru" | "en"): Promise<AudioState> {
+      return until<AudioState>(cdp, expression,
+        state => isSpeechPlaying(state, speaker, language), 45_000);
     }
     async function decode(src: string): Promise<Decoded> {
       return evaluate<Decoded>(cdp, `(async () => {
@@ -111,7 +111,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1" && process.env.KOROVANY_VOIC
     afterAll(async () => {
       cdp?.close();
       try {
-        if (browser) { await closeOwnedBrowser(browser); await rm(browser.profile, { recursive: true, force: true }); }
+        if (browser) await closeTestBrowser(browser);
       } finally { await server?.close(); }
     }, 30_000);
 
@@ -143,9 +143,9 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1" && process.env.KOROVANY_VOIC
     test("plays all nine actual faction epilogues without looking up obsolete ending-score IDs", async () => {
       await evaluate(cdp, `(async () => {
         const {Soundscape}=await import(${JSON.stringify(`${base}src/audio/soundscape.ts`)});
-        const {SpeechPresentation}=await import(${JSON.stringify(`${base}src/audio/presentation.ts`)});
+        const {AudioPresentation}=await import(${JSON.stringify(`${base}src/audio/presentation.ts`)});
         const failures=[],sound=new Soundscape(()=>failures.push("voice"));
-        window.voiceAcceptance={sound,presentation:new SpeechPresentation(sound),failures};
+        window.voiceAcceptance={sound,presentation:new AudioPresentation(sound),failures};
         document.querySelector("#unlock").addEventListener("click",e=>{if(e.isTrusted)void sound.unlock()});
       })()`);
       try {
@@ -161,7 +161,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1" && process.env.KOROVANY_VOIC
               }
               await evaluate(cdp, `window.voiceAcceptance.presentation.sync(${JSON.stringify(snapshot)},"terminal",false,${JSON.stringify(language)})`);
               await select("#unlock");
-              const speech = await playing("window.voiceAcceptance.sound.inspect().speech", "narrator", language);
+              const speech = await playing("window.voiceAcceptance.sound.inspect()", "narrator", language);
               expect(speech.lastDecoded?.src).toMatch(/\.ogg$/);
               expect(speech.failures).toEqual([]);
               expect(await evaluate(cdp, "window.voiceAcceptance.failures")).toEqual([]);
@@ -187,10 +187,10 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1" && process.env.KOROVANY_VOIC
         })()`);
         await navigate(origin, "window.korovany");
         await select('[data-action="continue"]');
-        await playing("window.korovany.inspect().audio.speech", npcId, language);
+        await playing("window.korovany.inspect().audio", npcId, language);
         await select(`[data-choice="${choice.id}"]`);
-        await playing("window.korovany.inspect().audio.speech", "player", language);
-        const speech = await playing("window.korovany.inspect().audio.speech", npcId, language);
+        await playing("window.korovany.inspect().audio", "player", language);
+        const speech = await playing("window.korovany.inspect().audio", npcId, language);
         expect(speech.lastDecoded?.src).toMatch(/\.ogg$/);
         expect(speech.failures).toEqual([]);
         expect(await evaluate(cdp, "window.korovany.inspect().snapshot.tick")).toBe(before.tick);
@@ -198,7 +198,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1" && process.env.KOROVANY_VOIC
         await evaluate(cdp, "window.dispatchEvent(new Event('blur'))");
         expect(await evaluate(cdp, "window.korovany.inspect().audio.voices")).toBe(0);
         await evaluate(cdp, "window.dispatchEvent(new Event('focus'))");
-        await playing("window.korovany.inspect().audio.speech", npcId, language);
+        await playing("window.korovany.inspect().audio", npcId, language);
         await select('[data-action="open-settings"]');
         expect(await evaluate(cdp, "window.korovany.inspect().audio.voices")).toBe(0);
         const nextLanguage = language === "ru" ? "en" : "ru";
@@ -208,16 +208,16 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1" && process.env.KOROVANY_VOIC
           language.dispatchEvent(new Event("change",{bubbles:true}));
         })()`);
         await select('[data-action="open-dialogue"]');
-        await playing("window.korovany.inspect().audio.speech", npcId, nextLanguage);
+        await playing("window.korovany.inspect().audio", npcId, nextLanguage);
         await navigate(origin, "window.korovany");
         expect(await evaluate(cdp, "window.korovany.inspect().audio.state")).toBe("locked");
         await select('[data-action="continue"]');
-        const restored = await playing("window.korovany.inspect().audio.speech", npcId, nextLanguage);
+        const restored = await playing("window.korovany.inspect().audio", npcId, nextLanguage);
         expect(restored.failures).toEqual([]);
         expect(await evaluate(cdp, "window.korovany.inspect().snapshot.tick")).toBe(before.tick);
         await select('[data-action="close-dialogue"]');
-        expect(await evaluate(cdp, "window.korovany.inspect().audio.speech.playing")).toBe(false);
-        expect(await evaluate(cdp, "window.korovany.inspect().audio.speech.length")).toBe(0);
+        expect(await evaluate(cdp, "window.korovany.inspect().audio.speaking")).toBe(false);
+        expect(await evaluate(cdp, "window.korovany.inspect().audio.speechLength")).toBe(0);
       }
     }, 180_000);
   },

@@ -1,0 +1,2696 @@
+{
+  "version": 1,
+  "production": "korovany2-hollow-road-20260913",
+  "master_archive": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913",
+  "generator_sha256": "89ef0c309b22c25ea2246b54b3956084d8fe69b5c67e62f44b8ee8eb82ace9a4",
+  "recipe_sha256": "c80ceeebc797bf44f1c64338e227e69616c0b31484f74db264ccb2d22d394612",
+  "render_wrapper_sha256": "5a5459e6c882bea836190e6248f6c743e77128b6c410af7976025b373bea6760",
+  "local_runner_sha256": "0a4de6c08413656ac6bdbb99a18c828a5806d1b16545b49f83df835de54bf995",
+  "archived_helper": {
+    "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\tooling\\generate-music.ps1",
+    "sha256": "db525a1fdf35b61c98549ec08a55f48f0b68359cf486d4285a996ad731f44600"
+  },
+  "archived_launcher": {
+    "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\tooling\\Start-ACE-Step.ps1",
+    "sha256": "ff3b1b461f8e92a8027469e6446740b57a41e4186e6c0dd6608c35adc0388aa0"
+  },
+  "archived_local_runners": [
+    {
+      "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\tooling\\render_score_local-v1.py",
+      "sha256": "960020d719a7de23a977a82ac11ec3f31873f523eaf758197bf0c3df71c51215"
+    }
+  ],
+  "failed_attempts": [
+    "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\failed-mystery-timeout\\failure.json",
+    "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\failed-title-timeout\\failure.json"
+  ],
+  "ffmpeg": "ffmpeg version 2024-06-30-git-b818dff8d8-full_build-www.gyan.dev Copyright (c) 2000-2024 the FFmpeg developers",
+  "assets": [
+    {
+      "asset": {
+        "id": "title",
+        "src": "audio/soundtrack/music/title.ogg",
+        "duration": 120,
+        "loop": true
+      },
+      "category": "music",
+      "source": {
+        "method": "ACE-Step text2music",
+        "model": "acestep-v15-xl-sft",
+        "planner": "acestep-5Hz-lm-1.7B",
+        "seed": 9132601,
+        "prompt": "Original instrumental title music for a dark borderland folk mystery, intimate and patient, human warmth held against an uncertain road. A memorable rising three-note protective-bell motif is answered by a low bowed viola melody over dry plucked cittern and wooden frame-drum taps. Small acoustic string ensemble, breathy wooden flute used sparingly, resonant iron bells rather than bright glockenspiel. Begin with the plucked road figure already moving, introduce the viola theme, broaden gently into interwoven strings and a measured walking pulse, then return to the spare opening texture with the pulse still alive. Weathered wood, bow grain, natural room air, restrained low end, warm close recording, wide but coherent stereo, generous melodic breathing room. Entirely instrumental, no voice or choir, no electronic dance beat, no trailer impacts. End on a sustained open fifth with continuous plucked motion suitable for a clean loop.",
+        "request": {
+          "prompt": "Original instrumental title music for a dark borderland folk mystery, intimate and patient, human warmth held against an uncertain road. A memorable rising three-note protective-bell motif is answered by a low bowed viola melody over dry plucked cittern and wooden frame-drum taps. Small acoustic string ensemble, breathy wooden flute used sparingly, resonant iron bells rather than bright glockenspiel. Begin with the plucked road figure already moving, introduce the viola theme, broaden gently into interwoven strings and a measured walking pulse, then return to the spare opening texture with the pulse still alive. Weathered wood, bow grain, natural room air, restrained low end, warm close recording, wide but coherent stereo, generous melodic breathing room. Entirely instrumental, no voice or choir, no electronic dance beat, no trailer impacts. End on a sustained open fifth with continuous plucked motion suitable for a clean loop.",
+          "lyrics": "[Instrumental]",
+          "thinking": true,
+          "use_format": false,
+          "model": "acestep-v15-xl-sft",
+          "vocal_language": "en",
+          "audio_duration": 124,
+          "inference_steps": 50,
+          "guidance_scale": 7.0,
+          "use_random_seed": false,
+          "seed": 9132601,
+          "batch_size": 1,
+          "task_type": "text2music",
+          "infer_method": "ode",
+          "shift": 3.0,
+          "audio_format": "flac",
+          "use_tiled_decode": true,
+          "lm_model_path": "acestep-5Hz-lm-1.7B",
+          "lm_backend": "vllm",
+          "constrained_decoding": true,
+          "use_cot_caption": true,
+          "use_cot_language": true,
+          "bpm": 72,
+          "key_scale": "D minor",
+          "time_signature": "4/4"
+        },
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-title.flac",
+        "sha256": "4c7e6829d2e9085ae84d91f6abc02aa1bce884ba66f39bd682ec297ab5fd0061",
+        "metadata_path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-title.json",
+        "metadata_sha256": "fad94c45db178159e826dd23fdc04e3af772d42cb0aab65056a8e46d1e62b183",
+        "codec": "flac",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 124.0,
+        "crossfade_seconds": 4,
+        "task_id": "d61efcac-15ba-46e9-8565-f6b63150dafa",
+        "generated_at": "2026-09-13T19:54:32.8720736+02:00",
+        "quantization": "int8_weight_only",
+        "cpu_offload": true,
+        "dit_cpu_offload": true,
+        "attention": "flash_attention_2",
+        "generation_timeout_seconds": 5400,
+        "actual_shift": 1.0,
+        "parameter_forwarding_note": "Legacy Gradio route ignored requested shift=3 and used default shift=1; completed composition retained.",
+        "planner_unloaded_before_diffusion": false,
+        "ace_revision": "ca1e85fe9430179831e6bc6be790c332190a3866",
+        "runner_sha256": null
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\music\\title-master.flac",
+        "codec": "flac",
+        "duration": 120.0,
+        "decoded_duration": 120.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "flac",
+        "peak_dbfs": -7.656,
+        "true_peak_dbtp": -7.651,
+        "rms_dbfs": -23.781,
+        "sha256": "c16badef58083c085559ba5783662bb5e57864934b96dc99ba55c0431114c21b",
+        "seam": {
+          "sample_jump": 0.0005414,
+          "local_step_p995": 0.0046933,
+          "rms_change_db_100ms": 1.147
+        }
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 6,
+        "duration": 120.0,
+        "decoded_duration": 120.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "vorbis",
+        "peak_dbfs": -7.521,
+        "true_peak_dbtp": -7.515,
+        "rms_dbfs": -23.76,
+        "sha256": "33e0dc0501a94c0cd5def95435794d11c49fc01399edfa9e783a66e534b13641",
+        "seam": {
+          "sample_jump": 0.0017305,
+          "local_step_p995": 0.0046744,
+          "rms_change_db_100ms": 1.127
+        }
+      },
+      "mastering": {
+        "source_integrated_lufs": -13.85,
+        "source_true_peak_dbtp": -0.5,
+        "source_rms_dbfs": -16.631,
+        "target_lufs": -21,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -2.5,
+        "static_gain_db": -7.15
+      }
+    },
+    {
+      "asset": {
+        "id": "road",
+        "src": "audio/soundtrack/music/road.ogg",
+        "duration": 150,
+        "loop": true
+      },
+      "category": "music",
+      "source": {
+        "method": "ACE-Step text2music",
+        "model": "acestep-v15-xl-sft",
+        "planner": "acestep-5Hz-lm-1.7B",
+        "seed": 9132602,
+        "prompt": "Original instrumental travelling music for a wagon convoy crossing wet borderland pastures and old bridges. A lilting dry cittern ostinato and muted plucked low strings carry a patient walking rhythm, with brushed frame drum, small wooden clacks and occasional harness-like iron bell. Bowed viola unfolds a modest modal melody, answered by a distant wooden flute; a rising three-note bell figure quietly recalls shelter and maintained road wards. Small acoustic folk chamber ensemble, earthy and alert without urgency, weathered intimate room sound, no glossy orchestra or electronic percussion. Develop through a lighter plucked middle passage and a warm string answer, never become heroic bombast. Entirely instrumental with no voices or choir. Keep a steady rolling pulse and return to the opening open-string texture at the end, still moving for seamless road exploration.",
+        "request": {
+          "prompt": "Original instrumental travelling music for a wagon convoy crossing wet borderland pastures and old bridges. A lilting dry cittern ostinato and muted plucked low strings carry a patient walking rhythm, with brushed frame drum, small wooden clacks and occasional harness-like iron bell. Bowed viola unfolds a modest modal melody, answered by a distant wooden flute; a rising three-note bell figure quietly recalls shelter and maintained road wards. Small acoustic folk chamber ensemble, earthy and alert without urgency, weathered intimate room sound, no glossy orchestra or electronic percussion. Develop through a lighter plucked middle passage and a warm string answer, never become heroic bombast. Entirely instrumental with no voices or choir. Keep a steady rolling pulse and return to the opening open-string texture at the end, still moving for seamless road exploration.",
+          "lyrics": "[Instrumental]",
+          "thinking": true,
+          "use_format": false,
+          "model": "acestep-v15-xl-sft",
+          "vocal_language": "en",
+          "audio_duration": 154,
+          "inference_steps": 50,
+          "guidance_scale": 7.0,
+          "use_random_seed": false,
+          "seed": 9132602,
+          "batch_size": 1,
+          "task_type": "text2music",
+          "infer_method": "ode",
+          "shift": 3.0,
+          "audio_format": "flac",
+          "use_tiled_decode": true,
+          "lm_model_path": "acestep-5Hz-lm-1.7B",
+          "lm_backend": "vllm",
+          "constrained_decoding": true,
+          "use_cot_caption": true,
+          "use_cot_language": true,
+          "bpm": 84,
+          "key_scale": "D minor",
+          "time_signature": "6/8"
+        },
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-road.flac",
+        "sha256": "7adb195dc83c44413cf681f587f1968232f2ce1bcc8544a4b7430c76b039b4d8",
+        "metadata_path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-road.json",
+        "metadata_sha256": "62e542c79c7b757b94de6b80b9e0ba85fabf7c8054082b6272599e83a34689ff",
+        "codec": "flac",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 154.0,
+        "crossfade_seconds": 4,
+        "task_id": "53d36d12-4d60-4a8c-a83b-48fa70161c6e",
+        "generated_at": "2026-09-13T20:59:25.0425109+02:00",
+        "quantization": "int8_weight_only",
+        "cpu_offload": true,
+        "dit_cpu_offload": true,
+        "attention": "flash_attention_2",
+        "generation_timeout_seconds": 5400,
+        "actual_shift": 1.0,
+        "parameter_forwarding_note": "Legacy Gradio route ignored requested shift=3 and used default shift=1; completed composition retained.",
+        "planner_unloaded_before_diffusion": false,
+        "ace_revision": "ca1e85fe9430179831e6bc6be790c332190a3866",
+        "runner_sha256": null
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\music\\road-master.flac",
+        "codec": "flac",
+        "duration": 150.0,
+        "decoded_duration": 150.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "flac",
+        "peak_dbfs": -5.873,
+        "true_peak_dbtp": -5.867,
+        "rms_dbfs": -23.191,
+        "sha256": "e2a364ab730edb249735ddf874d3a430d96de6a0d42bb1d34ea8f42d6825f650",
+        "seam": {
+          "sample_jump": 0.0014479,
+          "local_step_p995": 0.0076899,
+          "rms_change_db_100ms": 1.25
+        }
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 6,
+        "duration": 150.0,
+        "decoded_duration": 150.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "vorbis",
+        "peak_dbfs": -5.821,
+        "true_peak_dbtp": -5.815,
+        "rms_dbfs": -23.178,
+        "sha256": "106dc0cf863a661ecfe13883ff0aaa7741a6b99095b2091d0cd7e05447fa6b00",
+        "seam": {
+          "sample_jump": 0.0022105,
+          "local_step_p995": 0.007637,
+          "rms_change_db_100ms": 1.235
+        }
+      },
+      "mastering": {
+        "source_integrated_lufs": -15.91,
+        "source_true_peak_dbtp": -0.78,
+        "source_rms_dbfs": -18.101,
+        "target_lufs": -21,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -2.5,
+        "static_gain_db": -5.09
+      }
+    },
+    {
+      "asset": {
+        "id": "mystery",
+        "src": "audio/soundtrack/music/mystery.ogg",
+        "duration": 120,
+        "loop": true
+      },
+      "category": "music",
+      "source": {
+        "method": "ACE-Step text2music",
+        "model": "acestep-v15-xl-sft",
+        "planner": "acestep-5Hz-lm-1.7B",
+        "seed": 9132603,
+        "prompt": "Original instrumental investigation underscore for black ward-glass, missing convoy crews and a deserted borderland archive. Quiet close bowed viola harmonics, a low cello open fifth, isolated dry cittern questions and softly rubbed resonant glass. Sparse wooden taps suggest thought rather than a beat; a low protective iron bell sounds rarely and decays naturally. Let an incomplete three-note modal phrase move between plucked strings and viola, gather a gentle dissonance in the middle, then thin back to the original open fifth. Restrained folk chamber mystery, fragile material textures, spacious natural room, plenty of silence between gestures but a continuous soft string floor. No voices, whispers, choir, jump scares, synthetic horror risers or huge impacts. Fully instrumental, unresolved and contemplative, finish in the same sustained texture for an edit-clean loop.",
+        "request": {
+          "prompt": "Original instrumental investigation underscore for black ward-glass, missing convoy crews and a deserted borderland archive. Quiet close bowed viola harmonics, a low cello open fifth, isolated dry cittern questions and softly rubbed resonant glass. Sparse wooden taps suggest thought rather than a beat; a low protective iron bell sounds rarely and decays naturally. Let an incomplete three-note modal phrase move between plucked strings and viola, gather a gentle dissonance in the middle, then thin back to the original open fifth. Restrained folk chamber mystery, fragile material textures, spacious natural room, plenty of silence between gestures but a continuous soft string floor. No voices, whispers, choir, jump scares, synthetic horror risers or huge impacts. Fully instrumental, unresolved and contemplative, finish in the same sustained texture for an edit-clean loop.",
+          "lyrics": "[Instrumental]",
+          "thinking": true,
+          "use_format": false,
+          "model": "acestep-v15-xl-sft",
+          "vocal_language": "en",
+          "audio_duration": 124,
+          "inference_steps": 50,
+          "guidance_scale": 7.0,
+          "use_random_seed": false,
+          "seed": 9132603,
+          "batch_size": 1,
+          "task_type": "text2music",
+          "infer_method": "ode",
+          "shift": 3.0,
+          "audio_format": "flac",
+          "use_tiled_decode": true,
+          "lm_model_path": "acestep-5Hz-lm-1.7B",
+          "lm_backend": "vllm",
+          "constrained_decoding": true,
+          "use_cot_caption": true,
+          "use_cot_language": true,
+          "bpm": 60,
+          "key_scale": "D minor",
+          "time_signature": "4/4"
+        },
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-mystery.flac",
+        "sha256": "1c2215c20cbcf5f084809bff848661497803919d53c775dfdbd493b2aa605d94",
+        "metadata_path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-mystery.json",
+        "metadata_sha256": "b01c9d682b5e339384df8afc1cf6217275c875ddc1a5b91043aaa8f20d42bed1",
+        "codec": "flac",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 124.0,
+        "crossfade_seconds": 4,
+        "task_id": "55643da6-dac2-467e-b14a-16b6359e364e",
+        "generated_at": "2026-09-13T20:38:00.382011+00:00",
+        "quantization": "int8_weight_only",
+        "cpu_offload": true,
+        "dit_cpu_offload": true,
+        "attention": "flash_attention_2",
+        "generation_timeout_seconds": 5400,
+        "actual_shift": 3.0,
+        "parameter_forwarding_note": "Explicit parameters verified from supported Python API output.",
+        "planner_unloaded_before_diffusion": true,
+        "ace_revision": "ca1e85fe9430179831e6bc6be790c332190a3866",
+        "runner_sha256": "960020d719a7de23a977a82ac11ec3f31873f523eaf758197bf0c3df71c51215"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\music\\mystery-master.flac",
+        "codec": "flac",
+        "duration": 120.0,
+        "decoded_duration": 120.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "flac",
+        "peak_dbfs": -5.844,
+        "true_peak_dbtp": -5.836,
+        "rms_dbfs": -22.966,
+        "sha256": "7a7e841bf8a8529e3139c4bfb93a27d72a04660eca1d2688a9e5df6895b9f3d6",
+        "seam": {
+          "sample_jump": 0.0004324,
+          "local_step_p995": 0.0032481,
+          "rms_change_db_100ms": 0.556
+        }
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 6,
+        "duration": 120.0,
+        "decoded_duration": 120.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "vorbis",
+        "peak_dbfs": -5.909,
+        "true_peak_dbtp": -5.903,
+        "rms_dbfs": -22.942,
+        "sha256": "f8f36ac2eb5d6da7e8d42cf36e41909d8448f6d68267d8a5ebfbde32405efe85",
+        "seam": {
+          "sample_jump": 0.0022682,
+          "local_step_p995": 0.0031639,
+          "rms_change_db_100ms": 0.573
+        }
+      },
+      "mastering": {
+        "source_integrated_lufs": -16.11,
+        "source_true_peak_dbtp": -0.95,
+        "source_rms_dbfs": -18.076,
+        "target_lufs": -21,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -2.5,
+        "static_gain_db": -4.89
+      }
+    },
+    {
+      "asset": {
+        "id": "combat",
+        "src": "audio/soundtrack/music/combat.ogg",
+        "duration": 120,
+        "loop": true
+      },
+      "category": "music",
+      "source": {
+        "method": "ACE-Step text2music",
+        "model": "acestep-v15-xl-sft",
+        "planner": "acestep-5Hz-lm-1.7B",
+        "seed": 9132604,
+        "prompt": "Original instrumental tactical skirmish music for a grounded borderland convoy battle. Taut short bowed viola and cello figures, dry low cittern strumming, interlocking wooden stick percussion and deep leather frame drums. A clipped three-note minor theme passes between low strings and a narrow higher fiddle line. Urgent but disciplined acoustic folk chamber ensemble, clear rhythmic attacks and breathing space for game impacts, firm bass without sub-bass excess. Alternate a driving rhythmic statement with a lean stalking passage, then rebuild the same pulse without cinematic crescendo overload. Protective iron bell punctuation only at structural turns. No brass fanfare, electric guitar, electronic drums, choir or vocals. Maintain the final rhythmic pattern through the ending so it can cycle into the opening without a terminal hit.",
+        "request": {
+          "prompt": "Original instrumental tactical skirmish music for a grounded borderland convoy battle. Taut short bowed viola and cello figures, dry low cittern strumming, interlocking wooden stick percussion and deep leather frame drums. A clipped three-note minor theme passes between low strings and a narrow higher fiddle line. Urgent but disciplined acoustic folk chamber ensemble, clear rhythmic attacks and breathing space for game impacts, firm bass without sub-bass excess. Alternate a driving rhythmic statement with a lean stalking passage, then rebuild the same pulse without cinematic crescendo overload. Protective iron bell punctuation only at structural turns. No brass fanfare, electric guitar, electronic drums, choir or vocals. Maintain the final rhythmic pattern through the ending so it can cycle into the opening without a terminal hit.",
+          "lyrics": "[Instrumental]",
+          "thinking": true,
+          "use_format": false,
+          "model": "acestep-v15-xl-sft",
+          "vocal_language": "en",
+          "audio_duration": 124,
+          "inference_steps": 50,
+          "guidance_scale": 7.0,
+          "use_random_seed": false,
+          "seed": 9132604,
+          "batch_size": 1,
+          "task_type": "text2music",
+          "infer_method": "ode",
+          "shift": 3.0,
+          "audio_format": "flac",
+          "use_tiled_decode": true,
+          "lm_model_path": "acestep-5Hz-lm-1.7B",
+          "lm_backend": "vllm",
+          "constrained_decoding": true,
+          "use_cot_caption": true,
+          "use_cot_language": true,
+          "bpm": 116,
+          "key_scale": "D minor",
+          "time_signature": "4/4"
+        },
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-combat.flac",
+        "sha256": "27fae0b087548b654e8a7da051f239b5e792bd36d1b0e957a115a2a03f7c812e",
+        "metadata_path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-combat.json",
+        "metadata_sha256": "e7894582675d927007b6ed9e54b913eab267f992090a25c9bbe644fb359128ea",
+        "codec": "flac",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 124.0,
+        "crossfade_seconds": 4,
+        "task_id": "2c598874-6889-4c61-a06e-3ffbcfa5412d",
+        "generated_at": "2026-09-13T20:40:43.525315+00:00",
+        "quantization": "int8_weight_only",
+        "cpu_offload": true,
+        "dit_cpu_offload": true,
+        "attention": "flash_attention_2",
+        "generation_timeout_seconds": 5400,
+        "actual_shift": 3.0,
+        "parameter_forwarding_note": "Explicit parameters verified from supported Python API output.",
+        "planner_unloaded_before_diffusion": true,
+        "ace_revision": "ca1e85fe9430179831e6bc6be790c332190a3866",
+        "runner_sha256": "960020d719a7de23a977a82ac11ec3f31873f523eaf758197bf0c3df71c51215"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\music\\combat-master.flac",
+        "codec": "flac",
+        "duration": 120.0,
+        "decoded_duration": 120.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "flac",
+        "peak_dbfs": -7.373,
+        "true_peak_dbtp": -7.353,
+        "rms_dbfs": -23.585,
+        "sha256": "b2b4680eb6ad861a55001cbed2d63737aad6a21164f7fb3f72c1e2e504b71a05",
+        "seam": {
+          "sample_jump": 0.0154544,
+          "local_step_p995": 0.0308703,
+          "rms_change_db_100ms": 3.124
+        }
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 6,
+        "duration": 120.0,
+        "decoded_duration": 120.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "vorbis",
+        "peak_dbfs": -7.232,
+        "true_peak_dbtp": -7.21,
+        "rms_dbfs": -23.596,
+        "sha256": "6905fd875c418ba28393fc09a486a7755b67326481922fb19bc3cbfd0e87a040",
+        "seam": {
+          "sample_jump": 0.0162858,
+          "local_step_p995": 0.0309651,
+          "rms_change_db_100ms": 3.095
+        }
+      },
+      "mastering": {
+        "source_integrated_lufs": -14.74,
+        "source_true_peak_dbtp": -1.09,
+        "source_rms_dbfs": -17.325,
+        "target_lufs": -21,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -2.5,
+        "static_gain_db": -6.26
+      }
+    },
+    {
+      "asset": {
+        "id": "fortress",
+        "src": "audio/soundtrack/music/fortress.ogg",
+        "duration": 120,
+        "loop": true
+      },
+      "category": "music",
+      "source": {
+        "method": "ACE-Step text2music",
+        "model": "acestep-v15-xl-sft",
+        "planner": "acestep-5Hz-lm-1.7B",
+        "seed": 9132605,
+        "prompt": "Original instrumental fortress approach and commander confrontation score in a dark borderland folk world. Weighty bowed cellos, rough viola double stops, low plucked strings, slow tightly disciplined frame-drum and woodblock march. A bronze foundry bell toll opens space around an austere descending minor phrase; high string harmonics reveal black ward-glass beneath the military order. Intimate small ensemble made imposing through register and restraint, dry foreground percussion against stone-room string resonance. Build from measured threat to a denser contrapuntal middle, then retain momentum in a spare low-string final section. No choir, speech, brass spectacle, modern beat or giant trailer impacts. Instrumental throughout. End with the march and low open-string pattern continuing for a clean sustained combat loop.",
+        "request": {
+          "prompt": "Original instrumental fortress approach and commander confrontation score in a dark borderland folk world. Weighty bowed cellos, rough viola double stops, low plucked strings, slow tightly disciplined frame-drum and woodblock march. A bronze foundry bell toll opens space around an austere descending minor phrase; high string harmonics reveal black ward-glass beneath the military order. Intimate small ensemble made imposing through register and restraint, dry foreground percussion against stone-room string resonance. Build from measured threat to a denser contrapuntal middle, then retain momentum in a spare low-string final section. No choir, speech, brass spectacle, modern beat or giant trailer impacts. Instrumental throughout. End with the march and low open-string pattern continuing for a clean sustained combat loop.",
+          "lyrics": "[Instrumental]",
+          "thinking": true,
+          "use_format": false,
+          "model": "acestep-v15-xl-sft",
+          "vocal_language": "en",
+          "audio_duration": 124,
+          "inference_steps": 50,
+          "guidance_scale": 7.0,
+          "use_random_seed": false,
+          "seed": 9132605,
+          "batch_size": 1,
+          "task_type": "text2music",
+          "infer_method": "ode",
+          "shift": 3.0,
+          "audio_format": "flac",
+          "use_tiled_decode": true,
+          "lm_model_path": "acestep-5Hz-lm-1.7B",
+          "lm_backend": "vllm",
+          "constrained_decoding": true,
+          "use_cot_caption": true,
+          "use_cot_language": true,
+          "bpm": 92,
+          "key_scale": "D minor",
+          "time_signature": "4/4"
+        },
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-fortress.flac",
+        "sha256": "3bbe17586c61d8c3944b7512ab0f046fa341dd93308be8f33b37f43ec0815e27",
+        "metadata_path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-fortress.json",
+        "metadata_sha256": "8d1ba4aba9833c4c3e420c04dcd08543d31ed9b45c0bb7fdd1ccfd888485a16c",
+        "codec": "flac",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 124.0,
+        "crossfade_seconds": 4,
+        "task_id": "3514a20f-0466-48ed-8712-d6e7e15a2f7f",
+        "generated_at": "2026-09-13T20:43:01.829959+00:00",
+        "quantization": "int8_weight_only",
+        "cpu_offload": true,
+        "dit_cpu_offload": true,
+        "attention": "flash_attention_2",
+        "generation_timeout_seconds": 5400,
+        "actual_shift": 3.0,
+        "parameter_forwarding_note": "Explicit parameters verified from supported Python API output.",
+        "planner_unloaded_before_diffusion": true,
+        "ace_revision": "ca1e85fe9430179831e6bc6be790c332190a3866",
+        "runner_sha256": "960020d719a7de23a977a82ac11ec3f31873f523eaf758197bf0c3df71c51215"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\music\\fortress-master.flac",
+        "codec": "flac",
+        "duration": 120.0,
+        "decoded_duration": 120.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "flac",
+        "peak_dbfs": -8.852,
+        "true_peak_dbtp": -8.841,
+        "rms_dbfs": -22.586,
+        "sha256": "cc25e5590485ee78bdac0c86ff2a22a84fdec6d5ab38ad9c71ae8204814f809a",
+        "seam": {
+          "sample_jump": 0.003288,
+          "local_step_p995": 0.012514,
+          "rms_change_db_100ms": 4.769
+        }
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 6,
+        "duration": 120.0,
+        "decoded_duration": 120.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "vorbis",
+        "peak_dbfs": -8.847,
+        "true_peak_dbtp": -8.838,
+        "rms_dbfs": -22.593,
+        "sha256": "406b12702a3e3f6afdb2a39e5fa2fb86e37d3d9440eda3f2af08ed7341c09f58",
+        "seam": {
+          "sample_jump": 0.0029889,
+          "local_step_p995": 0.0121432,
+          "rms_change_db_100ms": 4.772
+        }
+      },
+      "mastering": {
+        "source_integrated_lufs": -11.31,
+        "source_true_peak_dbtp": 0.85,
+        "source_rms_dbfs": -12.896,
+        "target_lufs": -21,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -2.5,
+        "static_gain_db": -9.69
+      }
+    },
+    {
+      "asset": {
+        "id": "ending-commons",
+        "src": "audio/soundtrack/music/ending-commons.ogg",
+        "duration": 90,
+        "loop": false
+      },
+      "category": "music",
+      "source": {
+        "method": "ACE-Step text2music",
+        "model": "acestep-v15-xl-sft",
+        "planner": "acestep-5Hz-lm-1.7B",
+        "seed": 9132606,
+        "prompt": "Original instrumental epilogue for Three Bells: border villages restore shared protection after a costly journey. Three different warm iron bells answer each other over dry cittern arpeggios and a tender bowed viola melody. Small acoustic folk string ensemble, low cello, very soft brushed frame drum, a little wooden flute. The familiar rising three-note shelter motif now resolves into a modest warm major harmony. Begin quietly, let the instruments answer as neighbours rather than a grand orchestra, open into one restrained luminous statement, then let percussion fall away and close with an unhurried resolved strings-and-bell cadence and complete natural decay. Weathered intimate recording, relief with remembered loss, never triumphalist. Entirely instrumental, no singing or choir.",
+        "request": {
+          "prompt": "Original instrumental epilogue for Three Bells: border villages restore shared protection after a costly journey. Three different warm iron bells answer each other over dry cittern arpeggios and a tender bowed viola melody. Small acoustic folk string ensemble, low cello, very soft brushed frame drum, a little wooden flute. The familiar rising three-note shelter motif now resolves into a modest warm major harmony. Begin quietly, let the instruments answer as neighbours rather than a grand orchestra, open into one restrained luminous statement, then let percussion fall away and close with an unhurried resolved strings-and-bell cadence and complete natural decay. Weathered intimate recording, relief with remembered loss, never triumphalist. Entirely instrumental, no singing or choir.",
+          "lyrics": "[Instrumental]",
+          "thinking": true,
+          "use_format": false,
+          "model": "acestep-v15-xl-sft",
+          "vocal_language": "en",
+          "audio_duration": 90,
+          "inference_steps": 50,
+          "guidance_scale": 7.0,
+          "use_random_seed": false,
+          "seed": 9132606,
+          "batch_size": 1,
+          "task_type": "text2music",
+          "infer_method": "ode",
+          "shift": 3.0,
+          "audio_format": "flac",
+          "use_tiled_decode": true,
+          "lm_model_path": "acestep-5Hz-lm-1.7B",
+          "lm_backend": "vllm",
+          "constrained_decoding": true,
+          "use_cot_caption": true,
+          "use_cot_language": true,
+          "bpm": 70,
+          "key_scale": "D major",
+          "time_signature": "6/8"
+        },
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-ending-commons.flac",
+        "sha256": "0d5916e8d1d3a48748ea850edaeaa29685f42466e9e4f1f03445fdac5d2106ab",
+        "metadata_path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-ending-commons.json",
+        "metadata_sha256": "ac0c526173b917b9ff1d07ce88f1b277798f7641449373d6067c4eb220252470",
+        "codec": "flac",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 90.0,
+        "crossfade_seconds": 0,
+        "task_id": "47e01788-270d-4ede-a6f8-f6e0a85174aa",
+        "generated_at": "2026-09-13T20:45:08.502244+00:00",
+        "quantization": "int8_weight_only",
+        "cpu_offload": true,
+        "dit_cpu_offload": true,
+        "attention": "flash_attention_2",
+        "generation_timeout_seconds": 5400,
+        "actual_shift": 3.0,
+        "parameter_forwarding_note": "Explicit parameters verified from supported Python API output.",
+        "planner_unloaded_before_diffusion": true,
+        "ace_revision": "ca1e85fe9430179831e6bc6be790c332190a3866",
+        "runner_sha256": "960020d719a7de23a977a82ac11ec3f31873f523eaf758197bf0c3df71c51215"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\music\\ending-commons-master.flac",
+        "codec": "flac",
+        "duration": 90.0,
+        "decoded_duration": 90.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "flac",
+        "peak_dbfs": -10.485,
+        "true_peak_dbtp": -10.48,
+        "rms_dbfs": -23.649,
+        "sha256": "f045d7314e151cc809b74cc5faff66080e899992c397eeb89e4e9dacb75678bb"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 6,
+        "duration": 90.0,
+        "decoded_duration": 90.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "vorbis",
+        "peak_dbfs": -10.419,
+        "true_peak_dbtp": -10.413,
+        "rms_dbfs": -23.603,
+        "sha256": "c4ca5a78a30164e50cd3173e046b3186d86dccc9cebb2efb32091bf7b48710b4"
+      },
+      "mastering": {
+        "source_integrated_lufs": -10.85,
+        "source_true_peak_dbtp": -0.33,
+        "source_rms_dbfs": -13.499,
+        "target_lufs": -21,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -2.5,
+        "static_gain_db": -10.15
+      }
+    },
+    {
+      "asset": {
+        "id": "ending-compact",
+        "src": "audio/soundtrack/music/ending-compact.ogg",
+        "duration": 90,
+        "loop": false
+      },
+      "category": "music",
+      "source": {
+        "method": "ACE-Step text2music",
+        "model": "acestep-v15-xl-sft",
+        "planner": "acestep-5Hz-lm-1.7B",
+        "seed": 9132607,
+        "prompt": "Original instrumental epilogue for The Cloister's Prisoner: survival purchased through an uneasy binding compact. A solitary bowed viola sings a narrow modal melody over low cello open strings and carefully spaced dry cittern notes. Soft iron bell and rubbed glass harmonics reply without resolving the question. Small acoustic folk chamber arrangement, cold stone-room resonance, human bow texture and restrained low dynamics, no pulse beyond an occasional muted wooden tap. Introduce the shelter motif with its last note altered, develop a brief warmer middle, then withdraw into a dignified ambiguous open-fifth cadence, complete natural bell and string decay. No jump scare, huge swell, electronic beat, voice or choir; entirely instrumental, thoughtful and bittersweet rather than evil.",
+        "request": {
+          "prompt": "Original instrumental epilogue for The Cloister's Prisoner: survival purchased through an uneasy binding compact. A solitary bowed viola sings a narrow modal melody over low cello open strings and carefully spaced dry cittern notes. Soft iron bell and rubbed glass harmonics reply without resolving the question. Small acoustic folk chamber arrangement, cold stone-room resonance, human bow texture and restrained low dynamics, no pulse beyond an occasional muted wooden tap. Introduce the shelter motif with its last note altered, develop a brief warmer middle, then withdraw into a dignified ambiguous open-fifth cadence, complete natural bell and string decay. No jump scare, huge swell, electronic beat, voice or choir; entirely instrumental, thoughtful and bittersweet rather than evil.",
+          "lyrics": "[Instrumental]",
+          "thinking": true,
+          "use_format": false,
+          "model": "acestep-v15-xl-sft",
+          "vocal_language": "en",
+          "audio_duration": 90,
+          "inference_steps": 50,
+          "guidance_scale": 7.0,
+          "use_random_seed": false,
+          "seed": 9132607,
+          "batch_size": 1,
+          "task_type": "text2music",
+          "infer_method": "ode",
+          "shift": 3.0,
+          "audio_format": "flac",
+          "use_tiled_decode": true,
+          "lm_model_path": "acestep-5Hz-lm-1.7B",
+          "lm_backend": "vllm",
+          "constrained_decoding": true,
+          "use_cot_caption": true,
+          "use_cot_language": true,
+          "bpm": 62,
+          "key_scale": "D minor",
+          "time_signature": "4/4"
+        },
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-ending-compact.flac",
+        "sha256": "4df55bf76a881680798567a0c5d63d4a1fef42e179d5001405cf9706f0408b9c",
+        "metadata_path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-ending-compact.json",
+        "metadata_sha256": "2eac05f3233d8dfbb1156a960711f6878a458d84251bdf39b5b670def509f2db",
+        "codec": "flac",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 90.0,
+        "crossfade_seconds": 0,
+        "task_id": "03008f7b-8cd5-47de-b656-479e30758a18",
+        "generated_at": "2026-09-13T20:47:12.992368+00:00",
+        "quantization": "int8_weight_only",
+        "cpu_offload": true,
+        "dit_cpu_offload": true,
+        "attention": "flash_attention_2",
+        "generation_timeout_seconds": 5400,
+        "actual_shift": 3.0,
+        "parameter_forwarding_note": "Explicit parameters verified from supported Python API output.",
+        "planner_unloaded_before_diffusion": true,
+        "ace_revision": "ca1e85fe9430179831e6bc6be790c332190a3866",
+        "runner_sha256": "960020d719a7de23a977a82ac11ec3f31873f523eaf758197bf0c3df71c51215"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\music\\ending-compact-master.flac",
+        "codec": "flac",
+        "duration": 90.0,
+        "decoded_duration": 90.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "flac",
+        "peak_dbfs": -7.69,
+        "true_peak_dbtp": -7.684,
+        "rms_dbfs": -23.226,
+        "sha256": "7362206b7f9c24866b77b517770f9d642524f043f07dc9e5487a882749dbcd7b"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 6,
+        "duration": 90.0,
+        "decoded_duration": 90.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "vorbis",
+        "peak_dbfs": -7.615,
+        "true_peak_dbtp": -7.61,
+        "rms_dbfs": -23.207,
+        "sha256": "3f549d3217623f99f8b78c56ee4909d558c1831ee7ba407c4ff48f1335d065ac"
+      },
+      "mastering": {
+        "source_integrated_lufs": -13.96,
+        "source_true_peak_dbtp": -0.65,
+        "source_rms_dbfs": -16.186,
+        "target_lufs": -21,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -2.5,
+        "static_gain_db": -7.04
+      }
+    },
+    {
+      "asset": {
+        "id": "ending-cinder",
+        "src": "audio/soundtrack/music/ending-cinder.ogg",
+        "duration": 90,
+        "loop": false
+      },
+      "category": "music",
+      "source": {
+        "method": "ACE-Step text2music",
+        "model": "acestep-v15-xl-sft",
+        "planner": "acestep-5Hz-lm-1.7B",
+        "seed": 9132608,
+        "prompt": "Original instrumental epilogue for Broken Glass: the old protection is shattered and survivors face a bare uncertain road. Dry solitary cittern, a low bowed cello lament, grainy viola harmonics and a few small struck glass tones fading into room air. Sparse hollow wooden percussion enters only in the middle, supporting a stoic modal melody rather than celebration. Transform the rising three-note shelter motif into a falling answer, broaden briefly with close acoustic strings, then leave the plucked instrument alone to make a quiet final cadence with complete natural decay. Ash-dry intimate folk chamber sound, mournful yet resolute, restrained and human. No explosive destruction effects, choir, vocals or modern electronic beat; entirely instrumental.",
+        "request": {
+          "prompt": "Original instrumental epilogue for Broken Glass: the old protection is shattered and survivors face a bare uncertain road. Dry solitary cittern, a low bowed cello lament, grainy viola harmonics and a few small struck glass tones fading into room air. Sparse hollow wooden percussion enters only in the middle, supporting a stoic modal melody rather than celebration. Transform the rising three-note shelter motif into a falling answer, broaden briefly with close acoustic strings, then leave the plucked instrument alone to make a quiet final cadence with complete natural decay. Ash-dry intimate folk chamber sound, mournful yet resolute, restrained and human. No explosive destruction effects, choir, vocals or modern electronic beat; entirely instrumental.",
+          "lyrics": "[Instrumental]",
+          "thinking": true,
+          "use_format": false,
+          "model": "acestep-v15-xl-sft",
+          "vocal_language": "en",
+          "audio_duration": 90,
+          "inference_steps": 50,
+          "guidance_scale": 7.0,
+          "use_random_seed": false,
+          "seed": 9132608,
+          "batch_size": 1,
+          "task_type": "text2music",
+          "infer_method": "ode",
+          "shift": 3.0,
+          "audio_format": "flac",
+          "use_tiled_decode": true,
+          "lm_model_path": "acestep-5Hz-lm-1.7B",
+          "lm_backend": "vllm",
+          "constrained_decoding": true,
+          "use_cot_caption": true,
+          "use_cot_language": true,
+          "bpm": 66,
+          "key_scale": "D minor",
+          "time_signature": "4/4"
+        },
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-ending-cinder.flac",
+        "sha256": "8499a38bd42c0e6065134eff183f1c09db38d00561dba7340a3b9497a6f373fb",
+        "metadata_path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913-ending-cinder.json",
+        "metadata_sha256": "d5794fb6fc8053571591af86e6c44960ee19df7650c7b085d6aaf99bf570239e",
+        "codec": "flac",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 90.0,
+        "crossfade_seconds": 0,
+        "task_id": "2860ef88-2d7e-4fc2-8077-b7ccc7522ff2",
+        "generated_at": "2026-09-13T20:49:17.640336+00:00",
+        "quantization": "int8_weight_only",
+        "cpu_offload": true,
+        "dit_cpu_offload": true,
+        "attention": "flash_attention_2",
+        "generation_timeout_seconds": 5400,
+        "actual_shift": 3.0,
+        "parameter_forwarding_note": "Explicit parameters verified from supported Python API output.",
+        "planner_unloaded_before_diffusion": true,
+        "ace_revision": "ca1e85fe9430179831e6bc6be790c332190a3866",
+        "runner_sha256": "960020d719a7de23a977a82ac11ec3f31873f523eaf758197bf0c3df71c51215"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\music\\ending-cinder-master.flac",
+        "codec": "flac",
+        "duration": 90.0,
+        "decoded_duration": 90.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "flac",
+        "peak_dbfs": -6.66,
+        "true_peak_dbtp": -6.559,
+        "rms_dbfs": -24.055,
+        "sha256": "b1fa5d3fc8edb383d6060f3d9cbba057dd739f10a7bb04411d3c1c827ea9968d"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 6,
+        "duration": 90.0,
+        "decoded_duration": 90.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "native_codec": "vorbis",
+        "peak_dbfs": -6.482,
+        "true_peak_dbtp": -6.37,
+        "rms_dbfs": -24.029,
+        "sha256": "fb7e73cf6b90ee7227fea81418d903e1aa1f7f0ceeb267a95d564e03f3a7900c"
+      },
+      "mastering": {
+        "source_integrated_lufs": -15.05,
+        "source_true_peak_dbtp": -0.61,
+        "source_rms_dbfs": -18.105,
+        "target_lufs": -21,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -2.5,
+        "static_gain_db": -5.95
+      }
+    },
+    {
+      "asset": {
+        "id": "heartlands",
+        "src": "audio/soundtrack/ambience/heartlands.ogg",
+        "duration": 32,
+        "loop": true
+      },
+      "category": "ambience",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Wet pasture wind, distant small iron door bells, wooden wagon creaks.",
+        "seed": 297485594,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\heartlands-source.wav",
+        "sha256": "5a4883faac7753cd7094b1b74b482155b0afc5d8f679a2d3e611f7429c8ed126",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 36,
+        "crossfade_seconds": 4,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\heartlands-master.flac",
+        "codec": "flac",
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -17.288,
+        "true_peak_dbtp": -17.276,
+        "rms_dbfs": -34.31,
+        "sha256": "99b5d10486f20e6f6acda090748d00a4d9685c6a45b0734711b14fa0ad8a59d7",
+        "seam": {
+          "sample_jump": 0.003058,
+          "local_step_p995": 0.0089163,
+          "rms_change_db_100ms": 0.351
+        }
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 4,
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -18.017,
+        "true_peak_dbtp": -18.01,
+        "rms_dbfs": -34.603,
+        "sha256": "a767d14a287e5b198963ca1cb0eacc8b50279d1ad7a3eb8b134f92700d496c5b",
+        "seam": {
+          "sample_jump": 0.0033015,
+          "local_step_p995": 0.0086196,
+          "rms_change_db_100ms": 0.416
+        }
+      },
+      "mastering": {
+        "source_integrated_lufs": -20.97,
+        "source_true_peak_dbtp": -7.25,
+        "source_rms_dbfs": -24.28,
+        "target_lufs": -31,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -6,
+        "static_gain_db": -10.03
+      }
+    },
+    {
+      "asset": {
+        "id": "greenmarch",
+        "src": "audio/soundtrack/ambience/greenmarch.ogg",
+        "duration": 32,
+        "loop": true
+      },
+      "category": "ambience",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Forest canopy and orchard leaves, sparse small birds, branch creaks.",
+        "seed": 99280833,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\greenmarch-source.wav",
+        "sha256": "5fcdbfdd9b13c1fddc1053bf892112d60068ff3b9a37e35612d332b227304dee",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 36,
+        "crossfade_seconds": 4,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\greenmarch-master.flac",
+        "codec": "flac",
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -19.618,
+        "true_peak_dbtp": -19.527,
+        "rms_dbfs": -36.12,
+        "sha256": "8520faedca2947962b99ef5d300384565888fb0cd652c70871271cb0d9bd7e69",
+        "seam": {
+          "sample_jump": 0.0091393,
+          "local_step_p995": 0.0164749,
+          "rms_change_db_100ms": 0.101
+        }
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 4,
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -20.081,
+        "true_peak_dbtp": -20.075,
+        "rms_dbfs": -36.473,
+        "sha256": "d8a2089abb182b457fc93c4721bf6207425b52ee61009a442400f43f0043e8aa",
+        "seam": {
+          "sample_jump": 0.0073395,
+          "local_step_p995": 0.0160534,
+          "rms_change_db_100ms": 0.114
+        }
+      },
+      "mastering": {
+        "source_integrated_lufs": -20.1,
+        "source_true_peak_dbtp": -8.64,
+        "source_rms_dbfs": -25.22,
+        "target_lufs": -31,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -6,
+        "static_gain_db": -10.9
+      }
+    },
+    {
+      "asset": {
+        "id": "fens",
+        "src": "audio/soundtrack/ambience/fens.ogg",
+        "duration": 32,
+        "loop": true
+      },
+      "category": "ambience",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Reed hiss, black-water laps and drips, damp plank and ferry-rope creaks.",
+        "seed": 856687113,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\fens-source.wav",
+        "sha256": "ed34cfcd6bde129b2262dd3e81f90e4d17be50c21392325e1ba33b59f1c60f2e",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 36,
+        "crossfade_seconds": 4,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\fens-master.flac",
+        "codec": "flac",
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -19.097,
+        "true_peak_dbtp": -19.091,
+        "rms_dbfs": -34.764,
+        "sha256": "20fb4f7340b2325602a53349096d212444f3942be0013cf14e09058945100e21",
+        "seam": {
+          "sample_jump": 0.003582,
+          "local_step_p995": 0.0106702,
+          "rms_change_db_100ms": 0.219
+        }
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 4,
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -19.58,
+        "true_peak_dbtp": -19.574,
+        "rms_dbfs": -35.083,
+        "sha256": "2530af5c50ec1432b4b54813ebd664a89993146a2718acd50c6a87556470d178",
+        "seam": {
+          "sample_jump": 0.0069096,
+          "local_step_p995": 0.0103953,
+          "rms_change_db_100ms": 0.221
+        }
+      },
+      "mastering": {
+        "source_integrated_lufs": -21.26,
+        "source_true_peak_dbtp": -9.36,
+        "source_rms_dbfs": -25.024,
+        "target_lufs": -31,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -6,
+        "static_gain_db": -9.74
+      }
+    },
+    {
+      "asset": {
+        "id": "salt-coast",
+        "src": "audio/soundtrack/ambience/salt-coast.ogg",
+        "duration": 32,
+        "loop": true
+      },
+      "category": "ambience",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Layered brine surf, sand hiss, rigging wood and distant shore birds.",
+        "seed": 3753515078,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\salt-coast-source.wav",
+        "sha256": "f792fa95d6053dba8fd417da5f3269e87bf03440d3f213e0bfecfea71c5de6d5",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 36,
+        "crossfade_seconds": 4,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\salt-coast-master.flac",
+        "codec": "flac",
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -19.069,
+        "true_peak_dbtp": -19.011,
+        "rms_dbfs": -36.117,
+        "sha256": "9ff935208cf69e9e87f9cb4f2ee3b8e1e77ff6aeac5641ddfd19ef3e72e5396d",
+        "seam": {
+          "sample_jump": 0.0044843,
+          "local_step_p995": 0.0090275,
+          "rms_change_db_100ms": 0.055
+        }
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 4,
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -19.082,
+        "true_peak_dbtp": -19.077,
+        "rms_dbfs": -36.459,
+        "sha256": "1e7665a531a797f3f51f8dd2fe50559ec1b3392934aa0be7ea8216aad88623bb",
+        "seam": {
+          "sample_jump": 0.0034004,
+          "local_step_p995": 0.0088229,
+          "rms_change_db_100ms": 0.017
+        }
+      },
+      "mastering": {
+        "source_integrated_lufs": -12.88,
+        "source_true_peak_dbtp": -0.9,
+        "source_rms_dbfs": -17.997,
+        "target_lufs": -31,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -6,
+        "static_gain_db": -18.12
+      }
+    },
+    {
+      "asset": {
+        "id": "ash-steppe",
+        "src": "audio/soundtrack/ambience/ash-steppe.ogg",
+        "duration": 32,
+        "loop": true
+      },
+      "category": "ambience",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Dry exposed gusts, granular ash, charcoal ticks and hollow loose slag.",
+        "seed": 1484630780,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\ash-steppe-source.wav",
+        "sha256": "b8aa4966c2a0ce9b263e9349abbeddb620b6b7231220fb08db26a82873b3b024",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 36,
+        "crossfade_seconds": 4,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\ash-steppe-master.flac",
+        "codec": "flac",
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -20.183,
+        "true_peak_dbtp": -20.102,
+        "rms_dbfs": -36.205,
+        "sha256": "7be3f9e1adbffe8a8c46e363a0c3219331b51a0bb2d5fd76bb192b56b5edded0",
+        "seam": {
+          "sample_jump": 0.0127223,
+          "local_step_p995": 0.0222297,
+          "rms_change_db_100ms": 0.394
+        }
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 4,
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -20.478,
+        "true_peak_dbtp": -20.424,
+        "rms_dbfs": -36.559,
+        "sha256": "4f15d9d719f0dc41d484e60b1da14beb5498aaaadbe369758118242099a1f9e9",
+        "seam": {
+          "sample_jump": 0.0114876,
+          "local_step_p995": 0.02135,
+          "rms_change_db_100ms": 0.396
+        }
+      },
+      "mastering": {
+        "source_integrated_lufs": -17.52,
+        "source_true_peak_dbtp": -6.63,
+        "source_rms_dbfs": -22.725,
+        "target_lufs": -31,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -6,
+        "static_gain_db": -13.48
+      }
+    },
+    {
+      "asset": {
+        "id": "crownlands",
+        "src": "audio/soundtrack/ambience/crownlands.ogg",
+        "duration": 32,
+        "loop": true
+      },
+      "category": "ambience",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Sheltered low wind, distant bronze foundry work and army wagon wood.",
+        "seed": 721313837,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\crownlands-source.wav",
+        "sha256": "bdbeebfd0039d11d9af6a59cdc200113eace2b3fbb583242f8ccf050a36ee251",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 36,
+        "crossfade_seconds": 4,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\crownlands-master.flac",
+        "codec": "flac",
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -17.526,
+        "true_peak_dbtp": -17.52,
+        "rms_dbfs": -33.832,
+        "sha256": "24952eb5e9aaefdf3ff0619a0b8f91890450e23e97a99c940b28260d156a223d",
+        "seam": {
+          "sample_jump": 0.001986,
+          "local_step_p995": 0.0069182,
+          "rms_change_db_100ms": 0.433
+        }
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 4,
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -17.856,
+        "true_peak_dbtp": -17.85,
+        "rms_dbfs": -34.074,
+        "sha256": "b2d26428425793d7634c30a96f2fee4681ec7291ea6bfe701c867c682e32881d",
+        "seam": {
+          "sample_jump": 0.0065475,
+          "local_step_p995": 0.0066354,
+          "rms_change_db_100ms": 0.494
+        }
+      },
+      "mastering": {
+        "source_integrated_lufs": -24.5,
+        "source_true_peak_dbtp": -11.03,
+        "source_rms_dbfs": -27.332,
+        "target_lufs": -31,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -6,
+        "static_gain_db": -6.5
+      }
+    },
+    {
+      "asset": {
+        "id": "frostspine",
+        "src": "audio/soundtrack/ambience/frostspine.ogg",
+        "duration": 32,
+        "loop": true
+      },
+      "category": "ambience",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Cold mountain gusts, snow hiss, dry shelter timber and distant monastery bell.",
+        "seed": 796879329,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\frostspine-source.wav",
+        "sha256": "f6fe0168f6bf63cbc4b32771d3c82087faaae5478515479d55029f8e93f18ee5",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 36,
+        "crossfade_seconds": 4,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\frostspine-master.flac",
+        "codec": "flac",
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -19.635,
+        "true_peak_dbtp": -19.591,
+        "rms_dbfs": -36.319,
+        "sha256": "f1fd83ffcf1ceb9d484b1d28e94a707c6798579d0a67434b637f78d8ac121dc9",
+        "seam": {
+          "sample_jump": 0.0053896,
+          "local_step_p995": 0.0178136,
+          "rms_change_db_100ms": 0.05
+        }
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 4,
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -20.155,
+        "true_peak_dbtp": -20.035,
+        "rms_dbfs": -36.68,
+        "sha256": "452c2a88a6ab3a59e7381539fcd6b2a0482c73f20e5a3681fa953f12b21ef58c",
+        "seam": {
+          "sample_jump": 0.0097941,
+          "local_step_p995": 0.0171771,
+          "rms_change_db_100ms": 0.197
+        }
+      },
+      "mastering": {
+        "source_integrated_lufs": -16.06,
+        "source_true_peak_dbtp": -4.66,
+        "source_rms_dbfs": -21.379,
+        "target_lufs": -31,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -6,
+        "static_gain_db": -14.94
+      }
+    },
+    {
+      "asset": {
+        "id": "hollowvale",
+        "src": "audio/soundtrack/ambience/hollowvale.ogg",
+        "duration": 32,
+        "loop": true
+      },
+      "category": "ambience",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Hushed fir wind, loose shutters at a stone well, sparse deep water drops; no voices.",
+        "seed": 1125866117,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\hollowvale-source.wav",
+        "sha256": "4e1cdb12e480521a09625dda18bf8bcd29bb5ce6635dd0482c7b33765a571785",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 2,
+        "duration": 36,
+        "crossfade_seconds": 4,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\ambience\\hollowvale-master.flac",
+        "codec": "flac",
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -16.471,
+        "true_peak_dbtp": -16.466,
+        "rms_dbfs": -34.058,
+        "sha256": "431aad20519939d7ad37fc342317cba608dc8d6ad4449c347901ee3e9b192ee2",
+        "seam": {
+          "sample_jump": 0.003638,
+          "local_step_p995": 0.0075894,
+          "rms_change_db_100ms": 0.356
+        }
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 4,
+        "duration": 32.0,
+        "decoded_duration": 32.0,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak_dbfs": -16.693,
+        "true_peak_dbtp": -16.672,
+        "rms_dbfs": -34.327,
+        "sha256": "be572a335626111c8a15590ce1efa2375bda1eb4a9fa12ede991e15daf27555e",
+        "seam": {
+          "sample_jump": 0.004471,
+          "local_step_p995": 0.0072826,
+          "rms_change_db_100ms": 0.322
+        }
+      },
+      "mastering": {
+        "source_integrated_lufs": -23.86,
+        "source_true_peak_dbtp": -9.33,
+        "source_rms_dbfs": -26.918,
+        "target_lufs": -31,
+        "target_rms_dbfs": null,
+        "peak_ceiling_dbtp": -6,
+        "static_gain_db": -7.14
+      }
+    },
+    {
+      "asset": {
+        "id": "attack-elf",
+        "src": "audio/soundtrack/sfx/attack-elf.ogg",
+        "duration": 0.62,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Bow-limb flex, string release and narrow arrow air pass.",
+        "seed": 1377895987,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\attack-elf-source.wav",
+        "sha256": "2c1fad0b8d726eb616f068bf310e1f37965050d20b4b95942a7c94c4c4261afc",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\attack-elf-master.flac",
+        "codec": "flac",
+        "duration": 0.62,
+        "decoded_duration": 0.62,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -9.339,
+        "true_peak_dbtp": -9.025,
+        "rms_dbfs": -25.0,
+        "sha256": "5f4af8c9e5d7558fa3dcf139efbdffcf90953b3e6a3aa71b3a2780b91930385a"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.62,
+        "decoded_duration": 0.6173333333333333,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -9.193,
+        "true_peak_dbtp": -8.944,
+        "rms_dbfs": -25.139,
+        "sha256": "c7ca2b01b3370df3d566b4280b12f6bbbd80b21bfa66cfc1d2feb85e9731bb86"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 4.966517977828737,
+        "source_rms_dbfs": -11.009,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -13.99101945
+      }
+    },
+    {
+      "asset": {
+        "id": "attack-guard",
+        "src": "audio/soundtrack/sfx/attack-guard.ogg",
+        "duration": 0.72,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Sword air sweep with a short steel hilt ring.",
+        "seed": 3493800497,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\attack-guard-source.wav",
+        "sha256": "e0e7f0826b1b504b660180d860c0477742d5258c518ad0bd03eeea3b01e56cae",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\attack-guard-master.flac",
+        "codec": "flac",
+        "duration": 0.72,
+        "decoded_duration": 0.72,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -6.705,
+        "true_peak_dbtp": -6.699,
+        "rms_dbfs": -25.0,
+        "sha256": "9bab2d02dc3244d4dd34548d43a307d91d359f6c9ba8e8bc7967033504a9af41"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.72,
+        "decoded_duration": 0.7173333333333334,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -7.246,
+        "true_peak_dbtp": -7.14,
+        "rms_dbfs": -25.32,
+        "sha256": "503a108aa2e4c201c0862f26368baf301fcdbce172c579ad9a18811714282917"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 6.796506127966358,
+        "source_rms_dbfs": -11.504,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -13.49595014
+      }
+    },
+    {
+      "asset": {
+        "id": "attack-villain",
+        "src": "audio/soundtrack/sfx/attack-villain.ogg",
+        "duration": 0.9,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Heavy cleave air displacement and rough iron scrape.",
+        "seed": 930371160,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\attack-villain-source.wav",
+        "sha256": "ab99d515d52dc96eed1d4a1ec468ef45c2150660038ac055ea8be20a54e51678",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\attack-villain-master.flac",
+        "codec": "flac",
+        "duration": 0.9,
+        "decoded_duration": 0.9,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -8.389,
+        "true_peak_dbtp": -8.384,
+        "rms_dbfs": -25.0,
+        "sha256": "99514459485cf5b238b4e951a2421e22f0eaa018b1b587bde6bf6e874dc42bbf"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.9,
+        "decoded_duration": 0.8973333333333333,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -8.037,
+        "true_peak_dbtp": -8.004,
+        "rms_dbfs": -25.279,
+        "sha256": "cd2e79b70846e25a516e46b3066371ab89b2a1a190d95d00902f2032eda19de2"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 6.852806263148702,
+        "source_rms_dbfs": -9.763,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -15.23655644
+      }
+    },
+    {
+      "asset": {
+        "id": "hit",
+        "src": "audio/soundtrack/sfx/hit.ogg",
+        "duration": 0.42,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Muted layered leather/cloth body impact, no vocalization.",
+        "seed": 3402094636,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\hit-source.wav",
+        "sha256": "12a6ab9f1c0aafd999de8f4d4df7617b07ecc0df858c6b84720d8c06b790ec94",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\hit-master.flac",
+        "codec": "flac",
+        "duration": 0.42,
+        "decoded_duration": 0.42,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -10.129,
+        "true_peak_dbtp": -10.115,
+        "rms_dbfs": -25.0,
+        "sha256": "fcdc0ac3d4124f265f0ae5c5f0f2ecf867e6965162aa75c9bd1206a4db5daf47"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.42,
+        "decoded_duration": 0.41733333333333333,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -10.155,
+        "true_peak_dbtp": -10.149,
+        "rms_dbfs": -25.045,
+        "sha256": "4917d4ecb414a71ee599e32610018c3233d4833e3158ddc7e5dc9cdf4bab5457"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 4.504440350468464,
+        "source_rms_dbfs": -10.381,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -14.61924824
+      }
+    },
+    {
+      "asset": {
+        "id": "kill",
+        "src": "audio/soundtrack/sfx/kill.ogg",
+        "duration": 1.12,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Equipment settles: cloth fall, wood thump and small loose iron.",
+        "seed": 107602010,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\kill-source.wav",
+        "sha256": "fd6eb51915b83092344f1222cdacb50a1dece6366cfe35e2d3ea66f7b724b928",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\kill-master.flac",
+        "codec": "flac",
+        "duration": 1.12,
+        "decoded_duration": 1.12,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -6.625,
+        "true_peak_dbtp": -6.618,
+        "rms_dbfs": -25.0,
+        "sha256": "aa162eadaea08684c6a36796b0b6c6e6525dbbfadcc58fb8ea6a57e97750d619"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 1.12,
+        "decoded_duration": 1.12,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -7.508,
+        "true_peak_dbtp": -7.503,
+        "rms_dbfs": -25.169,
+        "sha256": "7f718f2fc269d39b6507a9375d3855ac9433eb6971a3261f2e14ba5c8ee101c6"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 2.7302300666538626,
+        "source_rms_dbfs": -15.652,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -9.34849697
+      }
+    },
+    {
+      "asset": {
+        "id": "pickup",
+        "src": "audio/soundtrack/sfx/pickup.ogg",
+        "duration": 0.85,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Leather pouch lift and several small coin contacts.",
+        "seed": 372142708,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\pickup-source.wav",
+        "sha256": "8ca90ba3cfc3173811ce2fb2d7d9f1ac4e816316a4870308c8086f3d5977363d",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\pickup-master.flac",
+        "codec": "flac",
+        "duration": 0.85,
+        "decoded_duration": 0.85,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -10.375,
+        "true_peak_dbtp": -10.348,
+        "rms_dbfs": -25.0,
+        "sha256": "89f0577e6d1612fb6c2f27ce38ea2d5c63bdc40248535a09c154b26f38ad1862"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.85,
+        "decoded_duration": 0.8473333333333334,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -10.395,
+        "true_peak_dbtp": -10.358,
+        "rms_dbfs": -24.999,
+        "sha256": "e953af1e7c25e9ee46d7fde3aeeb14c28ce386c7f6db6d56a9ba8fcec4b31b17"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": -2.989199113752999,
+        "source_rms_dbfs": -17.642,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -7.35843565
+      }
+    },
+    {
+      "asset": {
+        "id": "capture",
+        "src": "audio/soundtrack/sfx/capture.ogg",
+        "duration": 2.8,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Three warm protective bell answers and a wooden latch.",
+        "seed": 4041963010,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\capture-source.wav",
+        "sha256": "353618849b1f86f81ff9166306a42da396adaf2a1a711545200a3c96536d4ce0",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\capture-master.flac",
+        "codec": "flac",
+        "duration": 2.8,
+        "decoded_duration": 2.8,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -10.319,
+        "true_peak_dbtp": -10.305,
+        "rms_dbfs": -25.0,
+        "sha256": "d4f23b6ce5b00b375807884fc95695045d1816d9f07744fa693e2cf577bed245"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 2.8,
+        "decoded_duration": 2.8,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -10.417,
+        "true_peak_dbtp": -10.404,
+        "rms_dbfs": -24.975,
+        "sha256": "6ab94fc6d1a9f6bd8afc29d22625623aee3e87d47841d6e9fb0befd4b4258991"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 1.6832528367099797,
+        "source_rms_dbfs": -13.012,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -11.98780332
+      }
+    },
+    {
+      "asset": {
+        "id": "delivery",
+        "src": "audio/soundtrack/sfx/delivery.ogg",
+        "duration": 1.65,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Two grain sacks set onto a wooden wagon deck, grain rattle.",
+        "seed": 1107716174,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\delivery-source.wav",
+        "sha256": "225b67db083bce1f7c9abbd020982392ea0366544704e87182b96fc08bfa14f4",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\delivery-master.flac",
+        "codec": "flac",
+        "duration": 1.65,
+        "decoded_duration": 1.65,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -7.757,
+        "true_peak_dbtp": -7.752,
+        "rms_dbfs": -25.0,
+        "sha256": "e79c93e0ffb0b96b73e2ebb99ad9682ea8fd0e8422d289d866fcf803b32f037e"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 1.65,
+        "decoded_duration": 1.65,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -7.686,
+        "true_peak_dbtp": -7.68,
+        "rms_dbfs": -25.015,
+        "sha256": "ec00946e5913f9ffd6a2349eba89c347f76b77648997ec69b55c9eea8cd9824b"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 1.0918433701339778,
+        "source_rms_dbfs": -16.156,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -8.8436313
+      }
+    },
+    {
+      "asset": {
+        "id": "raid",
+        "src": "audio/soundtrack/sfx/raid.ogg",
+        "duration": 2.1,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Wagon board crack, loose wheel wood and falling cargo.",
+        "seed": 3809481329,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\raid-source.wav",
+        "sha256": "a6aa7d409c831ed11257184da176538d8d6409b3becb5b304f6d3b749267739e",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\raid-master.flac",
+        "codec": "flac",
+        "duration": 2.1,
+        "decoded_duration": 2.1,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -8.448,
+        "true_peak_dbtp": -8.443,
+        "rms_dbfs": -25.0,
+        "sha256": "9ef847a2c1381cb6dc85a01c2b2c9842bb7478446a26a42dc8ff0a0d031c830c"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 2.1,
+        "decoded_duration": 2.1,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -8.521,
+        "true_peak_dbtp": -8.504,
+        "rms_dbfs": -25.107,
+        "sha256": "6c698e940f46690bd54ea7fb8535ed61e7fcb1b85f0eed729b49246b9c89e568"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 0.7348088541383736,
+        "source_rms_dbfs": -15.822,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -9.17771988
+      }
+    },
+    {
+      "asset": {
+        "id": "convoy",
+        "src": "audio/soundtrack/sfx/convoy.ogg",
+        "duration": 2.0,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Axle creak, two wheel bumps and leather harness jostle.",
+        "seed": 3561060908,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\convoy-source.wav",
+        "sha256": "5b552dd0cbce01d884b88e57ac1a671ab8e143bda3c19ba62cc89ac369ae7813",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\convoy-master.flac",
+        "codec": "flac",
+        "duration": 2.0,
+        "decoded_duration": 2.0,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -9.955,
+        "true_peak_dbtp": -9.95,
+        "rms_dbfs": -25.0,
+        "sha256": "c26c6b855285146be32958192ca1e998a95c20337b75ad49232352741c46b738"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 2.0,
+        "decoded_duration": 2.0,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -10.04,
+        "true_peak_dbtp": -10.034,
+        "rms_dbfs": -24.996,
+        "sha256": "40ef2b8f2c55b862ee5ad59688b04bb45f63bdf9c55787bb27b2c49acf851abc"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": -3.3694722821267957,
+        "source_rms_dbfs": -18.42,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -6.58047148
+      }
+    },
+    {
+      "asset": {
+        "id": "repair",
+        "src": "audio/soundtrack/sfx/repair.ogg",
+        "duration": 1.75,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Three different hammer-on-wood strikes and tightened rope.",
+        "seed": 3568052906,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\repair-source.wav",
+        "sha256": "0439ac5213f015e299971b7173a205de8fad7b724109063d868b262dcd56b894",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\repair-master.flac",
+        "codec": "flac",
+        "duration": 1.75,
+        "decoded_duration": 1.75,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -8.719,
+        "true_peak_dbtp": -8.696,
+        "rms_dbfs": -25.0,
+        "sha256": "3f55ce623829becf83bdb2c2b7d99538dc6f27cdf9996d4a8b75a9628d370977"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 1.75,
+        "decoded_duration": 1.75,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -8.633,
+        "true_peak_dbtp": -8.619,
+        "rms_dbfs": -24.942,
+        "sha256": "d99b64d21513b8312d18b48100447d8c90b07400db2d743e8c778aaf9c0a19cc"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 0.1422596756074212,
+        "source_rms_dbfs": -16.162,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -8.83810405
+      }
+    },
+    {
+      "asset": {
+        "id": "upgrade",
+        "src": "audio/soundtrack/sfx/upgrade.ogg",
+        "duration": 2.4,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Dry plucked-string ascending figure, small bronze confirmation.",
+        "seed": 2084840524,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\upgrade-source.wav",
+        "sha256": "96fc104d179c0e47f3521f0fe8f3cde8586817c131f01d52b4421948ddc7df5d",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\upgrade-master.flac",
+        "codec": "flac",
+        "duration": 2.4,
+        "decoded_duration": 2.4,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -10.397,
+        "true_peak_dbtp": -10.391,
+        "rms_dbfs": -25.0,
+        "sha256": "8bb5d844a52500f9a47abc827f8157fb93f178f810a69b5192e46f17afcf816e"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 2.4,
+        "decoded_duration": 2.4,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -10.375,
+        "true_peak_dbtp": -10.37,
+        "rms_dbfs": -24.965,
+        "sha256": "f6fe1442b1679965fb9eaeae16ceea7e9e04dc4514649d4f7f5582ea76feee21"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 1.1008777361964228,
+        "source_rms_dbfs": -13.508,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -11.4918134
+      }
+    },
+    {
+      "asset": {
+        "id": "ability-elf",
+        "src": "audio/soundtrack/sfx/ability-elf.ogg",
+        "duration": 1.8,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Layered three-arrow volley with a flutter of dry leaves.",
+        "seed": 1477065169,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\ability-elf-source.wav",
+        "sha256": "eeb4b92f0a40f334531171a7a6896ee682822f57d2da4cfeffb47c2299fdac43",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\ability-elf-master.flac",
+        "codec": "flac",
+        "duration": 1.8,
+        "decoded_duration": 1.8,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -9.044,
+        "true_peak_dbtp": -8.777,
+        "rms_dbfs": -25.0,
+        "sha256": "bdf7c8e97155d61fd5593c8d4b167aa4467a785ef9789656beb1341cc67241bc"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 1.8,
+        "decoded_duration": 1.8,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -9.672,
+        "true_peak_dbtp": -9.667,
+        "rms_dbfs": -25.292,
+        "sha256": "071dd218e788e905e3b9d9c0e434d1552d7cf353e0729a7def7c61345471ef6e"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 3.64181718655014,
+        "source_rms_dbfs": -12.581,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -12.41902216
+      }
+    },
+    {
+      "asset": {
+        "id": "ability-guard",
+        "src": "audio/soundtrack/sfx/ability-guard.ogg",
+        "duration": 2.1,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Broad shield-plate strike and protective iron resonance.",
+        "seed": 1818967058,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\ability-guard-source.wav",
+        "sha256": "f833cb7390af6adffb752827f2f5ea368a99729a5cd9f0fe5e92cd538cfcd3b6",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\ability-guard-master.flac",
+        "codec": "flac",
+        "duration": 2.1,
+        "decoded_duration": 2.1,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -8.751,
+        "true_peak_dbtp": -8.745,
+        "rms_dbfs": -25.0,
+        "sha256": "be355662a0907104ffab6c37c7bb374a40328d527d66fdd4d90358f2f7623c7b"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 2.1,
+        "decoded_duration": 2.1,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -8.669,
+        "true_peak_dbtp": -8.662,
+        "rms_dbfs": -24.963,
+        "sha256": "8467041ba36ec1b54df1b9f26f6bb1a65755601fff3c2a8f707de85c065caa0a"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 4.750947492536583,
+        "source_rms_dbfs": -11.504,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -13.49551794
+      }
+    },
+    {
+      "asset": {
+        "id": "ability-villain",
+        "src": "audio/soundtrack/sfx/ability-villain.ogg",
+        "duration": 1.9,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Double heavy cleave and deep leather-frame impact.",
+        "seed": 1178693076,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\ability-villain-source.wav",
+        "sha256": "9c522541395cacf202a772dc2bfac947a5dc1886d5337bd8905da9a0df321e2a",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\ability-villain-master.flac",
+        "codec": "flac",
+        "duration": 1.9,
+        "decoded_duration": 1.9,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -6.985,
+        "true_peak_dbtp": -6.935,
+        "rms_dbfs": -25.0,
+        "sha256": "e639a61562790f3e07e2907aa8bea068b37ba5b0554995fd939cdf8a0e2d7406"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 1.9,
+        "decoded_duration": 1.9,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -7.044,
+        "true_peak_dbtp": -7.029,
+        "rms_dbfs": -25.221,
+        "sha256": "dcef664e719ee4bc394b460bb0870e7fab00eb2938b01c43fe6c99cdfb87bca3"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 8.768650979586264,
+        "source_rms_dbfs": -9.296,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -15.70365351
+      }
+    },
+    {
+      "asset": {
+        "id": "fortress",
+        "src": "audio/soundtrack/sfx/fortress.ogg",
+        "duration": 4.2,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Single heavy foundry bell with irregular bronze partials.",
+        "seed": 4005175074,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\fortress-source.wav",
+        "sha256": "b60e6978e0398befef3179cea77090880dd5720b777ccd1dbd5c5fb5d28e93fd",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\fortress-master.flac",
+        "codec": "flac",
+        "duration": 4.2,
+        "decoded_duration": 4.2,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -7.451,
+        "true_peak_dbtp": -7.446,
+        "rms_dbfs": -25.0,
+        "sha256": "1be372598bf23d50addf53f3bcd34ec469f58c4fe293338f39af2be794c1dd51"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 4.2,
+        "decoded_duration": 4.2,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -7.258,
+        "true_peak_dbtp": -7.253,
+        "rms_dbfs": -24.972,
+        "sha256": "76c78797c1ed13093a444dfe474de1f68a5e0237145b15106709f738403a04f9"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 5.480268269791636,
+        "source_rms_dbfs": -12.074,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -12.92577824
+      }
+    },
+    {
+      "asset": {
+        "id": "victory",
+        "src": "audio/soundtrack/sfx/victory.ogg",
+        "duration": 4.5,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Restrained rising three-bell cadence with dry plucked strings.",
+        "seed": 4183657431,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\victory-source.wav",
+        "sha256": "d8a240343626f42128d7712e12a673a6c075d3806c0d77c7c58c14d27cf0aaea",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\victory-master.flac",
+        "codec": "flac",
+        "duration": 4.5,
+        "decoded_duration": 4.5,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -9.713,
+        "true_peak_dbtp": -9.704,
+        "rms_dbfs": -25.0,
+        "sha256": "bc73dad78b73939080b2d1504ae4c4696dc05bb5bf00feda5910e20e4d465631"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 4.5,
+        "decoded_duration": 4.5,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -9.713,
+        "true_peak_dbtp": -9.702,
+        "rms_dbfs": -24.978,
+        "sha256": "2833a161b816f6a327eea14b708dd88c50e486d884ee959c18a9716b1876f799"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 4.769128172666606,
+        "source_rms_dbfs": -10.526,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -14.4735654
+      }
+    },
+    {
+      "asset": {
+        "id": "defeat",
+        "src": "audio/soundtrack/sfx/defeat.ogg",
+        "duration": 3.6,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Low descending muted strings and a final dull wood contact.",
+        "seed": 1955465965,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\defeat-source.wav",
+        "sha256": "9d79f98bcfc68f2c29e98808d18a89fa6a5bb29bed6ab3f9999b2e969d1ad1f9",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\defeat-master.flac",
+        "codec": "flac",
+        "duration": 3.6,
+        "decoded_duration": 3.6,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -10.298,
+        "true_peak_dbtp": -10.292,
+        "rms_dbfs": -25.0,
+        "sha256": "03108f809f9a5bf5f36d492f52da6e0c1b8fa0cb991a64b214e2ca7c39f60736"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 3.6,
+        "decoded_duration": 3.6,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -10.267,
+        "true_peak_dbtp": -10.262,
+        "rms_dbfs": -24.954,
+        "sha256": "45618706fa7ea0137926ea3d7c444e1a476615743ef879175183dd54d3b9ab2d"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 0.41744441521171416,
+        "source_rms_dbfs": -14.291,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -10.70948392
+      }
+    },
+    {
+      "asset": {
+        "id": "click",
+        "src": "audio/soundtrack/sfx/click.ogg",
+        "duration": 0.14,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Short double wooden mechanism contact.",
+        "seed": 2434914586,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\click-source.wav",
+        "sha256": "5f4375a58457f5ca259f75aca167d6ddf2f9d7345a6e0e4e8511f11647cb5b88",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\click-master.flac",
+        "codec": "flac",
+        "duration": 0.14,
+        "decoded_duration": 0.14,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -13.48,
+        "true_peak_dbtp": -13.326,
+        "rms_dbfs": -25.0,
+        "sha256": "4bcc1bc6333cdda51962403c3fda945843e942b1dd9e0ea4886167fa78ee1c4f"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.14,
+        "decoded_duration": 0.13733333333333334,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -13.601,
+        "true_peak_dbtp": -13.422,
+        "rms_dbfs": -24.871,
+        "sha256": "d4834344e3fd7b05821940b481663d4b72bff6dc504889b0886b5c707e36d5ab"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": -0.8723407996606187,
+        "source_rms_dbfs": -12.547,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -12.45345959
+      }
+    },
+    {
+      "asset": {
+        "id": "step-dirt",
+        "src": "audio/soundtrack/sfx/step-dirt.ogg",
+        "duration": 0.38,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Soft heel thump followed by granular earth and leather scuff.",
+        "seed": 221418476,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-dirt-source.wav",
+        "sha256": "bf442e8d9f143a5d48ec93da57444ce7f361b2126075a25cddb5d2df9ec977bc",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-dirt-master.flac",
+        "codec": "flac",
+        "duration": 0.38,
+        "decoded_duration": 0.38,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -6.577,
+        "true_peak_dbtp": -6.571,
+        "rms_dbfs": -25.0,
+        "sha256": "cda7639730af6d88d4324569efe2b2b2201a36f599db94da18a9f9d61e354c29"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.38,
+        "decoded_duration": 0.37733333333333335,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -9.061,
+        "true_peak_dbtp": -9.056,
+        "rms_dbfs": -25.109,
+        "sha256": "6594cf9787fbf1adc5d30c82f2ddfd11ac81094a2afb65f33ae50bdfa0151f43"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 4.512857066087409,
+        "source_rms_dbfs": -13.916,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -11.08391579
+      }
+    },
+    {
+      "asset": {
+        "id": "step-stone",
+        "src": "audio/soundtrack/sfx/step-stone.ogg",
+        "duration": 0.32,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Hard heel and toe contacts with a short stone reflection.",
+        "seed": 3356391501,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-stone-source.wav",
+        "sha256": "faec277a5f64717ffc5c54ae139d65631d2fab57104ee15cc4f76dfbe29a0431",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-stone-master.flac",
+        "codec": "flac",
+        "duration": 0.32,
+        "decoded_duration": 0.32,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -11.689,
+        "true_peak_dbtp": -11.651,
+        "rms_dbfs": -25.0,
+        "sha256": "dff2e31599ed25eb97e5d499019c739aba6ce11d28e122ea7a43db15be23da76"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.32,
+        "decoded_duration": 0.31733333333333336,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -11.518,
+        "true_peak_dbtp": -11.469,
+        "rms_dbfs": -24.884,
+        "sha256": "695a5b4e1cb70f3457aec4d51a7ee5c8ca392642f4cd0a87f587a16ae4512412"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 0.0059248301210702275,
+        "source_rms_dbfs": -13.343,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -11.65653912
+      }
+    },
+    {
+      "asset": {
+        "id": "dodge",
+        "src": "audio/soundtrack/sfx/dodge.ogg",
+        "duration": 0.68,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Cloth rush, leather flex and a restrained earth slide.",
+        "seed": 1228122540,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\dodge-source.wav",
+        "sha256": "214b91ebc3c6bad35ae57be312076250481c6edea364541a25cbd59c66414ae9",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\dodge-master.flac",
+        "codec": "flac",
+        "duration": 0.68,
+        "decoded_duration": 0.68,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -8.636,
+        "true_peak_dbtp": -8.63,
+        "rms_dbfs": -25.0,
+        "sha256": "b1f71fd37757d67f961a7975c5eb6c07ca928d5b952cb1acde6b912411378873"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.68,
+        "decoded_duration": 0.6773333333333333,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -8.003,
+        "true_peak_dbtp": -7.998,
+        "rms_dbfs": -25.27,
+        "sha256": "28ac4f4b22b063a04d06c6cd61eaea165478af589c6b9b039996e92019e253a1"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 2.776829394393064,
+        "source_rms_dbfs": -13.593,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -11.40699863
+      }
+    },
+    {
+      "asset": {
+        "id": "discover",
+        "src": "audio/soundtrack/sfx/discover.ogg",
+        "duration": 2.0,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Open resonant glass and a dry plucked questioning figure.",
+        "seed": 3615582435,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\discover-source.wav",
+        "sha256": "d931ede14512ce05f0fa8288686046820c0966bb3ed00dd2e2c8fcd9dd9dec78",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\discover-master.flac",
+        "codec": "flac",
+        "duration": 2.0,
+        "decoded_duration": 2.0,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -10.693,
+        "true_peak_dbtp": -10.688,
+        "rms_dbfs": -25.0,
+        "sha256": "e885a9eb35aece4dd9d1fa283f745c2af25a34be467d31203a7593ee7ac3cdb1"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 2.0,
+        "decoded_duration": 2.0,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -10.674,
+        "true_peak_dbtp": -10.669,
+        "rms_dbfs": -24.947,
+        "sha256": "aed9159a457836c7356a3ecb39697dd53a16354b386a3f524d45863c42e1ba68"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": -0.829338804576305,
+        "source_rms_dbfs": -15.142,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -9.85840042
+      }
+    },
+    {
+      "asset": {
+        "id": "inspect",
+        "src": "audio/soundtrack/sfx/inspect.ogg",
+        "duration": 0.9,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v1",
+        "description": "Parchment unfolding, wood edge contact, quiet glass detail.",
+        "seed": 3145306217,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\inspect-source.wav",
+        "sha256": "c679373ab0c2c6f2fa62a6f5afc9ac27363bd5b9f8fa30bbc3c0e124aa5706dd",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1"
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\inspect-master.flac",
+        "codec": "flac",
+        "duration": 0.9,
+        "decoded_duration": 0.9,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -7.3,
+        "true_peak_dbtp": -6.92,
+        "rms_dbfs": -25.0,
+        "sha256": "c9a673b9533ef4534680fc93cc744ce7676083287adac16023129bb6a72639a1"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.9,
+        "decoded_duration": 0.8973333333333333,
+        "sample_rate": 48000,
+        "channels": 1,
+        "peak_dbfs": -7.403,
+        "true_peak_dbtp": -6.731,
+        "rms_dbfs": -25.322,
+        "sha256": "85dbb7377001d5f76da9dee0f38570098f66478e2e52d6f60789e187c3b6d77c"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": -2.3155094001910888,
+        "source_rms_dbfs": -20.395,
+        "target_lufs": null,
+        "target_rms_dbfs": -25,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -4.60488748
+      }
+    }
+  ]
+}

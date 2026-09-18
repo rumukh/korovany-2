@@ -21,9 +21,9 @@ view.render(campaign.snapshot(), frameSeconds);
 | `orbit(deltaYaw, deltaPitch?)` | Radian deltas. Pitch is constrained for third-person visibility. |
 | `zoom(delta)` | Wheel-style delta; positive zooms out. Distance is constrained to 18-40 metres. |
 | `resize()` | Matches the drawing buffer to the canvas CSS dimensions, without changing CSS. |
-| `setQuality('low' \| 'high')` | Low caps DPR at 1, disables shadows, grasses and ambient motes; high caps DPR at 1.75. |
+| `setQuality('low' \| 'high')` | Low caps DPR at 1, disables shadows, grasses and ambient motes, simplifies tree crowns and releases HDR postprocessing buffers; high caps DPR at 1.75 and enables subtle bloom with multisampled HDR targets. Generated textures remain in both modes. |
 | `setReducedMotion(boolean)` | Removes camera lag, ambient motes, water/cape flourishes and dodge trails; reduces gait animation. |
-| `dispose()` | Idempotently releases shared geometry/materials/textures, shadow buffers, instance buffers, renderer resources and owned canvas listeners. |
+| `dispose()` | Idempotently releases shared geometry/materials/textures, the sky reflection environment, shadow and HDR buffers, instance buffers, renderer resources and owned canvas listeners. |
 
 The shell owns RAF, keyboard/pointer/wheel input, pause, canvas layout and recovery
 UI. WebGL 2 creation/context-loss errors are explicit exceptions. There are no
@@ -36,9 +36,9 @@ WebGL renderer.
 Road widths, water and bridge rectangles, site positions and solid scenery come
 from `WorldBlueprint`. `generateWorld(seed, 1)` preserves the original 140-metre
 world and its save hashes. The default version 2 is 980 metres square (49 times
-the area), with eight bilingual regions and 24 authored locations connected by
-road loops and three river crossings. The original six military sites and their
-structures remain in place. Every exploration location has a matching road-node
+the area), with eight bilingual regions and 26 authored locations connected by
+road loops and three river crossings. Campaign homes and the military citadel
+use their faction-specific authoritative sites. Every exploration location has a matching road-node
 ID; NPCs can stand within three metres of its centre without hitting scenery.
 
 Buildings are constrained to real circular wall obstacles, including the new
@@ -59,11 +59,24 @@ Geometry and materials are shared across cells. Low quality removes the entire
 dressing layer, not the authoritative landmarks. Instance buffers are released
 when the world mirror is disposed.
 
+Seven generated surface families use shared color, normal and roughness maps
+from `public/textures/frontier`. Albedo is sRGB; normal/roughness data is linear.
+Maps repeat with bounded anisotropic filtering and ground UVs are world-scaled.
+`ViewResources` accepts a texture loader for the browser; omitting it supports
+DOM-free geometry tests. Loading failures are retained and raised to the shell
+on the next frame, rather than silently dropping the texture. Resource disposal
+also covers images that finish loading after a world mirror is replaced.
+
 The sky dome follows `scenery.heroPosition` in `scenery.update()`, including
 teleports to the map corners. The existing 290-metre camera far plane encloses
 the 240-metre dome at the maximum 40-metre follow distance. Fog remains local
-(48-158 metres), and the existing player-centred shadow frustum follows the hero
+(64-205 metres), and the player-centred shadow frustum follows the hero
 instead of stretching one shadow texture over the full map.
+The sky also supplies a prefiltered reflection environment for metal, stone and
+wood. Water has view-dependent reflection, sun glints and shallow-bank foam.
+The camera keeps its 18-40 metre distance range and allows a 0.38-radian minimum
+pitch for landscape views. Tree crowns switch to shared lower-detail geometry
+beyond 95 metres and in low quality; this does not change their solid footprint.
 
 Actors and projectiles are keyed by authoritative IDs, with faction silhouettes,
 snapshot-driven windups, health and capture/supply states. Combat cosmetics use
@@ -76,6 +89,24 @@ draw range, with overhead markers within 32 metres and atlas/minimap markers
 within 38 metres. These ranges are independent of `NpcSnapshot.available`,
 which only permits conversation within 4.25 metres when it is safe. Walking
 away or entering danger does not remove residents or their nearby map markers.
+
+Actor appearance and hostility are separate: explicit `allegiance` controls
+friendly/neutral ground rings, health bars and hostile attack tells, while faction
+controls the detailed uniform. Changing allegiance rebuilds the keyed visual using
+shared geometry and textured materials. A mission shipment with zero health and
+an idle state is disabled but repairable, not a corpse. The citadel flag follows
+its actual faction and changes to the player's banner after defeat; its ground
+ring communicates the military state independently.
+
+Old Fort towers and broken curtain sections use the authored circular blockers,
+with shared stone and cloth surfaces. A narrow camera-to-hero dither cutaway keeps
+the character visible behind foreground masonry; only fort material copies use it,
+with unchanged opaque shadow depth. It follows orbit/zoom without changing collision
+or the landscape camera, and leaves unobstructing fort surfaces opaque.
+The structures do not add noncolliding walls across the open road gates.
+DOM-free scene assertions construct `Presentation` without
+a texture loader; `createGameView` always supplies browser texture resources and
+the shared reflection environment.
 
 Shadow depth materials are game-owned as well as visible materials, so changing
 runs releases their shader programs rather than retaining Three's implicit shadow

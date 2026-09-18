@@ -8,6 +8,7 @@ import {
 } from '../scripts/voices/catalogue';
 import type { FactionId, NarrativeSnapshot } from '../src/game/types';
 import cast from '../scripts/voices/cast.json';
+import samples from '../scripts/voices/faction-samples.json';
 
 const entries = createVoiceCatalogue();
 const keys = new Set(entries.map(e => voiceKey(e.speaker, e.language, e.text)));
@@ -45,6 +46,19 @@ describe('complete faction-aware exact-match bilingual voice inventory', () => {
     }
     expect(Object.values(cast.engines).filter(v => v.startsWith('ru-RU-'))).toHaveLength(3);
     expect(Object.values(cast.engines).filter(v => v.startsWith('en-GB-'))).toHaveLength(4);
+    for (const profile of Object.values(cast.profiles)) for (const language of languages) {
+      const [engine, rate, pitch] = profile[language];
+      expect(Object.hasOwn(cast.engines, engine!)).toBe(true);
+      expect(typeof rate).toBe('number');
+      expect(typeof pitch).toBe('number');
+      expect(rate).toBeGreaterThanOrEqual(-15);
+      expect(rate).toBeLessThanOrEqual(5);
+      expect(pitch).toBeGreaterThanOrEqual(-10);
+      expect(pitch).toBeLessThanOrEqual(5);
+    }
+    for (const role of samples) for (const language of languages) {
+      expect(entries.filter(e => e.language === language && e.speaker === role.speaker && e.sources.includes(role.source))).toHaveLength(1);
+    }
     for (const entry of entries) {
       expect(entry.segments.map(s => s.text).join(' ').replace(/\s+/g, ' ')).toBe(entry.text.replace(/\s+/g, ' '));
       expect(entry.text).toBe(normalizeVoiceText(entry.text));

@@ -1,4 +1,3 @@
-import { rm } from "node:fs/promises";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
 import { createCampaign, type GameSnapshot, type LocalizedText } from "../src/game";
@@ -8,7 +7,9 @@ import { storageKeys, type Settings } from "../src/ui/storage";
 import {
   click, evaluate, launchBrowser, openPage, until, type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeOwnedBrowser } from "../vendor/aegis-engine/packages/render-three/src/testing/browser-lifecycle";
+import { closeTestBrowser } from "./browser-cleanup";
+import { navigateTestPage, reloadTestPage } from "./browser-navigation";
+import { isSpeechPlaying } from "./browser-audio";
 
 interface Inspection {
   snapshot: GameSnapshot;
@@ -55,9 +56,9 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction voice browser tran
   });
   const wave = fixtureWave();
   const inspect = () => evaluate<Inspection>(cdp, "window.korovany.inspect()");
-  const speech = (speaker: string, language: "ru" | "en") => until<Inspection["audio"]["speech"]>(
-    cdp, "window.korovany.inspect().audio.speech",
-    s => s.playing && s.subtitle?.speaker === speaker && s.subtitle.language === language, 20_000);
+  const speech = (speaker: string, language: "ru" | "en") => until<Inspection["audio"]>(
+    cdp, "window.korovany.inspect().audio",
+    audio => isSpeechPlaying(audio, speaker, language), 20_000);
 
   async function select(selector: string): Promise<void> {
     const point = await evaluate<{ x: number; y: number }>(cdp, `(() => {
@@ -70,15 +71,13 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction voice browser tran
     await click(cdp, point.x, point.y);
   }
   async function load(item: typeof cases[number], language: "ru" | "en", muted = false): Promise<void> {
-    const origin = await evaluate<number>(cdp, "performance.timeOrigin");
     await evaluate(cdp, `(() => {
       localStorage.setItem(${JSON.stringify(storageKeys.campaign)}, ${JSON.stringify(JSON.stringify(item.saved))});
       localStorage.setItem(${JSON.stringify(storageKeys.settings)}, ${JSON.stringify(JSON.stringify({
         language, muted, quality: "low", reducedMotion: true,
       }))});
     })()`);
-    await cdp.send("Page.reload");
-    await until(cdp, `performance.timeOrigin !== ${origin} && Boolean(window.korovany)`, Boolean, 30_000);
+    await reloadTestPage(cdp, "window.korovany");
   }
 
   beforeAll(async () => {
@@ -101,14 +100,14 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction voice browser tran
     if (!origin) throw new Error("Missing voice test URL");
     expect((await fetch(origin)).status).toBe(200);
     browser = await launchBrowser({ viewport: { width: 1440, height: 1000 } });
-    cdp = await openPage(browser.port, origin, { width: 1440, height: 1000 });
-    await until(cdp, "Boolean(window.korovany)", Boolean, 30_000);
+    cdp = await openPage(browser.port, "about:blank", { width: 1440, height: 1000 });
+    await navigateTestPage(cdp, origin, "window.korovany");
   }, 90_000);
 
   afterAll(async () => {
     cdp?.close();
     try {
-      if (browser) { await closeOwnedBrowser(browser); await rm(browser.profile, { recursive: true, force: true }); }
+      if (browser) await closeTestBrowser(browser);
     } finally { await server?.close(); }
   }, 30_000);
 
@@ -134,10 +133,10 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction voice browser tran
       await evaluate(cdp, "window.dispatchEvent(new Event('focus'))");
       await speech(item.npcId, language);
       await select('[data-action="close-dialogue"]');
-      expect((await inspect()).audio.speech.playing).toBe(false);
-      expect((await inspect()).audio.speech.length).toBe(0);
-      expect((await inspect()).audio.speech.failures).toEqual([]);
-      expect((await inspect()).audio.speech.cacheBytes).toBeLessThanOrEqual(24 * 1024 * 1024);
+      expect((await inspect()).audio.speaking).toBe(false);
+      expect((await inspect()).audio.speechLength).toBe(0);
+      expect((await inspect()).audio.failures).toEqual([]);
+      expect((await inspect()).audio.cacheBytes).toBeLessThanOrEqual(24 * 1024 * 1024);
     }
   }, 90_000);
 
@@ -151,16 +150,16 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction voice browser tran
       s.value="ru"; s.dispatchEvent(new Event("change",{bubbles:true})); })()`);
     await select('[data-action="open-dialogue"]');
     await speech(cases[0]!.npcId, "ru");
-    expect((await inspect()).audio.speech.failures).toEqual([]);
+    expect((await inspect()).audio.failures).toEqual([]);
   });
 
   test("missing assets are explicit, and muted startup creates no context until trusted unmute", async () => {
     failAssets = true;
     await load(cases[0]!, "en");
     await select('[data-action="continue"]');
-    await until(cdp, "window.korovany.inspect().audio.speech.failures.length > 0", Boolean, 20_000);
+    await until(cdp, "window.korovany.inspect().audio.failures.length > 0", Boolean, 20_000);
     expect(await evaluate(cdp, "document.querySelector('.warnings').textContent.includes('audio')")).toBe(true);
-    expect((await inspect()).audio.speech.playing).toBe(false);
+    expect((await inspect()).audio.speaking).toBe(false);
     failAssets = false;
     await load(cases[0]!, "en", true);
     await select('[data-action="continue"]');

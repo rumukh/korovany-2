@@ -11,7 +11,7 @@ export interface MovementBasis {
 }
 
 export class FollowCamera {
-  readonly camera = new THREE.PerspectiveCamera(43, 1, 0.25, 290);
+  readonly camera = new THREE.PerspectiveCamera(48, 1, 0.25, 290);
   private readonly focus = new THREE.Vector3();
   private readonly target = new THREE.Vector3();
   private readonly raycaster = new THREE.Raycaster();
@@ -19,7 +19,7 @@ export class FollowCamera {
   private readonly intersection = new THREE.Vector3();
   private readonly cursor = new THREE.Vector2();
   private yaw = Math.PI;
-  private pitch = 0.77;
+  private pitch = 0.48;
   private distance = 26;
   private initialized = false;
   private reducedMotion = false;
@@ -52,7 +52,7 @@ export class FollowCamera {
   orbit(deltaYaw: number, deltaPitch = 0): void {
     if (!Number.isFinite(deltaYaw) || !Number.isFinite(deltaPitch)) throw new Error('Camera orbit requires finite deltas.');
     this.yaw = THREE.MathUtils.euclideanModulo(this.yaw + deltaYaw, Math.PI * 2);
-    this.pitch = THREE.MathUtils.clamp(this.pitch + deltaPitch, 0.53, 1.13);
+    this.pitch = THREE.MathUtils.clamp(this.pitch + deltaPitch, 0.38, 1.13);
   }
 
   zoom(delta: number): void {

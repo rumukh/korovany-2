@@ -79,9 +79,12 @@ Publishing this new corpus requires its own informed final recording release
 even if all automated scores pass. Pending that decision, only external
 `publish.py --stage-only` output is permitted.
 
-Voice playback uses the existing gesture-unlocked audio context and mute setting.
-It adds no score assets or browser speech synthesis; existing synthesized music
-and effects remain unchanged. Player choices precede NPC replies, with narrator
+Voice playback shares one gesture-unlocked `Soundscape` with the published
+recorded soundtrack, regional ambience and effects. Master, music, ambience,
+effects and voices have independent persistent gains; dialogue ducks music.
+Effects and voices share one bounded 24 MiB decoded-audio cache, while music and
+ambience stream. There is no duplicate voice transport or browser speech
+synthesis. Player choices precede NPC replies, with narrator
 inspection/ending queues, bounded decoded-audio caching, explicit missing-asset
 warnings, and cancellation on scene, focus, pause, language and lifecycle changes.
 Transport fixtures run with `KOROVANY_BROWSER=1` and

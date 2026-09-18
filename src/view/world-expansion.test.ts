@@ -33,7 +33,7 @@ describe('kilometre-scale world presentation', () => {
     expect(objects).toBeLessThan(2500);
     expect(geometries.size).toBeLessThan(20);
     expect(materials.size).toBeLessThan(140);
-    expect(meshes.reduce((count, mesh) => count + mesh.count, 0)).toBeLessThan(25000);
+    expect(meshes.reduce((count, mesh) => count + mesh.count, 0)).toBeLessThan(50000);
     expect(meshes.length).toBeGreaterThan(100);
     expect(meshes.every(mesh => mesh.boundingSphere && Number.isFinite(mesh.boundingSphere.radius))).toBe(true);
     const disposed = meshes.map(mesh => {
@@ -66,7 +66,11 @@ describe('kilometre-scale world presentation', () => {
       expect(isDressingAllowed(world, place)).toBe(false);
     }
     expect(scenery.group.children.some(child => child.name.startsWith('world-structures:') && !child.visible)).toBe(true);
+    const triangleCount = (): number => meshes.reduce((count, mesh) =>
+      count + mesh.count * (mesh.geometry.index?.count ?? mesh.geometry.getAttribute('position').count) / 3, 0);
+    const detailedTriangles = triangleCount();
     scenery.setQuality(true);
+    expect(triangleCount()).toBeLessThan(detailedTriangles);
     expect(scenery.group.getObjectByName('world-details')?.visible).toBe(false);
     scenery.setQuality(false);
     expect(scenery.group.getObjectByName('world-details')?.visible).toBe(true);

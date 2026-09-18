@@ -1,4 +1,4 @@
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import * as THREE from "three";
@@ -15,7 +15,8 @@ import {
   click, evaluate, launchBrowser, openPage, screenshot, until,
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeOwnedBrowser } from "../vendor/aegis-engine/packages/render-three/src/testing/browser-lifecycle";
+import { closeTestBrowser } from "./browser-cleanup";
+import { reloadTestPage } from "./browser-navigation";
 
 const factions: FactionId[] = ["elf", "guard", "villain"];
 const languages: Language[] = ["en", "ru"];
@@ -93,6 +94,14 @@ describe("faction presentation source of truth", () => {
       expect(color(presentation.scene.getObjectByName(`actor:${friend.id}`)?.getObjectByName("health-fill"))).toBe(palette.teal);
       expect(color(presentation.scene.getObjectByName(`actor:${enemy.id}`)?.getObjectByName("health-fill"))).toBe(palette.ember);
       expect(color(presentation.scene.getObjectByName("fortress-flag"))).toBe(factionColors.guard);
+      const fortMaterials = new Set<THREE.Material>();
+      presentation.scenery.group.traverse((object) => {
+        if (!(object instanceof THREE.Mesh) || Array.isArray(object.material) || object.material.name !== "old-fort-cutaway") return;
+        fortMaterials.add(object.material);
+        expect(object.customDepthMaterial).toBe(presentation.resources.depthMaterial());
+      });
+      expect(fortMaterials.size).toBeGreaterThan(0);
+      expect(presentation.resources.material(palette.stoneLight, { side: THREE.FrontSide, surface: "stone" }).name).not.toBe("old-fort-cutaway");
       const neutralWagon = presentation.scene.getObjectByName(`actor:${wagon.id}`)!;
       expect(neutralWagon.userData.allegiance).toBe("neutral");
       expect(color(neutralWagon.getObjectByName("health-fill"))).toBe(palette.stone);
@@ -140,7 +149,13 @@ describe("faction presentation source of truth", () => {
     expect(towers.every((tower) => tower.z > home.z && tower.height >= 14)).toBe(true);
     expect(blockers.filter((obstacle) => obstacle.id.startsWith("old-fort-wall-")).length).toBeGreaterThanOrEqual(14);
     const original = JSON.stringify(snapshot.world);
-    const resources = new ViewResources();
+    const resources = new ViewResources({
+      load(_url, onLoad) {
+        const texture = new THREE.Texture();
+        onLoad?.(texture);
+        return texture;
+      },
+    });
     const point = new THREE.Vector3();
     try {
       for (const obstacle of blockers) {
@@ -148,6 +163,13 @@ describe("faction presentation source of truth", () => {
         model.updateMatrixWorld(true);
         model.traverse((object) => {
           if (!(object instanceof THREE.Mesh)) return;
+          const material = object.material;
+          if (!(material instanceof THREE.MeshStandardMaterial)) throw new Error("Missing fort surface material");
+          if ([palette.slate, palette.stoneLight, "#9facb0"].includes(`#${material.color.getHexString()}`)) {
+            expect(material.map, obstacle.id).toBeInstanceOf(THREE.Texture);
+            expect(material.normalMap, obstacle.id).toBeInstanceOf(THREE.Texture);
+            expect(material.roughnessMap, obstacle.id).toBeInstanceOf(THREE.Texture);
+          }
           const positions = object.geometry.getAttribute("position");
           for (let index = 0; index < positions.count; index++) {
             point.fromBufferAttribute(positions, index).applyMatrix4(object.matrixWorld);
@@ -192,9 +214,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
   }
 
   async function reload(): Promise<void> {
-    const origin = await evaluate<number>(cdp, "performance.timeOrigin");
-    await cdp.send("Page.reload");
-    await until(cdp, `performance.timeOrigin !== ${origin} && Boolean(window.korovany) && window.korovany.inspect().overlay === 'menu'`, Boolean, 30_000);
+    await reloadTestPage(cdp);
   }
 
   async function capture(name: string): Promise<void> {
@@ -203,7 +223,15 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
 
   beforeAll(async () => {
     if (process.env.KOROVANY_CAPTURE_DIR) await mkdir(process.env.KOROVANY_CAPTURE_DIR, { recursive: true });
-    server = await createServer({ configFile: false, server: { host: "127.0.0.1", port: 0, hmr: false, watch: null } });
+    server = await createServer({
+      configFile: false,
+      plugins: [{
+        name: "faction-presentation-three",
+        resolveId: (id) => id === "/__faction-three" ? "\0faction-three" : undefined,
+        load: (id) => id === "\0faction-three" ? 'export * from "three";' : undefined,
+      }],
+      server: { host: "127.0.0.1", port: 0, hmr: false, watch: null },
+    });
     await server.listen();
     const origin = server.resolvedUrls?.local[0];
     if (!origin) throw new Error("Missing faction presentation preview URL");
@@ -215,11 +243,11 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
 
   afterAll(async () => {
     cdp?.close();
-    if (browser) {
-      await closeOwnedBrowser(browser);
-      await rm(browser.profile, { recursive: true, force: true });
+    try {
+      if (browser) await closeTestBrowser(browser);
+    } finally {
+      await server?.close();
     }
-    await server?.close();
   }, 30_000);
 
   it("presents three roles, changes the selected briefing without losing focus and retains selection through language/settings", async () => {
@@ -290,18 +318,14 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
   }, 90_000);
 
   it("presents the actual villain campaign at its Old Fort home", async () => {
-    await evaluate(cdp, `localStorage.removeItem(${JSON.stringify(storageKeys.campaign)})`);
+    const fresh = createCampaign({ seed: "old-fort-identity", faction: "villain", runId: "actual-villain-start" }).serialize();
+    await evaluate(cdp, `localStorage.setItem(${JSON.stringify(storageKeys.campaign)}, ${JSON.stringify(JSON.stringify(fresh))})`);
     await reload();
-    await select('[data-faction="villain"]');
-    await evaluate(cdp, `(() => {
-      const seed = document.querySelector('.seed-input');
-      seed.value = 'old-fort-identity';
-      seed.dispatchEvent(new Event('input', {bubbles:true}));
-    })()`);
-    await select('[data-action="start"]');
+    await select('[data-action="continue"]');
     await until(cdp, "window.korovany.inspect().snapshot?.tick ?? 0", (tick: number) => tick >= 2, 30_000);
     const snapshot = await evaluate<GameSnapshot>(cdp, "window.korovany.inspect().snapshot");
     expect(snapshot.faction).toBe("villain");
+    expect(snapshot.runId).toBe("actual-villain-start");
     expect(snapshot.campaign!.identity.homeLocationId).toBe("old-fort");
     const home = snapshot.world.sites.find((site) => site.id === "home")!;
     expect(Math.hypot(home.x - snapshot.player.x, home.z - snapshot.player.z)).toBeLessThan(10);
@@ -312,6 +336,104 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
     await evaluate(cdp, "document.querySelector('.hud').style.visibility = ''");
     await tap("Escape");
   }, 60_000);
+
+  it("reveals the hero through foreground fort walls and restores opaque rendering after orbiting clear", async () => {
+    const result = await evaluate<{
+      defaultVisible: number; defaultOpaque: number; nearVisible: number; farVisible: number; clearDifferences: number;
+      restoredVisible: number; shaderErrors: number;
+    }>(cdp, `(async () => {
+      const THREE = await import('/__faction-three');
+      const { createCampaign } = await import('/src/game/index.ts');
+      const { Presentation } = await import('/src/view/index.ts');
+      const { FollowCamera } = await import('/src/view/camera.ts');
+      const { ViewResources } = await import('/src/view/resources.ts');
+      const { skyEnvironment } = await import('/src/view/atmosphere.ts');
+      const canvas = document.createElement('canvas');
+      canvas.style.cssText = 'position:fixed;inset:0;width:720px;height:500px;z-index:100';
+      document.body.append(canvas);
+      const renderer = new THREE.WebGLRenderer({canvas, antialias:true, preserveDrawingBuffer:true});
+      renderer.setSize(720, 500, false);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      let shaderErrors = 0;
+      renderer.debug.onShaderError = () => { shaderErrors++; };
+      const pending = [];
+      const loader = new THREE.TextureLoader();
+      const resources = new ViewResources({load(url, onLoad, onProgress, onError) {
+        let resolve, reject;
+        pending.push(new Promise((done, fail) => { resolve = done; reject = fail; }));
+        return loader.load(url, (texture) => { onLoad?.(texture); resolve(); }, onProgress,
+          (error) => { onError?.(error); reject(new Error('Cutaway texture failed: ' + url)); });
+      }}, 8);
+      const snapshot = createCampaign({seed:'old-fort-identity',faction:'villain'}).snapshot();
+      const presentation = new Presentation(snapshot.world, resources);
+      const environment = skyEnvironment(renderer, presentation.scenery.group);
+      presentation.scene.environment = environment.texture;
+      const camera = new FollowCamera(canvas);
+      camera.resize(720, 500);
+      camera.update(snapshot.player, 0);
+      presentation.update(snapshot, 0, camera.camera, true);
+      const highlight = new THREE.MeshBasicMaterial({color:0xff00ff, toneMapped:false});
+      const hero = presentation.scene.getObjectByName('actor-body').parent;
+      hero.traverse(object => { if (object.isMesh) object.material = highlight; });
+      const plain = new Map();
+      const fort = [];
+      presentation.scenery.group.traverse(object => {
+        if (!object.isMesh || object.material.name !== 'old-fort-cutaway') return;
+        const material = object.material;
+        if (!plain.has(material)) plain.set(material, material.clone());
+        fort.push({object, cutaway:material, opaque:plain.get(material)});
+      });
+      const render = (cutaway) => {
+        for (const entry of fort) entry.object.material = cutaway ? entry.cutaway : entry.opaque;
+        camera.update(snapshot.player, 0);
+        renderer.render(presentation.scene, camera.camera);
+        const pixels = new Uint8Array(720 * 500 * 4);
+        const gl = renderer.getContext();
+        gl.readPixels(0,0,720,500,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+        return pixels;
+      };
+      const visible = (pixels) => {
+        let count = 0;
+        for (let index=0;index<pixels.length;index+=4)
+          if (pixels[index]>240 && pixels[index+1]<15 && pixels[index+2]>240) count++;
+        return count;
+      };
+      try {
+        await Promise.all(pending);
+        resources.assertTextures();
+        const defaultOpaque = visible(render(false));
+        const defaultVisible = visible(render(true));
+        camera.zoom(-1e6);
+        const nearVisible = visible(render(true));
+        camera.zoom(1e6);
+        const farVisible = visible(render(true));
+        camera.orbit(-Math.PI / 2);
+        const opaque = render(false), clear = render(true);
+        let clearDifferences = 0;
+        for (let index=0;index<clear.length;index++) if (clear[index] !== opaque[index]) clearDifferences++;
+        camera.orbit(Math.PI / 2);
+        const restoredVisible = visible(render(true));
+        return {defaultVisible, defaultOpaque, nearVisible, farVisible, clearDifferences, restoredVisible, shaderErrors};
+      } finally {
+        presentation.dispose();
+        for (const material of plain.values()) material.dispose();
+        highlight.dispose();
+        environment.dispose();
+        renderer.dispose();
+        canvas.remove();
+      }
+    })()`);
+    expect(result.shaderErrors).toBe(0);
+    expect(result.defaultOpaque).toBe(0);
+    expect(result.defaultVisible).toBeGreaterThan(20);
+    expect(result.nearVisible).toBeGreaterThan(20);
+    expect(result.farVisible).toBeGreaterThan(5);
+    expect(result.clearDifferences).toBe(0);
+    expect(result.restoredVisible).toBe(result.farVisible);
+  }, 90_000);
 
   it("renders current orders, relationships, moving targets and terminal meanings from authoritative snapshots, including legacy", async () => {
     const fixtures = [

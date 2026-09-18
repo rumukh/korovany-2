@@ -1,22 +1,58 @@
 import * as THREE from 'three';
 import { ViewResources } from './resources';
+import type { Surface } from './surfaces';
 
-export type Shape = 'box' | 'sphere' | 'rock' | 'cone' | 'cylinder' | 'disc' | 'ring' | 'zone-ring' | 'cloth';
+export type Shape = 'box' | 'sphere' | 'rock' | 'cone' | 'cylinder' | 'disc' | 'ring' | 'zone-ring' | 'cloth'
+  | 'roof' | 'torus' | 'foliage' | 'grass';
 export type Triplet = readonly [number, number, number];
 
 export function shapeGeometry(resources: ViewResources, shape: Shape): THREE.BufferGeometry {
   return resources.geometry(shape, () => {
     switch (shape) {
       case 'box': return new THREE.BoxGeometry(1, 1, 1);
-      case 'sphere': return new THREE.IcosahedronGeometry(0.5, 0);
-      case 'rock': return new THREE.DodecahedronGeometry(0.5, 0);
-      case 'cone': return new THREE.ConeGeometry(0.5, 1, 7);
-      case 'cylinder': return new THREE.CylinderGeometry(0.5, 0.5, 1, 8);
+      case 'sphere': return new THREE.IcosahedronGeometry(0.5, 1);
+      case 'rock':
+      case 'foliage': {
+        const geometry = new THREE.IcosahedronGeometry(0.5, 1);
+        const positions = geometry.getAttribute('position');
+        for (let index = 0; index < positions.count; index++) {
+          const x = positions.getX(index), y = positions.getY(index), z = positions.getZ(index);
+          const ripple = 0.86 + 0.14 * Math.sin(x * 31 + y * 17) * Math.cos(z * 29 - y * 11);
+          positions.setXYZ(index, x * ripple, y * ripple, z * ripple);
+        }
+        if (shape === 'rock') geometry.computeVertexNormals();
+        return geometry;
+      }
+      case 'cone': return new THREE.ConeGeometry(0.5, 1, 12);
+      case 'cylinder': return new THREE.CylinderGeometry(0.5, 0.5, 1, 16);
+      case 'torus': return new THREE.TorusGeometry(0.43, 0.07, 6, 24);
+      case 'roof': {
+        const profile = new THREE.Shape();
+        profile.moveTo(-0.5, -0.5);
+        profile.lineTo(0.5, -0.5);
+        profile.lineTo(0, 0.5);
+        profile.closePath();
+        return new THREE.ExtrudeGeometry(profile, { depth: 1, bevelEnabled: false }).translate(0, 0, -0.5);
+      }
+      case 'grass': {
+        const vertices: number[] = [];
+        for (let blade = 0; blade < 5; blade++) {
+          const angle = blade * 2.4;
+          const x = Math.sin(angle) * 0.28, z = Math.cos(angle) * 0.28;
+          const height = 0.6 + (blade % 3) * 0.2;
+          vertices.push(x - 0.065, 0, z, x + 0.065, 0, z,
+            x + Math.sin(angle) * 0.3, height, z + Math.cos(angle) * 0.3);
+        }
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        geometry.computeVertexNormals();
+        return geometry;
+      }
       case 'disc': return new THREE.CylinderGeometry(0.5, 0.5, 1, 24);
       case 'ring': return new THREE.RingGeometry(0.42, 0.5, 40).rotateX(-Math.PI / 2);
       case 'zone-ring': return new THREE.RingGeometry(0.494, 0.5, 80).rotateX(-Math.PI / 2);
       case 'cloth': {
-        const geometry = new THREE.PlaneGeometry(1, 1, 3, 2);
+        const geometry = new THREE.PlaneGeometry(1, 1, 12, 8);
         const positions = geometry.getAttribute('position');
         for (let index = 0; index < positions.count; index += 1) {
           const x = positions.getX(index);
@@ -38,9 +74,11 @@ export function part(
   position: Triplet,
   scale: Triplet,
   rotation: Triplet = [0, 0, 0],
+  surface?: Surface,
 ): THREE.Mesh {
   const mesh = new THREE.Mesh(shapeGeometry(resources, shape), resources.material(color, {
-    side: shape === 'cloth' ? THREE.DoubleSide : THREE.FrontSide,
+    side: shape === 'cloth' || shape === 'grass' ? THREE.DoubleSide : THREE.FrontSide,
+    surface: surface ?? (shape === 'cloth' ? 'cloth' : undefined),
   }));
   mesh.position.set(...position);
   mesh.scale.set(...scale);
@@ -90,13 +128,16 @@ export class StaticBatch {
 
   constructor(private readonly resources: ViewResources) {}
 
-  add(shape: Shape, color: string, position: Triplet, scale: Triplet, rotation: Triplet = [0, 0, 0], shadow = true): void {
-    const key = `${shape}:${color}:${shadow}`;
+  add(shape: Shape, color: string, position: Triplet, scale: Triplet, rotation: Triplet = [0, 0, 0], shadow = true, surface?: Surface): void {
+    const key = `${shape}:${color}:${shadow}:${surface ?? ''}`;
     let batch = this.batches.get(key);
     if (!batch) {
       batch = {
         geometry: shapeGeometry(this.resources, shape),
-        material: this.resources.material(color, { side: shape === 'cloth' ? THREE.DoubleSide : THREE.FrontSide }),
+        material: this.resources.material(color, {
+          side: shape === 'cloth' || shape === 'grass' ? THREE.DoubleSide : THREE.FrontSide,
+          surface: surface ?? (shape === 'cloth' ? 'cloth' : undefined),
+        }),
         transforms: [],
         shadow,
       };

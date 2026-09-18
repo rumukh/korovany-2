@@ -1,4 +1,4 @@
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
@@ -10,7 +10,8 @@ import {
   click, evaluate, launchBrowser, openPage, screenshot, until,
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeOwnedBrowser } from "../vendor/aegis-engine/packages/render-three/src/testing/browser-lifecycle";
+import { closeTestBrowser } from "./browser-cleanup";
+import { reloadTestPage } from "./browser-navigation";
 
 interface Inspection { snapshot: GameSnapshot; overlay: string | null; running: boolean }
 
@@ -18,6 +19,8 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
   let server: ViteDevServer;
   let browser: LaunchedBrowser;
   let cdp: CdpSession;
+  // SwiftShader can take seconds per frame while the game caps simulation catch-up.
+  const gameplayTimeout = 60_000;
 
   async function inspect(): Promise<Inspection> {
     return evaluate(cdp, "window.korovany.inspect()");
@@ -49,9 +52,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     if (process.env.KOROVANY_CAPTURE_DIR) await screenshot(cdp, join(process.env.KOROVANY_CAPTURE_DIR, `${name}.png`));
   }
   async function reload(): Promise<void> {
-    const origin = await evaluate<number>(cdp, "performance.timeOrigin");
-    await cdp.send("Page.reload");
-    await until(cdp, `performance.timeOrigin !== ${origin} && Boolean(window.korovany) && window.korovany.inspect().overlay === 'menu'`, Boolean, 30_000);
+    await reloadTestPage(cdp);
   }
 
   beforeAll(async () => {
@@ -69,7 +70,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     driver.toNode("roadward");
     driver.walk(game.snapshot().narrative!.npcs.find(npc => npc.id === "mara")!, 0.2);
     const save = game.serialize();
-    const settings: Settings = { language: "en", quality: "high", reducedMotion: false, muted: false };
+    const settings: Omit<Settings, "audio"> = { language: "en", quality: "high", reducedMotion: false, muted: false };
     await evaluate(cdp, `(() => {
       localStorage.setItem(${JSON.stringify(storageKeys.campaign)}, ${JSON.stringify(JSON.stringify(save))});
       localStorage.setItem(${JSON.stringify(storageKeys.settings)}, ${JSON.stringify(JSON.stringify(settings))});
@@ -79,12 +80,12 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
 
   afterAll(async () => {
     cdp?.close();
-    if (browser) {
-      await closeOwnedBrowser(browser);
-      await rm(browser.profile, { recursive: true, force: true });
+    try {
+      if (browser) await closeTestBrowser(browser);
+    } finally {
+      await server?.close();
     }
-    await server?.close();
-  }, 30_000);
+  }, 60_000);
 
   it("shows discovered NPC map markers beyond talk range, including when conversation is blocked", async () => {
     const game = createCampaign({ seed: "resident-map-range", faction: "guard" });
@@ -128,22 +129,39 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
       const npc = snapshot.narrative.npcs.find(person => person.id === 'mara');
       return Math.hypot(npc.x - snapshot.player.x, npc.z - snapshot.player.z);
     })()`;
-    for (const [code, away] of [["KeyS", true], ["KeyW", false]] as const) {
-      await press(code, true);
-      try {
-        await until(cdp, distanceFromMara, (distance: number) => away ? distance >= 10 : distance <= 3.5, 20_000);
-      } finally {
-        await press(code, false);
+    // Bound SwiftShader's pixel cost during sustained movement without disabling high-quality rendering.
+    // Dialogue and layout coverage still use the full desktop viewport.
+    await cdp.send("Emulation.setDeviceMetricsOverride", { width: 720, height: 500, deviceScaleFactor: 1, mobile: false });
+    try {
+      await until(cdp, "document.querySelector('canvas').width === 720 && document.querySelector('canvas').height === 500", Boolean, gameplayTimeout);
+      expect(await evaluate(cdp, "window.korovany.inspect().settings.quality")).toBe("high");
+      for (const [code, away] of [["KeyS", true], ["KeyW", false]] as const) {
+        const started = Date.now();
+        const startTick = (await inspect()).snapshot.tick;
+        await press(code, true);
+        try {
+          await until(cdp, distanceFromMara, (distance: number) => away ? distance >= 10 : distance <= 3.5, gameplayTimeout);
+        } finally {
+          await press(code, false);
+          const ended = await inspect();
+          console.info("NPC movement", JSON.stringify({
+            code, wallMs: Date.now() - started, ticks: ended.snapshot.tick - startTick,
+            distance: await evaluate(cdp, distanceFromMara), overlay: ended.overlay, running: ended.running,
+          }));
+        }
+        if (away) {
+          const distant = await inspect();
+          expect(distant.snapshot.narrative!.npcs.find(npc => npc.id === "mara")?.available).toBe(false);
+          expect(distant.snapshot.narrative!.interaction?.targetId).not.toBe("mara");
+          await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= distant.snapshot.tick + 60, gameplayTimeout);
+          expect(await evaluate(cdp, `Boolean(document.querySelector('.minimap [data-npc="mara"]'))`)).toBe(true);
+          await capture("residents-beyond-talk-range");
+        }
       }
-      if (away) {
-        const distant = await inspect();
-        expect(distant.snapshot.narrative!.npcs.find(npc => npc.id === "mara")?.available).toBe(false);
-        expect(distant.snapshot.narrative!.interaction?.targetId).not.toBe("mara");
-        await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= distant.snapshot.tick + 60, 15_000);
-        expect(await evaluate(cdp, `Boolean(document.querySelector('.minimap [data-npc="mara"]'))`)).toBe(true);
-        await capture("residents-beyond-talk-range");
-      }
+    } finally {
+      await cdp.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
     }
+    await until(cdp, "document.querySelector('canvas').width === 1440 && document.querySelector('canvas').height === 1000", Boolean, gameplayTimeout);
     await tap("KeyT");
     await until(cdp, "window.korovany.inspect().overlay", (value: string) => value === "dialogue", 15_000);
     const talking = await inspect();
@@ -167,7 +185,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick > talking.snapshot.tick + 5, 20_000);
     expect((await inspect()).snapshot.player.x).toBe(position.x);
     expect((await inspect()).snapshot.player.z).toBe(position.z);
-  }, 90_000);
+  }, 210_000);
 
   it("tracks authored quests on a paused journal and switches between local and regional navigation", async () => {
     await tap("KeyJ");
