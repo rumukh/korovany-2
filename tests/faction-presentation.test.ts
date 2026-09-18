@@ -340,7 +340,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
   it("reveals the hero through foreground fort walls and restores opaque rendering after orbiting clear", async () => {
     const result = await evaluate<{
       defaultVisible: number; defaultOpaque: number; nearVisible: number; farVisible: number; clearDifferences: number;
-      restoredVisible: number; shaderErrors: number;
+      restoredVisible: number; ordinaryDifferences: number; shaderErrors: number;
     }>(cdp, `(async () => {
       const THREE = await import('/__faction-three');
       const { createCampaign } = await import('/src/game/index.ts');
@@ -401,6 +401,12 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
           if (pixels[index]>240 && pixels[index+1]<15 && pixels[index+2]>240) count++;
         return count;
       };
+      const ordinary = resources.material('#c3c0a0', {side:THREE.FrontSide,surface:'stone'});
+      const ordinaryBaseline = ordinary.clone();
+      const probeGeometry = new THREE.BoxGeometry(1.3, 1.8, 1);
+      const probe = new THREE.InstancedMesh(probeGeometry, ordinary, 1);
+      probe.receiveShadow = true;
+      probe.frustumCulled = false;
       try {
         await Promise.all(pending);
         resources.assertTextures();
@@ -416,12 +422,27 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
         for (let index=0;index<clear.length;index++) if (clear[index] !== opaque[index]) clearDifferences++;
         camera.orbit(Math.PI / 2);
         const restoredVisible = visible(render(true));
-        return {defaultVisible, defaultOpaque, nearVisible, farVisible, clearDifferences, restoredVisible, shaderErrors};
+        const point = camera.camera.position.clone().lerp(presentation.scenery.heroPosition, 0.8);
+        probe.setMatrixAt(0, new THREE.Matrix4().makeTranslation(point.x, point.y, point.z));
+        presentation.scene.add(probe);
+        let ordinaryDifferences = 0;
+        for (const order of [-1, 1]) {
+          probe.renderOrder = order;
+          probe.material = ordinaryBaseline;
+          const expected = render(true);
+          probe.material = ordinary;
+          const actual = render(true);
+          for (let index=0;index<actual.length;index++) if (actual[index] !== expected[index]) ordinaryDifferences++;
+        }
+        return {defaultVisible, defaultOpaque, nearVisible, farVisible, clearDifferences, restoredVisible, ordinaryDifferences, shaderErrors};
       } finally {
         presentation.dispose();
         for (const material of plain.values()) material.dispose();
         highlight.dispose();
         environment.dispose();
+        ordinaryBaseline.dispose();
+        probeGeometry.dispose();
+        probe.dispose();
         renderer.dispose();
         canvas.remove();
       }
@@ -432,6 +453,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
     expect(result.nearVisible).toBeGreaterThan(20);
     expect(result.farVisible).toBeGreaterThan(5);
     expect(result.clearDifferences).toBe(0);
+    expect(result.ordinaryDifferences).toBe(0);
     expect(result.restoredVisible).toBe(result.farVisible);
   }, 90_000);
 

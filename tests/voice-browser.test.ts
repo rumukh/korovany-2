@@ -18,6 +18,11 @@ interface Inspection {
   settings: Settings;
   audio: ReturnType<Soundscape["inspect"]>;
 }
+interface SpeechObservation {
+  audio: Inspection["audio"];
+  captionVisible: boolean;
+  paused: Inspection["audio"] | null;
+}
 
 // Transport-only media. This never enters public/audio and is not speech acceptance evidence.
 function fixtureWave(): Buffer {
@@ -34,6 +39,14 @@ function fixtureWave(): Buffer {
 describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction voice browser transport (HTTP fixtures, not recording approval)", () => {
   let server: ViteDevServer, browser: LaunchedBrowser, cdp: CdpSession;
   let failAssets = false, requests = 0;
+  const httpFailures: { path: string; status: number }[] = [];
+  const traceAudio = (phase: string, audio: Inspection["audio"]) => {
+    if (process.env.KOROVANY_VOICE_TRACE !== "1") return;
+    console.info(JSON.stringify({ phase, at: Date.now(), active: audio.active, speaking: audio.speaking,
+      voices: audio.voices, effects: audio.effects, speaker: audio.subtitle?.speaker,
+      language: audio.subtitle?.language, speechIndex: audio.speechIndex, clipIndex: audio.clipIndex,
+      speechLength: audio.speechLength, failures: audio.failures }));
+  };
   const entries = new Map<string, VoiceEntry>();
   const add = (speaker: string, text: LocalizedText) => {
     for (const language of ["ru", "en"] as const) for (const block of paragraphs(text[language])) {
@@ -55,10 +68,34 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction voice browser tran
     return { faction, npcId, saved, choice, response };
   });
   const wave = fixtureWave();
-  const inspect = () => evaluate<Inspection>(cdp, "window.korovany.inspect()");
-  const speech = (speaker: string, language: "ru" | "en") => until<Inspection["audio"]>(
-    cdp, "window.korovany.inspect().audio",
-    audio => isSpeechPlaying(audio, speaker, language), 20_000);
+  const inspect = async () => {
+    const inspected = await evaluate<Inspection>(cdp, "window.korovany.inspect()");
+    traceAudio("inspect", inspected.audio);
+    return inspected;
+  };
+  const speech = (speaker: string, language: "ru" | "en", action: "observe" | "blur" = "observe") => {
+    let prior = "";
+    // A two-second source may end between CDP roundtrips; observe playback and blur in one browser task.
+    const expression = `(() => {
+      const audio = window.korovany.inspect().audio;
+      const playing = audio.speaking && audio.voices > audio.effects &&
+        audio.subtitle?.speaker === ${JSON.stringify(speaker)} && audio.subtitle.language === ${JSON.stringify(language)};
+      const caption = document.querySelector(".voice-caption");
+      const captionVisible = caption !== null && !caption.hidden;
+      const pause = playing && ${action === "blur"};
+      if (pause) window.dispatchEvent(new Event("blur"));
+      return {audio, captionVisible, paused: pause ? window.korovany.inspect().audio : null};
+    })()`;
+    return until<SpeechObservation>(cdp, expression, observation => {
+      const audio = observation.audio;
+      const state = JSON.stringify([audio.active, audio.speaking, audio.voices, audio.effects, audio.subtitle?.speaker,
+        audio.subtitle?.language, audio.speechIndex, audio.clipIndex, audio.speechLength]);
+      if (state !== prior) traceAudio(`${action}-${language}-${speaker}`, audio);
+      if (observation.paused) traceAudio(`paused-${language}-${speaker}`, observation.paused);
+      prior = state;
+      return isSpeechPlaying(audio, speaker, language);
+    }, 20_000);
+  };
 
   async function select(selector: string): Promise<void> {
     const point = await evaluate<{ x: number; y: number }>(cdp, `(() => {
@@ -84,6 +121,13 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction voice browser tran
     server = await createServer({ configFile: false, server: { host: "127.0.0.1", port: 0, hmr: false, watch: null },
       plugins: [{ name: "voice-transport-fixtures", configureServer(server) {
         server.middlewares.use((req, res, next) => {
+          res.once("finish", () => {
+            if (res.statusCode >= 400) {
+              const failure = { status: res.statusCode, path: req.url ?? "" };
+              httpFailures.push(failure);
+              if (process.env.KOROVANY_VOICE_TRACE === "1") console.info(JSON.stringify(failure));
+            }
+          });
           if (!req.url?.startsWith("/audio/voices/")) return next();
           requests++;
           if (failAssets) { res.statusCode = 404; res.end("Missing test fixture"); return; }
@@ -112,6 +156,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction voice browser tran
   }, 30_000);
 
   test.each(cases)("$faction: real RU/EN player-to-NPC sequence, paused ticks, focus and reload", async item => {
+    const firstHttpFailure = httpFailures.length;
     for (const language of ["ru", "en"] as const) {
       const beforeRequests = requests;
       await load(item, language);
@@ -123,13 +168,14 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction voice browser tran
       expect(before.overlay).toBe("dialogue");
       expect(before.running).toBe(false);
       await select(`[data-choice="${item.choice.id}"]`);
-      await speech("player", language);
-      expect(await evaluate(cdp, "!document.querySelector('.voice-caption').hidden")).toBe(true);
-      await speech(item.npcId, language);
-      expect((await inspect()).snapshot.narrative!.dialogue!.text).toEqual(item.response.text);
-      expect((await inspect()).snapshot.tick).toBe(before.snapshot.tick);
-      await evaluate(cdp, "window.dispatchEvent(new Event('blur'))");
-      expect((await inspect()).audio.voices).toBe(0);
+      const player = await speech("player", language);
+      expect(player.captionVisible).toBe(true);
+      const paused = await speech(item.npcId, language, "blur");
+      expect(isSpeechPlaying(paused.audio, item.npcId, language)).toBe(true);
+      expect(paused.paused).toMatchObject({ active: false, speaking: false, voices: 0 });
+      const response = await inspect();
+      expect(response.snapshot.narrative!.dialogue!.text).toEqual(item.response.text);
+      expect(response.snapshot.tick).toBe(before.snapshot.tick);
       await evaluate(cdp, "window.dispatchEvent(new Event('focus'))");
       await speech(item.npcId, language);
       await select('[data-action="close-dialogue"]');
@@ -138,6 +184,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction voice browser tran
       expect((await inspect()).audio.failures).toEqual([]);
       expect((await inspect()).audio.cacheBytes).toBeLessThanOrEqual(24 * 1024 * 1024);
     }
+    expect(httpFailures.slice(firstHttpFailure).filter(failure => failure.path.startsWith("/audio/"))).toEqual([]);
   }, 90_000);
 
   test("settings pause and language replacement never resume a stale-language response", async () => {

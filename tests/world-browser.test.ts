@@ -1,4 +1,4 @@
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createServer, type ViteDevServer } from 'vite';
@@ -74,7 +74,22 @@ function renderLocation(id,low=false) {
     contextLost:gl.isContextLost(),pixelBrightness:brightness,
     sky:scenery.group.getObjectByName('world-sky').position.toArray()};
 }
-window.worldPreview = {renderLocation,get textures() {return resources.textureStatus;},renderModels() {
+window.worldPreview = {renderLocation,get textures() {return resources.textureStatus;},shaderPrograms() {
+  const materials = new Set();
+  scene.traverse(object => {
+    if (!object.isMesh) return;
+    for (const material of Array.isArray(object.material) ? object.material : [object.material]) materials.add(material);
+    if (object.customDepthMaterial) materials.add(object.customDepthMaterial);
+  });
+  return renderer.info.programs.map(program => ({
+    id:program.id, name:program.name, key:program.cacheKey, users:program.usedTimes,
+    materials:[...materials].filter(material =>
+      [...(renderer.properties.get(material).programs?.values() ?? [])].includes(program)
+    ).map(material => ({name:material.name,type:material.type,key:material.customProgramCacheKey(),
+      color:material.color?.getHexString(),maps:[Boolean(material.map),Boolean(material.normalMap),Boolean(material.roughnessMap)],
+      side:material.side,transparent:material.transparent}))
+  }));
+},renderModels() {
   if (!modelStage) {
     modelStage = new THREE.Group();
     scene.add(modelStage);
@@ -183,6 +198,15 @@ describe.runIf(process.env.KOROVANY_WORLD_BROWSER === '1')('expanded world WebGL
       if (captures) await screenshot(cdp, join(captures, `${location}.png`));
     }
     console.info('World render metrics', JSON.stringify(metrics));
+    const programs = await evaluate<{ id: number; materials: { name: string }[] }[]>(cdp, 'window.worldPreview.shaderPrograms()');
+    if (process.env.KOROVANY_SHADER_DIAGNOSTICS) {
+      await writeFile(process.env.KOROVANY_SHADER_DIAGNOSTICS, JSON.stringify(programs, null, 2));
+    }
+    const fortPrograms = programs.filter(program => program.materials.some(material => material.name === 'old-fort-cutaway'));
+    expect(fortPrograms).toHaveLength(3);
+    for (const program of fortPrograms) {
+      expect(program.materials.some(material => material.name !== 'old-fort-cutaway'), `shared fort program ${program.id}`).toBe(true);
+    }
     for (const stats of metrics) {
       expect.soft(stats.calls, stats.location).toBeLessThan(250);
       expect.soft(stats.triangles, stats.location).toBeLessThan(500000);

@@ -5,6 +5,7 @@ import { beam, joint, part, shapeGeometry, StaticBatch } from './primitives';
 import { seededRandom, ViewResources } from './resources';
 import { locationStructure, regionThemes, themeAt, type RegionTheme } from './region-scenery';
 import { WorldChunks } from './world-chunks';
+import { applySightlineDither } from './sightline';
 
 export interface WorldScenery {
   group: THREE.Group;
@@ -383,34 +384,11 @@ function addBridge(bridge: Bounds, world: WorldBlueprint, batch: StaticBatch): v
   }
 }
 
-function applySightlineDither(material: THREE.Material, hero: THREE.Vector3, strength: number): void {
-  material.onBeforeCompile = (shader) => {
-    shader.uniforms.heroPosition = { value: hero };
-    shader.vertexShader = `varying vec3 vCutawayWorld;\n${shader.vertexShader}`.replace('#include <worldpos_vertex>', `
-        #include <worldpos_vertex>
-        vec4 cutawayPosition = vec4(transformed, 1.0);
-        #ifdef USE_INSTANCING
-          cutawayPosition = instanceMatrix * cutawayPosition;
-        #endif
-        vCutawayWorld = (modelMatrix * cutawayPosition).xyz;
-      `);
-    shader.fragmentShader = `uniform vec3 heroPosition;\nvarying vec3 vCutawayWorld;\n${shader.fragmentShader}`.replace('#include <alphatest_fragment>', `
-        #include <alphatest_fragment>
-        vec3 sightline = heroPosition - cameraPosition;
-        float alongSight = dot(vCutawayWorld - cameraPosition, sightline) / max(0.001, dot(sightline, sightline));
-        float distanceToSight = length(vCutawayWorld - (cameraPosition + sightline * alongSight));
-        float cutaway = (1.0 - smoothstep(1.2, 2.5, distanceToSight)) * step(0.0, alongSight) * (1.0 - step(1.03, alongSight));
-        float pattern = fract(dot(floor(gl_FragCoord.xy), vec2(0.75487766, 0.56984029)));
-        if (pattern < cutaway * ${strength.toFixed(2)}) discard;
-      `);
-  };
-}
-
 function applyFoliageDither(resources: ViewResources, hero: THREE.Vector3): void {
   for (const color of new Set([palette.leaf, palette.leafLight, palette.leafDark, ...Object.values(regionThemes).flatMap(theme => theme.foliage)])) {
     const material = resources.material(color, { side: THREE.FrontSide });
-    material.customProgramCacheKey = () => 'korovany-foliage-v2';
     applySightlineDither(material, hero, 0.92);
+    material.customProgramCacheKey = () => 'korovany-foliage-v2';
     const cutaway = material.onBeforeCompile;
     material.onBeforeCompile = (shader, renderer) => {
       cutaway.call(material, shader, renderer);
@@ -515,7 +493,6 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
           let material = fortMaterials.get(original);
           if (!material) {
             material = resources.ownMaterial(`old-fort-cutaway:${original.uuid}`, original.clone());
-            material.customProgramCacheKey = () => 'korovany-fort-cutaway-v1';
             material.name = 'old-fort-cutaway';
             applySightlineDither(material, heroPosition, 1);
             fortMaterials.set(original, material);

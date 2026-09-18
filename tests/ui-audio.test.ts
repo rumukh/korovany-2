@@ -385,6 +385,29 @@ describe("cancellable bilingual speech", () => {
     expect(request.mock.calls.filter(([url]) => String(url).includes("/voices/")).length).toBe(5);
   });
 
+  it("does not replay a completed player/response queue when focus activation returns", async () => {
+    const sound = make();
+    sound.setActive(true);
+    sound.speak("completed", [line("Yes", "player"), line("Response")]);
+    await sound.unlock();
+    await flush();
+    const context = Context.instances[0]!;
+    for (let clip = 0; clip < 3; clip++) {
+      context.sources.at(-1)!.end();
+      await flush();
+    }
+    const completed = sound.inspect();
+    expect(completed.speechIndex).toBe(completed.speechLength);
+    expect(completed.speaking).toBe(false);
+    const played = context.sources.length;
+    sound.setActive(false);
+    sound.setActive(true);
+    await flush();
+    expect(context.sources).toHaveLength(played);
+    expect(sound.inspect().voices).toBe(0);
+    expect(sound.inspect().speechIndex).toBe(completed.speechLength);
+  });
+
   it("discards a stale native decode and restarts the right language after pause/mute", async () => {
     const sound = make();
     sound.setActive(true);

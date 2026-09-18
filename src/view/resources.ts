@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { palette } from './palette';
 import { surfaceForColor, surfaceUrl, type Surface } from './surfaces';
+import { applySightlineDither } from './sightline';
 
 /** One owner for shared GPU assets, including assets held by invisible pools. */
 export class ViewResources {
@@ -101,6 +102,7 @@ export class ViewResources {
         ...(surface ? this.maps(surface) : undefined),
         normalScale: new THREE.Vector2(surface === 'stone' ? 0.65 : 0.32, surface === 'stone' ? 0.65 : 0.32),
       });
+    if (!options.unlit) applySightlineDither(material);
     if (surface === 'ground' && !options.unlit) {
       material.customProgramCacheKey = () => 'frontier-ground-uv-v1';
       material.onBeforeCompile = shader => {

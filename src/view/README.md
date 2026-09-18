@@ -103,6 +103,9 @@ with shared stone and cloth surfaces. A narrow camera-to-hero dither cutaway kee
 the character visible behind foreground masonry; only fort material copies use it,
 with unchanged opaque shadow depth. It follows orbit/zoom without changing collision
 or the landscape camera, and leaves unobstructing fort surfaces opaque.
+Cutaway strength is a per-material uniform (zero on ordinary surfaces), so isolated
+fort material copies share compiled programs with matching ordinary materials
+instead of creating extra texture/sidedness shader variants.
 The structures do not add noncolliding walls across the open road gates.
 DOM-free scene assertions construct `Presentation` without
 a texture loader; `createGameView` always supplies browser texture resources and
