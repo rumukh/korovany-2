@@ -249,6 +249,40 @@ Opening menus pauses the campaign. Browser focus loss pauses play and releases
 held controls. Once the atlas is open, Tab navigates its controls; use M or
 Escape to return to the road.
 
+### Xbox-style controllers
+
+Standard-mapped controllers use the shared Aegis browser input adapter. Connect
+over USB or Bluetooth, press a button if the browser has not exposed the device,
+then release the sticks and buttons to arm it. Serve over localhost or HTTPS.
+Non-standard layouts and blocked browser permissions are reported, not guessed.
+
+| Controller | Action |
+| --- | --- |
+| Left stick | Camera-relative analog movement |
+| Right stick | Orbit camera |
+| LT + right stick | Aim independently; camera stays still |
+| RT | Attack |
+| A (hold) / X | Contextual interaction / Talk or inspect |
+| B / Y | Dodge / Faction ability |
+| LB (hold) / RB | Sprint / Cycle convoy orders |
+| Menu / View | Pause / Atlas |
+| D-pad up / Left or right | Journal / Camera zoom |
+
+In overlays, use the D-pad or left stick to navigate, A to confirm and B to
+return. Right stick scrolls long text; left/right adjusts focused selectors
+and sliders. Confirmations are game-owned, so replacing a campaign does not
+require a browser dialog. Seed text entry still needs a keyboard; the random
+seed button is controller-accessible. Prompts follow the last-used device.
+Disconnecting an active controller pauses play. Focus changes and leaving a
+menu require neutral controls before gameplay resumes; held confirmation or
+attack cannot leak across that boundary.
+
+Gamepad input alone does not unlock browser audio. A real click or key press
+may still be needed once; the controller hint explains this. Camera angle
+limits and combat rules are unchanged; manual aiming does not add lock-on.
+Automated coverage uses virtual standard controllers in a real browser, not
+physical Xbox hardware or driver certification.
+
 ## Audio
 
 The browser plays local compressed media from

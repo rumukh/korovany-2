@@ -7,10 +7,10 @@ import { createGameView, type GameView } from "./view";
 import { Soundscape } from "./audio/soundscape";
 import { AudioPresentation, type SpeechSelection } from "./audio/presentation";
 import { GameInput } from "./ui/input";
+import { ControllerInput } from "./ui/gamepad";
 import { GameShell, type Overlay, type ShellAction, type ShellState } from "./ui/shell";
 import { BrowserStorage, DirtySave, defaultSettings, parseSettings, storageKeys } from "./ui/storage";
 import { parseChart } from "./ui/atlas";
-import { translate } from "./ui/locale";
 import "./style.css";
 
 const STEP = 1 / 60;
@@ -49,6 +49,7 @@ let preview: GameSnapshot | null = null;
 let view: GameView | null = null;
 let viewWorldId: string | null = null;
 let input: GameInput | null = null;
+let controllerInput: ControllerInput | null = null;
 let queued: CampaignInput = {};
 let lastAim: Vec2 = { x: 0, z: -1 };
 let lastFrame: number | null = null;
@@ -154,6 +155,7 @@ function saveCampaign(notify = false): boolean {
 function freeze(silence = true): void {
   running = false;
   input?.setEnabled(false);
+  controllerInput?.clear();
   queued = {};
   cameraDrag = null;
   accumulator = 0;
@@ -223,7 +225,7 @@ function finish(selection?: SpeechSelection): void {
   syncAudio(selection);
 }
 
-function begin(sameSeed?: boolean): void {
+function begin(sameSeed?: boolean, confirmed = false): void {
   if (!shell) return;
   if (sameSeed === false) selectedSeed = newSeed();
   if (sameSeed === true && snapshot) selectedSeed = snapshot.seed;
@@ -231,8 +233,10 @@ function begin(sameSeed?: boolean): void {
     shell.warn("seedRequired");
     return;
   }
-  if (((campaign && snapshot?.phase === "playing") || storage.unchanged(storageKeys.campaign) === false) &&
-    !window.confirm(translate(settings.language, "overwrite"))) return;
+  if (!confirmed && ((campaign && snapshot?.phase === "playing") || storage.unchanged(storageKeys.campaign) === false)) {
+    confirmAction("overwrite", () => begin(undefined, true));
+    return;
+  }
   freeze();
   // An explicit new campaign may replace the latest record, not a stale tab's baseline.
   storage.read(storageKeys.campaign, restored(restoreCampaign));
@@ -271,13 +275,16 @@ function resume(): void {
   else finish();
 }
 
-function continueLatest(): void {
+function continueLatest(confirmed = false): void {
   const unchanged = storage.unchanged(storageKeys.campaign);
   if (campaignSave.dirty && unchanged !== false) {
     resume();
     return;
   }
-  if (campaignSave.dirty && !window.confirm(translate(settings.language, "loadLatest"))) return;
+  if (campaignSave.dirty && !confirmed) {
+    confirmAction("loadLatest", () => continueLatest(true));
+    return;
+  }
   const latest = storage.read(storageKeys.campaign, restored(restoreCampaign));
   if (latest.status === "error") return;
   campaign = latest.status === "ok" ? latest.value : null;
@@ -318,10 +325,8 @@ function dispatch(action: ShellAction): void {
         break;
       case "save": saveCampaign(true); break;
       case "title":
-        if (!saveCampaign() && !window.confirm(translate(settings.language, "leaveUnsaved"))) break;
-        changeOverlay("menu");
-        updatePreview();
-        refresh();
+        if (!saveCampaign()) confirmAction("leaveUnsaved", returnToTitle);
+        else returnToTitle();
         break;
       case "randomSeed":
         selectedSeed = newSeed();
@@ -399,6 +404,22 @@ function dispatch(action: ShellAction): void {
   }
 }
 
+function returnToTitle(): void {
+  changeOverlay("menu");
+  updatePreview();
+  refresh();
+}
+
+function confirmAction(key: string, action: () => void): void {
+  shell?.confirm(key, () => {
+    try {
+      action();
+    } catch (error) {
+      stopForError(error, "game");
+    }
+  });
+}
+
 function worldDirection(local: Vec2): Vec2 {
   const basis = view?.getMoveBasis();
   if (!basis) return { x: 0, z: 0 };
@@ -409,7 +430,7 @@ function worldDirection(local: Vec2): Vec2 {
 }
 
 function sampleInput(): CampaignInput {
-  const sample = input?.consume();
+  const sample = input?.consume(controllerInput?.consume(snapshot?.tick ?? 0));
   if (!sample || !snapshot) return {};
   if (sample.talk && snapshot.narrative?.interaction) {
     const target = snapshot.narrative.interaction;
@@ -468,13 +489,39 @@ function stopForError(error: unknown, kind: "graphics" | "game"): void {
   if (raf) cancelAnimationFrame(raf);
   shell?.fail(kind);
   syncAudio();
+  raf = requestAnimationFrame(frame);
+}
+
+function pollController(delta: number): void {
+  if (!controllerInput || !shell) return;
+  const frame = controllerInput.poll(running, delta);
+  if (frame.becameActive) input?.useGamepad();
+  shell.updateController({
+    active: controllerInput.active,
+    connected: frame.sample.device !== null && frame.sample.status === "ready",
+    status: frame.sample.status, armed: frame.sample.armed,
+    audioLocked: !settings.muted && sound.inspect().state !== "running",
+  });
+  if (running) {
+    if (frame.disconnected) changeOverlay("pause");
+    else if (frame.overlay) changeOverlay(frame.overlay);
+    else {
+      if (frame.camera.yaw || frame.camera.pitch) view?.orbit(frame.camera.yaw, frame.camera.pitch);
+      if (frame.camera.zoom) view?.zoom(frame.camera.zoom);
+    }
+  } else if (shell.handleController(frame.ui, delta)) controllerInput.clear();
 }
 
 function frame(time: number): void {
-  if (disposed || fatal) return;
+  if (disposed) return;
   const delta = lastFrame === null ? 0 : Math.min(MAX_FRAME, Math.max(0, (time - lastFrame) / 1000));
   lastFrame = time;
   try {
+    pollController(delta);
+    if (fatal) {
+      raf = requestAnimationFrame(frame);
+      return;
+    }
     if (running && campaign) {
       accumulator += delta;
       let stepped = false;
@@ -505,32 +552,45 @@ function frame(time: number): void {
     const display = atTitle ? preview : snapshot;
     if (display && !document.hidden) view?.render(display, delta);
   } catch (error) {
+    if (fatal) {
+      console.error("Korovany II recovery controls failed.", error);
+      return;
+    }
     stopForError(error, "game");
     return;
   }
   raf = requestAnimationFrame(frame);
 }
 
-shell = new GameShell(root, state(), dispatch);
-pendingWarnings.forEach((key) => shell?.warn(key));
-input = new GameInput(shell.canvas, (overlay) => changeOverlay(overlay), () => changeOverlay("pause"));
-const storedChart = storage.read(storageKeys.atlas, parseChart);
-if (storedChart.status === "ok") shell.atlas.restore(storedChart.value);
-if (snapshot) shell.update(snapshot);
-
-window.addEventListener("resize", () => view?.resize(), { signal: lifecycle.signal });
 window.addEventListener("pointerdown", (event) => {
+  controllerInput?.useKeyboardOrMouse();
   if (event.isTrusted && !document.hidden) {
     audio.setFocused(true);
     void sound.unlock();
   }
 }, { signal: lifecycle.signal, capture: true });
 window.addEventListener("keydown", (event) => {
+  controllerInput?.useKeyboardOrMouse();
   if (event.isTrusted && !document.hidden) {
     audio.setFocused(true);
     void sound.unlock();
   }
 }, { signal: lifecycle.signal, capture: true });
+window.addEventListener("pointermove", (event) => {
+  if (event.movementX || event.movementY) controllerInput?.useKeyboardOrMouse();
+}, { signal: lifecycle.signal, capture: true });
+window.addEventListener("wheel", () => controllerInput?.useKeyboardOrMouse(),
+  { signal: lifecycle.signal, capture: true, passive: true });
+
+shell = new GameShell(root, state(), dispatch);
+pendingWarnings.forEach((key) => shell?.warn(key));
+input = new GameInput(shell.canvas, (overlay) => changeOverlay(overlay), () => changeOverlay("pause"));
+controllerInput = new ControllerInput();
+const storedChart = storage.read(storageKeys.atlas, parseChart);
+if (storedChart.status === "ok") shell.atlas.restore(storedChart.value);
+if (snapshot) shell.update(snapshot);
+
+window.addEventListener("resize", () => view?.resize(), { signal: lifecycle.signal });
 // Native checkbox changes occur after click propagation; unlock after settings are applied.
 for (const type of ["input", "change"]) window.addEventListener(type, (event) => {
   if (event.isTrusted && !document.hidden) void sound.unlock();
@@ -593,6 +653,12 @@ Object.defineProperty(window, "korovany", {
       profile: { ...profile, upgrades: { ...profile.upgrades }, completedRuns: [...profile.completedRuns] },
       viewWorldId,
       moveBasis: view?.getMoveBasis() ?? null,
+      controller: {
+        active: controllerInput?.active ?? false,
+        status: controllerInput?.sample?.status ?? "no-device",
+        armed: controllerInput?.sample?.armed ?? false,
+        device: controllerInput?.sample?.device ?? null,
+      },
     }),
   }),
 });
@@ -604,6 +670,7 @@ function dispose(): void {
   cancelAnimationFrame(raf);
   lifecycle.abort();
   input?.dispose();
+  controllerInput?.dispose();
   view?.dispose();
   sound.dispose();
   shell?.dispose();

@@ -1,0 +1,38 @@
+[data-controller-active="true"] :is(button, input, select, summary, [tabindex="0"]):focus {
+  outline: 3px solid #f7da8d;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px #111c16;
+}
+[data-controller-active="true"] .panel { scroll-padding: 75px 8px 8px; }
+[data-controller-active="true"] .choice-number { visibility: hidden; }
+[data-controller-active="true"] .dialogue-choice:focus .choice-number { visibility: visible; font-size: 0; }
+[data-controller-active="true"] .dialogue-choice:focus .choice-number::after { content: "A"; font-size: 16px; }
+.controller-hints {
+  position: sticky; top: -1px; z-index: 2; padding: 9px 10px; margin: -10px 0 16px;
+  border: 1px solid #c9a45a66; background: #15231af5; color: #f7da8d;
+  font-size: 11px; line-height: 1.6;
+}
+.controller-status {
+  position: fixed; z-index: 14; right: 18px; top: 250px; width: min(265px, 30vw);
+  padding: 9px 12px; background: #101c17ed; border: 1px solid #c9a45a55;
+  color: #efe6d2; font-size: 11px; line-height: 1.5; pointer-events: none;
+}
+.controller-status[data-overlay="true"] { top: 12px; width: min(320px, 32vw); }
+.controller-status[data-warning="true"] { border-color: #e6ad73; }
+.controller-onboarding { margin: 14px 0; }
+.controller-guide { margin: 18px 0; }
+.controller-guide p + p { margin-top: 10px; }
+.confirmation-host {
+  position: fixed; z-index: 30; inset: 0; display: grid; place-items: center;
+  padding: 24px; background: #080f0ce8; backdrop-filter: blur(5px);
+}
+.confirmation-panel { width: min(560px, 100%); }
+.confirmation-message { margin: 22px 0; }
+.confirmation-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+.confirmation-actions > button { flex: 1; }
+@media (max-width: 760px) {
+  .controller-status, .controller-status[data-overlay="true"] {
+    top: auto; bottom: 5px; left: 12px; right: 12px; width: auto;
+    max-height: 15vh; overflow: hidden; padding: 5px 9px; font-size: 10px;
+  }
+}

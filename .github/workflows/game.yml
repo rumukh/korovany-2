@@ -57,7 +57,7 @@ jobs:
       matrix:
         include:
           - shard: 1
-            files: tests/voice-assets-browser.test.ts
+            files: tests/voice-assets-browser.test.ts tests/controller-browser.test.ts tests/controller-navigation-browser.test.ts
           - shard: 2
             files: tests/story-browser.test.ts tests/ui-browser.test.ts
           - shard: 3

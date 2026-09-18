@@ -1,3 +1,5 @@
+import type { ControllerGameplay } from "./gamepad";
+
 export interface InputVector {
   x: number;
   z: number;
@@ -43,6 +45,7 @@ function editable(target: EventTarget | null): boolean {
 /** Edges are consumed by simulation ticks, never by render-only frames. */
 export class GameInput {
   private readonly keys = new Set<string>();
+  private readonly blockedKeys = new Set<string>();
   private readonly edges = new Set<Edge>();
   private readonly controller = new AbortController();
   private enabled = false;
@@ -57,7 +60,11 @@ export class GameInput {
   ) {
     const signal = this.controller.signal;
     window.addEventListener("keydown", (event) => {
-      if (!this.enabled || event.defaultPrevented || editable(event.target)) return;
+      if (this.blockedKeys.has(event.code)) return;
+      if (!this.enabled || event.defaultPrevented || editable(event.target)) {
+        if (gameKeys.has(event.code)) this.blockedKeys.add(event.code);
+        return;
+      }
       if (["Escape", "KeyM", "Tab", "KeyJ"].includes(event.code)) {
         event.preventDefault();
         if (!event.repeat) onOverlay(event.code === "Escape" ? "pause" : event.code === "KeyJ" ? "journal" : "map");
@@ -75,6 +82,7 @@ export class GameInput {
       }
     }, { signal });
     window.addEventListener("keyup", (event) => {
+      this.blockedKeys.delete(event.code);
       this.keys.delete(event.code);
       if (this.enabled && gameKeys.has(event.code)) event.preventDefault();
     }, { signal });
@@ -117,30 +125,38 @@ export class GameInput {
     if (enabled) this.surface.focus({ preventScroll: true });
   }
 
-  consume(): InputSample {
+  useGamepad(): void {
+    this.pointer = null;
+    this.aimSource = "keyboard";
+  }
+
+  consume(controller?: ControllerGameplay): InputSample {
+    if (!this.enabled) controller = undefined;
     const axis = (positive: string, negative: string): number =>
       Number(this.keys.has(positive)) - Number(this.keys.has(negative));
-    const move = vector(axis("KeyD", "KeyA"), axis("KeyW", "KeyS"));
+    const keyboardMove = vector(axis("KeyD", "KeyA"), axis("KeyW", "KeyS"));
+    const move = vector(keyboardMove.x + (controller?.move.x ?? 0), keyboardMove.z + (controller?.move.z ?? 0));
     const aim = vector(axis("ArrowRight", "ArrowLeft"), axis("ArrowUp", "ArrowDown"));
     const sample: InputSample = {
       move,
-      keyboardAim: this.aimSource === "keyboard"
-        ? (aim.x || aim.z ? aim : move.x || move.z ? move : null)
+      keyboardAim: controller?.active ? controller.aim : this.aimSource === "keyboard"
+        ? (aim.x || aim.z ? aim : keyboardMove.x || keyboardMove.z ? keyboardMove : null)
         : null,
-      pointer: this.aimSource === "pointer" ? this.pointer : null,
-      attack: this.pointerDown || this.keys.has("Space") || this.edges.has("attack"),
-      sprint: this.keys.has("ShiftLeft") || this.keys.has("ShiftRight"),
-      dodge: this.edges.has("dodge"),
-      ability: this.edges.has("ability"),
-      interact: this.keys.has("KeyE") || this.edges.has("interact"),
-      convoy: this.edges.has("convoy"),
-      talk: this.edges.has("talk"),
+      pointer: !controller?.active && this.aimSource === "pointer" ? this.pointer : null,
+      attack: this.pointerDown || this.keys.has("Space") || this.edges.has("attack") || controller?.attack === true,
+      sprint: this.keys.has("ShiftLeft") || this.keys.has("ShiftRight") || controller?.sprint === true,
+      dodge: this.edges.has("dodge") || controller?.dodge === true,
+      ability: this.edges.has("ability") || controller?.ability === true,
+      interact: this.keys.has("KeyE") || this.edges.has("interact") || controller?.interact === true,
+      convoy: this.edges.has("convoy") || controller?.convoy === true,
+      talk: this.edges.has("talk") || controller?.talk === true,
     };
     this.edges.clear();
     return sample;
   }
 
   release(): void {
+    for (const key of this.keys) this.blockedKeys.add(key);
     this.keys.clear();
     this.edges.clear();
     this.pointerDown = false;

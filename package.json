@@ -19,6 +19,7 @@
     "@aegis/core": "0.0.0",
     "@aegis/content": "0.0.0",
     "@aegis/harness": "0.0.0",
+    "@aegis/render-three": "0.0.0",
     "three": "~0.169.0"
   },
   "devDependencies": {

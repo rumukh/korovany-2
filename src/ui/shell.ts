@@ -5,6 +5,9 @@ import type { Settings } from "./storage";
 import { campaignContent, dialogueContent, inspectionContent, journalContent, localText, militaryObjective, questTarget, worldTarget, type QuestFilter } from "./story";
 import { mixChannels } from "../audio/mix";
 import type { SpeechLine } from "../audio/soundscape";
+import { captureControllerContext, ControllerNavigation, controllerControls, controllerNeutral, restoreControllerContext, trapControllerTab, type ControllerContext } from "./controller-navigation";
+import type { ControllerFeedback, ControllerUiFrame } from "./controller-types";
+import "./controller.css";
 
 export type Overlay = "menu" | "pause" | "map" | "journal" | "dialogue" | "inspection" | "settings" | "help" | "records" | "terminal" | "fatal" | null;
 export interface MetaOffer {
@@ -74,7 +77,16 @@ export class GameShell {
   private readonly warnings = element("div", "warnings");
   private readonly live = element("div", "sr-only");
   private readonly voiceCaption = element("div", "voice-caption");
+  private readonly controllerStatus = element("div", "controller-status");
+  private readonly confirmationHost = element("div", "confirmation-host");
+  private readonly navigation = new ControllerNavigation();
   private readonly controller = new AbortController();
+  private controllerFeedback: ControllerFeedback = { active: false, connected: false, armed: false, audioLocked: false, status: "no-device" };
+  private controllerSeen = false;
+  private controllerPresentationKey = "";
+  private disconnectedUntil = 0;
+  private controllerGate = false;
+  private confirmation: { messageKey: string; onConfirm: () => void; focus: HTMLElement | null; context: ControllerContext } | null = null;
   private warningKeys: string[] = [];
   private snapshot: GameSnapshot | null = null;
   private currentOverlay: Overlay = "menu";
@@ -85,6 +97,7 @@ export class GameShell {
   private selectedQuest: string | null = null;
   private questFilter: QuestFilter = "active";
   private localMap = false;
+  private selectedDestination: string | null = null;
 
   constructor(root: HTMLElement, state: ShellState, private readonly dispatch: (action: ShellAction) => void) {
     this.state = state;
@@ -93,13 +106,22 @@ export class GameShell {
     this.live.setAttribute("aria-atomic", "true");
     this.warnings.setAttribute("aria-live", "polite");
     this.voiceCaption.hidden = true;
+    this.controllerStatus.hidden = true;
+    this.controllerStatus.setAttribute("role", "status");
+    this.controllerStatus.setAttribute("aria-live", "polite");
+    this.confirmationHost.hidden = true;
     this.minimap.type = "button";
     this.minimap.addEventListener("click", () => dispatch({ type: "overlay", overlay: "map" }));
     this.hud.append(this.hudTop, this.minimap, this.hudBottom, this.controls);
     this.voiceCaption.setAttribute("aria-live", "polite");
     this.voiceCaption.setAttribute("aria-atomic", "true");
-    root.replaceChildren(this.canvas, this.hud, this.overlayHost, this.warnings, this.live, this.voiceCaption);
-    window.addEventListener("keydown", (event) => this.overlayKey(event), { signal: this.controller.signal });
+    root.replaceChildren(this.canvas, this.hud, this.overlayHost, this.warnings, this.live, this.voiceCaption, this.controllerStatus, this.confirmationHost);
+    window.addEventListener("keydown", (event) => this.overlayKey(event), { signal: this.controller.signal, capture: true });
+    window.addEventListener("focusin", (event) => {
+      if (this.confirmation && event.target instanceof Node && !this.confirmationHost.contains(event.target)) {
+        controllerControls(this.confirmationHost)[0]?.focus({ preventScroll: true });
+      }
+    }, { signal: this.controller.signal });
     this.applyLanguage();
     this.buildControls();
     this.renderOverlay();
@@ -117,6 +139,7 @@ export class GameShell {
     const button = element("button", className, this.t(key));
     button.type = "button";
     button.dataset.action = action.type === "overlay" ? `open-${action.overlay}` : action.type;
+    button.dataset.controllerKey = JSON.stringify(action);
     button.addEventListener("click", () => this.dispatch(action));
     return button;
   }
@@ -138,12 +161,172 @@ export class GameShell {
       this.buildControls();
       this.renderWarnings();
       this.lastMapTick = -Infinity;
+      if (this.confirmation) this.renderConfirmation(true);
     }
     if (rebuild) this.renderOverlay(true);
     if (factionChanged && this.currentOverlay === "menu") {
       this.announceText(localText(FACTION_CAMPAIGNS[state.faction].introduction, state.settings.language));
     }
     if (this.snapshot) this.update(this.snapshot);
+    this.refreshControllerPresentation();
+  }
+
+  updateController(feedback: ControllerFeedback): void {
+    const previous = this.controllerFeedback;
+    if (previous.connected && !feedback.connected) this.disconnectedUntil = performance.now() + 8000;
+    this.controllerSeen ||= feedback.connected || feedback.active;
+    this.controllerFeedback = { ...feedback };
+    if (!feedback.active || !feedback.armed || feedback.status !== "ready") this.navigation.reset();
+    if (previous.active !== feedback.active) {
+      this.buildControls();
+      this.lastMapTick = -Infinity;
+      if (this.snapshot) this.update(this.snapshot);
+    }
+    this.refreshControllerPresentation(false);
+  }
+
+  handleController(frame: ControllerUiFrame, dt: number): boolean {
+    if (this.controllerGate) {
+      this.navigation.reset();
+      if (controllerNeutral(frame)) this.controllerGate = false;
+      return false;
+    }
+    if (!this.controllerFeedback.active || !this.controllerFeedback.armed || this.controllerFeedback.status !== "ready") {
+      this.navigation.reset();
+      return false;
+    }
+    if (!this.confirmation && this.currentOverlay === null) { this.navigation.reset(); return false; }
+    let acted = false;
+    if (frame.cancel || frame.pause) {
+      if (this.confirmation) { this.closeConfirmation(false); acted = true; }
+      else acted = this.controllerBack();
+    } else if (frame.map && !this.confirmation && ["pause", "map", "journal"].includes(this.currentOverlay ?? "")) {
+      this.dispatch(this.currentOverlay === "map" ? { type: "resume" } : { type: "overlay", overlay: "map" });
+      acted = true;
+    } else {
+      acted = this.navigation.handle(this.confirmation ? this.confirmationHost : this.overlayHost, frame, dt);
+    }
+    if (acted) { this.controllerGate = true; this.navigation.reset(); }
+    return acted;
+  }
+
+  private controllerBack(): boolean {
+    if (["settings", "help", "records"].includes(this.currentOverlay ?? "")) this.dispatch({ type: "overlay", overlay: this.returnOverlay });
+    else if (this.currentOverlay === "dialogue" || this.currentOverlay === "inspection") this.dispatch({ type: "narrative", command: { type: "close" } });
+    else if (["pause", "map", "journal"].includes(this.currentOverlay ?? "")) {
+      this.dispatch(this.snapshot ? { type: "resume" } : { type: "overlay", overlay: "menu" });
+    } else if (this.currentOverlay === "terminal") this.dispatch({ type: "title" });
+    else return false;
+    return true;
+  }
+
+  confirm(messageKey: string, onConfirm: () => void): void {
+    if (this.confirmation) this.closeConfirmation(false);
+    this.confirmation = {
+      messageKey, onConfirm, focus: document.activeElement instanceof HTMLElement ? document.activeElement : null,
+      context: captureControllerContext(this.overlayHost),
+    };
+    this.controllerGate = true;
+    this.navigation.reset();
+    this.overlayHost.inert = true;
+    this.hud.inert = true;
+    this.canvas.inert = true;
+    this.warnings.inert = true;
+    this.renderConfirmation();
+  }
+
+  private renderConfirmation(preserve = false): void {
+    const pending = this.confirmation;
+    if (!pending) return;
+    const context = preserve ? captureControllerContext(this.confirmationHost) : null;
+    const panel = element("section", "panel confirmation-panel");
+    panel.setAttribute("role", "alertdialog");
+    panel.setAttribute("aria-modal", "true");
+    panel.setAttribute("aria-labelledby", "confirmation-title");
+    panel.setAttribute("aria-describedby", "confirmation-message");
+    const heading = this.heading("controller.confirmTitle");
+    heading.id = "confirmation-title";
+    const message = element("p", "guide-copy confirmation-message", this.t(pending.messageKey));
+    message.id = "confirmation-message";
+    const actions = element("div", "confirmation-actions");
+    const cancel = element("button", "button primary", this.t("controller.cancel"));
+    cancel.type = "button";
+    cancel.dataset.action = "cancel-confirmation";
+    cancel.addEventListener("click", () => this.closeConfirmation(false));
+    const accept = element("button", "button", this.t("controller.confirm"));
+    accept.type = "button";
+    accept.dataset.action = "accept-confirmation";
+    accept.addEventListener("click", () => this.closeConfirmation(true));
+    actions.append(cancel, accept);
+    panel.append(this.controllerHints("controller.confirmHint"), heading, message, actions);
+    this.confirmationHost.replaceChildren(panel);
+    this.confirmationHost.hidden = false;
+    this.refreshControllerPresentation();
+    if (!context || !restoreControllerContext(this.confirmationHost, context)) cancel.focus({ preventScroll: true });
+  }
+
+  private closeConfirmation(accept: boolean): void {
+    const pending = this.confirmation;
+    if (!pending) return;
+    this.confirmation = null;
+    this.confirmationHost.hidden = true;
+    this.confirmationHost.replaceChildren();
+    this.overlayHost.inert = false;
+    this.hud.inert = false;
+    this.canvas.inert = false;
+    this.warnings.inert = false;
+    this.controllerGate = true;
+    this.navigation.reset();
+    if (pending.focus?.isConnected) pending.focus.focus({ preventScroll: true });
+    else if (!restoreControllerContext(this.overlayHost, pending.context)) this.canvas.focus({ preventScroll: true });
+    if (accept) pending.onConfirm();
+  }
+
+  private controllerHints(key = "controller.menu"): HTMLElement {
+    const hint = element("p", "controller-hints", this.t(key));
+    hint.hidden = !this.controllerFeedback.active;
+    return hint;
+  }
+
+  private modeText(keyboard: string, controller: string, className = "guide-copy"): HTMLElement {
+    const node = element("p", className, this.t(this.controllerFeedback.active ? controller : keyboard));
+    node.dataset.keyboardText = keyboard;
+    node.dataset.controllerText = controller;
+    return node;
+  }
+
+  private refreshControllerPresentation(force = true): void {
+    const feedback = this.controllerFeedback;
+    const recentlyDisconnected = performance.now() < this.disconnectedUntil;
+    const key = [feedback.active, feedback.connected, feedback.armed, feedback.audioLocked, feedback.status,
+      this.currentOverlay, this.state.settings.language, recentlyDisconnected].join(":");
+    if (!force && key === this.controllerPresentationKey) return;
+    this.controllerPresentationKey = key;
+    for (const root of [this.overlayHost, this.confirmationHost]) {
+      const active = String(feedback.active);
+      if (root.dataset.controllerActive !== active) root.dataset.controllerActive = active;
+      root.querySelectorAll<HTMLElement>(".controller-hints").forEach((node) => { node.hidden = !feedback.active; });
+      root.querySelectorAll<HTMLElement>("[data-keyboard-text]").forEach((node) => {
+        const text = this.t((feedback.active ? node.dataset.controllerText : node.dataset.keyboardText)!);
+        if (node.textContent !== text) node.textContent = text;
+      });
+    }
+    this.canvas.setAttribute("aria-label", this.t(feedback.active ? "controller.worldLabel" : "worldLabel"));
+    const explainUnavailable = feedback.active || feedback.connected || this.controllerSeen || ["settings", "help"].includes(this.currentOverlay ?? "");
+    let statusKey = "";
+    if (feedback.status === "unsupported-mapping") statusKey = "controller.mapping";
+    else if (explainUnavailable && feedback.status === "blocked") statusKey = "controller.blocked";
+    else if (explainUnavailable && feedback.status === "unsupported") statusKey = "controller.unsupported";
+    else if (feedback.status === "suspended" && feedback.active) statusKey = "controller.suspended";
+    else if (!feedback.connected && (feedback.active || recentlyDisconnected)) statusKey = "controller.disconnected";
+    else if (feedback.connected && !feedback.armed) statusKey = "controller.rearm";
+    else if (feedback.active && feedback.connected) statusKey = "controller.ready";
+    let text = statusKey ? this.t(statusKey) : "";
+    if (feedback.active && feedback.audioLocked) text += `${text ? " · " : ""}${this.t("controller.audio")}`;
+    this.controllerStatus.hidden = !text;
+    this.controllerStatus.dataset.overlay = String(this.currentOverlay !== null);
+    this.controllerStatus.dataset.warning = String(Boolean(statusKey && statusKey !== "controller.ready") || feedback.active && feedback.audioLocked);
+    if (this.controllerStatus.textContent !== text) this.controllerStatus.textContent = text;
   }
 
   private applyLanguage(): void {
@@ -155,14 +338,17 @@ export class GameShell {
   }
 
   show(overlay: Overlay): void {
-    if (overlay === "settings" || overlay === "help" || overlay === "records") {
+    const sameOverlay = overlay === this.currentOverlay;
+    if (overlay !== this.currentOverlay && (overlay === "settings" || overlay === "help" || overlay === "records")) {
       this.returnOverlay = this.currentOverlay;
     }
+    this.navigation.reset();
     this.currentOverlay = overlay;
-    this.renderOverlay();
+    this.renderOverlay(sameOverlay);
   }
 
   fail(kind: "graphics" | "game"): void {
+    if (this.confirmation) this.closeConfirmation(false);
     this.fatalKind = kind;
     this.show("fatal");
   }
@@ -214,6 +400,11 @@ export class GameShell {
       this.button("map", { type: "overlay", overlay: "map" }, "hud-button"),
       this.button("pause", { type: "overlay", overlay: "pause" }, "hud-button"),
     );
+    if (this.controllerFeedback.active) {
+      [...this.controls.children].forEach((button, index) => {
+        button.prepend(`${["D-pad ↑", "View", "Menu"][index]} · `);
+      });
+    }
   }
 
   update(snapshot: GameSnapshot): void {
@@ -243,14 +434,14 @@ export class GameShell {
       objective.append(element("p", "tracked-objective", localText(tracked.objective, language)));
       const target = questTarget(snapshot, tracked, language);
       if (target) objective.append(element("p", "quest-distance",
-        `${Math.round(Math.hypot(target.x - snapshot.player.x, target.z - snapshot.player.z))} ${this.t("story.metres")} / J · ${this.t("story.journal")}`));
+        `${Math.round(Math.hypot(target.x - snapshot.player.x, target.z - snapshot.player.z))} ${this.t("story.metres")} / ${this.controllerFeedback.active ? "D-pad ↑" : "J"} · ${this.t("story.journal")}`));
     }
     if (snapshot.campaign) {
       const military = element("p", "military-cue", `${this.t("campaign.military")}: ${militaryObjective(snapshot, language)}`);
       objective.append(military);
       const completed = snapshot.campaign.requirements.filter((requirement) => requirement.complete).length;
       objective.append(element("p", "objective-counts",
-        `${this.t("campaign.requirements")} ${completed}/${snapshot.campaign.requirements.length} · J · ${this.t("campaign.orders")}`));
+        `${this.t("campaign.requirements")} ${completed}/${snapshot.campaign.requirements.length} · ${this.controllerFeedback.active ? "D-pad ↑" : "J"} · ${this.t("campaign.orders")}`));
     } else {
       objective.append(element("p", "objective-counts",
         `${this.t("capturedCount")} ${snapshot.objective.captured}/${snapshot.objective.captureRequired} · ` +
@@ -268,8 +459,8 @@ export class GameShell {
     convoy.append(this.label(snapshot.campaign ? "convoy" : FACTIONS[snapshot.faction].convoyKey));
     convoy.append(this.meter("convoy", snapshot.convoy.hp, snapshot.convoy.maxHp, "convoy-health"));
     convoy.append(element("p", "cargo", `${this.t("cargo")} ${snapshot.convoy.cargo}/${snapshot.convoy.capacity} · ${this.t("order." + snapshot.convoy.mode)}`));
-    if (snapshot.convoy.disabled) convoy.append(element("p", "danger-text", this.t("disabledConvoy")));
-    convoy.append(element("p", "key-prompt", `C · ${this.t("orders")}`));
+    if (snapshot.convoy.disabled) convoy.append(element("p", "danger-text", this.t(this.controllerFeedback.active ? "controller.disabledConvoy" : "disabledConvoy")));
+    convoy.append(element("p", "key-prompt", `${this.controllerFeedback.active ? "RB" : "C"} · ${this.t("orders")}`));
     if (snapshot.campaign) {
       const shipment = element("div", "shipment-status");
       shipment.append(element("p", "eyebrow", localText(snapshot.campaign.shipment.role, language)),
@@ -281,7 +472,7 @@ export class GameShell {
       const interaction = story.interaction;
       const prompt = this.button("interact", { type: "narrative", command: interaction.kind === "talk"
         ? { type: "talk", npcId: interaction.targetId } : { type: "inspect", locationId: interaction.targetId } }, "interaction story-interaction");
-      prompt.replaceChildren(element("kbd", "", "T"), element("span", "", localText(interaction.label, language)));
+      prompt.replaceChildren(element("kbd", "", this.controllerFeedback.active ? "X" : "T"), element("span", "", localText(interaction.label, language)));
       prompt.disabled = !interaction.enabled;
       prompt.dataset.action = "interact-story";
       actions.append(prompt);
@@ -289,7 +480,7 @@ export class GameShell {
     if (story?.notice) actions.append(element("p", "story-notice", localText(story.notice, language)));
     if (snapshot.interaction) {
       const interaction = element("div", `interaction ${snapshot.interaction.enabled ? "" : "unavailable"}`);
-      interaction.append(element("kbd", "", "E"), element("span", "", `${this.t("hold")} · ${snapshot.interaction.label
+      interaction.append(element("kbd", "", this.controllerFeedback.active ? "A" : "E"), element("span", "", `${this.t("hold")} · ${snapshot.interaction.label
         ? localText(snapshot.interaction.label, language) : this.t(snapshot.interaction.key)}`));
       if (snapshot.interaction.progress > 0) interaction.append(this.meter("interact", snapshot.interaction.progress, 1, "capture"));
       actions.append(interaction);
@@ -301,11 +492,12 @@ export class GameShell {
       ["F", FACTIONS[snapshot.faction].abilityKey, snapshot.player.abilityCooldown],
     ] as const) {
       const slot = element("div", "action-slot");
-      slot.append(element("kbd", "", key === "Space" ? this.t("spaceKey") : key), element("span", "", this.t(label)),
+      const glyph = this.controllerFeedback.active ? ({ Space: "RT", Q: "B", F: "Y" } as const)[key] : key === "Space" ? this.t("spaceKey") : key;
+      slot.append(element("kbd", "", glyph), element("span", "", this.t(label)),
         element("small", cooldown > 0 ? "cooldown" : "", cooldown > 0 ? `${cooldown.toFixed(1)}${this.t("seconds")}` : this.t("ready")));
       slots.append(slot);
     }
-    actions.append(slots, element("p", "movement-prompt", `WASD · ${this.t("move")} / Shift · ${this.t("sprint")}`));
+    actions.append(slots, element("p", "movement-prompt", this.controllerFeedback.active ? this.t("controller.movement") : `WASD · ${this.t("move")} / Shift · ${this.t("sprint")}`));
     const journal = element("section", "journal");
     journal.setAttribute("aria-label", this.t("events"));
     journal.append(element("div", "purse", `${this.t("coins")} ${snapshot.player.coins} · ${this.t("supplies")} ${snapshot.player.supplies}`));
@@ -313,7 +505,7 @@ export class GameShell {
     for (const event of relevant) journal.append(element("p", "", this.eventText(event, snapshot)));
     this.hudBottom.replaceChildren(convoy, actions, journal);
     if (snapshot.tick < this.lastMapTick || snapshot.tick - this.lastMapTick >= 60) {
-      this.minimap.replaceChildren(this.atlas.draw(snapshot, this.state.settings.language, true), element("span", "", `M · ${this.t("map")}`));
+      this.minimap.replaceChildren(this.atlas.draw(snapshot, this.state.settings.language, true), element("span", "", `${this.controllerFeedback.active ? "View" : "M"} · ${this.t("map")}`));
       this.lastMapTick = snapshot.tick;
     }
   }
@@ -348,9 +540,7 @@ export class GameShell {
   }
 
   private renderOverlay(preserveContext = false): void {
-    const focusIndex = preserveContext
-      ? [...this.overlayHost.querySelectorAll("button, input, select, summary")].findIndex((node) => node === document.activeElement) : -1;
-    const scrollTop = preserveContext ? this.overlayHost.querySelector(".panel")?.scrollTop ?? 0 : 0;
+    const context = preserveContext ? captureControllerContext(this.overlayHost) : null;
     this.hud.hidden = this.currentOverlay !== null;
     this.overlayHost.replaceChildren();
     this.overlayHost.hidden = this.currentOverlay === null;
@@ -359,6 +549,7 @@ export class GameShell {
     if (this.currentOverlay === null) {
       this.lastMapTick = -Infinity;
       if (this.snapshot) this.update(this.snapshot);
+      this.refreshControllerPresentation();
       return;
     }
     const panel = element("section", `panel ${this.currentOverlay}-panel`);
@@ -374,17 +565,25 @@ export class GameShell {
     if (this.currentOverlay === "terminal" && this.snapshot?.phase === "victory" && this.snapshot.campaign) {
       panel.setAttribute("aria-label", localText(this.snapshot.campaign.identity.victoryTitle, this.state.settings.language));
     }
+    panel.append(this.controllerHints(this.currentOverlay === "settings" ? "controller.settingsHint"
+      : this.currentOverlay === "map" ? "controller.mapHint" : "controller.menu"));
     if (this.currentOverlay === "menu") this.menu(panel);
     else if (this.currentOverlay === "pause") this.pause(panel);
     else if (this.currentOverlay === "map") this.map(panel);
     else if (this.currentOverlay === "journal") this.questJournal(panel);
-    else if (this.currentOverlay === "dialogue" && this.snapshot) panel.append(dialogueContent(this.snapshot, this.state.settings.language,
-      (command) => this.dispatch({ type: "narrative", command })));
+    else if (this.currentOverlay === "dialogue" && this.snapshot) {
+      panel.append(dialogueContent(this.snapshot, this.state.settings.language,
+        (command) => this.dispatch({ type: "narrative", command })));
+      panel.querySelector(".conversation > p.small.muted")?.replaceWith(this.modeText("story.dialogueHint", "controller.dialogueHint", "small muted"));
+    }
     else if (this.currentOverlay === "inspection" && this.snapshot) {
       panel.append(inspectionContent(this.snapshot, this.state.settings.language,
         (command) => this.dispatch({ type: "narrative", command })),
       this.button("pause", { type: "overlay", overlay: "pause" }, "button quiet inspection-pause"));
       panel.setAttribute("aria-labelledby", "inspection-title");
+      const evidence = panel.querySelector<HTMLElement>(".inspection-text");
+      if (evidence) evidence.tabIndex = 0;
+      panel.querySelector(".inspection > p.small.muted")?.replaceWith(this.modeText("story.inspectionHint", "controller.inspectionHint", "small muted"));
     }
     else if (this.currentOverlay === "settings") this.settings(panel);
     else if (this.currentOverlay === "help") this.help(panel);
@@ -395,11 +594,11 @@ export class GameShell {
       panel.append(this.button("settings", { type: "overlay", overlay: "settings" }, "button quiet speech-settings"));
     }
     this.overlayHost.append(panel);
-    panel.focus({ preventScroll: true });
-    if (preserveContext) {
-      panel.scrollTop = scrollTop;
-      const control = panel.querySelectorAll<HTMLElement>("button, input, select, summary")[focusIndex];
-      if (control && !control.matches(":disabled")) control.focus({ preventScroll: true });
+    this.refreshControllerPresentation();
+    if (!this.confirmation) {
+      panel.focus({ preventScroll: true });
+      if (context) restoreControllerContext(this.overlayHost, context);
+      if (this.controllerFeedback.active) this.navigation.focus(this.overlayHost, true);
     }
   }
 
@@ -460,6 +659,7 @@ export class GameShell {
     const hint = element("p", "small muted", this.t("seedHint"));
     hint.id = "seed-hint";
     panel.append(seedRow, hint);
+    panel.append(element("p", "small muted controller-onboarding", this.t("controller.seed")));
     const launch = element("div", "launch-actions");
     if (this.state.hasSave) {
       launch.append(this.button("continue", { type: "continue" }, "button primary"));
@@ -480,6 +680,7 @@ export class GameShell {
     languageButton.addEventListener("click", () => this.dispatch({ type: "settings", settings: { ...this.state.settings, language: language === "ru" ? "en" : "ru" } }));
     footer.append(languageButton);
     panel.append(footer, element("p", "desktop-note", this.t("desktop")), element("p", "touch-note", this.t("touchNotice")),
+      element("p", "small muted controller-onboarding", this.t("controller.connect")),
       element("p", "attribution", this.t("powered")));
   }
 
@@ -524,7 +725,7 @@ export class GameShell {
       const toggle = element("button", "button quiet map-scale", this.t(this.localMap ? "story.worldMap" : "story.localMap"));
       toggle.type = "button";
       toggle.dataset.action = "map-scale";
-      toggle.addEventListener("click", () => { this.localMap = !this.localMap; this.renderOverlay(); });
+      toggle.addEventListener("click", () => { this.localMap = !this.localMap; this.renderOverlay(true); });
       panel.append(toggle);
       const region = snapshot.world.exploration.regions.find(({ bounds }) => snapshot.player.x >= bounds.minX &&
         snapshot.player.x <= bounds.maxX && snapshot.player.z >= bounds.minZ && snapshot.player.z <= bounds.maxZ);
@@ -570,15 +771,16 @@ export class GameShell {
     for (const site of sites) {
       const option = element("option", "", site.name ? localText(site.name, language) : this.t(site.nameKey));
       option.value = site.id;
-      option.selected = snapshot.convoy.destination === site.id;
+      option.selected = (this.selectedDestination ?? snapshot.convoy.destination) === site.id;
       destinations.append(option);
     }
     for (const place of places) {
       const option = element("option", "", localText(place.name, this.state.settings.language));
       option.value = place.id;
-      option.selected = snapshot.convoy.destination === place.id;
+      option.selected = (this.selectedDestination ?? snapshot.convoy.destination) === place.id;
       destinations.append(option);
     }
+    destinations.addEventListener("change", () => { this.selectedDestination = destinations.value; });
     const send = element("button", "button primary", this.t("sendConvoy"));
     send.type = "button";
     send.disabled = sites.length === 0;
@@ -621,8 +823,8 @@ export class GameShell {
       return;
     }
     panel.append(journalContent(this.snapshot, this.state.settings.language, this.selectedQuest, this.questFilter,
-      (id) => { this.selectedQuest = id; this.renderOverlay(); },
-      (filter) => { this.questFilter = filter; this.renderOverlay(); },
+      (id) => { this.selectedQuest = id; this.renderOverlay(true); },
+      (filter) => { this.questFilter = filter; this.renderOverlay(true); },
       (command) => this.dispatch({ type: "narrative", command })));
     const actions = element("div", "journal-actions");
     actions.append(this.button("map", { type: "overlay", overlay: "map" }),
@@ -635,6 +837,7 @@ export class GameShell {
     const choices = (key: "language" | "quality", values: readonly string[], labels: readonly string[]) => {
       const row = element("label", "setting-row", this.t(key));
       const select = element("select");
+      select.dataset.controllerKey = `setting:${key}`;
       select.setAttribute("aria-label", this.t(key));
       values.forEach((value, index) => {
         const option = element("option", "", labels[index]);
@@ -656,6 +859,7 @@ export class GameShell {
       const row = element("label", "setting-row", this.t(label));
       const input = element("input");
       input.type = "checkbox";
+      input.dataset.controllerKey = `setting:${key}`;
       input.checked = this.state.settings[key];
       input.addEventListener("change", () => this.dispatch({ type: "settings", settings: { ...this.state.settings, [key]: input.checked } }));
       row.append(input);
@@ -687,6 +891,7 @@ export class GameShell {
       mixer.append(row);
     }
     panel.append(mixer);
+    panel.append(element("p", "small muted controller-onboarding", this.t("controller.connect")));
     this.back(panel);
   }
 
@@ -700,15 +905,25 @@ export class GameShell {
         this.heading("campaign.military", "h3"), element("p", "guide-copy", localText(campaign.militaryObjective, language)));
       if (snapshot?.campaign) panel.append(campaignContent(snapshot, language));
     } else {
-      panel.append(this.heading("chapter", "h3"), element("p", "guide-copy", this.t("guideCampaign")));
+      panel.append(this.heading("chapter", "h3"), this.modeText("guideCampaign", "controller.guideCampaign"));
     }
     for (const [heading, paragraph] of [
       ["orders", "guideConvoy"], ["attack", "guideCombat"],
       ["upgrades", "guideRecovery"], ["map", "guideCamera"], ["save", "guideSave"],
       ["story.journal", campaign ? "campaign.storyGuide" : "story.guide"],
     ]) {
-      if (heading && paragraph) panel.append(this.heading(heading, "h3"), element("p", "guide-copy", this.t(paragraph)));
+      const controllerParagraph: Record<string, string> = {
+        guideConvoy: "controller.interaction", guideCombat: "controller.combat", guideCamera: "controller.shortcuts",
+        "campaign.storyGuide": "controller.guideStory", "story.guide": "controller.guideStory",
+      };
+      if (heading && paragraph) panel.append(this.heading(heading, "h3"), this.modeText(paragraph, controllerParagraph[paragraph] ?? paragraph));
     }
+    const guide = element("section", "controller-guide");
+    guide.append(this.heading("controller.title", "h3"));
+    for (const key of ["connect", "combat", "interaction", "shortcuts", "settingsHint", "seed", "audio"]) {
+      guide.append(element("p", "guide-copy", this.t(`controller.${key}`)));
+    }
+    panel.append(guide);
     this.back(panel);
   }
 
@@ -773,7 +988,21 @@ export class GameShell {
   }
 
   private overlayKey(event: KeyboardEvent): void {
-    if (this.currentOverlay === null || this.currentOverlay === "fatal") return;
+    if (this.confirmation) {
+      event.stopImmediatePropagation();
+      if (event.code === "Escape") {
+        event.preventDefault();
+        if (!event.repeat) this.closeConfirmation(false);
+      } else if (event.code === "Tab") trapControllerTab(this.confirmationHost, event);
+      else if (["Enter", "Space"].includes(event.code)) {
+        event.preventDefault();
+        if (!event.repeat && document.activeElement instanceof HTMLButtonElement && this.confirmationHost.contains(document.activeElement)) {
+          document.activeElement.click();
+        }
+      }
+      return;
+    }
+    if (this.currentOverlay === null) return;
     const editable = event.target instanceof HTMLElement && event.target.matches("input, textarea, select");
     if (this.currentOverlay === "dialogue" && !editable && !event.repeat && /^Digit[1-9]$/.test(event.code)) {
       event.preventDefault();
@@ -793,21 +1022,18 @@ export class GameShell {
       return;
     }
     if (event.code === "Tab") {
-      const focusable = [...this.overlayHost.querySelectorAll<HTMLElement>("button:not(:disabled), input, select, summary, [tabindex='0']")];
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && (document.activeElement === first || !focusable.includes(document.activeElement as HTMLElement))) {
-        event.preventDefault();
-        last?.focus();
-      } else if (!event.shiftKey && (document.activeElement === last || !focusable.includes(document.activeElement as HTMLElement))) {
-        event.preventDefault();
-        first?.focus();
-      }
+      trapControllerTab(this.overlayHost, event);
     }
   }
 
   dispose(): void {
     this.controller.abort();
+    this.confirmation = null;
+    this.confirmationHost.remove();
+    this.controllerStatus.remove();
+    this.overlayHost.inert = false;
+    this.hud.inert = false;
+    this.canvas.inert = false;
     this.overlayHost.replaceChildren();
   }
 }

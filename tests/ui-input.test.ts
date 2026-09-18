@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GameInput } from "../src/ui/input";
+import type { ControllerGameplay } from "../src/ui/gamepad";
 
 class Surface extends EventTarget {
   focus = vi.fn();
@@ -111,5 +112,46 @@ describe("browser input tick boundary", () => {
     documentTarget.dispatchEvent(event("visibilitychange"));
     expect(focusLost).toHaveBeenCalledOnce();
     expect(input.consume().move.z).toBe(0);
+  });
+
+  it("merges controller and keyboard levels without losing another source's held attack", () => {
+    const controller: ControllerGameplay = {
+      active: true, move: { x: 0.5, z: 0 }, aim: { x: 1, z: 0 },
+      attack: true, interact: false, sprint: false, dodge: false, ability: false, convoy: false, talk: false,
+    };
+    windowTarget.dispatchEvent(event("keydown", { code: "Space", repeat: false }));
+    windowTarget.dispatchEvent(event("keydown", { code: "KeyW", repeat: false }));
+    expect(input.consume(controller).attack).toBe(true);
+    windowTarget.dispatchEvent(event("keyup", { code: "Space" }));
+    const moving = input.consume(controller);
+    expect(moving.attack).toBe(true);
+    expect(Math.hypot(moving.move.x, moving.move.z)).toBeCloseTo(1);
+    expect(moving.keyboardAim).toEqual({ x: 1, z: 0 });
+    controller.attack = false;
+    expect(input.consume(controller).attack).toBe(false);
+    input.setEnabled(false);
+    expect(input.consume(controller)).toMatchObject({ move: { x: 0, z: 0 }, keyboardAim: null });
+  });
+
+  it("requires held keys to release across overlay transitions rather than accepting repeats", () => {
+    windowTarget.dispatchEvent(event("keydown", { code: "KeyW", repeat: false }));
+    input.setEnabled(false);
+    input.setEnabled(true);
+    windowTarget.dispatchEvent(event("keydown", { code: "KeyW", repeat: true }));
+    expect(input.consume().move.z).toBe(0);
+    windowTarget.dispatchEvent(event("keyup", { code: "KeyW" }));
+    windowTarget.dispatchEvent(event("keydown", { code: "KeyW", repeat: false }));
+    expect(input.consume().move.z).toBe(1);
+  });
+
+  it("does not accept a gameplay key first held in a menu until it is released", () => {
+    input.setEnabled(false);
+    windowTarget.dispatchEvent(event("keydown", { code: "Space", repeat: false }));
+    input.setEnabled(true);
+    windowTarget.dispatchEvent(event("keydown", { code: "Space", repeat: true }));
+    expect(input.consume().attack).toBe(false);
+    windowTarget.dispatchEvent(event("keyup", { code: "Space" }));
+    windowTarget.dispatchEvent(event("keydown", { code: "Space", repeat: false }));
+    expect(input.consume().attack).toBe(true);
   });
 });
