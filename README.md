@@ -71,9 +71,14 @@ runner still runs only one test file at a time. The workflow lists its groups
 explicitly, and a coverage test requires every browser suite to appear exactly
 once. `KOROVANY_TEST_SUITE=unit` or `browser` selects those categories locally.
 Without the selector, `npm test` retains its full-suite behavior.
-CI enables both the world-visual benchmark (`KOROVANY_WORLD_BROWSER=1`) and the
+CI enables both the world-rendering checks (`KOROVANY_WORLD_BROWSER=1`) and the
 complete shipped-voice checks (`KOROVANY_VOICE_ASSETS=1`). These remain opt-in for
 ordinary local runs; the example above enables the complete release coverage.
+Fixture-based audio checks exercise transport and focus handling; shipped-asset
+checks separately verify the recordings, so both are release gates. World checks
+enforce rendering budgets and stable resources on a second tour after shader
+warm-up. Frame timings are diagnostic only and require the separate opt-in
+`KOROVANY_WORLD_BENCHMARK=1`; shared Actions runners are not GPU benchmarks.
 
 Browser reloads wait for a new document loader and application readiness.
 Only execution-context replacement during the requested navigation is retried

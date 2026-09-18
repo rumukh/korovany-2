@@ -125,10 +125,17 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction voice browser tran
       await select(`[data-choice="${item.choice.id}"]`);
       await speech("player", language);
       expect(await evaluate(cdp, "!document.querySelector('.voice-caption').hidden")).toBe(true);
-      await speech(item.npcId, language);
-      expect((await inspect()).snapshot.narrative!.dialogue!.text).toEqual(item.response.text);
-      expect((await inspect()).snapshot.tick).toBe(before.snapshot.tick);
-      await evaluate(cdp, "window.dispatchEvent(new Event('blur'))");
+      // Observe and interrupt the short fixture in one page task, before slow CDP round trips let it finish.
+      const interrupted = await until<Inspection | null>(cdp, `(() => {
+        const inspection = window.korovany.inspect(), audio = inspection.audio;
+        if (!audio.speaking || audio.voices <= audio.effects ||
+            audio.subtitle?.speaker !== ${JSON.stringify(item.npcId)} ||
+            audio.subtitle.language !== ${JSON.stringify(language)}) return null;
+        window.dispatchEvent(new Event("blur"));
+        return inspection;
+      })()`, value => value !== null, 20_000);
+      expect(interrupted!.snapshot.narrative!.dialogue!.text).toEqual(item.response.text);
+      expect(interrupted!.snapshot.tick).toBe(before.snapshot.tick);
       expect((await inspect()).audio.voices).toBe(0);
       await evaluate(cdp, "window.dispatchEvent(new Event('focus'))");
       await speech(item.npcId, language);

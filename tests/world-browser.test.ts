@@ -187,7 +187,16 @@ describe.runIf(process.env.KOROVANY_WORLD_BROWSER === '1')('expanded world WebGL
       expect.soft(stats.calls, stats.location).toBeLessThan(250);
       expect.soft(stats.triangles, stats.location).toBeLessThan(500000);
       expect.soft(stats.geometries, stats.location).toBeLessThanOrEqual(20);
-      expect.soft(stats.programs, stats.location).toBeLessThan(22);
+      // Includes the fort's stone/cloth cutaway shader variants.
+      expect.soft(stats.programs, stats.location).toBeLessThanOrEqual(23);
+    }
+    // First visits compile material variants lazily; revisiting must not grow the warmed cache.
+    const warmed = metrics.at(-1)!;
+    for (const location of locations) {
+      const stats = await evaluate<{ geometries: number; programs: number }>(
+        cdp, `window.worldPreview.renderLocation(${JSON.stringify(location)})`);
+      expect.soft(stats.geometries, location).toBeLessThanOrEqual(warmed.geometries);
+      expect.soft(stats.programs, location).toBeLessThanOrEqual(warmed.programs);
     }
     expect(cdp.diagnostics).toEqual([]);
     if (process.env.KOROVANY_WORLD_BENCHMARK === '1') {
