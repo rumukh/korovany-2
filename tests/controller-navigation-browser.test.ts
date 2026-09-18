@@ -1,5 +1,3 @@
-import { mkdir, rm } from "node:fs/promises";
-import { join } from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
 import { createCampaign, type GameSnapshot } from "../src/game";
@@ -13,7 +11,6 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller-owned DOM navig
   let server: ViteDevServer | undefined;
   let browser: LaunchedBrowser | undefined;
   let cdp: CdpSession;
-  const browserFiles = join(process.cwd(), ".artifacts", `controller-navigation-${process.pid}`);
   const snapshot = createCampaign({ faction: "guard", seed: "controller-ui" }).snapshot();
   const run = <T = unknown>(body: string) => evaluate<T>(cdp, `(() => { ${body} })()`);
   const active = () => run<string>("return document.activeElement?.dataset.controllerKey || document.activeElement?.dataset.action || document.activeElement?.className;");
@@ -100,16 +97,8 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller-owned DOM navig
     const origin = server.resolvedUrls?.local[0];
     if (!origin) throw new Error("Controller test server unavailable");
     expect((await fetch(`${origin}__controller-shell`)).ok).toBe(true);
-    await mkdir(browserFiles, { recursive: true });
-    const original = { TMP: process.env.TMP, TEMP: process.env.TEMP, TMPDIR: process.env.TMPDIR };
-    try {
-      process.env.TMP = process.env.TEMP = process.env.TMPDIR = browserFiles;
-      browser = await launchBrowser({ viewport: { width: 1280, height: 800 } });
-    } finally {
-      for (const [name, value] of Object.entries(original)) {
-        if (value === undefined) delete process.env[name]; else process.env[name] = value;
-      }
-    }
+    // Keep the launcher's system-temp profile: deep TMPDIR paths break Chromium's Unix sockets.
+    browser = await launchBrowser({ viewport: { width: 1280, height: 800 } });
     cdp = await openPage(browser.port, `${origin}__controller-shell`, { width: 1280, height: 800 });
   }, 60_000);
 
@@ -118,7 +107,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller-owned DOM navig
   afterAll(async () => {
     cdp?.close();
     try { if (browser) await closeTestBrowser(browser); }
-    finally { await server?.close(); await rm(browserFiles, { recursive: true, force: true }); }
+    finally { await server?.close(); }
   }, 60_000);
 
   it("repeats deliberately, skips disabled/hidden controls and reveals focused items", async () => {

@@ -70,6 +70,10 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller through the rea
     expect((await fetch(origin)).status).toBe(200);
     browser = await launchBrowser({ viewport: { width: 960, height: 640 } });
     cdp = await openPage(browser.port, "about:blank", { width: 960, height: 640 });
+    // Bound SwiftShader pixel cost for input timing while preserving the full CSS layout.
+    await cdp.send("Emulation.setDeviceMetricsOverride", {
+      width: 960, height: 640, deviceScaleFactor: 0.5, mobile: false,
+    });
     await cdp.send("Page.addScriptToEvaluateOnNewDocument", { source: `
       window.testPad={index:0,id:'Korovany virtual Xbox',mapping:'standard',connected:true,
         axes:[0,0,0,0],buttons:Array.from({length:17},()=>({value:0,pressed:false}))};
@@ -81,6 +85,10 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller through the rea
       }
     ` });
     await navigateTestPage(cdp, origin, "window.korovany && window.korovany.inspect().controller.armed", 45_000);
+    expect(await evaluate(cdp, `({
+      width:innerWidth,height:innerHeight,pixelRatio:devicePixelRatio,
+      renderWidth:document.querySelector('canvas').width,renderHeight:document.querySelector('canvas').height
+    })`)).toEqual({ width: 960, height: 640, pixelRatio: 0.5, renderWidth: 480, renderHeight: 320 });
   }, 60_000);
 
   afterAll(async () => {
