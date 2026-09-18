@@ -1,9 +1,9 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { createServer, type ViteDevServer } from "vite";
-import { createCampaign, FACTION_CAMPAIGNS, type FactionId, type GameSnapshot } from "../src/game";
+import { createCampaign, FACTION_CAMPAIGNS, type CampaignSave, type FactionId, type GameSnapshot } from "../src/game";
 import { translate } from "../src/ui/locale";
 import { militaryObjective, questTarget, worldTarget } from "../src/ui/story";
 import { storageKeys, type Language } from "../src/ui/storage";
@@ -16,7 +16,7 @@ import {
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
 import { closeTestBrowser } from "./browser-cleanup";
-import { reloadTestPage } from "./browser-navigation";
+import { navigateTestPage, reloadTestPage } from "./browser-navigation";
 
 const factions: FactionId[] = ["elf", "guard", "villain"];
 const languages: Language[] = ["en", "ru"];
@@ -194,31 +194,46 @@ describe("faction presentation source of truth", () => {
 describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in the browser", () => {
   let server: ViteDevServer | undefined;
   let browser: LaunchedBrowser | undefined;
-  let cdp: CdpSession;
+  let origin: string;
+  const pages = new Set<CdpSession>();
 
-  async function select(selector: string): Promise<void> {
-    const point = await evaluate<{ x: number; y: number }>(cdp, `(() => {
-      const control = document.querySelector(${JSON.stringify(selector)});
-      if (!control || control.disabled) throw new Error('Unavailable faction control: ' + ${JSON.stringify(selector)});
-      control.scrollIntoView({block: 'center'});
-      const rect = control.getBoundingClientRect();
-      return {x: rect.x + rect.width / 2, y: rect.y + rect.height / 2};
+  async function fixture(name: string, save?: CampaignSave, standalone = false) {
+    if (!browser) throw new Error("Faction browser was not initialized");
+    const started = performance.now();
+    const cdp = await openPage(browser.port, `${origin}__faction-fixture`, { width: 1440, height: 1000 });
+    pages.add(cdp);
+    await evaluate(cdp, `(() => {
+      localStorage.clear();
+      localStorage.setItem(${JSON.stringify(storageKeys.settings)},
+        JSON.stringify({language:'ru',quality:'high',reducedMotion:false,muted:true}));
+      ${save ? `localStorage.setItem(${JSON.stringify(storageKeys.campaign)}, ${JSON.stringify(JSON.stringify(save))});` : ""}
     })()`);
-    await click(cdp, point.x, point.y);
-  }
-
-  async function tap(code: string): Promise<void> {
-    const key = code.startsWith("Key") ? code.slice(3).toLowerCase() : code;
-    const windowsVirtualKeyCode = code.startsWith("Key") ? code.charCodeAt(3) : code === "Escape" ? 27 : 9;
-    for (const type of ["keyDown", "keyUp"]) await cdp.send("Input.dispatchKeyEvent", { type, code, key, windowsVirtualKeyCode });
-  }
-
-  async function reload(): Promise<void> {
-    await reloadTestPage(cdp);
-  }
-
-  async function capture(name: string): Promise<void> {
-    if (process.env.KOROVANY_CAPTURE_DIR) await screenshot(cdp, join(process.env.KOROVANY_CAPTURE_DIR, `${name}.png`));
+    if (!standalone) await navigateTestPage(cdp, origin, "window.korovany && window.korovany.inspect().overlay === 'menu'");
+    console.info("Faction fixture stage", name, "open", Math.round(performance.now() - started));
+    return {
+      cdp,
+      async select(selector: string): Promise<void> {
+        const started = performance.now();
+        const point = await evaluate<{ x: number; y: number }>(cdp, `(() => {
+          const control = document.querySelector(${JSON.stringify(selector)});
+          if (!control || control.disabled) throw new Error('Unavailable faction control: ' + ${JSON.stringify(selector)});
+          control.scrollIntoView({block: 'center'});
+          const rect = control.getBoundingClientRect();
+          return {x: rect.x + rect.width / 2, y: rect.y + rect.height / 2};
+        })()`);
+        await click(cdp, point.x, point.y);
+        console.info("Faction fixture stage", name, selector, Math.round(performance.now() - started));
+      },
+      async tap(code: string): Promise<void> {
+        const key = code.startsWith("Key") ? code.slice(3).toLowerCase() : code;
+        const windowsVirtualKeyCode = code.startsWith("Key") ? code.charCodeAt(3) : code === "Escape" ? 27 : 9;
+        for (const type of ["keyDown", "keyUp"]) await cdp.send("Input.dispatchKeyEvent", { type, code, key, windowsVirtualKeyCode });
+      },
+      reload: () => reloadTestPage(cdp),
+      async capture(name: string): Promise<void> {
+        if (process.env.KOROVANY_CAPTURE_DIR) await screenshot(cdp, join(process.env.KOROVANY_CAPTURE_DIR, `${name}.png`));
+      },
+    };
   }
 
   beforeAll(async () => {
@@ -229,20 +244,37 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
         name: "faction-presentation-three",
         resolveId: (id) => id === "/__faction-three" ? "\0faction-three" : undefined,
         load: (id) => id === "\0faction-three" ? 'export * from "three";' : undefined,
+        configureServer(server) {
+          server.middlewares.use((request, response, next) => {
+            if (request.url !== "/__faction-fixture") return next();
+            response.setHeader("Content-Type", "text/html; charset=utf-8");
+            response.end('<!doctype html><html><head><link rel="icon" href="data:,"><link rel="stylesheet" href="/src/style.css"></head><body></body></html>');
+          });
+        },
       }],
       server: { host: "127.0.0.1", port: 0, hmr: false, watch: null },
     });
     await server.listen();
-    const origin = server.resolvedUrls?.local[0];
-    if (!origin) throw new Error("Missing faction presentation preview URL");
+    const url = server.resolvedUrls?.local[0];
+    if (!url) throw new Error("Missing faction presentation preview URL");
+    origin = url;
     expect((await fetch(origin)).status).toBe(200);
     browser = await launchBrowser({ viewport: { width: 1440, height: 1000 } });
-    cdp = await openPage(browser.port, origin, { width: 1440, height: 1000 });
-    await until(cdp, "Boolean(window.korovany)", Boolean, 30_000);
   }, 90_000);
 
+  afterEach(async () => {
+    for (const cdp of pages) {
+      try {
+        await cdp.send("Page.close");
+      } finally {
+        cdp.close();
+        pages.delete(cdp);
+      }
+    }
+  }, 30_000);
+
   afterAll(async () => {
-    cdp?.close();
+    for (const cdp of pages) cdp.close();
     try {
       if (browser) await closeTestBrowser(browser);
     } finally {
@@ -251,9 +283,10 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
   }, 30_000);
 
   it("presents three roles, changes the selected briefing without losing focus and retains selection through language/settings", async () => {
-    for (const language of ["ru", "en"] as const) {
-      if (await evaluate(cdp, "document.documentElement.lang") !== language) await select(".language-button");
-      for (const faction of factions) {
+    const { cdp, select, tap, capture } = await fixture("title");
+    for (const faction of factions) {
+      for (const language of ["ru", "en"] as const) {
+        if (await evaluate(cdp, "document.documentElement.lang") !== language) await select(".language-button");
         await select(`[data-faction="${faction}"]`);
         const state = await evaluate<{
           cards: string[]; selected: string[]; intro: string; focus: string; summary: boolean;
@@ -280,7 +313,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
     await capture("faction-title-en");
     await cdp.send("Emulation.setDeviceMetricsOverride", { width: 430, height: 900, deviceScaleFactor: 1, mobile: false });
     await select(".language-button");
-    await select('[data-faction="guard"]');
+    expect(await evaluate(cdp, "document.querySelector('.campaign-introduction').dataset.campaign")).toBe("villain");
     expect(await evaluate(cdp, "document.querySelector('.menu-panel').scrollWidth <= document.querySelector('.menu-panel').clientWidth")).toBe(true);
     await capture("faction-title-ru-narrow");
     await tap("Tab");
@@ -289,6 +322,8 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
   }, 120_000);
 
   it("starts the chosen home campaign, restores its identity and does not turn a continued guard run into the menu's new selection", async () => {
+    const { cdp, select, tap, reload, capture } = await fixture("continuation");
+    await select('[data-faction="guard"]');
     await select('[data-action="start"]');
     await until(cdp, "window.korovany.inspect().running", Boolean, 30_000);
     await tap("Escape");
@@ -319,8 +354,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
 
   it("presents the actual villain campaign at its Old Fort home", async () => {
     const fresh = createCampaign({ seed: "old-fort-identity", faction: "villain", runId: "actual-villain-start" }).serialize();
-    await evaluate(cdp, `localStorage.setItem(${JSON.stringify(storageKeys.campaign)}, ${JSON.stringify(JSON.stringify(fresh))})`);
-    await reload();
+    const { cdp, select, tap, capture } = await fixture("home", fresh);
     await select('[data-action="continue"]');
     await until(cdp, "window.korovany.inspect().snapshot?.tick ?? 0", (tick: number) => tick >= 2, 30_000);
     const snapshot = await evaluate<GameSnapshot>(cdp, "window.korovany.inspect().snapshot");
@@ -338,10 +372,9 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
   }, 60_000);
 
   it("reveals the hero through foreground fort walls and restores opaque rendering after orbiting clear", async () => {
-    const result = await evaluate<{
-      defaultVisible: number; defaultOpaque: number; nearVisible: number; farVisible: number; clearDifferences: number;
-      restoredVisible: number; ordinaryDifferences: number; shaderErrors: number;
-    }>(cdp, `(async () => {
+    const { cdp } = await fixture("cutaway", undefined, true);
+    const setupMs = await evaluate<number>(cdp, `(async () => {
+      const setupStarted = performance.now();
       const THREE = await import('/__faction-three');
       const { createCampaign } = await import('/src/game/index.ts');
       const { Presentation } = await import('/src/view/index.ts');
@@ -407,57 +440,86 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
       const probe = new THREE.InstancedMesh(probeGeometry, ordinary, 1);
       probe.receiveShadow = true;
       probe.frustumCulled = false;
-      try {
-        await Promise.all(pending);
-        resources.assertTextures();
-        const defaultOpaque = visible(render(false));
-        const defaultVisible = visible(render(true));
-        camera.zoom(-1e6);
-        const nearVisible = visible(render(true));
-        camera.zoom(1e6);
-        const farVisible = visible(render(true));
-        camera.orbit(-Math.PI / 2);
-        const opaque = render(false), clear = render(true);
-        let clearDifferences = 0;
-        for (let index=0;index<clear.length;index++) if (clear[index] !== opaque[index]) clearDifferences++;
-        camera.orbit(Math.PI / 2);
-        const restoredVisible = visible(render(true));
-        const point = camera.camera.position.clone().lerp(presentation.scenery.heroPosition, 0.8);
-        probe.setMatrixAt(0, new THREE.Matrix4().makeTranslation(point.x, point.y, point.z));
-        presentation.scene.add(probe);
-        let ordinaryDifferences = 0;
-        for (const order of [-1, 1]) {
-          probe.renderOrder = order;
-          probe.material = ordinaryBaseline;
-          const expected = render(true);
-          probe.material = ordinary;
-          const actual = render(true);
-          for (let index=0;index<actual.length;index++) if (actual[index] !== expected[index]) ordinaryDifferences++;
+      const phases = ['defaultOpaque','defaultVisible','nearVisible','farVisible','clearOpaque','clearVisible',
+        'restoredVisible','ordinaryEarlyOpaque','ordinaryEarlyVisible','ordinaryLateOpaque','ordinaryLateVisible'];
+      let phaseIndex = 0, baseline;
+      const results = {ordinaryDifferences:0};
+      const differences = (pixels) => {
+        if (!baseline) throw new Error('Missing opaque pixel baseline');
+        let count = 0;
+        for (let index=0;index<pixels.length;index++) if (pixels[index] !== baseline[index]) count++;
+        return count;
+      };
+      window.factionFortProbe = {
+        step(phase) {
+          if (phase !== phases[phaseIndex++]) throw new Error('Unexpected fort probe phase: ' + phase);
+          const started = performance.now();
+          if (phase === 'nearVisible') camera.zoom(-1e6);
+          if (phase === 'farVisible') camera.zoom(1e6);
+          if (phase === 'clearOpaque') camera.orbit(-Math.PI / 2);
+          if (phase === 'restoredVisible') camera.orbit(Math.PI / 2);
+          if (phase === 'ordinaryEarlyOpaque') {
+            const point = camera.camera.position.clone().lerp(presentation.scenery.heroPosition, 0.8);
+            probe.setMatrixAt(0, new THREE.Matrix4().makeTranslation(point.x, point.y, point.z));
+            presentation.scene.add(probe);
+          }
+          if (phase.startsWith('ordinary')) {
+            probe.renderOrder = phase.startsWith('ordinaryEarly') ? -1 : 1;
+            probe.material = phase.endsWith('Opaque') ? ordinaryBaseline : ordinary;
+          }
+          const pixels = render(phase !== 'defaultOpaque' && phase !== 'clearOpaque');
+          if (phase === 'clearOpaque' || phase === 'ordinaryEarlyOpaque' || phase === 'ordinaryLateOpaque') baseline = pixels;
+          else if (phase === 'clearVisible') results.clearDifferences = differences(pixels);
+          else if (phase === 'ordinaryEarlyVisible' || phase === 'ordinaryLateVisible') results.ordinaryDifferences += differences(pixels);
+          else results[phase] = visible(pixels);
+          return {phase, milliseconds:Math.round(performance.now()-started)};
+        },
+        result() {
+          if (phaseIndex !== phases.length) throw new Error('Fort probe is incomplete');
+          return {...results, shaderErrors};
+        },
+        dispose() {
+          presentation.dispose();
+          for (const material of plain.values()) material.dispose();
+          highlight.dispose();
+          environment.dispose();
+          ordinaryBaseline.dispose();
+          probeGeometry.dispose();
+          probe.dispose();
+          renderer.dispose();
+          canvas.remove();
+          delete window.factionFortProbe;
         }
-        return {defaultVisible, defaultOpaque, nearVisible, farVisible, clearDifferences, restoredVisible, ordinaryDifferences, shaderErrors};
-      } finally {
-        presentation.dispose();
-        for (const material of plain.values()) material.dispose();
-        highlight.dispose();
-        environment.dispose();
-        ordinaryBaseline.dispose();
-        probeGeometry.dispose();
-        probe.dispose();
-        renderer.dispose();
-        canvas.remove();
-      }
+      };
+      await Promise.all(pending);
+      resources.assertTextures();
+      return Math.round(performance.now() - setupStarted);
     })()`);
-    expect(result.shaderErrors).toBe(0);
-    expect(result.defaultOpaque).toBe(0);
-    expect(result.defaultVisible).toBeGreaterThan(20);
-    expect(result.nearVisible).toBeGreaterThan(20);
-    expect(result.farVisible).toBeGreaterThan(5);
-    expect(result.clearDifferences).toBe(0);
-    expect(result.ordinaryDifferences).toBe(0);
-    expect(result.restoredVisible).toBe(result.farVisible);
+    console.info("Fort probe setup ms", setupMs);
+    try {
+      for (const phase of ["defaultOpaque", "defaultVisible", "nearVisible", "farVisible", "clearOpaque", "clearVisible",
+        "restoredVisible", "ordinaryEarlyOpaque", "ordinaryEarlyVisible", "ordinaryLateOpaque", "ordinaryLateVisible"]) {
+        console.info("Fort probe frame", await evaluate(cdp, `window.factionFortProbe.step(${JSON.stringify(phase)})`));
+      }
+      const result = await evaluate<{
+        defaultVisible: number; defaultOpaque: number; nearVisible: number; farVisible: number; clearDifferences: number;
+        restoredVisible: number; ordinaryDifferences: number; shaderErrors: number;
+      }>(cdp, "window.factionFortProbe.result()");
+      expect(result.shaderErrors).toBe(0);
+      expect(result.defaultOpaque).toBe(0);
+      expect(result.defaultVisible).toBeGreaterThan(20);
+      expect(result.nearVisible).toBeGreaterThan(20);
+      expect(result.farVisible).toBeGreaterThan(5);
+      expect(result.clearDifferences).toBe(0);
+      expect(result.ordinaryDifferences).toBe(0);
+      expect(result.restoredVisible).toBe(result.farVisible);
+    } finally {
+      await evaluate(cdp, "window.factionFortProbe?.dispose()");
+    }
   }, 90_000);
 
   it("renders current orders, relationships, moving targets and terminal meanings from authoritative snapshots, including legacy", async () => {
+    const { cdp } = await fixture("surfaces", undefined, true);
     const fixtures = [
       ...factions.map((faction) => createCampaign({ seed: "presentation-surfaces", faction }).snapshot()),
       createCampaign({ seed: "presentation-legacy", faction: "guard", worldVersion: 1 }).snapshot(),
@@ -576,7 +638,5 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
         }
       }
     }
-    await evaluate(cdp, `localStorage.removeItem(${JSON.stringify(storageKeys.campaign)})`);
-    await reload();
   }, 120_000);
 });
