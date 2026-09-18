@@ -1,9 +1,11 @@
-import { CIVIC_FACTIONS, ENDINGS, ENDING_EPILOGUES, NPCS, QUESTS, STORY_TITLE, text, type CivicFaction, type EndingId,
+import { CIVIC_FACTIONS, text, type CivicFaction, type EndingId,
   type StoryAction, type StoryNpc, type StoryQuest, type StoryStage } from './narrative-data';
+import { getFactionStory } from './faction-stories';
+import { DIRECTIVES, FACTION_CAMPAIGNS, factionCampaignSnapshot, militaryReady } from './faction-campaigns';
 import { assertRecord } from './profile';
 import type { ActorData, CampaignData } from './state';
 import type { DialogueChoice, LocalizedText, NarrativeInput, NarrativeSnapshot, NpcSnapshot,
-  QuestSnapshot, Vec2, WorldBlueprint, WorldLocation } from './types';
+  QuestSnapshot, Vec2, WorldBlueprint, WorldLocation, FactionId } from './types';
 import { distance, isWalkable } from './world';
 
 const TALK_RADIUS = 4.25;
@@ -17,8 +19,8 @@ const NOTICES = {
   unknown: text('That person, place or quest is not available.', 'Этот человек, место или задание недоступны.'),
   stale: text('That reply is no longer available. Open the current conversation and choose an offered reply.',
     'Этот ответ больше недоступен. Откройте текущий разговор и выберите предложенный ответ.'),
-  conquest: text('First capture and supply two posts, and destroy the raiding caravan. The commander may be defeated before or after this choice.',
-    'Сначала захватите и снабдите две заставы и уничтожьте вражеский караван. Командира можно победить до или после этого выбора.'),
+  conquest: text('Complete your faction’s military requirements and defeat its final commander before this decision.',
+    'До этого решения выполните военные задачи своей стороны и победите последнего командира.'),
   allies: text('This plan needs allies you have not secured. The reply lists the required decisions and their quests.',
     'Для этого плана не хватает союзников. Под ответом указаны задания и решения, которые обеспечат их помощь.'),
   source: text('Travel starts at a discovered road stop marked for fast travel. Stand within 7m of its road node.',
@@ -42,7 +44,8 @@ type NoticeId = keyof typeof NOTICES;
 
 /** Only compact, validated IDs are saved; prose and derived quest state come from authored data. */
 export interface NarrativeState {
-  version: 2;
+  version: 3;
+  faction: FactionId;
   journal: string[];
   rewardedQuestIds: string[];
   discovered: string[];
@@ -57,16 +60,29 @@ interface QuestProgress {
   entries: StoryAction[];
 }
 interface StoryProgress {
+  catalog: ReturnType<typeof catalog>;
   quests: Map<string, QuestProgress>;
   reputation: Record<CivicFaction, number>;
   ending: EndingId | null;
   actions: Set<string>;
 }
-const QUEST_BY_ID = new Map(QUESTS.map(q => [q.id, q]));
-const QUEST_TOPICS = new Map(QUESTS.map(q => [`quest-${q.id}`, q.id]));
-const NPC_BY_ID = new Map(NPCS.map(n => [n.id, n]));
-const ACTION_BY_ID = new Map(QUESTS.flatMap(q => q.stages.flatMap((stage, index) =>
-  stage.actions.map(action => [action.id, { quest: q, stage, index, action }] as const))));
+function buildCatalog(faction: FactionId) {
+  const story = getFactionStory(faction), QUESTS = story.quests, NPCS = story.npcs;
+  return {
+    story, QUESTS, NPCS,
+    QUEST_BY_ID: new Map(QUESTS.map(q => [q.id, q])),
+    QUEST_TOPICS: new Map(QUESTS.map(q => [`quest-${q.id}`, q.id])),
+    NPC_BY_ID: new Map(NPCS.map(n => [n.id, n])),
+    ACTION_BY_ID: new Map(QUESTS.flatMap(q => q.stages.flatMap((stage, index) =>
+      stage.actions.map(action => [action.id, { quest: q, stage, index, action }] as const)))),
+  };
+}
+const catalogs = new Map<FactionId, ReturnType<typeof buildCatalog>>();
+function catalog(faction: FactionId): ReturnType<typeof buildCatalog> {
+  let result = catalogs.get(faction);
+  if (!result) { result = buildCatalog(faction); catalogs.set(faction, result); }
+  return result;
+}
 
 function location(world: WorldBlueprint, id: string): WorldLocation {
   const result = world.exploration?.locations.find(l => l.id === id);
@@ -78,13 +94,17 @@ function unlocked(progress: StoryProgress, quest: StoryQuest): boolean {
   return quest.requires === null || completed(progress.quests.get(quest.requires)!);
 }
 function conquestReady(s: CampaignData): boolean {
-  return s.raidComplete && s.outposts.filter(p => p.owner === 'player' && p.supplied).length >= 2;
+  return militaryReady(s) && s.fortress.bossDefeated;
 }
 function gate(action: StoryAction, s: CampaignData, journal = s.narrative?.journal ?? []): NoticeId | null {
-  if (action.gate === 'conquest' && !conquestReady(s)) return 'conquest';
+  if ((action.gate === 'conquest' || action.ending) && !conquestReady(s)) return 'conquest';
+  if (action.directive && (!DIRECTIVES[s.faction].includes(action.directive) ||
+      s.military?.directive !== null && (s.military?.directive !== action.directive || !journal.includes(action.id)))) return 'stale';
   return action.requiresActions?.some(id => !journal.includes(id)) ? 'allies' : null;
 }
 function gateText(action: StoryAction, s: CampaignData, reason: NoticeId): LocalizedText {
+  const { ACTION_BY_ID } = catalog(s.faction);
+  if (reason === 'conquest') return militaryText(s);
   if (reason !== 'allies') return NOTICES[reason];
   const journal = s.narrative!.journal;
   const missing = action.requiresActions!.filter(id => !journal.includes(id)).map(id => {
@@ -101,11 +121,14 @@ function gateText(action: StoryAction, s: CampaignData, reason: NoticeId): Local
 
 /** Replay makes branch exclusivity, ordering, reputation and completion rewards one source of truth. */
 function progress(state: NarrativeState): StoryProgress {
+  const authored = catalog(state.faction), { QUESTS, ACTION_BY_ID } = authored;
   const result: StoryProgress = {
+    catalog: authored,
     quests: new Map(QUESTS.map(quest => [quest.id, { quest, count: 0, entries: [] }])),
     reputation: { commons: 0, registry: 0, lanterns: 0 }, ending: null, actions: new Set(),
   };
   for (const id of state.journal) {
+    if (result.ending !== null) throw new Error('Narrative action follows a terminal ending');
     const entry = ACTION_BY_ID.get(id);
     if (!entry) throw new Error('Unknown narrative journal entry');
     const q = result.quests.get(entry.quest.id)!;
@@ -125,13 +148,14 @@ function progress(state: NarrativeState): StoryProgress {
   return result;
 }
 
-export function createNarrative(world: WorldBlueprint): NarrativeState {
+export function createNarrative(world: WorldBlueprint, faction: FactionId): NarrativeState {
+  const { QUESTS, NPCS, NPC_BY_ID, ACTION_BY_ID } = catalog(faction);
   if (world.version !== 2 || !world.exploration) throw new Error('Narrative requires a version 2 exploration world');
   if (ACTION_BY_ID.size !== QUESTS.reduce((sum, q) => sum + q.stages.reduce((n, st) => n + st.actions.length, 0), 0)) {
     throw new Error('Duplicate authored narrative action');
   }
   for (const npc of NPCS) {
-    npcPosition(world, npc);
+    npcPosition(world, npc, faction);
     for (const reaction of npc.reactions ?? []) {
       if (!ACTION_BY_ID.has(reaction.after)) throw new Error(`Unknown narrative reaction ${reaction.after}`);
     }
@@ -148,11 +172,12 @@ export function createNarrative(world: WorldBlueprint): NarrativeState {
       if (!ACTION_BY_ID.has(variant.after)) throw new Error(`Unknown narrative prompt condition ${variant.after}`);
     }
   }
-  return { version: 2, journal: [], rewardedQuestIds: [], discovered: [], dialogue: null, inspection: null,
-    trackedQuestId: 'missing-names', notice: null };
+  return { version: 3, faction, journal: [], rewardedQuestIds: [], discovered: [], dialogue: null, inspection: null,
+    trackedQuestId: QUESTS.find(q => q.kind === 'main' && q.requires === null)?.id ?? null, notice: null };
 }
 
-function npcPosition(world: WorldBlueprint, npc: StoryNpc): Vec2 {
+function npcPosition(world: WorldBlueprint, npc: StoryNpc, faction: FactionId): Vec2 {
+  const { NPCS } = catalog(faction);
   const at = location(world, npc.locationId);
   const index = NPCS.filter(n => n.locationId === npc.locationId).findIndex(n => n.id === npc.id);
   // Locations reserve a 3m approach area; try alternate local offsets explicitly if scenery changes.
@@ -166,7 +191,7 @@ function npcPosition(world: WorldBlueprint, npc: StoryNpc): Vec2 {
   throw new Error(`No walkable narrative position for ${npc.id}`);
 }
 function dangerous(s: CampaignData, enemies: readonly ActorData[], at: Vec2): boolean {
-  return enemies.some(a => a.hp > 0 && distance(a, at) < THREAT_RADIUS) ||
+  return enemies.some(a => a.hp > 0 && a.allegiance !== 'friendly' && a.allegiance !== 'neutral' && distance(a, at) < THREAT_RADIUS) ||
     s.projectiles.some(p => p.owner === 'enemy' && distance(p, at) < THREAT_RADIUS);
 }
 function interactionBlock(s: CampaignData, enemies: readonly ActorData[], at: Vec2, radius: number): NoticeId | null {
@@ -184,6 +209,7 @@ export function discoverNarrative(s: CampaignData, world: WorldBlueprint): void 
 }
 
 function availableStages(p: StoryProgress, npcId: string): { quest: StoryQuest; stage: StoryStage }[] {
+  const { QUESTS } = p.catalog;
   return QUESTS.flatMap(quest => {
     const q = p.quests.get(quest.id)!;
     const stage = quest.stages[q.count];
@@ -191,6 +217,7 @@ function availableStages(p: StoryProgress, npcId: string): { quest: StoryQuest; 
   });
 }
 function selectedStage(s: CampaignData, p: StoryProgress, npcId: string): { quest: StoryQuest; stage: StoryStage } | null {
+  const { QUEST_TOPICS, ACTION_BY_ID } = p.catalog;
   const stages = availableStages(p, npcId);
   const topic = s.narrative!.dialogue!.topicId;
   if (topic === null) return stages.length === 1 ? stages[0]! : null;
@@ -214,12 +241,17 @@ function spokenPrompt(s: CampaignData, p: StoryProgress, stage: StoryStage): Loc
   return text(`${prompt.en}\n\n${military.en}`, `${prompt.ru}\n\n${military.ru}`);
 }
 function hasWarTopic(npc: StoryNpc): boolean {
-  return npc.id === 'mara' || npc.id === 'ren' || npc.id === 'elin';
+  return ['toman', 'vesk', 'ren', 'elin'].includes(npc.id);
 }
 function finishAction(s: CampaignData, p: StoryProgress, quest: StoryQuest, action: StoryAction): void {
+  const { QUESTS } = p.catalog;
   const state = s.narrative!;
   const q = p.quests.get(quest.id)!;
   if (state.journal.includes(action.id)) throw new Error('Narrative action already applied');
+  if (action.directive) {
+    if (!s.military || s.military.directive !== null) throw new Error('Military directive already committed');
+    s.military.directive = action.directive;
+  }
   state.journal.push(action.id);
   if (q.count + 1 === quest.stages.length) {
     if (state.rewardedQuestIds.includes(quest.id)) throw new Error('Narrative reward already claimed');
@@ -282,6 +314,7 @@ export function pauseNarrative(s: CampaignData): void {
 
 /** Called only after structural input validation. No timers, movement, RNG or hostile systems run here. */
 export function applyNarrative(s: CampaignData, world: WorldBlueprint, enemies: readonly ActorData[], input: NarrativeInput): void {
+  const { QUESTS, QUEST_BY_ID, QUEST_TOPICS, NPC_BY_ID } = catalog(s.faction);
   const state = s.narrative;
   if (!state) throw new Error('Narrative commands are not supported by legacy campaigns');
   const fail = (reason: NoticeId): void => { state.notice = reason; };
@@ -312,7 +345,7 @@ export function applyNarrative(s: CampaignData, world: WorldBlueprint, enemies: 
   }
   if (input.type === 'inspect') {
     const at = world.exploration!.locations.find(l => l.id === input.locationId);
-    if (!at || !inspectable(at)) { fail('unknown'); return; }
+    if (!at || !inspectable(at, s.faction)) { fail('unknown'); return; }
     const blocked = interactionBlock(s, enemies, at, INSPECT_RADIUS);
     if (blocked) { fail(blocked); return; }
     discoverNarrative(s, world);
@@ -332,7 +365,7 @@ export function applyNarrative(s: CampaignData, world: WorldBlueprint, enemies: 
   }
   const npc = NPC_BY_ID.get(input.npcId);
   if (!npc) { fail('unknown'); return; }
-  const blocked = interactionBlock(s, enemies, npcPosition(world, npc), TALK_RADIUS);
+  const blocked = interactionBlock(s, enemies, npcPosition(world, npc, s.faction), TALK_RADIUS);
   if (blocked) { state.dialogue = null; fail(blocked); return; }
   if (input.type === 'talk') {
     discoverNarrative(s, world);
@@ -362,11 +395,13 @@ export function applyNarrative(s: CampaignData, world: WorldBlueprint, enemies: 
   state.dialogue.topicId = action.id;
 }
 
-function inspectable(at: WorldLocation): boolean {
+function inspectable(at: WorldLocation, faction: FactionId): boolean {
+  const { QUESTS } = catalog(faction);
   return at.kind === 'ruin' || at.kind === 'shrine' ||
     QUESTS.some(q => q.stages.some(st => st.kind === 'inspect' && st.at === at.id));
 }
 function questSnapshot(p: StoryProgress, q: QuestProgress, discovered: string[]): QuestSnapshot {
+  const { QUEST_BY_ID, NPC_BY_ID } = p.catalog;
   const { quest } = q;
   const done = completed(q);
   const stage = quest.stages[q.count];
@@ -389,31 +424,26 @@ function questSnapshot(p: StoryProgress, q: QuestProgress, discovered: string[])
   };
 }
 function militaryText(s: CampaignData): LocalizedText {
-  if (!conquestReady(s)) return NOTICES.conquest;
-  if (!s.fortress.bossDefeated) return text(
-    'The supply posts are ours and Raut has lost his caravan. He still holds the fortress. You can agree on a plan at the Old Cloister now, but cannot carry it out while he controls the glass.',
-    'Заставы снабжены, караван Раута разбит. Сам он ещё в крепости. План можно выбрать в Старом скиту уже сейчас, но исполнить его не выйдет, пока стекло у Раута.');
-  return text(
-    'Raut is defeated. Decide what to do with the glass at the Old Cloister. That decision will end the campaign: finish any local business before making it.',
-    'Раут побеждён. Осталось решить в Старом скиту, что делать со стеклом. Этот выбор завершит кампанию: закончите местные дела до разговора с Элином.');
+  const snapshot = factionCampaignSnapshot(s);
+  const lines = snapshot.requirements.filter(r => !r.complete).map(r => r.label);
+  return lines.length ? text(lines.map(l => l.en).join('\n'), lines.map(l => l.ru).join('\n')) :
+    text('Military obligations are fulfilled. The final story decision will end the campaign; finish local business first.',
+      'Военные обязательства выполнены. Итоговое сюжетное решение завершит кампанию; сначала закончите местные дела.');
 }
 function summaryText(s: CampaignData, p: StoryProgress, current: StoryQuest | undefined): LocalizedText {
-  if (!current) return s.fortress.bossDefeated ? text(
-    'Raut is dead. The people who agreed to help have carried out your plan. The account below records what followed.',
-    'Раут мёртв. Те, кто согласился помочь, исполнили ваш план. Ниже записано, что из этого вышло.') : text(
-    'The plan is agreed, not carried out. Defeat Raut at the fortress to complete the campaign. You can still finish local quests before that battle.',
-    'План согласован, но ещё не исполнен. Для завершения кампании победите Раута в крепости. До этого можно закончить местные задания.');
+  if (!current) return FACTION_CAMPAIGNS[s.faction].victorySummary;
   const q = p.quests.get(current.id)!;
   const objective = current.stages[q.count]!.objective;
-  const finalChoice = current.id === 'unwritten-road' && q.count === current.stages.length - 1;
+  const finalChoice = current.stages[q.count]!.actions.some(a => a.ending);
   const lines = [current.description, objective];
   if (finalChoice) lines.push(militaryText(s));
   else if (s.fortress.bossDefeated) lines.unshift(text(
-    'Raut is defeated, but you still do not know enough to deal with the glass. Follow the investigation in the journal.',
-    'Раут побеждён, но вы ещё не знаете достаточно, чтобы разобраться со стеклом. Продолжите расследование по журналу.'));
+    'The military campaign is won, but the ward-glass mystery remains. Follow your faction’s journal.',
+    'Военная кампания выиграна, но тайна обережного стекла не раскрыта. Следуйте журналу своей стороны.'));
   return text(lines.map(line => line.en).join('\n\n'), lines.map(line => line.ru).join('\n\n'));
 }
 function contextText(p: StoryProgress, npc: StoryNpc): LocalizedText {
+  const { ACTION_BY_ID } = p.catalog;
   const reaction = latestReaction(npc.reactions, p);
   if (reaction) return reaction.text;
   for (const id of [...p.actions].reverse()) {
@@ -423,6 +453,7 @@ function contextText(p: StoryProgress, npc: StoryNpc): LocalizedText {
   return npc.greeting;
 }
 function dialogueText(s: CampaignData, p: StoryProgress, npc: StoryNpc): LocalizedText {
+  const { QUEST_TOPICS, ACTION_BY_ID } = p.catalog;
   const topic = s.narrative!.dialogue!.topicId;
   if (topic === 'topic-local') return npc.local;
   if (topic === 'topic-belief') {
@@ -445,29 +476,27 @@ function dialogueText(s: CampaignData, p: StoryProgress, npc: StoryNpc): Localiz
 }
 function endingText(s: CampaignData, p: StoryProgress): LocalizedText | null {
   if (!p.ending) return null;
-  const root = s.fortress.bossDefeated ? ENDING_EPILOGUES[p.ending] : p.quests.get('unwritten-road')!.entries.at(-1)!.entry;
+  const { QUESTS, story } = p.catalog;
+  const root = story.epilogues[p.ending];
   const notes = QUESTS.filter(q => q.kind === 'side').map(quest => {
     const q = p.quests.get(quest.id)!;
     const outcome = completed(q) ? q.entries.at(-1)!.entry : quest.unresolved;
     return text(`${quest.title.en}\n${outcome.en}`, `${quest.title.ru}\n${outcome.ru}`);
   });
-  const mainChoices = QUESTS.filter(q => q.kind === 'main' && q.id !== 'unwritten-road')
-    .map(q => p.quests.get(q.id)!.entries.at(-1)!.entry);
-  const coda = s.fortress.bossDefeated ? text(
-    'The convoy leaves the fortress. Those who survived still need food, escorts and a way home.',
-    'Обоз выходит из крепости. Тем, кто выжил, всё ещё нужны еда, охрана и дорога домой.') : text(
-    'This is the agreed plan, not its outcome. Defeat Raut to put it into effect. Local quests remain available until then.',
-    'Это согласованный план, а не его итог. Победите Раута, чтобы исполнить его. До этого местные задания остаются доступны.');
-  const paragraphs = [ENDINGS[p.ending], root, ...mainChoices, ...notes, coda];
+  const mainChoices = QUESTS.filter(q => q.kind === 'main').flatMap(quest =>
+    p.quests.get(quest.id)!.entries.filter((action, index) => !action.ending && quest.stages[index]!.actions.length > 1)
+      .map(action => action.entry));
+  const paragraphs = [story.endings[p.ending], root, ...mainChoices, ...notes, FACTION_CAMPAIGNS[s.faction].victorySummary];
   return text(paragraphs.map(t => t.en).join('\n\n'), paragraphs.map(t => t.ru).join('\n\n'));
 }
 
 export function narrativeSnapshot(s: CampaignData, world: WorldBlueprint, enemies: readonly ActorData[]): NarrativeSnapshot {
+  const { QUESTS, NPCS, NPC_BY_ID, ACTION_BY_ID, story } = catalog(s.faction);
   const state = s.narrative!;
   const p = progress(state);
   const current = QUESTS.find(q => q.kind === 'main' && !completed(p.quests.get(q.id)!));
   const npcs: NpcSnapshot[] = NPCS.filter(n => state.discovered.includes(n.locationId)).map(npc => {
-    const at = npcPosition(world, npc);
+    const at = npcPosition(world, npc, s.faction);
     return {
       ...at, heading: 0, id: npc.id, locationId: npc.locationId, name: npc.name, role: npc.role, faction: npc.faction,
       activity: npc.activity,
@@ -478,7 +507,7 @@ export function narrativeSnapshot(s: CampaignData, world: WorldBlueprint, enemie
   let dialogue: NarrativeSnapshot['dialogue'] = null;
   if (state.dialogue) {
     const npc = NPC_BY_ID.get(state.dialogue.npcId)!;
-    const blocked = interactionBlock(s, enemies, npcPosition(world, npc), TALK_RADIUS);
+    const blocked = interactionBlock(s, enemies, npcPosition(world, npc, s.faction), TALK_RADIUS);
     const selected = selectedStage(s, p, npc.id);
     const choices: DialogueChoice[] = (selected?.stage.actions ?? []).map(a => {
       const reason = blocked ?? gate(a, s);
@@ -491,7 +520,7 @@ export function narrativeSnapshot(s: CampaignData, world: WorldBlueprint, enemie
     for (const topic of [
       { id: 'topic-local', text: npc.localQuestion },
       { id: 'topic-belief', text: npc.beliefQuestion },
-      ...(hasWarTopic(npc) ? [{ id: 'topic-war', text: text('What is left to do about the fortress?', 'Что осталось сделать с крепостью?') }] : []),
+      ...(hasWarTopic(npc) ? [{ id: 'topic-war', text: text('What military obligations remain?', 'Какие военные задачи остались?') }] : []),
     ]) choices.push({ ...topic, enabled: blocked === null, reason: blocked ? NOTICES[blocked] : null });
     choices.push({
       id: 'leave', text: text('I need to go.', 'Мне пора.'),
@@ -499,7 +528,7 @@ export function narrativeSnapshot(s: CampaignData, world: WorldBlueprint, enemie
     });
     dialogue = { npcId: npc.id, name: npc.name, role: npc.role, text: dialogueText(s, p, npc), choices };
   }
-  const inspectAt = world.exploration!.locations.filter(at => inspectable(at) && distance(s.player, at) <= INSPECT_RADIUS)
+  const inspectAt = world.exploration!.locations.filter(at => inspectable(at, s.faction) && distance(s.player, at) <= INSPECT_RADIUS)
     .sort((a, b) => distance(s.player, a) - distance(s.player, b))[0];
   const neededInspect = inspectAt && [...p.quests.values()].some(q => unlocked(p, q.quest) &&
     q.quest.stages[q.count]?.kind === 'inspect' && q.quest.stages[q.count]?.at === inspectAt.id);
@@ -514,8 +543,8 @@ export function narrativeSnapshot(s: CampaignData, world: WorldBlueprint, enemie
     } : null;
   const travel = travelPlan(s, world, enemies);
   return {
-    title: STORY_TITLE,
-    chapter: current?.title ?? ENDINGS[p.ending!],
+    title: story.title,
+    chapter: current?.title ?? story.endings[p.ending!],
     summary: summaryText(s, p, current),
     npcs, quests: QUESTS.map(quest => questSnapshot(p, p.quests.get(quest.id)!, state.discovered)), dialogue,
     inspection: state.inspection ? {
@@ -529,7 +558,7 @@ export function narrativeSnapshot(s: CampaignData, world: WorldBlueprint, enemie
     trackedQuestId: state.trackedQuestId, discovered: [...state.discovered],
     reputation: CIVIC_FACTIONS.map(f => ({ ...f, value: p.reputation[f.id] })),
     facts: state.journal.map(id => ACTION_BY_ID.get(id)!.action.entry),
-    ending: endingText(s, p), notice: state.notice ? NOTICES[state.notice] : null,
+    ending: endingText(s, p), notice: state.notice === 'conquest' ? militaryText(s) : state.notice ? NOTICES[state.notice] : null,
     interaction, travel: { available: s.phase === 'playing' && travel.reason === null,
       reason: travel.reason ? NOTICES[travel.reason] : null, destinations: travel.destinations },
   };
@@ -558,9 +587,11 @@ export function validateNarrativeInput(value: unknown): NarrativeInput {
 }
 
 export function validateNarrativeState(value: unknown, world: WorldBlueprint, s: CampaignData): NarrativeState {
+  const { QUEST_BY_ID, QUEST_TOPICS, NPC_BY_ID, ACTION_BY_ID } = catalog(s.faction);
   assertRecord(value, 'Narrative state');
-  if (value.version !== 2) throw new Error('Unsupported story version. Start a new campaign for The Hollow Road.');
-  const fields = ['version', 'journal', 'rewardedQuestIds', 'discovered', 'dialogue', 'inspection', 'trackedQuestId', 'notice'];
+  if (value.version !== 3) throw new Error('Unsupported story version. Start a new faction campaign; older narrative journals cannot be migrated.');
+  if (value.faction !== s.faction) throw new Error('Narrative faction does not match campaign');
+  const fields = ['version', 'faction', 'journal', 'rewardedQuestIds', 'discovered', 'dialogue', 'inspection', 'trackedQuestId', 'notice'];
   if (Object.keys(value).length !== fields.length || Object.keys(value).some(k => !fields.includes(k))) {
     throw new Error('Invalid narrative state fields/version');
   }
@@ -586,7 +617,7 @@ export function validateNarrativeState(value: unknown, world: WorldBlueprint, s:
       throw new Error('Invalid dialogue speaker');
     }
     const npc = NPC_BY_ID.get(d.npcId)!;
-    if (!discovered.includes(npc.locationId) || distance(s.player, npcPosition(world, npc)) > TALK_RADIUS) {
+    if (!discovered.includes(npc.locationId) || distance(s.player, npcPosition(world, npc, s.faction)) > TALK_RADIUS) {
       throw new Error('Saved dialogue is outside interaction range');
     }
     if (d.topicId !== null && (typeof d.topicId !== 'string' ||
@@ -605,7 +636,7 @@ export function validateNarrativeState(value: unknown, world: WorldBlueprint, s:
       throw new Error('Invalid inspection fields');
     }
     const at = world.exploration!.locations.find(at => at.id === i.locationId);
-    if (dialogue || !at || !inspectable(at) || !discovered.includes(at.id) || distance(s.player, at) > INSPECT_RADIUS) {
+    if (dialogue || !at || !inspectable(at, s.faction) || !discovered.includes(at.id) || distance(s.player, at) > INSPECT_RADIUS) {
       throw new Error('Saved inspection is outside interaction range or overlaps dialogue');
     }
     const actionIds = ids(i.actionIds, new Set(journal), 'inspection evidence');
@@ -619,9 +650,12 @@ export function validateNarrativeState(value: unknown, world: WorldBlueprint, s:
   }
   // The guards above establish these finite unions without trusting a deserialized object.
   const validNotice = Object.keys(NOTICES).find((key): key is NoticeId => key === notice) ?? null;
-  const state: NarrativeState = { version: 2, journal: [...journal], rewardedQuestIds: [...rewardedQuestIds], discovered: [...discovered],
+  const state: NarrativeState = { version: 3, faction: s.faction, journal: [...journal], rewardedQuestIds: [...rewardedQuestIds], discovered: [...discovered],
     dialogue, inspection, trackedQuestId: tracked, notice: validNotice };
   const derived = progress(state);
+  const directives = journal.flatMap(id => ACTION_BY_ID.get(id)!.action.directive ?? []);
+  if (directives.length > 1 || (directives[0] ?? null) !== s.military?.directive ||
+      directives.some(d => !DIRECTIVES[s.faction].includes(d))) throw new Error('Inconsistent faction military directive');
   if (dialogue?.topicId && QUEST_TOPICS.has(dialogue.topicId) &&
       !availableStages(derived, dialogue.npcId).some(({ quest }) => quest.id === QUEST_TOPICS.get(dialogue.topicId!))) {
     throw new Error('Saved quest topic is no longer available');

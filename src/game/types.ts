@@ -5,6 +5,7 @@
  * Combat steps advance 1/60 second. Narrative commands are paused transactions. No wall-clock is read.
  */
 import type { ExplorationWorld, NarrativeInput, NarrativeSnapshot } from './narrative-types';
+import type { FactionCampaignSnapshot } from './faction-campaigns';
 export type * from './narrative-types';
 
 export type FactionId = 'elf' | 'guard' | 'villain';
@@ -76,6 +77,8 @@ export interface ActorSnapshot extends Position {
   id: string;
   kind: ActorKind;
   faction: FactionId;
+  allegiance?: 'friendly' | 'hostile' | 'neutral';
+  name?: import('./narrative-types').LocalizedText;
   hp: number;
   maxHp: number;
   radius: number;
@@ -83,7 +86,7 @@ export interface ActorSnapshot extends Position {
   /** Seconds remaining in the currently telegraphed state. */
   stateTime: number;
   attackRange: number;
-  target: 'player' | 'convoy' | null;
+  target: 'player' | 'convoy' | 'shipment' | null;
   home: Vec2;
   siteId: string;
 }
@@ -149,6 +152,7 @@ export interface GameEvent extends Vec2 {
   key: string;
   amount: number;
   targetId: string;
+  label?: import('./narrative-types').LocalizedText;
 }
 export interface RoadNode extends Vec2 { id: string }
 export interface RoadEdge { from: string; to: string; width: number }
@@ -164,6 +168,8 @@ export interface WorldSite extends Vec2 {
   kind: 'home' | 'outpost' | 'fortress' | 'raid';
   faction: FactionId;
   nameKey: string;
+  name?: import('./narrative-types').LocalizedText;
+  allegiance?: 'friendly' | 'hostile' | 'neutral';
   radius: number;
 }
 export interface WorldBlueprint {
@@ -205,6 +211,7 @@ export interface InteractionSnapshot {
   targetId: string;
   progress: number;
   enabled: boolean;
+  label?: import('./narrative-types').LocalizedText;
 }
 export interface ShopItem {
   id: UpgradeId;
@@ -245,6 +252,7 @@ export interface GameSnapshot {
   shop: ShopItem[];
   rewards: RunRewards | null;
   narrative?: NarrativeSnapshot;
+  campaign?: FactionCampaignSnapshot;
 }
 
 /** Opaque JSON save; restoreCampaign accepts unknown and rejects invalid/corrupt saves. */

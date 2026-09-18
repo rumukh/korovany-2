@@ -5,12 +5,14 @@ import {
 } from "./game";
 import { createGameView, type GameView } from "./view";
 import { Soundscape } from "./audio/soundscape";
+import { SpeechPresentation, type SpeechSelection } from "./audio/presentation";
 import { GameInput } from "./ui/input";
 import { GameShell, type Overlay, type ShellAction, type ShellState } from "./ui/shell";
 import { BrowserStorage, DirtySave, defaultSettings, parseSettings, storageKeys } from "./ui/storage";
 import { parseChart } from "./ui/atlas";
 import { translate } from "./ui/locale";
 import "./style.css";
+import "./audio/speech.css";
 
 const STEP = 1 / 60;
 const MAX_FRAME = 0.1;
@@ -66,8 +68,13 @@ let fatal = false;
 let raf = 0;
 let cameraDrag: { x: number; y: number } | null = null;
 const lifecycle = new AbortController();
-const sound = new Soundscape(() => shell?.warn("audioFailure"));
+const sound = new Soundscape(() => shell?.warn("audioFailure"), line => shell?.caption(line));
+const speech = new SpeechPresentation(sound);
 sound.configure(settings.muted);
+
+function syncSpeech(selection?: SpeechSelection): void {
+  speech.sync(snapshot, shell ? shell.overlay : "menu", atTitle, settings.language, selection);
+}
 
 function newSeed(): string {
   const values = new Uint32Array(1);
@@ -136,6 +143,7 @@ function saveCampaign(notify = false): boolean {
   if (result === "conflict") {
     freeze();
     if (!atTitle) shell.show("pause");
+    syncSpeech();
   }
   lastSaveTick = snapshot?.tick ?? 0;
   if (notify && saved && chartSaved && rewardsSaved) shell.announce("saved");
@@ -151,6 +159,7 @@ function freeze(): void {
   accumulator = 0;
   lastFrame = null;
   sound.setActive(false);
+  sound.setSpeechActive(false);
 }
 
 function narrativeOverlay(): "dialogue" | "inspection" | null {
@@ -158,7 +167,7 @@ function narrativeOverlay(): "dialogue" | "inspection" | null {
   return snapshot?.narrative?.inspection ? "inspection" : null;
 }
 
-function changeOverlay(overlay: Overlay): void {
+function changeOverlay(overlay: Overlay, selection?: SpeechSelection): void {
   if (fatal) return;
   const wasRunning = running;
   freeze();
@@ -175,6 +184,7 @@ function changeOverlay(overlay: Overlay): void {
     input?.setEnabled(true);
     sound.setActive(true);
   }
+  syncSpeech(selection);
 }
 
 function rendererFor(next: GameSnapshot): void {
@@ -200,7 +210,7 @@ function updatePreview(): void {
   rendererFor(preview);
 }
 
-function finish(): void {
+function finish(selection?: SpeechSelection): void {
   if (!snapshot || snapshot.phase === "playing") return;
   freeze();
   atTitle = false;
@@ -212,6 +222,7 @@ function finish(): void {
   saveCampaign();
   refresh(false);
   shell?.show("terminal");
+  syncSpeech(selection);
 }
 
 function begin(sameSeed?: boolean): void {
@@ -234,6 +245,7 @@ function begin(sameSeed?: boolean): void {
     upgrades: profile.upgrades, runId: crypto.randomUUID(),
   });
   snapshot = campaign.snapshot();
+  speech.reset();
   campaignSave.adopt();
   atlasSave.adopt();
   campaignSave.markDirty();
@@ -250,6 +262,9 @@ function begin(sameSeed?: boolean): void {
 
 function resume(): void {
   if (!campaign || !snapshot) return;
+  selectedFaction = snapshot.faction;
+  selectedSeed = snapshot.seed;
+  refresh(false);
   atTitle = false;
   rendererFor(snapshot);
   lastAim = { x: Math.sin(snapshot.player.heading), z: Math.cos(snapshot.player.heading) };
@@ -269,6 +284,7 @@ function continueLatest(): void {
   if (latest.status === "error") return;
   campaign = latest.status === "ok" ? latest.value : null;
   snapshot = campaign?.snapshot() ?? null;
+  speech.reset();
   campaignSave.adopt();
   atlasSave.adopt();
   const chart = storage.read(storageKeys.atlas, parseChart);
@@ -329,6 +345,7 @@ function dispatch(action: ShellAction): void {
         view?.setQuality(settings.quality);
         view?.setReducedMotion(settings.reducedMotion);
         refresh();
+        syncSpeech();
         break;
       case "metaUpgrade":
         buyMetaUpgrade(action.id);
@@ -353,6 +370,9 @@ function dispatch(action: ShellAction): void {
           break;
         }
         const overlay = shell?.overlay ?? null;
+        const command = action.command;
+        const selected = command.type === "choose" ? snapshot.narrative?.dialogue?.choices
+          .find(choice => choice.id === command.choiceId && choice.enabled)?.text : undefined;
         freeze();
         campaign.step({ narrative: action.command });
         snapshot = campaign.snapshot();
@@ -361,9 +381,10 @@ function dispatch(action: ShellAction): void {
         shell?.update(snapshot);
         events(snapshot);
         saveCampaign();
-        if (snapshot.phase !== "playing") finish();
+        const selection = selected && !snapshot.narrative?.notice ? { player: selected } : undefined;
+        if (snapshot.phase !== "playing") finish(selection);
         else if (!campaignSave.conflicted) changeOverlay(narrativeOverlay()
-          ?? (overlay === "dialogue" || overlay === "inspection" ? null : overlay));
+          ?? (overlay === "dialogue" || overlay === "inspection" ? null : overlay), selection);
         break;
       }
       case "reload": window.location.reload(); break;
@@ -429,7 +450,10 @@ function events(next: GameSnapshot): void {
       case "upgrade":
       case "fortress": important = true; break;
     }
-    if (!["attack", "hurt", "pickup"].includes(event.kind)) shell?.announce(event.key);
+    if (!["attack", "hurt", "pickup"].includes(event.kind)) {
+      if (event.label) shell?.announceText(event.label[settings.language]);
+      else shell?.announce(event.key);
+    }
   }
   const combat = next.actors.some((actor) => actor.hp > 0 &&
     Math.hypot(actor.x - next.player.x, actor.z - next.player.z) < 24 &&
@@ -444,6 +468,7 @@ function stopForError(error: unknown, kind: "graphics" | "game"): void {
   freeze();
   if (raf) cancelAnimationFrame(raf);
   shell?.fail(kind);
+  syncSpeech();
 }
 
 function frame(time: number): void {
@@ -496,11 +521,23 @@ if (snapshot) shell.update(snapshot);
 
 window.addEventListener("resize", () => view?.resize(), { signal: lifecycle.signal });
 window.addEventListener("pointerdown", (event) => {
-  if (event.isTrusted) void sound.unlock();
+  if (event.isTrusted) {
+    speech.setFocused(!document.hidden);
+    void sound.unlock();
+  }
 }, { signal: lifecycle.signal, capture: true });
 window.addEventListener("keydown", (event) => {
-  if (event.isTrusted) void sound.unlock();
+  if (event.isTrusted) {
+    speech.setFocused(!document.hidden);
+    void sound.unlock();
+  }
 }, { signal: lifecycle.signal, capture: true });
+window.addEventListener("change", event => {
+  if (event.isTrusted) void sound.unlock();
+}, { signal: lifecycle.signal });
+window.addEventListener("blur", () => speech.setFocused(false), { signal: lifecycle.signal });
+window.addEventListener("focus", () => speech.setFocused(!document.hidden), { signal: lifecycle.signal });
+document.addEventListener("visibilitychange", () => speech.setFocused(!document.hidden), { signal: lifecycle.signal });
 shell.canvas.addEventListener("pointerdown", (event) => {
   if (!running || event.button !== 2) return;
   event.preventDefault();
@@ -535,6 +572,7 @@ window.addEventListener("storage", (event) => {
     freeze();
     shell?.warn("storage.conflict");
     shell?.show("pause");
+    syncSpeech();
   }
   if (event.key === storageKeys.profile && !pendingRewards.size) {
     reconcileProfile();

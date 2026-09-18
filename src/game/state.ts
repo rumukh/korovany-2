@@ -1,5 +1,6 @@
 import { defineComponent, defineResource, type World } from '@aegis/core';
 import type { NarrativeState } from './narrative';
+import type { MilitaryState } from './faction-campaigns';
 import type {
   ActorSnapshot, ConvoySnapshot, EffectSnapshot, FactionId, FortressSnapshot, GameEvent,
   GameInput, OutpostSnapshot, Phase, PickupSnapshot, PlayerSnapshot, ProjectileSnapshot, RunRewards, Vec2,
@@ -12,6 +13,8 @@ export interface ActorData extends ActorSnapshot {
   deadTime: number;
   attackPoint: Vec2;
   patrolDirection: number;
+  marchRoute?: Vec2[];
+  marchDestination?: string | null;
 }
 export interface ProjectileData extends ProjectileSnapshot {
   vx: number;
@@ -43,6 +46,7 @@ export interface CampaignData {
   dodgeDirection: Vec2;
   /** Absent on legacy v1 worlds, retained in the Aegis campaign resource on v2. */
   narrative?: NarrativeState;
+  military?: MilitaryState;
 }
 export const Combatant = defineComponent<ActorData>({
   id: 'KorovanyCombatant',

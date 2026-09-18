@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
 import { createCampaign, isWalkable, type GameSnapshot } from "../src/game";
-import { NPCS, QUESTS } from "../src/game/narrative-data";
+import { getFactionStory } from "../src/game/faction-stories";
 import { CampaignDriver } from "./driver";
 import { storageKeys, type Settings } from "../src/ui/storage";
 import {
@@ -25,13 +25,15 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
   async function visibleEvidence(): Promise<string> {
     return evaluate(cdp, "[...document.querySelectorAll('.inspection-text p')].map(p => p.textContent).join('\\n\\n')");
   }
+  async function press(code: string, down: boolean): Promise<void> {
+    await cdp.send("Input.dispatchKeyEvent", { type: down ? "keyDown" : "keyUp", code,
+      key: code.startsWith("Key") ? code.slice(3).toLowerCase() : code.startsWith("Digit") ? code.slice(5) : code,
+      windowsVirtualKeyCode: code.startsWith("Key") ? code.charCodeAt(3)
+        : code.startsWith("Digit") ? code.charCodeAt(5) : code === "Escape" ? 27 : 9 });
+  }
   async function tap(code: string): Promise<void> {
-    for (const type of ["keyDown", "keyUp"]) {
-      await cdp.send("Input.dispatchKeyEvent", { type, code,
-        key: code.startsWith("Key") ? code.slice(3).toLowerCase() : code.startsWith("Digit") ? code.slice(5) : code,
-        windowsVirtualKeyCode: code.startsWith("Key") ? code.charCodeAt(3)
-          : code.startsWith("Digit") ? code.charCodeAt(5) : code === "Escape" ? 27 : 9 });
-    }
+    await press(code, true);
+    await press(code, false);
   }
   async function select(selector: string): Promise<void> {
     const point = await evaluate<{ x: number; y: number }>(cdp, `(() => {
@@ -54,7 +56,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
 
   beforeAll(async () => {
     if (process.env.KOROVANY_CAPTURE_DIR) await mkdir(process.env.KOROVANY_CAPTURE_DIR, { recursive: true });
-    server = await createServer({ configFile: false, server: { host: "127.0.0.1", port: 0 } });
+    server = await createServer({ configFile: false, server: { host: "127.0.0.1", port: 0, hmr: false, watch: null } });
     await server.listen();
     const origin = server.resolvedUrls?.local[0];
     if (!origin) throw new Error("Missing narrative preview URL");
@@ -62,7 +64,11 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     browser = await launchBrowser({ viewport: { width: 1440, height: 1000 } });
     cdp = await openPage(browser.port, origin, { width: 1440, height: 1000 });
     await until(cdp, "Boolean(window.korovany)", Boolean, 30_000);
-    const save = createCampaign({ seed: "story-browser", faction: "guard", runId: "story-browser-run" }).serialize();
+    const game = createCampaign({ seed: "story-browser", faction: "guard", runId: "story-browser-run" });
+    const driver = new CampaignDriver(game);
+    driver.toNode("roadward");
+    driver.walk(game.snapshot().narrative!.npcs.find(npc => npc.id === "mara")!, 0.2);
+    const save = game.serialize();
     const settings: Settings = { language: "en", quality: "high", reducedMotion: false, muted: false };
     await evaluate(cdp, `(() => {
       localStorage.setItem(${JSON.stringify(storageKeys.campaign)}, ${JSON.stringify(JSON.stringify(save))});
@@ -80,6 +86,36 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     await server?.close();
   }, 30_000);
 
+  it("shows discovered NPC map markers beyond talk range, including when conversation is blocked", async () => {
+    const game = createCampaign({ seed: "resident-map-range", faction: "guard" });
+    new CampaignDriver(game).toNode("roadward");
+    const snapshot = game.snapshot();
+    const markers = await evaluate<{ distance: number; available: boolean; visible: boolean[] }[]>(cdp, `(async () => {
+      const { Atlas } = await import('/src/ui/atlas.ts');
+      const atlas = new Atlas();
+      const snapshot = ${JSON.stringify(snapshot)};
+      const npc = snapshot.narrative.npcs.find(person => person.id === 'mara');
+      const results = [];
+      for (const available of [false, true]) {
+        npc.available = available;
+        for (const distance of [0, 4.25, 4.26, 10, 32, 38, 38.01, 120]) {
+          snapshot.player.x = npc.x + distance;
+          snapshot.player.z = npc.z;
+          results.push({ distance, available, visible: [[false, false], [false, true], [true, false]]
+            .map(([miniature, local]) => Boolean(atlas.draw(snapshot, 'en', miniature, local).querySelector('[data-npc="mara"]'))) });
+        }
+      }
+      snapshot.narrative.npcs = [];
+      results.push({distance: 0, available: false, visible: [Boolean(atlas.draw(snapshot, 'en').querySelector('[data-npc]'))]});
+      return results;
+    })()`);
+    const absent = markers.pop()!;
+    expect(absent.visible).toEqual([false]);
+    for (const result of markers) {
+      expect(result.visible, `${result.distance}m, available: ${result.available}`).toEqual(Array(3).fill(result.distance <= 38));
+    }
+  });
+
   it("opens a live NPC conversation, preserves it across reload, and closes without leaking movement", async () => {
     await select('[data-action="continue"]');
     await until(cdp, "Boolean(window.korovany.inspect().snapshot.narrative?.interaction?.kind === 'talk')", Boolean, 20_000);
@@ -87,6 +123,27 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     expect(before.snapshot.world.exploration?.regions.length).toBeGreaterThanOrEqual(8);
     expect(before.snapshot.narrative?.npcs.some((npc) => npc.id === before.snapshot.narrative?.interaction?.targetId)).toBe(true);
     await capture("residents-at-roadward");
+    const distanceFromMara = `(() => {
+      const snapshot = window.korovany.inspect().snapshot;
+      const npc = snapshot.narrative.npcs.find(person => person.id === 'mara');
+      return Math.hypot(npc.x - snapshot.player.x, npc.z - snapshot.player.z);
+    })()`;
+    for (const [code, away] of [["KeyS", true], ["KeyW", false]] as const) {
+      await press(code, true);
+      try {
+        await until(cdp, distanceFromMara, (distance: number) => away ? distance >= 10 : distance <= 3.5, 20_000);
+      } finally {
+        await press(code, false);
+      }
+      if (away) {
+        const distant = await inspect();
+        expect(distant.snapshot.narrative!.npcs.find(npc => npc.id === "mara")?.available).toBe(false);
+        expect(distant.snapshot.narrative!.interaction?.targetId).not.toBe("mara");
+        await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= distant.snapshot.tick + 60, 15_000);
+        expect(await evaluate(cdp, `Boolean(document.querySelector('.minimap [data-npc="mara"]'))`)).toBe(true);
+        await capture("residents-beyond-talk-range");
+      }
+    }
     await tap("KeyT");
     await until(cdp, "window.korovany.inspect().overlay", (value: string) => value === "dialogue", 15_000);
     const talking = await inspect();
@@ -158,11 +215,12 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
   it("reads discovered evidence, stays paused through menus and reload, then resumes only after closing", async () => {
     const game = createCampaign({ seed: "inspection-browser", faction: "guard", runId: "inspection-browser-run" });
     const driver = new CampaignDriver(game);
-    const quest = QUESTS.find((entry) => entry.kind === "main")!;
+    const { quests, npcs } = getFactionStory("guard");
+    const quest = quests.find((entry) => entry.kind === "main")!;
     const evidenceStage = quest.stages.find((stage) => stage.kind === "inspect")!;
     for (const stage of quest.stages) {
       if (stage === evidenceStage) break;
-      const npc = NPCS.find((entry) => entry.id === stage.at)!;
+      const npc = npcs.find((entry) => entry.id === stage.at)!;
       driver.toNode(npc.locationId);
       game.step({ narrative: { type: "talk", npcId: npc.id } });
       if (!game.snapshot().narrative!.dialogue!.choices.some((choice) => choice.id === stage.actions[0]!.id)) {

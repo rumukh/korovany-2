@@ -1,5 +1,6 @@
 import type { EntitySnapshot, WorldSnapshot } from '@aegis/core';
 import { FACTIONS } from './config';
+import { DIRECTIVES, militaryReady, shipmentDestination, type MilitaryState } from './faction-campaigns';
 import { narrativeResolved, validateNarrativeState } from './narrative';
 import { assertRecord, boundedNumber, validatedUpgrades } from './profile';
 import { Combatant, type ActorData, type CampaignData } from './state';
@@ -71,9 +72,10 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
   const raw = resources.KorovanyCampaign;
   assertRecord(raw, 'Campaign resource');
   assertRecord(raw.convoy, 'convoy');
-  const { narrative: _initialNarrative, ...baseInitial } = initial;
-  const { narrative: rawNarrative, ...baseRaw } = raw;
+  const { narrative: _initialNarrative, military: _initialMilitary, ...baseInitial } = initial;
+  const { narrative: rawNarrative, military: rawMilitary, ...baseRaw } = raw;
   if (blueprint.version === 1 && Object.hasOwn(raw, 'narrative')) throw new Error('Legacy save contains narrative state');
+  if (blueprint.version === 1 && Object.hasOwn(raw, 'military')) throw new Error('Legacy save contains faction military state');
   const template: CampaignData = {
     ...baseInitial,
     convoy: { ...initial.convoy, destination: raw.convoy.destination === null ? null : '',
@@ -82,11 +84,29 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     projectiles: [{ id: '', x: 0, z: 0, heading: 0, owner: 'player', faction: 'elf',
       kind: 'arrow', radius: 0.1, remaining: 0, vx: 0, vz: 0, damage: 1 }],
     effects: [{ id: '', x: 0, z: 0, heading: 0, faction: 'elf', kind: 'hit', radius: 1, remaining: 0, duration: 1 }],
-    events: [{ id: 1, tick: 0, kind: 'attack', key: '', x: 0, z: 0, amount: 0, targetId: '' }],
+    events: [{ id: 1, tick: 0, kind: 'attack', key: '', x: 0, z: 0, amount: 0, targetId: '',
+      ...(blueprint.version === 2 ? { label: { en: '', ru: '' } } : {}) }],
     rewards: raw.rewards === null ? null : { runId: '', claimed: false, renown: 0, victory: false },
   };
   shape(baseRaw, template, 'campaign');
   const s = baseRaw;
+  if (blueprint.version === 2) {
+    assertRecord(rawMilitary, 'Military state'); assertRecord(rawMilitary.shipment, 'Military shipment');
+    const militaryTemplate: MilitaryState = {
+      version: 1, directive: rawMilitary.directive === null ? null : 'shelter',
+      shipment: { claimed: false, delivered: false, destination: rawMilitary.shipment.destination === null ? null : '',
+        route: [{ x: 0, z: 0 }], repairProgress: 1 },
+    };
+    shape(rawMilitary, militaryTemplate, 'military');
+    same(rawMilitary.version, 1, 'military schema');
+    oneOf(rawMilitary.directive, [null, ...DIRECTIVES[initial.faction]], 'faction directive');
+    boundedNumber(rawMilitary.shipment.repairProgress, 'shipment repair', 0, 1);
+    s.military = rawMilitary;
+    if (s.military.shipment.claimed && !s.military.directive) throw new Error('Shipment claimed before directive');
+    if (s.military.shipment.delivered && !s.military.shipment.claimed) throw new Error('Unclaimed shipment delivered');
+    same(s.military.shipment.destination, s.military.shipment.claimed ? shipmentDestination(s) : null, 'shipment destination');
+    same(s.raidComplete, s.military.shipment.delivered, 'shipment delivery outcome');
+  }
   if (blueprint.version === 2) s.narrative = validateNarrativeState(rawNarrative, blueprint, s);
   if (input.narrative || ((s.narrative?.dialogue || s.narrative?.inspection) && Object.keys(input).length > 0)) {
     throw new Error('Saved story scene contains stale intent');
@@ -102,7 +122,7 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
   same(p.speed, faction.speed, 'speed'); same(p.radius, 0.65, 'player radius');
   boundedNumber(p.hp, 'hero HP', 0, p.maxHp); boundedNumber(p.stamina, 'stamina', 0, 100);
   boundedNumber(p.coins, 'coins', 0, 10_000, true); boundedNumber(p.supplies, 'supplies', 0, 90, true);
-  boundedNumber(p.kills, 'kills', 0, 18, true); same(p.level, 1 + Math.floor(p.kills / 4), 'level');
+  boundedNumber(p.kills, 'kills', 0, initialActors.length + 3, true); same(p.level, 1 + Math.floor(p.kills / 4), 'level');
   boundedNumber(p.heading, 'heading', -Math.PI, Math.PI);
   if (!isWalkable(blueprint, p, p.radius)) throw new Error('Player is outside walkable world');
   oneOf(p.state, ['idle', 'moving', 'attack', 'dodge', 'dead'], 'player state');
@@ -127,18 +147,18 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     const b = blueprint.roads.nodes.find(n => n.id === e.to)!;
     return distance(point, projectSegment(point, a, b)) < 0.01;
   });
-  if (!onRoad(cart) || !isWalkable(blueprint, cart, cart.radius)) throw new Error('Convoy is off the road');
-  if (cart.route.length > blueprint.roads.nodes.length + 1 || cart.route.some(point => !onRoad(point))) throw new Error('Invalid convoy path');
-  const path = [cart, ...cart.route];
-  for (let i = 1; i < path.length; i++) {
-    const a = path[i - 1]!, b = path[i]!;
-    const steps = Math.max(1, Math.ceil(distance(a, b)));
-    for (let j = 1; j < steps; j++) {
-      if (!onRoad({ x: a.x + (b.x - a.x) * j / steps, z: a.z + (b.z - a.z) * j / steps })) {
-        throw new Error('Convoy path cuts across terrain');
+  const checkRoadSegments = (path: { x: number; z: number }[], label: string): void => {
+    if (path.some(point => !onRoad(point))) throw new Error(`${label} is off the road`);
+    for (let i = 1; i < path.length; i++) {
+      const a = path[i - 1]!, b = path[i]!, steps = Math.max(1, Math.ceil(distance(a, b)));
+      for (let j = 1; j < steps; j++) if (!onRoad({ x: a.x + (b.x - a.x) * j / steps, z: a.z + (b.z - a.z) * j / steps })) {
+        throw new Error(`${label} cuts across terrain`);
       }
     }
-  }
+  };
+  if (!onRoad(cart) || !isWalkable(blueprint, cart, cart.radius)) throw new Error('Convoy is off the road');
+  if (cart.route.length > blueprint.roads.nodes.length + 1 || cart.route.some(point => !onRoad(point))) throw new Error('Invalid convoy path');
+  checkRoadSegments([cart, ...cart.route], 'Convoy path');
   if (cart.hp === 0 && !cart.disabled) throw new Error('Wreck must be disabled');
   same(s.outposts.length, 3, 'outpost count');
   unique(s.outposts.map(post => post.id), 'outpost IDs');
@@ -150,14 +170,16 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     boundedNumber(post.captureProgress, 'capture progress', 0, 1);
     boundedNumber(post.defendersRemaining, 'defenders', 0, 3, true);
     if ((post.owner === 'player') !== (post.captureProgress === 1)) throw new Error('Inconsistent capture progress');
-    if (post.owner === 'player' && post.defendersRemaining !== 0) throw new Error('Captured post has defenders');
+    if (post.owner === 'player' && post.defendersRemaining !== 0 && base.owner !== 'player') throw new Error('Captured post has defenders');
+    if (base.owner === 'player' && post.owner !== 'player') throw new Error('Friendly holding changed owner');
     if (post.supplied && post.owner !== 'player') throw new Error('Enemy post cannot be supplied');
+    if (post.supplied && post.defendersRemaining !== 0) throw new Error('Contested holding cannot be supplied');
   }
   same(cart.delivered, s.outposts.filter(p => p.supplied).length * 30, 'delivery count');
   same(cart.cargo + p.supplies + cart.delivered + s.pickups.filter(p => p.kind === 'supply').reduce((n, p) => n + p.amount, 0),
     s.raidComplete ? 120 : 30, 'supply conservation');
   for (const key of ['id', 'x', 'z', 'bossId'] as const) same(s.fortress[key], initial.fortress[key], `fortress ${key}`);
-  same(s.fortress.unlocked, s.raidComplete && cart.delivered >= 60, 'fortress unlock');
+  same(s.fortress.unlocked, militaryReady(s), 'fortress unlock');
   boundedNumber(s.fortress.reinforcementWaves, 'reinforcement waves', 0, 1, true);
   boundedNumber(s.spawnSequence, 'spawn sequence', 0, 3, true);
   same(s.spawnSequence, s.fortress.reinforcementWaves * 3, 'spawn count');
@@ -226,7 +248,8 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     same(s.rewards.victory, s.phase === 'victory', 'reward outcome');
     same(s.rewards.renown, (s.phase === 'victory' ? 60 : 5) + s.outposts.filter(p => p.owner === 'player').length * 10 + Math.floor(p.kills / 3), 'reward amount');
   }
-  if (!Array.isArray(value.entities) || value.entities.length > 18) throw new Error('Invalid actor count');
+  const actorLimit = initialActors.length + 3;
+  if (!Array.isArray(value.entities) || value.entities.length > actorLimit) throw new Error('Invalid actor count');
   const entities: EntitySnapshot[] = [];
   const actorIds: string[] = [];
   const aliveByPost = new Map<string, number>();
@@ -236,7 +259,10 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     if (Object.keys(entry.components).join(',') !== 'KorovanyCombatant') throw new Error('Unexpected component');
     const rawActor = entry.components.KorovanyCombatant;
     assertRecord(rawActor, 'actor');
-    const actorTemplate = Combatant.create({ target: rawActor.target === null ? null : 'player' });
+    const originalTemplate = initialActors.find(a => a.id === rawActor.id);
+    const actorTemplate = Combatant.create({ target: rawActor.target === null ? null : 'player',
+      ...(s.military ? { allegiance: 'hostile' } : {}), ...(originalTemplate?.name ? { name: originalTemplate.name } : {}),
+      ...(originalTemplate?.marchRoute ? { marchRoute: [{ x: 0, z: 0 }], marchDestination: rawActor.marchDestination === null ? null : '' } : {}) });
     shape(rawActor, actorTemplate, 'actor');
     const a = rawActor;
     const reinforcement = /^reinforcement-([123])$/.exec(a.id);
@@ -245,15 +271,24 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
       for (const key of ['kind', 'siteId', 'faction', 'maxHp', 'radius', 'damage', 'speed', 'attackRange'] as const) {
         same(a[key], original[key], `actor ${a.id} ${key}`);
       }
-      if (a.siteId !== 'raid' || a.id === 'enemy-caravan' || tick === 0) {
+      if (s.military) {
+        same(a.allegiance, a.id === 'enemy-caravan' && s.military.shipment.claimed ? 'friendly' : original.allegiance, 'actor allegiance');
+        if (original.name) {
+          same(a.name?.en, original.name.en, 'actor English name'); same(a.name?.ru, original.name.ru, 'actor Russian name');
+        }
+      }
+      if (s.military?.directive && s.faction === 'villain' && a.siteId === 'home') {
+        if (distance(a.home, s.convoy) > 0.2) throw new Error('Army detachment lost its convoy orders');
+      } else if (s.military || a.siteId !== 'raid' || a.id === 'enemy-caravan' || tick === 0) {
         same(a.home.x, original.home.x, 'actor home X'); same(a.home.z, original.home.z, 'actor home Z');
       } else if (a.id !== 'enemy-caravan') {
         boundedNumber(a.home.x, 'raid escort home X', 6.9, 42.1); same(a.home.z, -24, 'raid escort home Z');
       }
     } else if (reinforcement && Number(reinforcement[1]) <= s.spawnSequence) {
       same(a.kind, 'soldier', 'reinforcement kind'); same(a.siteId, 'fortress', 'reinforcement site');
-      same(a.faction, 'villain', 'reinforcement faction');
-      same(a.home.x, (Number(reinforcement[1]) - 2) * 3, 'reinforcement home X');
+      same(a.faction, s.military && s.faction === 'villain' ? 'guard' : 'villain', 'reinforcement faction');
+      if (s.military) same(a.allegiance, 'hostile', 'reinforcement allegiance');
+      same(a.home.x, s.fortress.x + (Number(reinforcement[1]) - 2) * 3, 'reinforcement home X');
       same(a.home.z, s.fortress.z + 5, 'reinforcement home Z');
     } else throw new Error('Unknown actor identity');
     point(a); point(a.home); point(a.attackPoint);
@@ -261,43 +296,86 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     oneOf(a.kind, ['soldier', 'archer', 'captain', 'boss', 'caravan'], 'actor kind');
     oneOf(a.faction, ['elf', 'guard', 'villain'], 'actor faction');
     oneOf(a.state, ['idle', 'chase', 'windup', 'attack', 'recovery', 'dead'], 'actor state');
-    oneOf(a.target, ['player', 'convoy', null], 'actor target');
+    oneOf(a.target, s.military ? ['player', 'convoy', 'shipment', null] : ['player', 'convoy', null], 'actor target');
+    if (a.allegiance === 'friendly' && a.target !== null) throw new Error('Friendly actor has hostile target');
+    if (a.marchRoute) {
+      if (a.marchDestination !== null && !blueprint.roads.nodes.some(n => n.id === a.marchDestination)) throw new Error('Unknown army road destination');
+      if (a.marchRoute.length > blueprint.roads.nodes.length + 2 || a.marchRoute.some(p => !onRoad(p))) throw new Error('Invalid army road route');
+      checkRoadSegments(a.marchRoute, 'Army route');
+      const end = a.marchRoute.at(-1);
+      const destination = blueprint.roads.nodes.find(n => n.id === a.marchDestination);
+      if (end && (!destination || distance(end, destination) > 0.01)) {
+        throw new Error('Army route ends at wrong destination');
+      }
+    }
     const post = initial.outposts.find(post => post.id === a.siteId);
-    if (!post && a.siteId !== 'raid' && a.siteId !== 'fortress') throw new Error('Invalid actor site');
+    if (!post && a.siteId !== 'raid' && a.siteId !== 'fortress' && !(s.military && a.siteId === 'home')) throw new Error('Invalid actor site');
     const expectedHp = a.kind === 'boss' ? 480 : a.kind === 'caravan' ? 170 : a.kind === 'captain' ? 90 : a.kind === 'archer' ? 48 : 60;
     same(a.maxHp, expectedHp, 'actor max HP');
     boundedNumber(a.hp, 'actor HP', 0, a.maxHp);
-    same(a.state === 'dead', a.hp === 0, 'actor death');
+    if (s.military && a.id === 'enemy-caravan') same(a.state, 'idle', 'shipment state');
+    else same(a.state === 'dead', a.hp === 0, 'actor death');
     same(a.radius, a.kind === 'caravan' ? 1.5 : a.kind === 'boss' ? 1.3 : 0.7, 'actor radius');
     same(a.damage, a.kind === 'boss' ? 24 : a.kind === 'captain' ? 17 : a.kind === 'archer' ? 10 : 12, 'actor damage');
     same(a.speed, a.kind === 'boss' ? 3.6 : a.kind === 'archer' ? 3 : 3.5, 'actor speed');
     same(a.attackRange, a.kind === 'archer' ? 14 : a.kind === 'boss' ? 4.3 : 2.4, 'actor range');
-    timer(a.cooldown, 'actor cooldown', 2.6); timer(a.stateTime, 'AI state timer', 1.1); timer(a.deadTime, 'corpse age', 8.1);
+    timer(a.cooldown, 'actor cooldown', 2.6); timer(a.stateTime, 'AI state timer', 1.1);
+    timer(a.deadTime, 'corpse age', s.military && a.kind === 'caravan' ? 10_000_000 : 8.1);
     oneOf(a.patrolDirection, [-1, 1], 'patrol direction');
     if (!isWalkable(blueprint, a, a.radius)) throw new Error('Actor outside walkable geometry');
-    if (a.hp > 0) aliveByPost.set(a.siteId, (aliveByPost.get(a.siteId) ?? 0) + 1);
+    if (a.hp > 0 && a.allegiance !== 'friendly') aliveByPost.set(a.siteId, (aliveByPost.get(a.siteId) ?? 0) + 1);
     actorIds.push(a.id);
     entities.push({ id: entry.id, components: { KorovanyCombatant: a } });
   }
   unique(actorIds, 'actor IDs');
   const allowedIds = new Set([
-    ...initial.outposts.flatMap(post => [`${post.id}-soldier`, `${post.id}-archer`, `${post.id}-captain`]),
-    'enemy-caravan', 'raid-guard-1', 'raid-guard-2', 'boss', 'fortress-guard--1', 'fortress-guard-1',
+    ...initialActors.map(a => a.id),
     ...Array.from({ length: s.spawnSequence }, (_, i) => `reinforcement-${i + 1}`),
   ]);
   if (actorIds.some(id => !allowedIds.has(id))) throw new Error('Unknown actor ID');
   same(p.kills + entities.filter(e => {
     const data = e.components.KorovanyCombatant;
     assertRecord(data, 'actor');
-    return typeof data.hp === 'number' && data.hp > 0;
-  }).length, 15 + s.spawnSequence, 'kill conservation');
+    return typeof data.hp === 'number' && (data.hp > 0 || !!s.military && data.id === 'enemy-caravan');
+  }).length, initialActors.length + s.spawnSequence, 'kill conservation');
   for (const post of s.outposts) same(post.defendersRemaining, aliveByPost.get(post.id) ?? 0, 'defender count');
   const livingCaravan = entities.some(e => {
     const a = e.components.KorovanyCombatant;
     assertRecord(a, 'actor');
     return a.id === 'enemy-caravan' && typeof a.hp === 'number' && a.hp > 0;
   });
-  same(s.raidComplete, !livingCaravan, 'raid outcome');
+  if (!s.military) same(s.raidComplete, !livingCaravan, 'raid outcome');
+  else {
+    const wagon = entities.map(e => e.components.KorovanyCombatant).find(a => {
+      assertRecord(a, 'actor'); return a.id === 'enemy-caravan';
+    });
+    assertRecord(wagon, 'Persistent shipment');
+    const x = boundedNumber(wagon.x, 'shipment X', blueprint.bounds.minX, blueprint.bounds.maxX);
+    const z = boundedNumber(wagon.z, 'shipment Z', blueprint.bounds.minZ, blueprint.bounds.maxZ);
+    const position = { x, z }, shipment = s.military.shipment;
+    if (!onRoad(position) || shipment.route.length > blueprint.roads.nodes.length + 1) throw new Error('Invalid shipment road position');
+    checkRoadSegments([position, ...shipment.route], 'Shipment route');
+    if (!shipment.claimed) {
+      const initialWagon = initialActors.find(a => a.id === 'enemy-caravan')!;
+      same(x, initialWagon.x, 'waiting shipment X'); same(z, initialWagon.z, 'waiting shipment Z');
+      same(shipment.route.length, 0, 'unclaimed shipment route');
+    } else {
+      const destination = blueprint.roads.nodes.find(n => n.id === shipment.destination)!;
+      const end = shipment.route.at(-1) ?? position;
+      if (distance(end, destination) > 0.01) throw new Error('Shipment route ends at wrong destination');
+      if (shipment.delivered && (distance(position, destination) > 0.01 || shipment.route.length || !(typeof wagon.hp === 'number' && wagon.hp > 0))) {
+        throw new Error('Shipment delivery not physically completed');
+      }
+    }
+    if (s.faction === 'guard' && s.outposts.find(p => p.id === 'quarry')!.owner === 'player' &&
+        (s.military.directive !== 'pursuit' || !shipment.delivered || !s.outposts.find(p => p.id === 'palace')!.supplied)) {
+      throw new Error('Guard capture bypassed service orders');
+    }
+    if (s.faction === 'guard' && s.outposts.find(p => p.id === 'forest')!.owner === 'player') throw new Error('Unauthorized guard conquest');
+    if (!s.military.directive && s.outposts.some(p => p.owner !== initial.outposts.find(q => q.id === p.id)!.owner || p.supplied)) {
+      throw new Error('Military holdings precede directive');
+    }
+  }
   const livingBoss = entities.some(e => {
     const a = e.components.KorovanyCombatant;
     assertRecord(a, 'actor');
@@ -309,10 +387,10 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
   const words = value.prng.s.map((word, i) => boundedNumber(word, `PRNG word ${i}`, 0, 0xffffffff, true));
   if (words.every(word => word === 0)) throw new Error('Degenerate PRNG state');
   assertRecord(value.allocator, 'allocator');
-  if (!Array.isArray(value.allocator.slots) || value.allocator.slots.length > 18 ||
-      !Array.isArray(value.allocator.free) || value.allocator.free.length > 18) throw new Error('Invalid allocator');
+  if (!Array.isArray(value.allocator.slots) || value.allocator.slots.length > actorLimit ||
+      !Array.isArray(value.allocator.free) || value.allocator.free.length > actorLimit) throw new Error('Invalid allocator');
   const slots = value.allocator.slots.map((slot, i) => boundedNumber(slot, `slot ${i}`, 0, 0xffffffff, true));
-  const free = value.allocator.free.map((slot, i) => boundedNumber(slot, `free slot ${i}`, 0, 17, true));
+  const free = value.allocator.free.map((slot, i) => boundedNumber(slot, `free slot ${i}`, 0, actorLimit - 1, true));
   return {
     version: 1, tick, entities, resources: { KorovanyCampaign: s, KorovanyIntent: input },
     prng: { s: words }, allocator: { slots, free },

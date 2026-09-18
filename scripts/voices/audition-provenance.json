@@ -1,0 +1,841 @@
+{
+  "version": 1,
+  "status": "awaiting-parent-relayed-human-voice-approval",
+  "provider": "azure-speech",
+  "source_lock": {
+    "version": 1,
+    "inventory_sha256": "79b2fd238d469ac2f05c391f60a7af73d8f835ba9f57734190759d1d580b0543",
+    "inventory_source_hash": "8fe0c2347ad949abe0d9d13424751118f126f0d87413d185e8d44549f1be550a",
+    "cast_sha256": "5cba55d109d1eca0ec99414ec3943288086a1d01dc2cb39dfca8b590a263169b",
+    "pronunciation_sha256": "4cebb22685d0485dd5ab267c9f9c3c5dc529d51863cc22e26d14aab1ec845f23",
+    "status": "awaiting-human-cast-approval",
+    "engine_count": 7,
+    "manifest_sha256": {
+      "audition-enL.json": "39b137cb5ba0709f52ccc655c766712b7ec509e52381b40cbfd2bedbb2b6fff2",
+      "audition-enR.json": "678c8e5122dcb697f5c220f3ee3949b9cab1d820f4059edd228b434ecff50530",
+      "audition-enS.json": "ee1596e823b885574fcd648599bd1e5ceed1e8d5aa24e6b6b4b92381fede8a52",
+      "audition-enT.json": "b905ed613218f2ea96a8072a86bdb780348a955bd57755be169f3566f5a4dc66",
+      "audition-ruD.json": "71ba35e6e349846520b1e608db1028949ed53bb4b0d12de6b1e4269b383154da",
+      "audition-ruF.json": "6537be85751080a12cf2a3434ecfee66bc10668a342cad92a2c015d443e7c2e6",
+      "audition-ruS.json": "7cb19b33470fd7ea86a8c4181995f9c29f65adb1071c6d21afb86af428b5e16b",
+      "corpus-enL.json": "00286d0ccef1357d7cd985874dd2eff6633b41c4200d0d45be51ad2b0c44e00f",
+      "corpus-enR.json": "bcfa537fa9e013af1d8ddc5dfa621119d1fdb5835cd487358630f7594ae305e8",
+      "corpus-enS.json": "244fc8f82217ac6be8517001a78f2685c7fac69005ba991cfd021461a36b5d31",
+      "corpus-enT.json": "f3b94ed7af0f0cd2f162d1dfa6d38a94cf5519927181b5cad77e6188afba606b",
+      "corpus-ruD.json": "baa5c18f0275799abab78b30ac7b3feeefe9a5482ef737fc8c5ec51adda66a64",
+      "corpus-ruF.json": "66fb738135b07a6bc45eabef6d747c4fe774fdf81b8df51a3a251493d116e304",
+      "corpus-ruS.json": "a6892a9821c40ccb84407a46792f4c34d4df6e1d593abef3d8d09decfbcad667"
+    }
+  },
+  "inventory_summary": {
+    "npcCount": 20,
+    "speakerCount": 22,
+    "total": {
+      "entries": 698,
+      "segments": 2265,
+      "characters": 105960,
+      "words": 17920,
+      "minutesAt130Wpm": 137.8,
+      "minutesAt155Wpm": 115.6,
+      "illustrativeUsdAt15PerMillionCharacters": 1.59
+    },
+    "languages": {
+      "ru": {
+        "entries": 349,
+        "segments": 1163,
+        "characters": 50695,
+        "words": 7909,
+        "minutesAt130Wpm": 60.8,
+        "minutesAt155Wpm": 51,
+        "illustrativeUsdAt15PerMillionCharacters": 0.76
+      },
+      "en": {
+        "entries": 349,
+        "segments": 1102,
+        "characters": 55265,
+        "words": 10011,
+        "minutesAt130Wpm": 77,
+        "minutesAt155Wpm": 64.6,
+        "illustrativeUsdAt15PerMillionCharacters": 0.83
+      }
+    },
+    "scope": "All authored dialogue/choice branches, inspectable fallbacks, pending and terminal epilogues. Includes conservative default prompts even when a prior branch necessarily selects a variant.",
+    "estimateNote": "Unique corpus, not one playthrough. USD is an illustrative standard-neural rate, not an Azure quote; excludes SSML billing overhead, probes and assessment."
+  },
+  "cast_sha256": "5cba55d109d1eca0ec99414ec3943288086a1d01dc2cb39dfca8b590a263169b",
+  "engines": {
+    "enL": {
+      "voice": "en-GB-LibbyNeural",
+      "region": "swedencentral",
+      "probe_decision": "PASS",
+      "sentinel_followed": true,
+      "correct_target_scores": [
+        {
+          "target": "Mara",
+          "matched_word": "mara",
+          "word_index": 0,
+          "accuracy_score": 98.0
+        },
+        {
+          "target": "read",
+          "matched_word": "read",
+          "word_index": 2,
+          "accuracy_score": 99.0
+        },
+        {
+          "target": "Toman",
+          "matched_word": "toman",
+          "word_index": 3,
+          "accuracy_score": 100.0
+        },
+        {
+          "target": "read",
+          "matched_word": "read",
+          "word_index": 5,
+          "accuracy_score": 98.0
+        },
+        {
+          "target": "Elin",
+          "matched_word": "elin",
+          "word_index": 6,
+          "accuracy_score": 100.0
+        }
+      ],
+      "sentinel_transcription": "Ma says banana.",
+      "production_report_sha256": "ec99a6e70c035ddfb084ee100036a40f8df15c67275c385368cab638df062c2a"
+    },
+    "enR": {
+      "voice": "en-GB-RyanNeural",
+      "region": "swedencentral",
+      "probe_decision": "PASS",
+      "sentinel_followed": true,
+      "correct_target_scores": [
+        {
+          "target": "Mara",
+          "matched_word": "mara",
+          "word_index": 0,
+          "accuracy_score": 99.0
+        },
+        {
+          "target": "read",
+          "matched_word": "read",
+          "word_index": 2,
+          "accuracy_score": 98.0
+        },
+        {
+          "target": "Toman",
+          "matched_word": "toman",
+          "word_index": 3,
+          "accuracy_score": 100.0
+        },
+        {
+          "target": "read",
+          "matched_word": "read",
+          "word_index": 5,
+          "accuracy_score": 98.0
+        },
+        {
+          "target": "Elin",
+          "matched_word": "elin",
+          "word_index": 6,
+          "accuracy_score": 100.0
+        }
+      ],
+      "sentinel_transcription": "Mara says banana.",
+      "production_report_sha256": "36988a9a84f95075f3ce2477f4020adaf3d4651c7197f5b362cb87e50bd99a1e"
+    },
+    "enS": {
+      "voice": "en-GB-SoniaNeural",
+      "region": "swedencentral",
+      "probe_decision": "PASS",
+      "sentinel_followed": true,
+      "correct_target_scores": [
+        {
+          "target": "Mara",
+          "matched_word": "mara",
+          "word_index": 0,
+          "accuracy_score": 99.0
+        },
+        {
+          "target": "read",
+          "matched_word": "read",
+          "word_index": 2,
+          "accuracy_score": 99.0
+        },
+        {
+          "target": "Toman",
+          "matched_word": "toman",
+          "word_index": 3,
+          "accuracy_score": 100.0
+        },
+        {
+          "target": "read",
+          "matched_word": "read",
+          "word_index": 5,
+          "accuracy_score": 98.0
+        },
+        {
+          "target": "Elin",
+          "matched_word": "elin",
+          "word_index": 6,
+          "accuracy_score": 100.0
+        }
+      ],
+      "sentinel_transcription": "Mara says Banana Towman repeats. Red. Ellen listens.",
+      "production_report_sha256": "66f8c2a9c372b586cd52f1d124edf37a2be16b1abbd70f71ca6a7b9d4010f2f6"
+    },
+    "enT": {
+      "voice": "en-GB-ThomasNeural",
+      "region": "swedencentral",
+      "probe_decision": "PASS",
+      "sentinel_followed": true,
+      "correct_target_scores": [
+        {
+          "target": "Mara",
+          "matched_word": "mara",
+          "word_index": 0,
+          "accuracy_score": 96.0
+        },
+        {
+          "target": "read",
+          "matched_word": "read",
+          "word_index": 2,
+          "accuracy_score": 99.0
+        },
+        {
+          "target": "Toman",
+          "matched_word": "toman",
+          "word_index": 3,
+          "accuracy_score": 100.0
+        },
+        {
+          "target": "read",
+          "matched_word": "read",
+          "word_index": 5,
+          "accuracy_score": 99.0
+        },
+        {
+          "target": "Elin",
+          "matched_word": "elin",
+          "word_index": 6,
+          "accuracy_score": 100.0
+        }
+      ],
+      "sentinel_transcription": "Ma says banana.",
+      "production_report_sha256": "fd58dd8643751943b6b392460499f5e8201c6689742a66d29f462f598d0889a3"
+    },
+    "ruD": {
+      "voice": "ru-RU-DmitryNeural",
+      "region": "swedencentral",
+      "probe_decision": "PASS",
+      "sentinel_followed": true,
+      "correct_target_scores": [
+        {
+          "target": "Мара",
+          "matched_word": "Мара",
+          "word_index": 0,
+          "accuracy_score": 100.0
+        },
+        {
+          "target": "замок",
+          "matched_word": "замок",
+          "word_index": 2,
+          "accuracy_score": 100.0
+        },
+        {
+          "target": "Томан",
+          "matched_word": "Томан",
+          "word_index": 3,
+          "accuracy_score": 100.0
+        },
+        {
+          "target": "замок",
+          "matched_word": "замок",
+          "word_index": 5,
+          "accuracy_score": 100.0
+        },
+        {
+          "target": "Элин",
+          "matched_word": "Элин",
+          "word_index": 6,
+          "accuracy_score": 100.0
+        }
+      ],
+      "sentinel_transcription": "Мара говорит собака.",
+      "production_report_sha256": "aeb7721e0e922cce272e530c6250a9bfa45cba1f994a79587ebe0a5ff30adc79"
+    },
+    "ruF": {
+      "voice": "ru-RU-DariyaNeural",
+      "region": "swedencentral",
+      "probe_decision": "FAIL",
+      "sentinel_followed": true,
+      "correct_target_scores": [
+        {
+          "target": "Мара",
+          "matched_word": "Мара",
+          "word_index": 0,
+          "accuracy_score": 100.0
+        },
+        {
+          "target": "замок",
+          "matched_word": "замок",
+          "word_index": 2,
+          "accuracy_score": 100.0
+        },
+        {
+          "target": "Томан",
+          "matched_word": "Томан",
+          "word_index": 3,
+          "accuracy_score": 87.0
+        },
+        {
+          "target": "замок",
+          "matched_word": "замок",
+          "word_index": 5,
+          "accuracy_score": 100.0
+        },
+        {
+          "target": "Элин",
+          "matched_word": "Элин",
+          "word_index": 6,
+          "accuracy_score": 100.0
+        }
+      ],
+      "sentinel_transcription": "Мара говорит собака.",
+      "production_report_sha256": "40fcc5739a706c6880135c29165d7781ade6980f75b925f6929ac00382d07d4a"
+    },
+    "ruS": {
+      "voice": "ru-RU-SvetlanaNeural",
+      "region": "swedencentral",
+      "probe_decision": "FAIL",
+      "sentinel_followed": true,
+      "correct_target_scores": [
+        {
+          "target": "Мара",
+          "matched_word": "Мара",
+          "word_index": 0,
+          "accuracy_score": 100.0
+        },
+        {
+          "target": "замок",
+          "matched_word": "замок",
+          "word_index": 2,
+          "accuracy_score": 100.0
+        },
+        {
+          "target": "Томан",
+          "matched_word": "Томан",
+          "word_index": 3,
+          "accuracy_score": 88.0
+        },
+        {
+          "target": "замок",
+          "matched_word": "замок",
+          "word_index": 5,
+          "accuracy_score": 100.0
+        },
+        {
+          "target": "Элин",
+          "matched_word": "Элин",
+          "word_index": 6,
+          "accuracy_score": 100.0
+        }
+      ],
+      "sentinel_transcription": "Мара говорит собака.",
+      "production_report_sha256": "4bd4cf9887a7aa48a57ec4a811b1720d2dbffe9b649a1d5a87eca76ee620c9b0"
+    }
+  },
+  "audition_flags": [
+    {
+      "id": "en-ada-2dddc66fcaff6d16.002",
+      "text": "Hollow Village draws drinking water elsewhere.",
+      "transcription": "Hollow Village draws drinking water elsewhere.",
+      "accuracy": 92.0,
+      "fluency": 100.0,
+      "completeness": 83.0,
+      "failed_checks": [
+        "completeness"
+      ],
+      "audio_sha256": "61c96592c5ebd44ae9079b0ff85feb1733993ef091c9d936b5814065bd9aab98"
+    },
+    {
+      "id": "ru-elin-c6ee8ce13c571c50.003",
+      "text": "Я достаточно изучал привязь, чтобы решать за себя.",
+      "transcription": "Я достаточно изучал привесь, чтобы решать за себя.",
+      "accuracy": 97.0,
+      "fluency": 99.0,
+      "completeness": 100.0,
+      "failed_checks": [
+        "target_pronunciation"
+      ],
+      "audio_sha256": "3064750f505ef6b11f224271ef11360ac878eba66335dc7faaef3f6601e4d841"
+    },
+    {
+      "id": "ru-narrator-1b72e8683102ebee.004",
+      "text": "Под клочком мешковины — чёрное стекло, завёрнутое в полотно с погребальным швом.",
+      "transcription": "Под клочком мешковины черное стекло, завернутая в полотно с погребальным швом.",
+      "accuracy": 86.0,
+      "fluency": 87.0,
+      "completeness": 91.0,
+      "failed_checks": [
+        "accuracy"
+      ],
+      "audio_sha256": "1ece1e743288866840013b73e2e5b4d2fa21e48bd7566302f62ef86d5920c29c"
+    },
+    {
+      "id": "ru-toman-88762292965ac4a8.002",
+      "text": "Сказал: жена к ужину зовёт.",
+      "transcription": "Сказал, жена кожи на зовет.",
+      "accuracy": 91.0,
+      "fluency": 79.0,
+      "completeness": 80.0,
+      "failed_checks": [
+        "completeness"
+      ],
+      "audio_sha256": "7103a95d09c0281e83546819fe8afcabd776e53c34e0bb47b57042dfb92cc299"
+    },
+    {
+      "id": "ru-mara-763595b4cde78b56.001",
+      "text": "Три телеги.",
+      "transcription": "3 реги.",
+      "accuracy": 64.0,
+      "fluency": 100.0,
+      "completeness": 100.0,
+      "failed_checks": [
+        "accuracy"
+      ],
+      "audio_sha256": "08c913a3cafb85d97ba2a53728e7745137921d25960dc142f18363aac35d5110"
+    },
+    {
+      "id": "ru-mara-763595b4cde78b56.005",
+      "text": "Я брала подряд на ячмень, не на это.",
+      "transcription": "Я брала подряд на ячмень не на это.",
+      "accuracy": 94.0,
+      "fluency": 95.0,
+      "completeness": 88.0,
+      "failed_checks": [
+        "completeness"
+      ],
+      "audio_sha256": "2c86fb4d56a5e52d514e99bcc4fd3d00abae7e0ebd5aff3612830758cc685046"
+    },
+    {
+      "id": "ru-mara-763595b4cde78b56.006",
+      "text": "Томан видел обоз у Зелёной лощины.",
+      "transcription": "Том он видел босс у зеленой ло.",
+      "accuracy": 90.0,
+      "fluency": 99.0,
+      "completeness": 100.0,
+      "failed_checks": [
+        "target_pronunciation"
+      ],
+      "audio_sha256": "0a8a7d0b7cccf8c0e3c822cfc7fc1bb942bf5aa8fe7684d7cda281262ab0ed28"
+    },
+    {
+      "id": "ru-ada-e35e8ce02cbb7d3f.003",
+      "text": "Крышка не пускает детей к краю.",
+      "transcription": "Крышка не пускает детей к краю.",
+      "accuracy": 81.0,
+      "fluency": 100.0,
+      "completeness": 83.0,
+      "failed_checks": [
+        "accuracy",
+        "completeness"
+      ],
+      "audio_sha256": "3063f5b4920cfc5f4fef1bb7ddf80c24355c70b2dde04067a829c45fb9f696b4"
+    }
+  ],
+  "samples": [
+    {
+      "id": "en-mila",
+      "file": "en-mila-ec99a6e70c.wav",
+      "sha256": "efd0dc85585877b98cb9362a3893fb2082bde725a92d6453301d5bf32e833387"
+    },
+    {
+      "id": "probe-enL-plain",
+      "file": "plain.wav",
+      "sha256": "0888132a12d30264b7bc14698950c9801f6d73d7e444bfd110e54d6c66c4490e"
+    },
+    {
+      "id": "probe-enL-correct",
+      "file": "correct.wav",
+      "sha256": "6f946209d4f7af74ced6a727087afc76f71be2277f07ae3f1029115058e13280"
+    },
+    {
+      "id": "probe-enL-swapped",
+      "file": "swapped.wav",
+      "sha256": "664f133f896d8bb3fac39bbe9088e8f983d0b853d61c7c10c424885ff7e820b4"
+    },
+    {
+      "id": "probe-enL-sentinel",
+      "file": "sentinel.wav",
+      "sha256": "7a47ab8e388fdf4db072f824db67bcf2c441b61cd5553b27a1b49f7144bd36c0"
+    },
+    {
+      "id": "en-player",
+      "file": "en-player-36988a9a84.wav",
+      "sha256": "7e5bd5a001201eb1a7404a03a9ddfed3aec70f00281e9ab1fc7f9dc67df7a779"
+    },
+    {
+      "id": "en-toman",
+      "file": "en-toman-36988a9a84.wav",
+      "sha256": "631dd89d104e5948a22d804f8d795342666feb2622255d03929c3b42f00e6894"
+    },
+    {
+      "id": "probe-enR-plain",
+      "file": "plain.wav",
+      "sha256": "c6b99062e9b64bc2b453b54b7502aaf86ff4e28c9a044de3025f0a8c50e55986"
+    },
+    {
+      "id": "probe-enR-correct",
+      "file": "correct.wav",
+      "sha256": "b5fa17c69644e04dc4a193d16d91afd70ae94750bba6d93c0ea93253b4c9022d"
+    },
+    {
+      "id": "probe-enR-swapped",
+      "file": "swapped.wav",
+      "sha256": "bc98ef62c37a4af5176b99a50e074fcca89a59c29d2900123ae58287259bb7a7"
+    },
+    {
+      "id": "probe-enR-sentinel",
+      "file": "sentinel.wav",
+      "sha256": "76e14aa3d6b0d2c2f30ddb21d521857fb1afdd873f25dd4ff04852b46450c050"
+    },
+    {
+      "id": "en-ada",
+      "file": "en-ada-66f8c2a9c3.wav",
+      "sha256": "67b229ee8c173443e6fa532b1223c9b32b2a881d1d8ad66a4b05ef81a79ae728"
+    },
+    {
+      "id": "en-mara",
+      "file": "en-mara-66f8c2a9c3.wav",
+      "sha256": "ad032191db5b06689fd570ebe65aed80771706c265ab8f0895e9ad96ce9f023b"
+    },
+    {
+      "id": "probe-enS-plain",
+      "file": "plain.wav",
+      "sha256": "abe2199023cff65651452d74c3dc6822493a3f37965788b7b6891794b5358cc9"
+    },
+    {
+      "id": "probe-enS-correct",
+      "file": "correct.wav",
+      "sha256": "aaae12390864c6825cb00e9acb4c8fe47daa5d83085f2d312b407d85cb7aac36"
+    },
+    {
+      "id": "probe-enS-swapped",
+      "file": "swapped.wav",
+      "sha256": "7229e7c82518f6819c2bfa0f516f0e916f1b1f925ab6cfa69c5e08b9c021c287"
+    },
+    {
+      "id": "probe-enS-sentinel",
+      "file": "sentinel.wav",
+      "sha256": "5414d724651a5ed46f96dcffcfa06afb350d0ce1ba035ced909a938b2123a135"
+    },
+    {
+      "id": "en-elin",
+      "file": "en-elin-fd58dd8643.wav",
+      "sha256": "45a665f5a777c888a4eea60600fefc9cc901d8e1ee4b2c5221513510c0239fa5"
+    },
+    {
+      "id": "en-narrator",
+      "file": "en-narrator-fd58dd8643.wav",
+      "sha256": "7886fb79852e800b8ae21d69d94acd8f60167dfff51705d03104352d974d87a4"
+    },
+    {
+      "id": "probe-enT-plain",
+      "file": "plain.wav",
+      "sha256": "c838948548f9169b5f64ccfeb6d8bed54628f7998c5aa407cbc9d489847a19dc"
+    },
+    {
+      "id": "probe-enT-correct",
+      "file": "correct.wav",
+      "sha256": "5fd30c982492b27971bd132d4729a90a8e31224ac8aeaad14d12ff7aaafd25a1"
+    },
+    {
+      "id": "probe-enT-swapped",
+      "file": "swapped.wav",
+      "sha256": "c0eab849c5c613a02311c7150dde489c47a3b02a0e13128a01d3e90eab7df213"
+    },
+    {
+      "id": "probe-enT-sentinel",
+      "file": "sentinel.wav",
+      "sha256": "cbbdff4a6457082c4354e4be9e1c6b332660ed54da4e69b46914cd8f72d3117b"
+    },
+    {
+      "id": "ru-elin",
+      "file": "ru-elin-aeb7721e0e.wav",
+      "sha256": "5a61272b5de78b6ddc3631061c6fa0e16e2644fd20e47a1ded4cdb7ce3068af4"
+    },
+    {
+      "id": "ru-narrator",
+      "file": "ru-narrator-aeb7721e0e.wav",
+      "sha256": "a0542201e3576ca74295766ed3753dde4513f2b5d9f91f90820f314333eb99e1"
+    },
+    {
+      "id": "ru-player",
+      "file": "ru-player-aeb7721e0e.wav",
+      "sha256": "63d008d3bbe3102b3320dcf659bfc402ccd5a2c3c7f32c9eb032e7ce4010c784"
+    },
+    {
+      "id": "ru-toman",
+      "file": "ru-toman-aeb7721e0e.wav",
+      "sha256": "bacc16366c5c34fe5c1fdc2cf7a219c73c305f4b07280fe05df468aa788379dc"
+    },
+    {
+      "id": "probe-ruD-plain",
+      "file": "plain.wav",
+      "sha256": "e120aeea690a4926fa2e615237727543bb264eeb4ce179c20c430af56983f75b"
+    },
+    {
+      "id": "probe-ruD-correct",
+      "file": "correct.wav",
+      "sha256": "4cee36a8fa0613c22b329c451ada4a37ffd95455b43213cd76ccea7e086b9459"
+    },
+    {
+      "id": "probe-ruD-swapped",
+      "file": "swapped.wav",
+      "sha256": "2cef954a1b05643309d6bf4cfcc331cc605decdeb10f328031a163e17a4369f8"
+    },
+    {
+      "id": "probe-ruD-sentinel",
+      "file": "sentinel.wav",
+      "sha256": "7e5052ad5d5aeb74d24ee4be486ae5adf550b76c22284dbc535d83e53a969a77"
+    },
+    {
+      "id": "ru-mara",
+      "file": "ru-mara-40fcc5739a.wav",
+      "sha256": "678a625f79ac422f63ab429180ae4bfb3059d7ae1a62b47ac205346ddc107580"
+    },
+    {
+      "id": "probe-ruF-plain",
+      "file": "plain.wav",
+      "sha256": "a027a16dbe1fc8c08ed1ca87eb14d61604f0925fe2d1568af3a088bfa1327347"
+    },
+    {
+      "id": "probe-ruF-correct",
+      "file": "correct.wav",
+      "sha256": "a0bacc5c6e366b44a92016c72cbd4e3a395d514252e8b294178a7860e8db318b"
+    },
+    {
+      "id": "probe-ruF-swapped",
+      "file": "swapped.wav",
+      "sha256": "5385bd0651e3b1eda765cac176d3940d1050667fd7c0f46ef32b6dd3ab718698"
+    },
+    {
+      "id": "probe-ruF-sentinel",
+      "file": "sentinel.wav",
+      "sha256": "9c1c9ae6c4d3e445032f7c326ac375296eed523e7a1a7e9df62999f26435db1a"
+    },
+    {
+      "id": "ru-ada",
+      "file": "ru-ada-4bd4cf9887.wav",
+      "sha256": "d252a6cd1c705a01a55dbe5a18e16bb7838761eb15f36345f00cc95af4c88309"
+    },
+    {
+      "id": "ru-mila",
+      "file": "ru-mila-4bd4cf9887.wav",
+      "sha256": "8c460b045c627a80dd37f42a5ee8a73b21edf02827a4bd86caa64a6f1d530675"
+    },
+    {
+      "id": "probe-ruS-plain",
+      "file": "plain.wav",
+      "sha256": "e4dab874bfc84703cdbb909ace3ea33e4a4e299c3270c860f9e49eaeceb31dc3"
+    },
+    {
+      "id": "probe-ruS-correct",
+      "file": "correct.wav",
+      "sha256": "d2934eb9509ac827e9a8308a11304242a5b8aeb1d2cee171cdae89385e72968f"
+    },
+    {
+      "id": "probe-ruS-swapped",
+      "file": "swapped.wav",
+      "sha256": "5c2d4ebff43db0034ef596ff4f7ce1f4311d8b4189d33aef8e968532c91c4fd3"
+    },
+    {
+      "id": "probe-ruS-sentinel",
+      "file": "sentinel.wav",
+      "sha256": "1bd651e0b1b53647bc24b31cccbb477ca610c5ff432d288594983bcf98355ddc"
+    }
+  ],
+  "acoustic": {
+    "device": "cpu",
+    "decision": "NEEDS_HUMAN_LISTENING",
+    "scored": {
+      "en-mila-ec99a6e70c.wav": {
+        "chunks": [
+          {
+            "mos": 4.888,
+            "noisiness": 4.6053,
+            "discontinuity": 4.6646,
+            "coloration": 4.3262,
+            "loudness": 4.6167
+          }
+        ],
+        "minimum_mos": 4.888,
+        "minimum_discontinuity": 4.6646
+      },
+      "en-toman-36988a9a84.wav": {
+        "chunks": [
+          {
+            "mos": 4.8602,
+            "noisiness": 4.6326,
+            "discontinuity": 4.708,
+            "coloration": 4.3468,
+            "loudness": 4.6227
+          }
+        ],
+        "minimum_mos": 4.8602,
+        "minimum_discontinuity": 4.708
+      },
+      "en-ada-66f8c2a9c3.wav": {
+        "chunks": [
+          {
+            "mos": 4.8164,
+            "noisiness": 4.5101,
+            "discontinuity": 4.6892,
+            "coloration": 4.3564,
+            "loudness": 4.574
+          }
+        ],
+        "minimum_mos": 4.8164,
+        "minimum_discontinuity": 4.6892
+      },
+      "en-mara-66f8c2a9c3.wav": {
+        "chunks": [
+          {
+            "mos": 4.9782,
+            "noisiness": 4.6909,
+            "discontinuity": 4.8332,
+            "coloration": 4.5362,
+            "loudness": 4.7094
+          }
+        ],
+        "minimum_mos": 4.9782,
+        "minimum_discontinuity": 4.8332
+      },
+      "en-elin-fd58dd8643.wav": {
+        "chunks": [
+          {
+            "mos": 4.6072,
+            "noisiness": 4.4652,
+            "discontinuity": 4.4729,
+            "coloration": 4.1685,
+            "loudness": 4.4951
+          }
+        ],
+        "minimum_mos": 4.6072,
+        "minimum_discontinuity": 4.4729
+      },
+      "en-narrator-fd58dd8643.wav": {
+        "chunks": [
+          {
+            "mos": 4.8267,
+            "noisiness": 4.5531,
+            "discontinuity": 4.6979,
+            "coloration": 4.3535,
+            "loudness": 4.6381
+          }
+        ],
+        "minimum_mos": 4.8267,
+        "minimum_discontinuity": 4.6979
+      },
+      "ru-elin-aeb7721e0e.wav": {
+        "chunks": [
+          {
+            "mos": 5.0242,
+            "noisiness": 4.6437,
+            "discontinuity": 4.824,
+            "coloration": 4.5437,
+            "loudness": 4.7514
+          }
+        ],
+        "minimum_mos": 5.0242,
+        "minimum_discontinuity": 4.824
+      },
+      "ru-narrator-aeb7721e0e.wav": {
+        "chunks": [
+          {
+            "mos": 5.0205,
+            "noisiness": 4.6864,
+            "discontinuity": 4.8503,
+            "coloration": 4.5348,
+            "loudness": 4.7583
+          }
+        ],
+        "minimum_mos": 5.0205,
+        "minimum_discontinuity": 4.8503
+      },
+      "ru-toman-aeb7721e0e.wav": {
+        "chunks": [
+          {
+            "mos": 4.9482,
+            "noisiness": 4.6197,
+            "discontinuity": 4.7848,
+            "coloration": 4.5004,
+            "loudness": 4.6804
+          }
+        ],
+        "minimum_mos": 4.9482,
+        "minimum_discontinuity": 4.7848
+      },
+      "ru-mara-40fcc5739a.wav": {
+        "chunks": [
+          {
+            "mos": 4.9812,
+            "noisiness": 4.5837,
+            "discontinuity": 4.7406,
+            "coloration": 4.449,
+            "loudness": 4.6505
+          }
+        ],
+        "minimum_mos": 4.9812,
+        "minimum_discontinuity": 4.7406
+      },
+      "ru-ada-4bd4cf9887.wav": {
+        "chunks": [
+          {
+            "mos": 4.5725,
+            "noisiness": 4.4824,
+            "discontinuity": 4.4678,
+            "coloration": 3.9999,
+            "loudness": 4.4428
+          }
+        ],
+        "minimum_mos": 4.5725,
+        "minimum_discontinuity": 4.4678
+      },
+      "ru-mila-4bd4cf9887.wav": {
+        "chunks": [
+          {
+            "mos": 5.0635,
+            "noisiness": 4.7338,
+            "discontinuity": 4.8918,
+            "coloration": 4.5916,
+            "loudness": 4.7795
+          }
+        ],
+        "minimum_mos": 5.0635,
+        "minimum_discontinuity": 4.8918
+      }
+    },
+    "not_scored": [
+      {
+        "path": "en-player-36988a9a84.wav",
+        "duration": 3.218667,
+        "reason": "Below NISQA's four-second minimum; not padded or repeated."
+      },
+      {
+        "path": "ru-player-aeb7721e0e.wav",
+        "duration": 3.124375,
+        "reason": "Below NISQA's four-second minimum; not padded or repeated."
+      }
+    ],
+    "note": "Raw NISQA regression scores are not clamped; values can slightly exceed five. They do not approve pronunciation or acting."
+  },
+  "limitations": [
+    "Three Russian engines, including one male timbre; four British English engines. Twenty character profiles are not twenty unique actors.",
+    "All seven voices obey sentinel phonemes, but two Russian female probes miss the target-score threshold on the proposed stress of Toman.",
+    "Automated pronunciation/recognition flags are retained for human listening. Thresholds are unchanged.",
+    "One identified IPA vowel defect in privyaz was corrected once. Original audio/report remain in the external repair history; the metric still flags the word.",
+    "No full-corpus synthesis or public runtime manifest has been released at this gate."
+  ]
+}

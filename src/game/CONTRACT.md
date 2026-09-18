@@ -38,10 +38,15 @@ for the lifetime of that run; renderer can cache scenery by `world.id`.
 Renderer sees player, actors (including the enemy caravan), convoy, collision
 obstacles, road graph, water/bridges, pickups, effects, projectiles, faction colors,
 AI windup/attack/recovery state, fortress and outpost ownership/progress.
-Enemy factions are rival houses: even a post of the player's selected faction
-starts hostile. `owner`, not faction color, defines captured status.
+For v2, `ActorSnapshot.allegiance` explicitly identifies friendly, hostile and
+neutral actors. Appearance and political identity never imply hostility. Friendly
+soldiers fight hostile forces; the player and friendly projectiles cannot damage
+friendly/neutral soldiers or the shipment. `WorldRegion.politicalFaction` exposes
+four political territories: elves, Crown, mountain ruler, and independent humans.
+`owner`, not faction color, defines controlled holdings. V1 retains its original
+rival-house rules, where all combat actors start hostile regardless of color.
 
-Campaign: defeat a post's defenders and hold interact inside its capture radius;
+Legacy v1 campaign: defeat a post's defenders and hold interact inside its capture radius;
 capture two of three posts; destroy the raiding caravan and gather its supplies;
 escort the physical road-following convoy with cargo to two captured posts.
 Deliveries (30 per post) plus the raid unlock the fortress boss. Supplying all
@@ -58,45 +63,92 @@ New campaigns default to world version 2. `CampaignOptions.worldVersion: 1`
 explicitly creates the original military-only campaign. Saves use the blueprint
 version and restore that exact generator, preserving v1 geometry and hashes.
 `GameSnapshot.version` remains the presentation protocol version 1, not the
-world/save version. `GameSnapshot.narrative` is absent for v1, present for v2.
+world/save version. `GameSnapshot.narrative` and `.campaign` are absent for v1,
+present for v2. New v2 worlds have faction-specific world IDs, home sites and
+home road aliases; restore reconstructs the same faction world.
+
+## Faction military campaigns
+
+`FACTION_CAMPAIGNS` is the localized public identity/guide configuration.
+`snapshot.campaign` supplies identity, current orders, requirement labels and
+completion, political standing, shipment status and objective label. Presenters
+must use these instead of interpreting generic legacy capture/raid counters.
+Sites and named actors have localized `name`; interactions and events can have
+localized `label`. The legacy keys remain available for v1.
+
+Each faction has a complete authored journal selected by `getFactionStory`.
+An early `StoryAction.directive` is an irreversible military decision, not prose
+parsing. It is saved separately and checked against replay of the faction journal.
+No new holdings can be claimed or supplied before this decision.
+
+| Faction | Home / authority | Directive and actual prerequisites |
+| --- | --- | --- |
+| Elf | Greenhollow; Toman and the forest households | `shelter`: liberate/supply forest depot; `interdict`: also take/supply palace supply gate. Both intercept the shipment and escort it to the forest depot, then defeat Raut. |
+| Guard | Crownbridge; authorized service under Vesk | Repel the attackers at the already-owned palace supply gate, protect the living shipment to the gate, and supply it. `relief` permits the sortie against Raut; `pursuit` additionally requires quarry capture/supply. Quarry cannot be claimed before the relief shipment and supplied gate; no unauthorized forest conquest. |
+| Villain | Old Fort in Frostspine; the player's own army | `dominion`: claim/supply palace gate and quarry, appropriating the shipment for the palace foothold. `plunder`: claim/supply palace gate, but physically return the shipment to Old Fort. Conquer the royal citadel against the Palace Marshal, not Raut. |
+
+`palace` is the supply gate, not the throne. `palace-citadel` is a distinct
+Crownlands location and the villain's `fortress` encounter. Elf/guard final combat
+is Raut's invasion redoubt. The villain's home soldiers accompany commanded
+logistics movements and engage hostile forces; the armed logistics convoy remains
+independently commandable.
+
+Old Fort has authoritative `old-fort-wall-*` perimeter blockers: twelve curtain
+sections and two tall northern gate towers. The original six building radii are
+unchanged; their heights describe stone keeps/towers rather than cottages.
+Placement preserves the 9m home clearing and both road approaches. Presentation
+must keep the road gaps open rather than adding an invisible gate collision.
+
+The same `enemy-caravan` actor is a Crown ward-glass shipment in all campaigns,
+not an enemy simply because of its legacy ID. It begins friendly for guard and
+neutral for the other factions. Clear its hostile escort/attackers and hold E
+within 4m to assume control after the directive (guard also needs the gate
+defense). It follows its actual road route at 4m/s only while the hero is within
+22m. Attacks can disable it without deleting it; held E repairs a wreck in five
+seconds for free, then continuously repairs damage. Delivery requires a living
+wagon physically at its destination and no nearby hostile forces. It grants
+90 supplies once. The separate logistics convoy still begins with 30 cargo,
+physically supplies holdings, and remains freely repairable.
+
+Required supplied holdings plus shipment delivery unlock the final battle.
+All story endings require both that military outcome and the final commander's
+death. Dialogue cannot manufacture a military victory. Optional holdings and
+local quests remain available before the final story choice.
 
 ## The Hollow Road
 
-The expanded campaign keeps the conquest intact and adds five sequential main
+The expanded campaign contains three different sets of five sequential main
 chapters, eight local quests with different investigation lengths and witnesses,
-and twenty authored NPCs across eight regions. Main chapter completion opens the
+and authored NPCs across the same eight regions. Main chapter completion opens the
 next investigation; side quests may be started in any order. Inspecting a relevant
 location records the evidence and opens a paused reading scene. Inspection
 snapshots expose the location, title and full text; closing the scene does not
 remove its evidence from the journal. Revisiting a place cannot grant evidence or
 rewards twice.
 
-The story concerns a convoy's missing crew, a voice that imitates the dead, and
-Commander Raut's trade in protective black glass. It does not add monster combat,
+The shared mystery concerns a shipment's missing crew, a voice that imitates the
+dead, and the ward-glass trade, but the witnesses, obligations, decisions and
+endings are faction-scoped. It does not add monster combat,
 a day/night system or simulated village populations. Local outcomes are recorded
 narrative events; they change testimony, reputation and available final plans,
 not unimplemented combat bonuses.
 
-Three mutually exclusive final plans follow the investigation and military
-supply prerequisites. Three Bells additionally requires the `bell-mourn` and
-`stag-dependents` alliances. Its reply explains the missing decisions; refusing
-those alliances leaves the other two plans available. Prerequisites are checked
-both when choosing and chronologically when replaying a save. A player may agree
-on a plan before the commander dies, or postpone the choice to finish local work.
-The selected plan is explicitly a commitment, not a completed ritual. Its actual
-epilogue appears only after the commander's defeat.
+Each faction has three mutually exclusive authored final plans. Some additionally
+require specific local alliances. Disabled replies explain missing decisions;
+refusing an alliance leaves other plans available. Prerequisites are checked
+both when choosing and chronologically when replaying a save. A final plan cannot
+be selected before the military outcome and commander's defeat.
 
 V2 victory requires **both** a chosen final plan and the defeated fortress
 commander. Boss death alone does not freeze an unresolved story. Final choice
-after boss death completes the expedition without a combat tick; choosing first
-leaves the world playable until the boss dies. Defeat and terminal reward rules
+after boss death completes the campaign without a combat tick. Defeat and terminal reward rules
 otherwise remain unchanged. V1 boss victory is unchanged.
 
 Public `NarrativeInput` commands are `talk`, `choose`, `close`, `inspect`, `track`
 and `travel`, with exact fields in `narrative-types.ts`. Map T/talk to
 `narrative.interaction`; held E remains military capture/repair/transfer/rest.
-NPCs near Roadward are available immediately. Each has authored questions about
-local matters and their own experience; only Mara, Ren and Elin offer the military
+Home residents are available immediately. Each has authored questions about
+local matters and their own experience; Toman, Vesk, Ren and Elin offer the military
 status topic. If several quests need the same witness, the player chooses a quest
 topic before seeing its prompt and replies. A local topic never offers answers to
 an unseen quest prompt. Raw commands cannot bypass that topic selection.
@@ -115,6 +167,11 @@ command structures throw before any mutation. A quest's `targetId` points to its
 speaker when discovered, otherwise that speaker's location, so map tracking
 does not depend on guessing an undiscovered NPC's coordinates. The `summary`
 explains remaining military/story obligations even after the commander dies.
+
+`npcs` includes residents at discovered locations regardless of talk range or
+nearby threats. `NpcSnapshot.available` means conversation is currently allowed:
+the campaign is playing, the hero is within 4.25m, and both are safe. It is not a
+visibility flag; world and map presenters apply their own draw distances.
 
 Locations are discovered on proximity. Travel requires a discovered eligible
 stop at both ends, the hero within 7m of the departure road node, the convoy
@@ -135,7 +192,8 @@ evidence discoveries, invalid topics, out-of-range scenes, simultaneous dialogue
 and inspection, stale intent and bypassed military/alliance gates. Both kinds of
 reading scene survive exact save/resume without advancing time.
 
-The Hollow Road uses narrative state version **2**, independently of the world
+Faction campaigns use narrative state version **3**, including an explicit faction,
+and military state version **1**, independently of the world
 and snapshot protocol versions. Previous story state is deliberately unsupported;
 start a new campaign rather than reinterpret old choices. Profile and settings
 storage are unchanged. Explicit military-only v1 worlds remain an independent
@@ -161,7 +219,7 @@ The Aegis ECS World, registered components/resources, ordered Systems and fixed
 Simulation own game state and timers. Browser code must not import the engine's
 Node-only renderer or CLI. A custom Three presenter is intentional.
 
-The registered `KorovanyCombatant` component owns every hostile actor; the
+The registered `KorovanyCombatant` component owns hostile/friendly forces and the shipment; the
 `KorovanyCampaign` resource owns the hero, convoy and campaign counters.
 `KorovanyIntent` receives validated per-tick input. The schedule runs timers,
 hero action, enemy AI, convoy routing, swept projectiles, conquest and terminal

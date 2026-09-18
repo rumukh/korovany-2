@@ -5,6 +5,7 @@ import { localText, questTarget } from "../src/ui/story";
 import { translate } from "../src/ui/locale";
 import { WorldResidents } from "../src/view/residents";
 import { ViewResources } from "../src/view/resources";
+import { CampaignDriver } from "./driver";
 
 function fixture(): GameSnapshot {
   const snapshot = createCampaign({ seed: "residents", faction: "guard" }).snapshot();
@@ -19,6 +20,8 @@ function fixture(): GameSnapshot {
       objective: copy, targetId: "keeper", entries: [], outcome: null }],
   };
   snapshot.narrative = story;
+  snapshot.player.x = 2;
+  snapshot.player.z = -53;
   return snapshot;
 }
 
@@ -27,7 +30,8 @@ describe("narrative presentation contract", () => {
     const snapshot = fixture();
     const quest = snapshot.narrative!.quests[0]!;
     expect(questTarget(snapshot, quest)).toMatchObject({ x: 1, z: -54 });
-    expect(questTarget(snapshot, { ...quest, targetId: "home" })).toMatchObject({ x: 0, z: -54 });
+    const home = snapshot.world.sites.find(site => site.id === "home")!;
+    expect(questTarget(snapshot, { ...quest, targetId: "home" })).toMatchObject({ x: home.x, z: home.z });
     expect(questTarget(snapshot, { ...quest, targetId: "missing" })).toBeNull();
     expect(questTarget(snapshot)).toBeNull();
   });
@@ -74,6 +78,8 @@ describe("narrative presentation contract", () => {
       ["tax-vault", "Sealed Vault", "Опечатанный подвал"],
       ["bell-foundry", "Bell Foundry", "Колокольный двор"],
       ["high-pass", "High Pass", "Высокий перевал"],
+      ["old-fort", "Old Fort", "Старый форт"],
+      ["palace-citadel", "Royal Citadel", "Королевская цитадель"],
       ["star-monastery", "Star Monastery", "Звёздный монастырь"],
       ["frozen-beacon", "Frozen Beacon", "Замёрзший маяк"],
       ["hollow-village", "Hollow Village", "Глухая деревня"],
@@ -117,5 +123,68 @@ describe("narrative presentation contract", () => {
     residents.dispose();
     resources.dispose();
     expect(disposals.every((dispose) => dispose.mock.calls.length === 1)).toBe(true);
+  });
+
+  it("keeps Mara visible when walking out of talk range and back", () => {
+    const game = createCampaign({ seed: "resident-walk-away", faction: "guard" });
+    const driver = new CampaignDriver(game);
+    driver.toNode("roadward");
+    driver.walk(game.snapshot().narrative!.npcs.find(npc => npc.id === "mara")!, 0.2);
+    const scene = new THREE.Scene();
+    const resources = new ViewResources();
+    const residents = new WorldResidents(resources, scene);
+    const camera = new THREE.PerspectiveCamera();
+    try {
+      residents.update(game.snapshot(), camera, false);
+      const mara = scene.getObjectByName("resident:mara");
+      expect(mara?.visible).toBe(true);
+      for (let step = 0; step < 120; step++) {
+        game.step({ move: { x: 0, z: -1 } });
+        residents.update(game.snapshot(), camera, false);
+        expect(mara?.visible).toBe(true);
+      }
+      const away = game.snapshot();
+      const npc = away.narrative!.npcs.find((person) => person.id === "mara")!;
+      expect(Math.hypot(npc.x - away.player.x, npc.z - away.player.z)).toBeGreaterThan(8);
+      expect(npc.available).toBe(false);
+      expect(away.narrative!.interaction?.targetId).not.toBe("mara");
+      game.step({ narrative: { type: "talk", npcId: "mara" } });
+      expect(game.snapshot().narrative!.dialogue).toBeNull();
+      expect(game.snapshot().narrative!.notice?.en).toContain("closer");
+      for (let step = 0; step < 120; step++) {
+        game.step({ move: { x: 0, z: 1 } });
+        residents.update(game.snapshot(), camera, false);
+        expect(scene.getObjectByName("resident:mara")).toBe(mara);
+        expect(mara?.visible).toBe(true);
+      }
+      expect(game.snapshot().narrative!.interaction).toMatchObject({ kind: "talk", targetId: "mara", enabled: true });
+    } finally {
+      residents.dispose();
+      resources.dispose();
+    }
+  });
+
+  it.each([false, true])("uses the world draw range even when conversation is unavailable (reduced motion: %s)", (reducedMotion) => {
+    const snapshot = fixture();
+    const npc = snapshot.narrative!.npcs[0]!;
+    npc.available = false;
+    const scene = new THREE.Scene();
+    const resources = new ViewResources();
+    const residents = new WorldResidents(resources, scene);
+    const camera = new THREE.PerspectiveCamera();
+    try {
+      for (const distance of [0, 4.25, 4.26, 10, 32, 38, 80, 119.99, 120, 120.01, 450, 10, 0]) {
+        snapshot.player.x = npc.x + distance;
+        snapshot.player.z = npc.z;
+        residents.update(snapshot, camera, reducedMotion);
+        expect(scene.getObjectByName("resident:keeper")?.visible, `${distance}m`).toBe(distance < 120);
+      }
+      snapshot.narrative = undefined;
+      residents.update(snapshot, camera, reducedMotion);
+      expect(scene.children).toHaveLength(0);
+    } finally {
+      residents.dispose();
+      resources.dispose();
+    }
   });
 });

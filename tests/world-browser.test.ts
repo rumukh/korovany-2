@@ -96,7 +96,7 @@ describe.runIf(process.env.KOROVANY_WORLD_BROWSER === '1')('expanded world WebGL
           });
         },
       }],
-      server: { host: '127.0.0.1', port: 0 },
+      server: { host: '127.0.0.1', port: 0, hmr: false, watch: null },
     });
     await server.listen();
     const origin = server.resolvedUrls?.local[0];
@@ -121,7 +121,7 @@ describe.runIf(process.env.KOROVANY_WORLD_BROWSER === '1')('expanded world WebGL
     const locations = [
       'roadward', 'greenhollow', 'stag-shrine', 'mirecross', 'drowned-archive', 'saltmarket',
       'tide-observatory', 'cinderwell', 'glass-quarry', 'crownbridge', 'bell-foundry',
-      'high-pass', 'star-monastery', 'frozen-beacon', 'hollow-village', 'name-well', 'last-archive',
+      'high-pass', 'old-fort', 'palace-citadel', 'star-monastery', 'frozen-beacon', 'hollow-village', 'name-well', 'last-archive',
     ];
     const metrics: { location: string; calls: number; triangles: number; geometries: number; programs: number }[] = [];
     for (const location of locations) {

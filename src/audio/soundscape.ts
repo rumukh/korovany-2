@@ -1,3 +1,5 @@
+import { VoicePlayback, type SpeechLine } from "./speech";
+
 type Cue = "attack" | "hit" | "capture" | "delivery" | "victory" | "defeat" | "ability" | "click";
 
 export class Soundscape {
@@ -10,8 +12,11 @@ export class Soundscape {
   private combat = false;
   private beat = 0;
   private disposed = false;
+  private readonly speech: VoicePlayback;
 
-  constructor(private readonly onFailure: () => void) {}
+  constructor(private readonly onFailure: () => void, onSubtitle: (line: SpeechLine | null) => void = () => {}) {
+    this.speech = new VoicePlayback(() => this.context, onFailure, onSubtitle);
+  }
 
   /** Call only from a trusted click/keypress; autoplay is never requested. */
   async unlock(): Promise<void> {
@@ -25,6 +30,7 @@ export class Soundscape {
       }
       if (this.context.state === "suspended") await this.context.resume();
       if (this.active) this.begin();
+      this.speech.start();
     } catch {
       this.onFailure();
     }
@@ -32,6 +38,7 @@ export class Soundscape {
 
   configure(muted: boolean): void {
     this.muted = muted;
+    this.speech.configure(muted);
     if (muted) this.silence();
     else if (this.active) this.begin();
   }
@@ -46,8 +53,14 @@ export class Soundscape {
     this.combat = combat;
   }
 
-  inspect(): { state: AudioContextState | "locked"; active: boolean; muted: boolean; voices: number } {
-    return { state: this.context?.state ?? "locked", active: this.active, muted: this.muted, voices: this.voices.size };
+  speak(key: string, lines: readonly SpeechLine[]): void { this.speech.speak(key, lines); }
+  cancelSpeech(): void { this.speech.cancel(); }
+  setSpeechActive(active: boolean): void { this.speech.setActive(active); }
+
+  inspect() {
+    const speech = this.speech.inspect();
+    return { state: this.context?.state ?? "locked", active: this.active, muted: this.muted,
+      voices: this.voices.size + Number(speech.playing), speech };
   }
 
   cue(cue: Cue): void {
@@ -119,6 +132,7 @@ export class Soundscape {
     this.disposed = true;
     this.active = false;
     this.silence();
+    this.speech.dispose();
     if (this.context) void this.context.close().catch(this.onFailure);
     this.context = null;
     this.master = null;

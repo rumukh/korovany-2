@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { ActorSnapshot, GameSnapshot, OutpostSnapshot, WorldBlueprint } from '../game/types';
-import { createActor, createWagon, type ActorLook, type ActorModel, type WagonModel } from './actors';
+import { createActor, createWagon, type ActorLook, type ActorModel, type ViewAllegiance, type WagonModel } from './actors';
 import { FollowCamera, type GroundPoint, type MovementBasis } from './camera';
 import { WorldEffects } from './effects';
 import { factionColors, palette } from './palette';
@@ -39,6 +39,7 @@ interface HealthBar {
 }
 
 interface ActorVisual {
+  appearance: string;
   root: THREE.Group;
   actor?: ActorModel;
   wagon?: WagonModel;
@@ -61,16 +62,20 @@ interface PostVisual {
   supply: THREE.Group;
 }
 
-function healthBar(resources: ViewResources, parent: THREE.Object3D, height: number, friendly: boolean): HealthBar {
+function healthBar(resources: ViewResources, parent: THREE.Object3D, height: number, affiliation: boolean | ViewAllegiance): HealthBar {
   const root = new THREE.Group();
+  root.name = 'health-bar';
+  const allegiance = typeof affiliation === 'boolean' ? affiliation ? 'friendly' : 'hostile' : affiliation;
+  const color = allegiance === 'friendly' ? palette.teal : allegiance === 'neutral' ? palette.stone : palette.ember;
   root.position.y = height;
   parent.add(root);
   const back = part(resources, root, 'box', palette.ink, [0, 0, 0], [1.08, 0.12, 0.025]);
   back.castShadow = false;
   back.material = resources.material(palette.ink, { unlit: true });
-  const fill = part(resources, root, 'box', friendly ? palette.teal : palette.ember, [0, 0, 0.019], [1, 0.065, 0.012]);
+  const fill = part(resources, root, 'box', color, [0, 0, 0.019], [1, 0.065, 0.012]);
+  fill.name = 'health-fill';
   fill.castShadow = false;
-  fill.material = resources.material(friendly ? palette.teal : palette.ember, { unlit: true });
+  fill.material = resources.material(color, { unlit: true });
   return { root, fill };
 }
 
@@ -93,7 +98,7 @@ function createTell(resources: ViewResources, parent: THREE.Object3D): { group: 
   return { group, ring, line };
 }
 
-class Presentation {
+export class Presentation {
   readonly scene = new THREE.Scene();
   readonly resources = new ViewResources();
   readonly scenery: WorldScenery;
@@ -142,16 +147,20 @@ class Presentation {
     this.scene.add(this.sun, this.sun.target);
     const fortress = world.sites.find((site) => site.kind === 'fortress');
     if (fortress) {
+      const color = world.version === 1 ? palette.villain : factionColors[fortress.faction];
       const anchor = this.scenery.flagAnchors.get(fortress.id);
       if (anchor) {
         this.fortressFlag = new THREE.Mesh(shapeGeometry(this.resources, 'cloth'),
-          this.resources.material(palette.villain, { side: THREE.DoubleSide }));
+          this.resources.material(color, { side: THREE.DoubleSide }));
+        this.fortressFlag.name = 'fortress-flag';
         this.fortressFlag.position.copy(anchor);
         this.fortressFlag.scale.set(1.7, 1.2, 1);
         this.scene.add(this.fortressFlag);
       }
       this.fortressRing = new THREE.Mesh(shapeGeometry(this.resources, 'zone-ring'),
-        this.resources.material(palette.villain, { unlit: true, opacity: 0.45, depthWrite: false }));
+        this.resources.material(world.version === 1 ? palette.villain : fortress.allegiance === 'friendly' ? palette.teal : palette.hostile,
+          { unlit: true, opacity: 0.45, depthWrite: false }));
+      this.fortressRing.name = 'fortress-ring';
       this.fortressRing.position.set(fortress.x, 0.04, fortress.z);
       this.fortressRing.scale.set(fortress.radius * 2, 1, fortress.radius * 2);
       this.scene.add(this.fortressRing);
@@ -165,16 +174,20 @@ class Presentation {
   }
 
   private makeActor(snapshot: ActorSnapshot): ActorVisual {
+    const affiliation = snapshot.allegiance ?? false;
     const actor = snapshot.kind === 'caravan' ? undefined : createActor(this.resources,
       ({ soldier: 'guard', archer: 'archer', captain: 'brute', boss: 'boss' } satisfies Record<Exclude<ActorSnapshot['kind'], 'caravan'>, ActorLook>)[snapshot.kind],
-      snapshot.faction);
-    const wagon = snapshot.kind === 'caravan' ? createWagon(this.resources, false) : undefined;
+      snapshot.faction, affiliation);
+    const wagon = snapshot.kind === 'caravan' ? createWagon(this.resources, affiliation) : undefined;
     const root = actor?.root ?? wagon?.root;
     if (!root) throw new Error(`Unsupported actor kind: ${snapshot.kind}`);
+    root.name = `actor:${snapshot.id}`;
     this.scene.add(root);
-    const bar = healthBar(this.resources, root, actor?.height ?? 2.95, false);
+    const bar = healthBar(this.resources, root, actor?.height ?? 2.95, affiliation);
     const tell = createTell(this.resources, this.scene);
+    tell.group.name = `tell:${snapshot.id}`;
     return {
+      appearance: `${snapshot.kind}:${snapshot.faction}:${snapshot.allegiance ?? 'legacy'}`,
       root, actor, wagon, bar, tell: tell.group, tellRing: tell.ring, tellLine: tell.line,
       lastX: snapshot.x, lastZ: snapshot.z, speed: 0, state: snapshot.state, stateDuration: snapshot.stateTime,
     };
@@ -263,13 +276,20 @@ class Presentation {
     });
     this.scenery.heroPosition.set(snapshot.player.x, 1.15, snapshot.player.z);
     this.scenery.update(this.cosmeticTime, reducedMotion);
-    const fortressColor = snapshot.fortress.bossDefeated ? palette.teal : snapshot.fortress.unlocked ? palette.brass : palette.villain;
+    const fortress = snapshot.world.sites.find((site) => site.kind === 'fortress');
+    const legacyFortressColor = snapshot.fortress.bossDefeated ? palette.teal : snapshot.fortress.unlocked ? palette.brass : palette.villain;
+    const fortressColor = snapshot.campaign && fortress
+      ? factionColors[snapshot.fortress.bossDefeated ? snapshot.faction : fortress.faction] : legacyFortressColor;
+    const fortressRingColor = snapshot.campaign && fortress
+      ? snapshot.fortress.bossDefeated || fortress.allegiance === 'friendly' ? palette.teal
+        : snapshot.fortress.unlocked ? palette.brass : palette.hostile
+      : legacyFortressColor;
     if (this.fortressFlag) {
       this.fortressFlag.material = this.resources.material(fortressColor, { side: THREE.DoubleSide });
       this.fortressFlag.rotation.y = reducedMotion ? 0 : Math.sin(this.cosmeticTime * 1.35) * 0.12;
     }
     if (this.fortressRing) {
-      this.fortressRing.material = this.resources.material(fortressColor, { unlit: true, opacity: 0.45, depthWrite: false });
+      this.fortressRing.material = this.resources.material(fortressRingColor, { unlit: true, opacity: 0.45, depthWrite: false });
     }
     // A player-centred shadow frustum preserves detail without a map-sized shadow texture.
     const shadowX = Math.round(snapshot.player.x * 8) / 8;
@@ -292,11 +312,19 @@ class Presentation {
     for (const actor of snapshot.actors) {
       activeIds.add(actor.id);
       let visual = this.actorVisuals.get(actor.id);
+      const appearance = `${actor.kind}:${actor.faction}:${actor.allegiance ?? 'legacy'}`;
+      if (visual && visual.appearance !== appearance) {
+        visual.root.removeFromParent();
+        visual.tell.removeFromParent();
+        this.actorVisuals.delete(actor.id);
+        visual = undefined;
+      }
       if (!visual) {
         visual = this.makeActor(actor);
         this.actorVisuals.set(actor.id, visual);
       }
-      const dead = actor.state === 'dead' || actor.hp <= 0;
+      const disabledShipment = snapshot.campaign?.shipment.targetId === actor.id && actor.state !== 'dead' && actor.hp <= 0;
+      const dead = actor.state === 'dead' || (actor.hp <= 0 && !disabledShipment);
       if (dead) corpses += 1;
       visual.root.visible = !dead || corpses <= 8;
       visual.root.position.set(actor.x, 0.08, actor.z);
@@ -325,7 +353,8 @@ class Presentation {
       visual.wagon?.animate(moved, snapshot.elapsed, reducedMotion, visual.speed / 2);
       visual.bar.root.visible = !dead && (actor.hp < actor.maxHp || actor.state === 'windup' || actor.kind === 'boss');
       updateHealth(visual.bar, actor.hp, actor.maxHp, camera, visual.root);
-      visual.tell.visible = actor.state === 'windup' && !dead;
+      visual.tell.visible = actor.state === 'windup' && !dead &&
+        (actor.allegiance === undefined || actor.allegiance === 'hostile');
       visual.tell.position.set(actor.x, 0, actor.z);
       visual.tell.rotation.y = actor.heading;
       visual.tellRing.scale.setScalar((actor.kind === 'archer' ? actor.radius + 0.45 : actor.attackRange) * 2);
@@ -333,7 +362,7 @@ class Presentation {
       visual.tellLine.visible = actor.kind === 'archer';
       visual.tellLine.position.set(0, 0.07, actor.attackRange / 2);
       visual.tellLine.scale.set(0.12 + progress * 0.1, 0.015, actor.attackRange);
-      if (dead && visual.wagon) visual.root.rotation.z = 0.27;
+      if (visual.wagon) visual.root.rotation.z = disabledShipment ? 0.085 : dead ? 0.27 : 0;
     }
     for (const [id, visual] of this.actorVisuals) {
       if (activeIds.has(id)) continue;

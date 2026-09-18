@@ -1,0 +1,507 @@
+{
+  "version": 1,
+  "model": "gpt-image-2",
+  "provider": "Azure OpenAI",
+  "apiVersion": "2024-02-01",
+  "settings": {
+    "size": "1024x1024",
+    "quality": "medium",
+    "background": "opaque",
+    "output_format": "png"
+  },
+  "attribution": "Original AI-generated character artwork for Korovany II, generated with Azure OpenAI gpt-image-2. No reference photographs, external artwork or artist imitation.",
+  "identityPolicy": "One canonical portrait per stable NPC ID, reused unchanged across all factions and languages. Authored story roles are primary; prior voice cast supplies adult gender and age cues. NPC appearance-faction is not evidence of biological species. Unspecified NPC ears remain unobtrusive or covered. All three playable archetypes are adult men.",
+  "delivery": {
+    "quality": 84,
+    "resampler": "Pillow LANCZOS",
+    "totalBytes": 320838
+  },
+  "portraits": [
+    {
+      "id": "mara",
+      "kind": "npc",
+      "name": "Mara Venn",
+      "file": "mara.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 15296,
+      "sha256": "098e5319ad1c9647a832ecdf3b9217f48c55407d6e6385e76a83dda57806c28a",
+      "master": {
+        "file": "mara.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "64b650a0d9a5badf4d2382f4983541a9fe4c20892787ae5f0ff003389fe7972c"
+      },
+      "generatedAt": "2026-09-18T08:55:11.2000454Z",
+      "prompt": "A practical independent convoy owner and innkeeper, woman about 45, broad square face, warm olive skin, strong dark brows, brown eyes, dark chestnut hair threaded with a little grey and tied into a low bun. Unshowy authority, tired but direct expression. Weathered ochre wool waistcoat over cream linen, dark green working shawl and a small plain brass key on its cord at the collar. Softly suggested timber inn behind her, no military insignia.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "toman",
+      "kind": "npc",
+      "name": "Toman Reed",
+      "file": "toman.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 17656,
+      "sha256": "1cbeada32d74638b275c24096a660af9780d101117a8796a7f27cdf001d888e3",
+      "master": {
+        "file": "toman.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "1b11d44985abcf59ccba4df68cd4508e4212d76d9cb37893428343507ba991db"
+      },
+      "generatedAt": "2026-09-18T08:55:07.9704251Z",
+      "prompt": "A weathered miller and village resistance councillor, man about 58, long lean sun-lined face, pale warm skin, grey-green eyes, grizzled short beard and sandy-grey hair under a soft faded moss wool cap covering the ears. Measured thoughtful expression. Flour-dusted flax work shirt, patched brown leather miller's apron and moss shoulder wrap; a coil of thin bell cord just visible at shoulder. Indistinct dark wooden mill backdrop, no crown or uniform.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "lida",
+      "kind": "npc",
+      "name": "Lida Ash",
+      "file": "lida.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 17172,
+      "sha256": "95f10f21a7634ae6e62d99a56bec11e792de1e4c750189c3975defbb53441aa1",
+      "master": {
+        "file": "lida.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "115b7dd5c49d0b51fe3a87aa8ee736e254fcfbc2a34d021b4d0b11cf1e6a0206"
+      },
+      "generatedAt": "2026-09-18T08:55:17.9038205Z",
+      "prompt": "A mature orchard keeper, woman about 60, rounded sun-weathered face, tawny freckled skin, hazel eyes, silver-brown hair mostly wrapped in a muted clay-red kerchief covering ears. Firm kind mouth, grounded patience, not frail. Heavy faded sage gardening smock and oatmeal woven shawl, a tiny twig caught on a shoulder. Soft orchard branches and grey-green leaves behind her.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "yara",
+      "kind": "npc",
+      "name": "Yara of the Thorns",
+      "file": "yara.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 12716,
+      "sha256": "8ac956268fc96d19d86b0f1f9a137d5cd73ec25db350b21fa10b1be38e50bee9",
+      "master": {
+        "file": "yara.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "81981fe23cc75a7e9ad6834374c5e5e85fdfc9d3faa45a085039104a4157054b"
+      },
+      "generatedAt": "2026-09-18T08:56:07.7461799Z",
+      "prompt": "A capable female hunt warden about 37, angular long cheekbones, medium warm brown skin, sharp amber-brown eyes, dense black hair in a practical braid and a hood resting close along the sides of the head. Alert composed authority, no smile. Weathered deep moss short cloak over charcoal quilted leather; a simple antler-shaped wooden fastening, bow strap at shoulder, no trophy animal. Muted woodland thorns behind her.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "sella",
+      "kind": "npc",
+      "name": "Sella Brine",
+      "file": "sella.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 16838,
+      "sha256": "c053a8e780b8f5f5da45b8fb3d06dd5f96add767fb22056f8e614a8fb39c4569",
+      "master": {
+        "file": "sella.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "f1beae988f6b700018dc33d54c4cde634366261135ad984c2bb98d7fe8fd61ba"
+      },
+      "generatedAt": "2026-09-18T08:56:09.0923881Z",
+      "prompt": "A river salvage diver, woman about 32, compact athletic build, broad nose, copper-brown skin, lively dark eyes and cropped dark curly hair damp from work, subtle asymmetrical amused mouth. Faded plum waxed work vest over coarse grey linen, practical knotted tow-rope over one shoulder. Bare head, no modern diving goggles, helmet or oxygen equipment. Soft misty river and old timber landing backdrop.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "ivet",
+      "kind": "npc",
+      "name": "Sister Ivet",
+      "file": "ivet.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 11210,
+      "sha256": "ac0a42b39cb433e999a266123d035223df1db64a75b29e089a7e81d59e74c355",
+      "master": {
+        "file": "ivet.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "c4d1efe3176ce03fb8982e73c8029c092b641d0e96bcce5a04d0c5e98e936a48"
+      },
+      "generatedAt": "2026-09-18T08:56:22.7925321Z",
+      "prompt": "A steady chapel keeper and nurse, woman about 48, narrow gentle face, light brown skin, dark clear eyes, dark hair hidden by a simple undyed linen coif. Quiet alert compassion, not saintly or mystical. Clean off-white bandage cloth at shoulder, modest slate-blue linen apron over warm grey wool. Indistinct chapel sickroom wall in cool green shadow with warm reflected stove light, no cross emblem or halo.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "oss",
+      "kind": "npc",
+      "name": "Oss Vale",
+      "file": "oss.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 15094,
+      "sha256": "e42efe3672ea204991a3ddbe92eb990df3b5aef20283612a31d72868075e7638",
+      "master": {
+        "file": "oss.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "9e33b83fe227c07f084bde6d9132c182403cdf69571a4c0bf6c5a93d18f1d034"
+      },
+      "generatedAt": "2026-09-18T08:57:05.3289369Z",
+      "prompt": "A work-worn ferryman, man about 51, broad heavy face, ruddy light skin, bulbous nose, tired blue-grey eyes, receding auburn-grey hair and uneven short stubble beneath a battered brown wool cap. Reserved uneasy but attentive expression. Faded wine-brown river coat with tar-darkened leather shoulder and coarse rope collar tie. Foggy river boards behind him, no pirate hat, weapons or military emblems.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "orsa",
+      "kind": "npc",
+      "name": "Orsa Flint",
+      "file": "orsa.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 10364,
+      "sha256": "ba741da2b2d4275769c5bb9f1c4dedacdf1d5493e82497880d433d242ec8af38",
+      "master": {
+        "file": "orsa.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "576b2a0a1e223f7925c9c0e3f77452f40e00ce588bdd8fa2aa8f722a23cff6ca"
+      },
+      "generatedAt": "2026-09-18T08:57:10.4738271Z",
+      "prompt": "A precise independent grain factor, woman about 43, full oval face with strong chin, deep warm brown skin, close dark eyes, neat black hair wound in a high practical twist. Deliberate appraising expression, not haughty. Muted indigo merchant wool coat, russet collar and small simple brass balance-weight pendant; tidy rather than rich. Blurred grain sacks and dark market wood in background, no visible written accounts.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "dren",
+      "kind": "npc",
+      "name": "Dren Silt",
+      "file": "dren.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 15994,
+      "sha256": "2264b587b25990ed14f30c7fd685b7305843737eb84c3d9540e73851511a4441",
+      "master": {
+        "file": "dren.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "d4e11009feecb6d40368ecc3e0209867747d670069308a4d646cf64bdc2e00d1"
+      },
+      "generatedAt": "2026-09-18T08:57:24.1063053Z",
+      "prompt": "A blunt salvage crew leader, man about 40, thick neck, broad cheekbones and flattened nose, warm medium-brown weathered skin, close-cropped black hair, heavy brows and a short boxed black beard. Guarded direct gaze with a small old healed eyebrow scar. Salt-worn charcoal oilskin shoulder cape over faded oxblood work vest, sailcloth collar, rope harness. Grey-green rocky shore behind, no pirate stereotype.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "hana",
+      "kind": "npc",
+      "name": "Hana Pell",
+      "file": "hana.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 13780,
+      "sha256": "5c37e76bc6e85c53c67620c299bea333215a93d7bc895c1fa76a486e89e65584",
+      "master": {
+        "file": "hana.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "7ea01dbe403c9275143953df02c877cff72c7ab3e153af7f48d4b6a780baf952"
+      },
+      "generatedAt": "2026-09-18T08:58:03.8661493Z",
+      "prompt": "A focused tide and signal keeper, woman about 34, slim oval face, golden-tan skin, almond-shaped brown eyes, straight black hair tucked under a close grey-green wool hood that covers ears. Technically attentive slightly raised brow. Teal wool jacket with plain brass fasteners and a red glass lens in a small leather clip on her shoulder strap, not eyewear. Softly suggested lighthouse shutter and sea mist behind her.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "beran",
+      "kind": "npc",
+      "name": "Beran Coalhand",
+      "file": "beran.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 15444,
+      "sha256": "aad989ce58d9fcf459666763d10dcb1afa85a5b327c23d834f3eef518dfd1129",
+      "master": {
+        "file": "beran.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "fbbf2b8df6a7fcdb22335ec931312d7c0b25457989549d0a36f8a239985d0777"
+      },
+      "generatedAt": "2026-09-18T08:58:11.1067737Z",
+      "prompt": "A patient glass founder, man about 50, very broad solid face, dark warm umber skin, thoughtful deep-set eyes, shaved head with short greying black beard. Subtle charcoal dust at temples, no burns or injury. Thick smoke-brown leather apron over cream work shirt, turned-up cloth collar. Faint amber furnace reflection at one side and teal glass blur in a dark workshop behind, readable face without dramatic flames.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "tessa",
+      "kind": "npc",
+      "name": "Tessa Rill",
+      "file": "tessa.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 17128,
+      "sha256": "0e792046668139abd441c3c52fece125252d2380291730003d7079c882dedea3",
+      "master": {
+        "file": "tessa.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "da0b3f2ec31b90eaeaa1e00fc1b97f4ce1bfdd0e7b3b66f2797cba2125d366f3"
+      },
+      "generatedAt": "2026-09-18T08:58:25.5210261Z",
+      "prompt": "An energetic empirical village healer, woman about 30, narrow freckled face, light warm skin, green-hazel eyes, copper-red curly hair tied back with a plain sage cloth covering ears. Bright focused expression and decisive mouth, clearly an adult not a girl. Moss-grey wool tunic, cream linen apron and a small corked clear sample vial on a shoulder strap. Muted stone cottage and water-jar silhouettes behind, no magical staff or glowing potion.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "vesk",
+      "kind": "npc",
+      "name": "Commander Vesk",
+      "file": "vesk.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 10396,
+      "sha256": "f29aac533c1f08282955722de64aa9a11936c09c17844cf65afb71fcd5ea8af8",
+      "master": {
+        "file": "vesk.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "f9afa53fb51d4932fa21e7d66ff1389963a15fa0463397e5212ef517d10c18ca"
+      },
+      "generatedAt": "2026-09-18T08:59:05.5185980Z",
+      "prompt": "An exacting Crownbridge garrison commander who also audits stores, man about 49, long rectangular face, pale olive skin, brown eyes, neatly parted dark hair greying at temples, narrow trimmed moustache and clean jaw. Contained disciplined expression, not cruel. Restrained slate-blue military high-collared wool coat, modest tarnished brass rank bars with no letters, practical steel gorget and one worn leather document strap. Blurred cool stone office wall, no regal crown or flamboyant armor.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "radek",
+      "kind": "npc",
+      "name": "Radek Noll",
+      "file": "radek.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 10928,
+      "sha256": "266fe32a87614bcf8060a478608377d3a640dedb2650e2c11a9d3ed23d4d15cb",
+      "master": {
+        "file": "radek.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "7c211aeb15d9e8caa6733cda57ea7e0d0f37f7b6f089e2539b8490d3b340180a"
+      },
+      "generatedAt": "2026-09-18T08:59:07.2605636Z",
+      "prompt": "An older master bell founder, man about 68, broad creased face, warm fair skin, pale grey-blue eyes, thick white eyebrows, long white drooping moustache and short white chin beard, thinning white hair. Grounded patient craft authority. Soot-brown leather apron, rust wool collar and a simple round bronze fastening. Soft out-of-focus bell bronze in dark foundry backdrop, no hammer or hands in frame.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "nika",
+      "kind": "npc",
+      "name": "Nika Frost",
+      "file": "nika.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 14004,
+      "sha256": "0a78fc9c08f92d0743ef63bb140497e5bb57f0b9ff7c2b17a44a72c2e6595db2",
+      "master": {
+        "file": "nika.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "a40943f6aa0ccfa725ee6ec1b475fcdcab241801bce0f2c9478cd1860415388b"
+      },
+      "generatedAt": "2026-09-18T08:59:29.8310519Z",
+      "prompt": "A resolute female mountain pass guide about 38, broad high cheekbones, wind-reddened tawny skin, dark grey eyes, coarse dark brown hair under a practical slate wool hood covering ears. Brisk watchful expression, chapped natural skin. Heavy grey-green mountain coat, cream sheepskin collar, a coil of narrow climbing rope over one shoulder. Cold misty ridge backdrop and gentle warm face light, no glamorous makeup or fantasy crown.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "lev",
+      "kind": "npc",
+      "name": "Brother Lev",
+      "file": "lev.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 13464,
+      "sha256": "6d6f4a4af34662b1d2cbd878c833719ec434aa14c2b6e19e358169a1261e5c0c",
+      "master": {
+        "file": "lev.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "33cd84a4e17e5ffa4e64fcfaf6e78eaccb991c132f55a5668c56f0b50385a500"
+      },
+      "generatedAt": "2026-09-18T09:00:03.1386828Z",
+      "prompt": "An older hospitable monastery steward, man about 64, long soft face, medium olive skin, kind brown eyes, balding crown, silver hair at sides and a neatly trimmed soft grey beard. Calm almost-smile, visibly practical not mystical. Plain brown wool robe with a cream shawl and humble wooden toggle, slightly oil-darkened work collar. Soft shelves and stone monastery wall in shadow behind, no halo, crown or ornate religious symbols.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "ada",
+      "kind": "npc",
+      "name": "Ada Wren",
+      "file": "ada.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 14350,
+      "sha256": "c57407c2433c15886e9cc791c610193a98d3bfa9e3f0a5a0219b4712ad2a3683",
+      "master": {
+        "file": "ada.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "11bef06e8ca08c8c9de19515177c38a97635e4ea4d7801023ff115b4ae63a820"
+      },
+      "generatedAt": "2026-09-18T09:00:11.4711800Z",
+      "prompt": "An older village burial keeper, woman about 73, finely lined broad face, light warm skin with age spots, clear dark eyes, strong gently closed mouth. Silver hair fully tucked into a charcoal linen headscarf covering ears. Sturdy upright bearing, weathered and compassionate rather than frail or frightening. Faded muted plum shawl over coarse ash-grey dress, pale salt dust on shoulder cloth. Soft misty village stone wall behind, no skulls, corpses or occult makeup.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "mila",
+      "kind": "npc",
+      "name": "Mila",
+      "file": "mila.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 11916,
+      "sha256": "a2c9ffa5af7a6bb303927d46c729ff0f8b4b34708bfa1c6bdcfaceb5e4e0a9a9",
+      "master": {
+        "file": "mila.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "843d96b582c7a6664f0b03cc5e3255dd53d4dee8ab0be6da376250194ea276f9"
+      },
+      "generatedAt": "2026-09-18T09:00:28.2697493Z",
+      "prompt": "A displaced seamstress, unmistakably adult woman age 27, slim long face with mature proportions, warm light-brown skin, dark expressive eyes, straight chestnut hair loosely braided over one shoulder. Direct observant expression with a tired but resilient half-smile. Carefully patched muted mauve wool working dress, cream collar, small wooden spool threaded through a practical apron strap. Soft layers of mended cloth in dark cottage background, not a child, no doll-like face.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "elin",
+      "kind": "npc",
+      "name": "Elin Voss",
+      "file": "elin.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 13236,
+      "sha256": "b6cf984184a4148b138e6539995fd7b02e14976ac53c449e7e104d50ff526584",
+      "master": {
+        "file": "elin.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "07be43c42fcbbcc9e551fe4851b9753e99525122a895da34129f20f1c34c91dd"
+      },
+      "generatedAt": "2026-09-18T09:00:59.3032190Z",
+      "prompt": "A male scholar and keeper of an ancient mechanical ward binding, about 46, thin long face, light olive skin, intelligent dark-grey eyes with tired lower lids, shoulder-length dark brown hair threaded silver, clean-shaven. Quiet measured resolve without a sinister look. Modest ink-green scholar's wool robe, cream collar and a small worn copper clasp echoing mechanical fittings. Muted cloister stone and out-of-focus copper fastening behind, no chains on body, glowing eyes, magic effects or villain costume.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "ren",
+      "kind": "npc",
+      "name": "Ren the Cartwright",
+      "file": "ren.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 14002,
+      "sha256": "9ac249b14a31cd8a900323c8df190aa9b0c3c56f36e00d8e88d4ceee7172f930",
+      "master": {
+        "file": "ren.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "d3ac02005a9758c6d295c5c333d0a092dbb4463a60f1dd50ce22fe3454453918"
+      },
+      "generatedAt": "2026-09-18T09:01:14.9140011Z",
+      "prompt": "A practical male wheelwright who also advises a mountain fort ruler, about 39, compact wiry build, warm freckled skin, narrow hazel eyes, crooked friendly nose, unruly sandy brown hair and short rough reddish beard. Dry skeptical half-smile, capable but not aristocratic. Faded oxblood wool workcoat, worn brown leather apron and a small wooden carpenter's measuring peg at collar. Shadowed wheel spokes and timber workbench suggested behind, no crown, military rank or magic.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "player-elf",
+      "kind": "player",
+      "name": "Forest resistance defender",
+      "faction": "elf",
+      "file": "player-elf.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 14778,
+      "sha256": "a56e6fb6c5373b6d61c49932c4d5b87058c166d54ec160c2fcf2d5b1ede91e17",
+      "master": {
+        "file": "player-elf.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "14e7316fd01a0f9b505088f232f9f49bbcb6141f16432b6d241e3499ca642ed7"
+      },
+      "generatedAt": "2026-09-18T09:01:28.3567772Z",
+      "prompt": "A clearly adult male forest elf resistance defender about 35 in human appearance, angular lean face, warm bronze skin, green-grey eyes, dark chestnut hair swept back exposing distinctive moderately pointed elven ears, clean-shaven. Resolute protective expression, a person defending wooden settlements, not a noble prince. Practical layered moss and bark-green wool hood resting back, weathered leather shoulder armor, plain carved leaf-shaped wooden clasp and bow strap. Muted wooden palisade and dark forest backdrop, no crown or jeweled robes.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "player-guard",
+      "kind": "player",
+      "name": "Palace guard officer",
+      "faction": "guard",
+      "file": "player-guard.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 11934,
+      "sha256": "55e5e9e49f54bfa814ee720fe66e43b8c278b9bbae063e0e1693a1685de1e098",
+      "master": {
+        "file": "player-guard.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "cc165ae7bfaf22e0f4f9dab9a0bd93abcd9939e4af7d47c86db4098eb1a289a2"
+      },
+      "generatedAt": "2026-09-18T09:01:57.3762391Z",
+      "prompt": "An adult male palace guard officer about 33, broad disciplined face, warm medium-brown skin, brown eyes, tightly cropped black hair, clean-shaven, human rounded ears. Steady dutiful expression, clearly an officer serving an institution rather than a ruler. Practical slate-blue high-collared uniform, restrained polished steel shoulder armor and plain narrow brass edging, cream scarf, no helmet hiding the face. Soft cool palace stone and blue-grey standards without symbols behind, no crown, excessive medals or text.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    },
+    {
+      "id": "player-villain",
+      "kind": "player",
+      "name": "Sovereign of the Old Fort",
+      "faction": "villain",
+      "file": "player-villain.webp",
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "bytes": 13138,
+      "sha256": "3195ab5e106d8899c0ba2c3435308fb258ed85e0637c04cdf357d3633085d61f",
+      "master": {
+        "file": "player-villain.png",
+        "width": 1024,
+        "height": 1024,
+        "format": "png",
+        "sha256": "4c0ff7cd173ab41afc2e339ccaf6acbf48c9de8da2f1965609c8a7d8c69d7bff"
+      },
+      "generatedAt": "2026-09-18T09:02:12.1116493Z",
+      "prompt": "An adult male independent mountain sovereign about 44, tall imposing upright bearing, long aquiline face, olive-tan skin, dark amber-brown eyes, black swept-back hair with silver temples and a precise short dark beard, human rounded ears. Calm self-commanding ambitious gaze, a ruler who gives orders rather than a hired mercenary. Low plain hammered dark-bronze circlet without jewels, deep oxblood mantle over charcoal layered armor, severe geometric bronze clasp, weathered mountain wool. Blurred massive grey fort stone behind, no demon, horns, skulls, spikes, evil grin, glowing eyes or royal palace finery.\n\nOriginal restrained dark-borderland fantasy RPG portrait, painterly gouache and oil illustration with visible broad brushwork, believable adult anatomy, not a photograph and not an anime or cartoon. Square head-and-shoulders composition, one person only, entire hair and shoulders inside frame, face centered in upper-middle and large enough to read at 80 pixels; calm near-frontal three-quarter view with attentive eyes towards viewer. Soft warm side daylight on readable natural skin and eyes, muted forest-ink atmospheric background, parchment highlights, worn wool, leather and subtle brass; low saturation with clear face-background separation. No hands in frame. No text, letters, numerals, signature, watermark, border, decorative frame, collage, overt magic, modern clothing, celebrity likeness or gore.",
+      "revisedPrompt": null
+    }
+  ]
+}

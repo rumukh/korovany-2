@@ -116,6 +116,12 @@ function locations(): WorldLocation[] {
     location('high-pass', 'frostspine', -200, 235, 'inn', 'High Pass', 'Высокий перевал',
       'A low stone shelter stands against the mountain wind. Meltwater drips from travellers’ coats onto the packed earth beside the hearth.',
       'Низкое каменное укрытие заслоняет путников от горного ветра. С дорожных плащей на утоптанную землю у очага стекает талая вода.', true),
+    location('old-fort', 'frostspine', -365, 235, 'settlement', 'Old Fort', 'Старый форт',
+      'Your mountain army musters inside an old stone fort. Its banners answer to its ruler, not a distant employer.',
+      'Ваша горная армия собирается в старом каменном форте. Её знамёна подчиняются своему правителю, не далёкому нанимателю.', true),
+    location('palace-citadel', 'crownlands', 0, 270, 'landmark', 'Royal Citadel', 'Королевская цитадель',
+      'The royal residence stands behind the garrison quarter. Taking a supply gate is not taking this throne.',
+      'За гарнизонным кварталом стоит королевская резиденция. Взять складские ворота — не значит захватить этот трон.'),
     location('star-monastery', 'frostspine', -330, 340, 'shrine', 'Star Monastery', 'Звёздный монастырь',
       'Narrow arches overlook the snowfields. Candle grease coats the reading desks, and a worn bell rope passes through a hole in the ceiling.',
       'Узкие арки выходят на снежные поля. Читальные столы покрыты свечными потёками; сквозь отверстие в потолке пропущена истёртая колокольная верёвка.'),
@@ -146,6 +152,10 @@ export function expandWorld(legacy: WorldBlueprint): WorldBlueprint {
     { minX: 263, maxX: 277, minZ: -12, maxZ: 12 },
   );
   world.exploration = { regions: regions(), locations: locations() };
+  for (const region of world.exploration.regions) {
+    region.politicalFaction = region.id === 'greenmarch' ? 'elf' : region.id === 'crownlands' ? 'guard' :
+      region.id === 'frostspine' ? 'villain' : 'neutral';
+  }
   const node = (id: string): RoadNode => {
     const result = world.roads.nodes.find(n => n.id === id);
     if (!result) throw new Error(`Unknown expanded road node: ${id}`);
@@ -167,6 +177,8 @@ export function expandWorld(legacy: WorldBlueprint): WorldBlueprint {
     { id: 'northeast-turn', x: 160, z: 440 },
   );
   const chains = [
+    ['high-pass', 'old-fort', 'star-monastery'],
+    ['crownbridge', 'palace-citadel'],
     ['home', 'roadward', 'southern-fork', 'old-orchard', 'greenhollow', 'thornwatch', 'southwest-turn', 'ash-cairn', 'glass-quarry', 'wreckers-rest', 'saltmarket'],
     ['forest', 'west-old-road', 'western-crossing-south', 'western-crossing-north', 'northwest-way', 'quarry'],
     ['raid', 'southeast-way', 'eastern-crossing-south', 'eastern-crossing-north', 'east-old-road', 'palace'],
@@ -209,11 +221,26 @@ export function expandWorld(legacy: WorldBlueprint): WorldBlueprint {
       if (placeObstacle({
         id: `${place.id}-building-${built}`, kind: 'wall',
         x: place.x + Math.sin(angle) * ring, z: place.z + Math.cos(angle) * ring,
-        radius, height: place.kind === 'landmark' ? 13 + built * 2 : place.kind === 'shrine' ? 8 : 5 + built % 3,
+        radius, height: place.id === 'old-fort' ? built === 0 ? 14 : 10 + built % 3 :
+          place.kind === 'landmark' ? 13 + built * 2 : place.kind === 'shrine' ? 8 : 5 + built % 3,
         variant: built,
       })) built++;
     }
     if (built < count) throw new Error(`Cannot place the authored silhouette at ${place.id}`);
+  }
+  const fort = world.exploration.locations.find(place => place.id === 'old-fort')!;
+  const fortWalls: Obstacle[] = [
+    { id: 'old-fort-wall-tower-0', kind: 'wall', x: fort.x - 5, z: fort.z + 18, radius: 2.5, height: 16, variant: 0 },
+    { id: 'old-fort-wall-tower-1', kind: 'wall', x: fort.x + 14, z: fort.z + 9, radius: 2.2, height: 14, variant: 1 },
+    ...Array.from({ length: 12 }, (_, index): Obstacle => {
+      const angle = (144 + index * 18) * Math.PI / 180;
+      return { id: `old-fort-wall-${index}`, kind: 'wall',
+        x: fort.x + Math.sin(angle) * 12, z: fort.z + Math.cos(angle) * 12,
+        radius: 1.3, height: 7, variant: index };
+    }),
+  ];
+  for (const wall of fortWalls) {
+    if (!placeObstacle(wall)) throw new Error(`Cannot place the Old Fort perimeter at ${wall.id}`);
   }
   const rng = createPrng(`korovany2:frontier:${world.seed}`);
   // Fixed attempt and obstacle budgets keep collision, saves and scenery bounded.

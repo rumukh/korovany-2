@@ -4,6 +4,7 @@ import { beam, joint, part, shapeGeometry } from './primitives';
 import { ViewResources } from './resources';
 
 export type ActorLook = 'hero' | 'guard' | 'archer' | 'brute' | 'boss';
+export type ViewAllegiance = 'friendly' | 'hostile' | 'neutral';
 
 export interface ActorPose {
   moving: number;
@@ -21,12 +22,15 @@ export interface ActorModel {
   animate(pose: ActorPose): void;
 }
 
-export function createActor(resources: ViewResources, look: ActorLook, faction: ViewFaction, friendly = false): ActorModel {
+export function createActor(resources: ViewResources, look: ActorLook, faction: ViewFaction, affiliation: boolean | ViewAllegiance = false): ActorModel {
   const root = new THREE.Group();
+  const allegiance = typeof affiliation === 'boolean' ? affiliation ? 'friendly' : 'hostile' : affiliation;
+  root.userData.allegiance = allegiance;
   const large = look === 'brute' || look === 'boss';
   const hero = look === 'hero';
   const scale = look === 'boss' ? 1.7 : large ? 1.2 : 1;
-  const coat = hero || friendly ? factionColors[faction] : look === 'boss' ? palette.villain : palette.hostile;
+  const coat = hero || allegiance === 'friendly' || affiliation === 'hostile' ? factionColors[faction]
+    : allegiance === 'neutral' ? palette.stone : look === 'boss' ? palette.villain : palette.hostile;
   const body = joint(root, [0, 0, 0]);
   body.scale.setScalar(scale);
   const hips = joint(body, [0, 0.75, 0]);
@@ -54,6 +58,13 @@ export function createActor(resources: ViewResources, look: ActorLook, faction: 
     inner.scale.setScalar(1.46);
     inner.position.y = 0.068;
     root.add(inner);
+  } else if (allegiance !== 'hostile') {
+    const ring = new THREE.Mesh(shapeGeometry(resources, 'ring'),
+      resources.material(allegiance === 'friendly' ? palette.teal : palette.stone, { unlit: true }));
+    ring.name = 'allegiance-ring';
+    ring.scale.setScalar(1.35 * scale);
+    ring.position.y = 0.065;
+    root.add(ring);
   }
 
   if ((hero && faction === 'elf') || look === 'archer') {
@@ -140,13 +151,15 @@ export interface WagonModel {
   animate(distance: number, time: number, reducedMotion: boolean, movement: number): void;
 }
 
-export function createWagon(resources: ViewResources, friendly: boolean): WagonModel {
+export function createWagon(resources: ViewResources, affiliation: boolean | ViewAllegiance): WagonModel {
   const root = new THREE.Group();
+  const allegiance = typeof affiliation === 'boolean' ? affiliation ? 'friendly' : 'hostile' : affiliation;
+  root.userData.allegiance = allegiance;
   const cart = joint(root, [0, 0, 0]);
   const wheels: THREE.Group[] = [];
   const legs: THREE.Group[] = [];
-  const canvas = friendly ? palette.parchment : '#c7b083';
-  const flag = friendly ? palette.teal : palette.hostile;
+  const canvas = allegiance === 'friendly' ? palette.parchment : '#c7b083';
+  const flag = allegiance === 'friendly' ? palette.teal : allegiance === 'neutral' ? palette.stone : palette.hostile;
 
   part(resources, cart, 'box', palette.iron, [0, 0.61, 0], [1.76, 0.14, 2.53]);
   part(resources, cart, 'box', palette.timber, [0, 0.85, 0], [1.61, 0.39, 2.45]);

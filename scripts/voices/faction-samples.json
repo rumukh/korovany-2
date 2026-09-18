@@ -1,0 +1,10 @@
+[
+  {"id":"elf-toman","speaker":"toman","source":"faction.elf.quest.elf-wooden-walls.stage.0.prompt","label":"Elf campaign - Toman, home and resistance; Mara inflection","segment_indices":[0,1,4]},
+  {"id":"guard-vesk","speaker":"vesk","source":"faction.guard.quest.guard-empty-relief.stage.0.prompt","label":"Guard campaign - Vesk, ordered service","segment_indices":[0,1]},
+  {"id":"villain-ren","speaker":"ren","source":"faction.villain.quest.villain-own-standard.stage.0.prompt","label":"Villain campaign - Ren, independent rule","segment_indices":[0,1]},
+  {"id":"elf-mara","speaker":"mara","source":"faction.elf.quest.elf-wooden-walls.stage.1.prompt","label":"Mara - independent civilian witness","segment_indices":[0,1]},
+  {"id":"guard-nika","speaker":"nika","source":"faction.guard.quest.guard-terms-of-duty.stage.0.prompt","label":"Nika - new read past-tense testimony","segment_indices":[0]},
+  {"id":"elf-ivet","speaker":"ivet","source":"faction.elf.quest.elf-grave-freight.stage.2.prompt","label":"Ivet - new neutral chapel testimony","segment_indices":[0,1]},
+  {"id":"elf-player","speaker":"player","source":"faction.elf.action.elf-supply-partisans.choice","label":"Player - unchanged adult male voice, partisan directive"},
+  {"id":"guard-narrator","speaker":"narrator","source":"faction.guard.epilogue.victory","label":"Narrator - guard military victory"}
+]

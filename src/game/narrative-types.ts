@@ -7,6 +7,7 @@ export interface WorldRegion {
   description: LocalizedText;
   bounds: Bounds;
   biome: 'forest' | 'countryside' | 'mountains' | 'marsh' | 'waste' | 'coast';
+  politicalFaction?: FactionId | 'neutral';
 }
 export interface WorldLocation extends Vec2 {
   id: string;
@@ -35,6 +36,7 @@ export interface NpcSnapshot extends Position {
   faction: FactionId;
   locationId: string;
   activity: LocalizedText;
+  /** Conversation eligibility (phase, proximity and safety), not world or map visibility. */
   available: boolean;
   questAvailable: boolean;
 }

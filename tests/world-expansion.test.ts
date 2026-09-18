@@ -7,7 +7,7 @@ const expectedLocations = [
   'roadward', 'greenhollow', 'old-orchard', 'stag-shrine', 'thornwatch',
   'mirecross', 'drowned-archive', 'reed-chapel', 'lantern-ferry',
   'saltmarket', 'tide-observatory', 'wreckers-rest', 'cinderwell', 'glass-quarry', 'ash-cairn',
-  'crownbridge', 'tax-vault', 'bell-foundry', 'high-pass', 'star-monastery', 'frozen-beacon',
+  'crownbridge', 'tax-vault', 'bell-foundry', 'high-pass', 'old-fort', 'palace-citadel', 'star-monastery', 'frozen-beacon',
   'hollow-village', 'name-well', 'last-archive',
 ];
 

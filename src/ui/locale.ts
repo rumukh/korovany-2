@@ -1,15 +1,13 @@
+import { FACTION_CAMPAIGNS } from "../game";
 import type { Language } from "./storage";
 
 const en = {
   title: "KOROVANY",
   subtitle: "The Hollow Road",
   edition: "A dark fantasy campaign",
-  prologue: "Mara's convoy came back with its grain. Not one person came back with it.",
-  introduction: "Hired to escort a convoy, you find black ward-glass beneath the grain sacks. Follow the disappearances across eight regions. Question witnesses, examine the evidence and keep your convoy moving. Beyond the roadside bells, the Caller speaks with the voices of the dead.",
-  chooseFaction: "Choose your banner",
-  "faction.elf": "Woodland elves",
-  "faction.guard": "Palace guard",
-  "faction.villain": "Iron company",
+  prologue: "Three banners. Eight regions. One road that speaks with the voices of the dead.",
+  introduction: "The Hollow Road crosses rival homelands and independent human trading communities. Choose whose home you defend, whose orders you follow and what your victory will mean.",
+  chooseFaction: "Choose your campaign",
   "description.elf": "Bow attacks, an arrow volley and a ranger convoy. Fight at range while escorting the wagons.",
   "description.guard": "Sword attacks, a protective bulwark and a repair convoy. Hold the road in close combat.",
   "description.villain": "Heavy melee attacks, a cleaving strike and a siege convoy. Break through defenders at close range.",
@@ -141,7 +139,9 @@ const en = {
   "storage.conflict": "Another tab changed the saved campaign or profile. This tab will not overwrite it. Return to the title and Continue to load the latest campaign.",
   loadLatest: "Another tab saved a different version of this journey. Discard this tab's unsaved progress and load the latest save?",
   profileChanged: "Your profile changed in another tab. Your purchase was not made. Review the current provisions and renown.",
-  audioFailure: "Audio could not start. The campaign remains playable without sound.",
+  audioFailure: "Some audio could not load or play. Dialogue text and the campaign remain available. See the console for the missing asset.",
+  "audio.player": "You",
+  "audio.narrator": "Narrator",
   graphicsFailure: "Could not render the world",
   graphicsDetail: "WebGL is unavailable or the graphics context was lost. Enable hardware acceleration or use a current desktop browser. Saved progress has not been deleted.",
   gameFailure: "The journey was interrupted",
@@ -162,12 +162,9 @@ const ru: Record<LocaleKey, string> = {
   title: "КОРОВАНЫ",
   subtitle: "Глухой тракт",
   edition: "Тёмное фэнтези",
-  prologue: "Обоз Мары вернулся с зерном. Ни один человек с ним не вернулся.",
-  introduction: "Вас наняли сопровождать обоз. Под мешками с зерном вы находите чёрное обережное стекло. Ищите следы пропавших в восьми краях, расспрашивайте свидетелей и берегите повозки. За пределами колокольного звона Оклик говорит голосами мёртвых.",
-  chooseFaction: "Выберите знамя",
-  "faction.elf": "Лесные эльфы",
-  "faction.guard": "Дворцовая стража",
-  "faction.villain": "Железная дружина",
+  prologue: "Три знамени. Восемь краёв. Один тракт, говорящий голосами мёртвых.",
+  introduction: "Глухой тракт связывает враждующие земли и независимые людские торговые общины. Выберите, чей дом защищать, чьим приказам следовать и что будет означать ваша победа.",
+  chooseFaction: "Выберите кампанию",
   "description.elf": "Лук, град стрел и обоз следопытов. Сражайтесь на расстоянии, прикрывая повозки.",
   "description.guard": "Меч, защитный бастион и ремонтный обоз. Удерживайте дорогу в ближнем бою.",
   "description.villain": "Тяжёлые удары, рассечение и осадный обоз. Прорывайте оборону в ближнем бою.",
@@ -299,7 +296,9 @@ const ru: Record<LocaleKey, string> = {
   "storage.conflict": "Другая вкладка изменила сохранённый поход или профиль. Эта вкладка не перезапишет их. Вернитесь в меню и продолжите путь, чтобы загрузить последнее сохранение.",
   loadLatest: "Другая вкладка сохранила другую версию похода. Отбросить несохранённый прогресс этой вкладки и загрузить последнее сохранение?",
   profileChanged: "Профиль изменился в другой вкладке. Покупка не совершена. Проверьте текущее оснащение и запас славы.",
-  audioFailure: "Не удалось включить звук. Поход можно продолжить без него.",
+  audioFailure: "Не удалось загрузить или воспроизвести часть звука. Текст реплик и поход доступны. Сведения о недостающем файле — в консоли.",
+  "audio.player": "Вы",
+  "audio.narrator": "Рассказчик",
   graphicsFailure: "Не удалось отобразить мир",
   graphicsDetail: "WebGL недоступен или графический контекст потерян. Включите аппаратное ускорение или используйте современный браузер. Сохранения не удалены.",
   gameFailure: "Поход прервался",
@@ -316,6 +315,31 @@ const ru: Record<LocaleKey, string> = {
 };
 
 const gameText: Record<string, readonly [string, string]> = {
+  "campaign.allegiance": ["Долг и власть", "Duty and authority"],
+  "campaign.home": ["Дом", "Home"],
+  "campaign.military": ["Военная задача", "Military objective"],
+  "campaign.orders": ["Текущие приказы", "Current orders"],
+  "campaign.relationships": ["Стороны конфликта", "Political relationships"],
+  "campaign.equipment": ["Вооружение и обоз", "Equipment and convoy"],
+  "campaign.neutral": ["Людские торговцы и общины независимы: это четвёртая политическая сторона, а не знамя для выбора.", "Human traders and communities are independent: a fourth political territory, not a selectable banner."],
+  "campaign.storyGuide": ["T — поговорить с жителем или осмотреть место; доступное действие указано в подсказке. Разговоры и чтение приостанавливают игру. J — дневник с целями, приказами, свидетельствами и последствиями решений. Отслеживаемая цель отмечается в атласе. Для завершения похода нужен и исход военной кампании, и решение тайны Глухого тракта. Эпилог появится только после военного исхода. Атлас позволяет переехать с обозом между открытыми безопасными стоянками.",
+    "T talks to a resident or inspects a location; the prompt shows the available action. Conversations and reading pause play. J opens the journal with objectives, orders, testimony and consequences. Tracked destinations appear on the atlas. Finishing requires both the military campaign's outcome and a decision about the Hollow Road. The epilogue follows the military outcome, never precedes it. The atlas offers convoy travel between discovered safe stops."],
+  "campaign.saved": ["Сохранённый поход", "Saved campaign"],
+  "campaign.requirements": ["Военные условия", "Military requirements"],
+  "campaign.shipment": ["Сюжетный груз", "Mission shipment"],
+  "campaign.territory": ["Территория", "Territory"],
+  "campaign.controlled": ["Под вашим знаменем", "Under your banner"],
+  "campaign.securedCount": ["Заставы под контролем", "Posts secured"],
+  "campaign.relation.friendly": ["Союзники", "Friendly"],
+  "campaign.relation.hostile": ["Противники", "Hostile"],
+  "campaign.relation.neutral": ["Независимы", "Neutral"],
+  "campaign.directive": ["Принятый план", "Chosen plan"],
+  "campaign.directive.shelter": ["Укрытие лесных семей", "Shelter the forest households"],
+  "campaign.directive.interdict": ["Расширенная блокада", "Widen the interdiction"],
+  "campaign.directive.relief": ["Приказ о помощи", "Relief assignment"],
+  "campaign.directive.pursuit": ["Приказ о преследовании", "Pursuit assignment"],
+  "campaign.directive.dominion": ["Держава", "Dominion"],
+  "campaign.directive.plunder": ["Добыча", "Plunder"],
   "story.journal": ["Дневник заданий", "Quest journal"],
   "story.dialogue": ["Разговор", "Conversation"],
   "story.inspection": ["Осмотр", "Inspection"],
@@ -396,6 +420,10 @@ const gameText: Record<string, readonly [string, string]> = {
 };
 
 export function translate(language: Language, key: string): string {
+  if (key === "faction.elf" || key === "faction.guard" || key === "faction.villain") {
+    const faction = key === "faction.elf" ? "elf" : key === "faction.guard" ? "guard" : "villain";
+    return FACTION_CAMPAIGNS[faction].name[language];
+  }
   if (Object.hasOwn(en, key)) return (language === "ru" ? ru : en)[key as LocaleKey];
   const pair = gameText[key];
   return pair ? pair[language === "ru" ? 0 : 1] : key;

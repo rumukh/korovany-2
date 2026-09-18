@@ -1,5 +1,6 @@
 import type { System, TickContext, World } from '@aegis/core';
 import { EMPTY_UPGRADES, FACTIONS, MAX_UPGRADE_LEVEL } from './config';
+import { canCapturePost, factionCampaignSnapshot, militaryReady, requiredPosts, shipmentDestination } from './faction-campaigns';
 import { discoverNarrative, narrativeResolved } from './narrative';
 import { actors, campaign, Combatant, Intent, type ActorData, type CampaignData } from './state';
 import type {
@@ -16,7 +17,30 @@ const direction = (from: Vec2, to: Vec2): Vec2 => {
 
 export function emit(world: World, s: CampaignData, kind: EventKind, key: string,
   at: Vec2, amount = 0, targetId = ''): void {
-  s.events.push({ id: ++s.eventSequence, tick: world.tick, kind, key, x: at.x, z: at.z, amount, targetId });
+  const labels: Record<string, { en: string; ru: string }> = {
+    'event.attack': { en: 'Attack', ru: 'Атака' }, 'event.hurt': { en: 'Damage taken', ru: 'Получен урон' },
+    'event.kill': { en: 'Enemy defeated', ru: 'Враг побеждён' }, 'event.coin': { en: 'Coins collected', ru: 'Собраны монеты' },
+    'event.health': { en: 'Health recovered', ru: 'Здоровье восстановлено' }, 'event.supply': { en: 'Supplies collected', ru: 'Собраны припасы' },
+    'event.capture': { en: 'Holding secured', ru: 'Позиция взята' }, 'event.delivery': { en: 'Supplies delivered', ru: 'Припасы доставлены' },
+    'event.raid': { en: 'Shipment operation completed', ru: 'Операция с грузом завершена' },
+    'event.convoy': { en: 'Convoy orders updated', ru: 'Приказ обозу изменён' },
+    'event.disabled': { en: 'Convoy disabled; recover with repairs', ru: 'Обоз выведен из строя; требуется ремонт' },
+    'event.repair': { en: 'Convoy repaired', ru: 'Обоз отремонтирован' }, 'event.upgrade': { en: 'Upgrade purchased', ru: 'Улучшение приобретено' },
+    'event.ability': { en: 'Ability used', ru: 'Применена способность' },
+    'event.fortress': { en: 'Military prerequisites fulfilled; final battle available', ru: 'Военные условия выполнены; решающее сражение доступно' },
+    'event.victory': { en: 'Faction campaign completed', ru: 'Кампания фракции завершена' },
+    'event.defeat': { en: 'Your campaign ends in defeat', ru: 'Кампания окончилась поражением' },
+    'notice.location': { en: 'Return to a friendly holding to purchase', ru: 'Для покупки вернитесь на дружественную позицию' },
+    'notice.coins': { en: 'Not enough coins', ru: 'Недостаточно монет' }, 'notice.max': { en: 'Maximum upgrade reached', ru: 'Улучшение максимально' },
+    'notice.destination': { en: 'Unknown road destination', ru: 'Неизвестный дорожный пункт' },
+  };
+  const label = s.military ? targetId === 'enemy-caravan' && kind === 'delivery' ?
+    { en: 'Shipment delivered intact; provisions recovered', ru: 'Груз доставлен целым; припасы получены' } :
+    targetId === 'enemy-caravan' && kind === 'convoy' ?
+    { en: 'Shipment secured; escort it along the road', ru: 'Груз под контролем; сопровождайте его по дороге' } : labels[key] : undefined;
+  if (s.military && !label) throw new Error(`Missing military event text: ${key}`);
+  s.events.push({ id: ++s.eventSequence, tick: world.tick, kind, key, x: at.x, z: at.z, amount, targetId,
+    ...(label ? { label } : {}) });
   if (s.events.length > 32) s.events.shift();
 }
 
@@ -28,7 +52,7 @@ function effect(s: CampaignData, kind: EffectSnapshot['kind'], at: Vec2, radius:
 }
 
 export function createActor(world: World, kind: ActorData['kind'], id: string, siteId: string,
-  at: Vec2, faction: ActorData['faction']): void {
+  at: Vec2, faction: ActorData['faction'], allegiance?: ActorData['allegiance']): void {
   const hp = kind === 'boss' ? 480 : kind === 'caravan' ? 170 : kind === 'captain' ? 90 : kind === 'archer' ? 48 : 60;
   world.spawn(Combatant({
     x: at.x, z: at.z, id, siteId, faction, kind, home: { x: at.x, z: at.z }, maxHp: hp, hp,
@@ -37,11 +61,13 @@ export function createActor(world: World, kind: ActorData['kind'], id: string, s
     speed: kind === 'boss' ? 3.6 : kind === 'archer' ? 3 : 3.5,
     attackRange: kind === 'archer' ? 14 : kind === 'boss' ? 4.3 : 2.4,
     cooldown: world.random.range(0.4, 1.2),
+    ...(allegiance ? { allegiance } : {}),
+    ...(allegiance === 'friendly' && kind !== 'caravan' ? { marchRoute: [], marchDestination: null } : {}),
   }));
 }
 
 function hurtActor(world: World, s: CampaignData, a: ActorData, amount: number): void {
-  if (a.hp <= 0 || (a.siteId === 'fortress' && !s.fortress.unlocked)) return;
+  if (a.hp <= 0 || a.allegiance === 'friendly' || a.allegiance === 'neutral' || (a.siteId === 'fortress' && !s.fortress.unlocked)) return;
   const actual = Math.min(a.hp, amount);
   a.hp = Math.max(0, a.hp - amount);
   effect(s, 'hit', a, a.radius + 0.5);
@@ -66,7 +92,16 @@ function hurtActor(world: World, s: CampaignData, a: ActorData, amount: number):
   emit(world, s, 'kill', 'event.kill', a, coins, a.id);
 }
 
-function hurtTarget(world: World, s: CampaignData, target: 'player' | 'convoy', amount: number): void {
+function hurtTarget(world: World, s: CampaignData, target: 'player' | 'convoy' | 'shipment', amount: number): void {
+  if (target === 'shipment') {
+    const shipment = actors(world).find(a => a.id === 'enemy-caravan');
+    if (!shipment || !s.military || shipment.hp <= 0) return;
+    shipment.hp = Math.max(0, shipment.hp - amount);
+    if (shipment.hp === 0) s.military.shipment.repairProgress = 0;
+    effect(s, 'hit', shipment, 1.5);
+    emit(world, s, 'hurt', 'event.hurt', shipment, amount, shipment.id);
+    return;
+  }
   const body = target === 'player' ? s.player : s.convoy;
   if (body.hp <= 0 || (target === 'player' && s.player.invulnerable > 0)) return;
   const reduction = target === 'player' && s.faction === 'guard' && s.player.abilityDuration > 0 ? 0.25 : 1;
@@ -103,6 +138,15 @@ export function shopItems(s: CampaignData, world: WorldBlueprint): ShopItem[] {
 }
 
 export function objective(s: CampaignData): ObjectiveSnapshot {
+  if (s.military) {
+    const required = requiredPosts(s), info = factionCampaignSnapshot(s), next = info.requirements.find(r => !r.complete);
+    const stage = s.phase === 'victory' ? 'complete' : s.phase === 'defeat' ? 'failed' :
+      next?.id === 'shipment' ? 'raid' : !next || next.id === 'commander' ? 'fortress' : next.id.startsWith('post-') &&
+      s.outposts.find(p => p.id === next.targetId)?.owner === 'player' ? 'supply' : 'capture';
+    return { stage, key: `objective.${stage}`, captured: s.outposts.filter(p => required.includes(p.id) && p.owner === 'player').length,
+      captureRequired: required.length, supplied: s.outposts.filter(p => required.includes(p.id) && p.supplied).length,
+      supplyRequired: required.length, raidComplete: s.raidComplete, targetId: next?.targetId ?? null };
+  }
   const captured = s.outposts.filter(p => p.owner === 'player').length;
   const supplied = s.outposts.filter(p => p.supplied).length;
   const stage = s.phase === 'victory' ? 'complete' : s.phase === 'defeat' ? 'failed' :
@@ -113,10 +157,24 @@ export function objective(s: CampaignData): ObjectiveSnapshot {
   return { stage, key: `objective.${stage}`, captured, captureRequired: 2, supplied, supplyRequired: 2, raidComplete: s.raidComplete, targetId };
 }
 
-export function interaction(s: CampaignData, world: WorldBlueprint): InteractionSnapshot | null {
+export function interaction(s: CampaignData, world: WorldBlueprint, all: readonly ActorData[] = []): InteractionSnapshot | null {
   if (s.phase !== 'playing') return null;
   const p = s.player, convoy = s.convoy;
   const nearConvoy = distance(p, convoy) < 4;
+  const shipment = s.military && all.find(a => a.id === 'enemy-caravan');
+  if (shipment && distance(p, shipment) < 4 && !s.military!.shipment.delivered) {
+    const threatened = all.some(a => a.allegiance === 'hostile' && a.hp > 0 && distance(a, shipment) < 16);
+    const authorized = s.military!.directive !== null && (s.faction !== 'guard' ||
+      s.outposts.some(post => post.id === 'palace' && post.defendersRemaining === 0));
+    const label = threatened ? { en: 'Clear hostile forces before handling the shipment', ru: 'Уберите вражеские силы, прежде чем заниматься грузом' } :
+      shipment.hp < shipment.maxHp ? { en: 'Hold E to repair the shipment wagon', ru: 'Удерживайте E, чтобы починить грузовую повозку' } :
+      !authorized ? { en: 'Complete your assignment prerequisites first', ru: 'Сначала выполните предварительные условия задания' } :
+      !s.military!.shipment.claimed ? { en: 'Hold E to take charge of the shipment', ru: 'Удерживайте E, чтобы взять груз под контроль' } :
+      { en: 'Stay within 22m to escort the shipment along its road route', ru: 'Держитесь в пределах 22 м, сопровождая груз по дорожному маршруту' };
+    return { kind: threatened ? 'contested' : shipment.hp < shipment.maxHp ? 'repair' : authorized ? 'raid' : 'locked',
+      key: 'interaction.raid', targetId: shipment.id, progress: s.military!.shipment.repairProgress,
+      enabled: !threatened && (authorized || shipment.hp < shipment.maxHp), label };
+  }
   if (nearConvoy && p.supplies > 0 && convoy.cargo < convoy.capacity) {
     return { kind: 'transfer', key: 'interaction.transfer', targetId: 'convoy', progress: 0, enabled: true };
   }
@@ -124,8 +182,15 @@ export function interaction(s: CampaignData, world: WorldBlueprint): Interaction
     return { kind: 'repair', key: 'interaction.repair', targetId: 'convoy', progress: convoy.repairProgress, enabled: true };
   }
   for (const post of s.outposts) {
-    if (post.owner === 'player' || distance(p, post) > post.captureRadius) continue;
+    if (distance(p, post) > post.captureRadius) continue;
+    if (s.military && post.owner === 'player' && post.defendersRemaining > 0) {
+      return { kind: 'contested', key: 'interaction.contested', targetId: post.id, progress: 0, enabled: false,
+        label: { en: 'Defend the supply gate: repel its attackers', ru: 'Защитите складские ворота: отбейте нападающих' } };
+    }
+    if (post.owner === 'player') continue;
     const kind = post.defendersRemaining > 0 ? 'contested' : 'capture';
+    if (!canCapturePost(s, post.id)) return { kind: 'locked', key: 'interaction.locked', targetId: post.id, progress: 0, enabled: false,
+      label: { en: 'No authority to claim this post under the current orders.', ru: 'Текущий приказ не разрешает захватить эту заставу.' } };
     return { kind, key: `interaction.${kind}`, targetId: post.id, progress: post.captureProgress, enabled: kind === 'capture' };
   }
   const home = world.sites.find(site => site.id === 'home')!;
@@ -142,7 +207,7 @@ export function resolveOutcome(world: World, s: CampaignData): void {
   if (s.phase !== 'playing') return;
   // Mutual lethal combat is a defeat; a narrative decision cannot reverse a death.
   if (s.player.hp <= 0) { s.phase = 'defeat'; s.player.state = 'dead'; }
-  else if (s.fortress.bossDefeated && narrativeResolved(s)) s.phase = 'victory';
+  else if (s.fortress.bossDefeated && (!s.military || militaryReady(s)) && narrativeResolved(s)) s.phase = 'victory';
   if (s.phase !== 'playing') {
     if (s.narrative) {
       s.narrative.dialogue = null;
@@ -256,7 +321,7 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
       run(ctx) {
         const { s } = state(ctx), all = actors(ctx.world);
         const caravan = all.find(a => a.kind === 'caravan' && a.hp > 0);
-        if (caravan) {
+        if (caravan && !s.military) {
           caravan.x += caravan.patrolDirection * 1.15 * ctx.dt;
           if (caravan.x <= 7) caravan.patrolDirection = 1;
           if (caravan.x >= 42) caravan.patrolDirection = -1;
@@ -265,13 +330,56 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
         }
         for (const a of all) {
           if (a.hp <= 0 || a.kind === 'caravan' || (a.siteId === 'fortress' && !s.fortress.unlocked)) continue;
-          if (a.siteId === 'raid' && caravan) a.home = { x: caravan.x, z: caravan.z };
+          if (a.allegiance === 'friendly') {
+            if (s.faction === 'villain' && s.military?.directive && a.siteId === 'home') {
+              a.home = { x: s.convoy.x, z: s.convoy.z };
+            }
+            const enemy = all.filter(other => other.hp > 0 && other.allegiance === 'hostile' &&
+              (other.siteId !== 'fortress' || s.fortress.unlocked) && distance(a.home, other) < 20 && distance(a, other) < 22)
+              .sort((left, right) => distance(a, left) - distance(a, right))[0];
+            a.target = null;
+            a.state = enemy ? 'chase' : 'idle';
+            if (enemy) {
+              const d = direction(a, enemy);
+              a.heading = Math.atan2(d.x, d.z);
+              if (distance(a, enemy) > a.attackRange) moveWithCollision(blueprint, a, d.x * a.speed * ctx.dt, d.z * a.speed * ctx.dt, a.radius);
+              else if (a.cooldown === 0) {
+                a.cooldown = 1.8;
+                if (a.kind === 'archer') fire(s, a, a.heading, a.damage, 'player', s.faction, 18, 'bolt');
+                else hurtActor(ctx.world, s, enemy, a.damage);
+              }
+            } else if (distance(a, a.home) > 2) {
+              let destination = a.home;
+              if (s.faction === 'villain' && a.siteId === 'home') {
+                const destinationNode = blueprint.roads.nodes.find(n => n.id === s.convoy.destination) ??
+                  blueprint.roads.nodes.reduce((best, n) => distance(n, a.home) < distance(best, a.home) ? n : best);
+                if (a.marchDestination !== destinationNode.id) {
+                  const edge = blueprint.roads.edges.map(e => {
+                    const start = blueprint.roads.nodes.find(n => n.id === e.from)!;
+                    const end = blueprint.roads.nodes.find(n => n.id === e.to)!;
+                    return projectSegment(a, start, end);
+                  }).sort((left, right) => distance(a, left) - distance(a, right))[0]!;
+                  a.marchDestination = destinationNode.id;
+                  a.marchRoute = [edge, ...findRoadRoute(blueprint, edge, destinationNode.id)];
+                }
+                while (a.marchRoute?.length && distance(a, a.marchRoute[0]!) < 0.5) a.marchRoute.shift();
+                destination = a.marchRoute?.[0] ?? a.home;
+              }
+              const d = direction(a, destination);
+              const speed = s.faction === 'villain' && a.siteId === 'home' ? s.convoy.speed : a.speed;
+              moveWithCollision(blueprint, a, d.x * speed * ctx.dt, d.z * speed * ctx.dt, a.radius);
+              a.heading = Math.atan2(d.x, d.z);
+            }
+            continue;
+          }
+          if (a.siteId === 'raid' && caravan && !s.military) a.home = { x: caravan.x, z: caravan.z };
           if (a.state === 'windup') {
             if (a.stateTime > 0) continue;
             a.state = 'attack'; a.stateTime = 0.12;
             if (a.kind === 'archer') fire(s, a, a.heading, a.damage, 'enemy', a.faction, 18, 'bolt');
             else {
-              const victim = a.target === 'convoy' ? s.convoy : s.player;
+              const victim = a.target === 'shipment' ? caravan : a.target === 'convoy' ? s.convoy : s.player;
+              if (!victim) { a.target = null; continue; }
               if (distance(a, victim) <= a.attackRange + victim.radius &&
                   distance(a.attackPoint, victim) < (a.kind === 'boss' ? 3.5 : 2.3)) {
                 hurtTarget(ctx.world, s, a.target ?? 'player', a.damage);
@@ -288,7 +396,8 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
           const heroDistance = distance(a, s.player), cartDistance = distance(a, s.convoy);
           const heroLeash = distance(s.player, a.home) < (a.kind === 'boss' ? 22 : 19);
           const cartLeash = distance(s.convoy, a.home) < 18;
-          const target = heroDistance < 17 && heroLeash ? 'player' :
+          const target = s.military && caravan?.allegiance === 'friendly' && !s.military.shipment.delivered &&
+            distance(a, caravan) < 12 && distance(a.home, caravan) < 20 ? 'shipment' : heroDistance < 17 && heroLeash ? 'player' :
             cartDistance < 12 && cartLeash && !s.convoy.disabled ? 'convoy' : null;
           a.target = target;
           if (!target) {
@@ -300,7 +409,7 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
             }
             continue;
           }
-          const victim = target === 'player' ? s.player : s.convoy;
+          const victim = target === 'shipment' ? caravan! : target === 'player' ? s.player : s.convoy;
           const d = direction(a, victim), range = distance(a, victim);
           a.heading = Math.atan2(d.x, d.z);
           if (range <= a.attackRange + victim.radius && a.cooldown === 0) {
@@ -313,6 +422,48 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
               moveWithCollision(blueprint, a, d.x * a.speed * ctx.dt, d.z * a.speed * ctx.dt, a.radius);
             }
           }
+        }
+      },
+    },
+    {
+      name: 'KorovanyShipment', phase: 'physics',
+      run(ctx) {
+        const { s, input } = state(ctx);
+        if (!s.military) return;
+        const operation = s.military.shipment, all = actors(ctx.world), wagon = all.find(a => a.id === 'enemy-caravan')!;
+        const nearby = distance(s.player, wagon) < 4;
+        const threatened = all.some(a => a.hp > 0 && a.allegiance === 'hostile' && distance(a, wagon) < 16);
+        if (input.interact && nearby && !threatened && s.player.hp > 0) {
+          if (wagon.hp <= 0) {
+            operation.repairProgress = Math.min(1, operation.repairProgress + ctx.dt / 5);
+            if (operation.repairProgress >= 1) wagon.hp = wagon.maxHp / 2;
+          } else if (wagon.hp < wagon.maxHp) wagon.hp = Math.min(wagon.maxHp, wagon.hp + 30 * ctx.dt);
+          const authorized = s.military.directive !== null && (s.faction !== 'guard' ||
+            s.outposts.some(p => p.id === 'palace' && p.defendersRemaining === 0));
+          if (!operation.claimed && authorized && wagon.hp > 0 &&
+              !all.some(a => a.siteId === 'raid' && a.allegiance === 'hostile' && a.hp > 0)) {
+            operation.claimed = true;
+            operation.destination = shipmentDestination(s);
+            operation.route = findRoadRoute(blueprint, wagon, operation.destination);
+            wagon.allegiance = 'friendly';
+            emit(ctx.world, s, 'convoy', 'event.convoy', wagon, 0, wagon.id);
+          }
+        }
+        if (!operation.claimed || operation.delivered || wagon.hp <= 0 || distance(s.player, wagon) > 22) return;
+        let remaining = 4 * ctx.dt;
+        while (remaining > 0 && operation.route.length) {
+          const next = operation.route[0]!, d = distance(wagon, next);
+          if (d <= remaining) { wagon.x = next.x; wagon.z = next.z; operation.route.shift(); remaining -= d; }
+          else {
+            const vector = direction(wagon, next);
+            wagon.heading = Math.atan2(vector.x, vector.z);
+            wagon.x += vector.x * remaining; wagon.z += vector.z * remaining; remaining = 0;
+          }
+        }
+        if (operation.route.length === 0 && !threatened) {
+          operation.delivered = true; s.raidComplete = true;
+          s.pickups.push({ id: `pickup-${++s.transientSequence}`, x: wagon.x, z: wagon.z, kind: 'supply', amount: 90 });
+          emit(ctx.world, s, 'delivery', 'event.delivery', wagon, 90, wagon.id);
         }
       },
     },
@@ -363,6 +514,7 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
         }
         if (!cart.disabled && s.convoyWeaponTimer === 0) {
           const enemy = actors(ctx.world).find(a => a.hp > 0 && distance(a, cart) < (s.faction === 'elf' ? 14 : 9) &&
+            a.allegiance !== 'friendly' && a.allegiance !== 'neutral' &&
             (a.siteId !== 'fortress' || s.fortress.unlocked));
           if (enemy && s.faction !== 'guard') {
             s.convoyWeaponTimer = s.faction === 'villain' ? 2.5 : 1.2;
@@ -385,12 +537,16 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
               end.x < blueprint.bounds.minX || end.x > blueprint.bounds.maxX ||
               end.z < blueprint.bounds.minZ || end.z > blueprint.bounds.maxZ) return false;
           if (projectile.owner === 'player') {
-            const hits = all.filter(a => a.hp > 0 && (a.siteId !== 'fortress' || s.fortress.unlocked) &&
+            const hits = all.filter(a => a.hp > 0 && a.allegiance !== 'friendly' && a.allegiance !== 'neutral' && (a.siteId !== 'fortress' || s.fortress.unlocked) &&
               distance(a, projectSegment(a, start, end)) < a.radius + projectile.radius)
               .sort((a, b) => distance(start, a) - distance(start, b));
             const hit = hits[0];
             if (hit) { hurtActor(ctx.world, s, hit, projectile.damage); return false; }
           } else {
+            const shipment = s.military && !s.military.shipment.delivered && all.find(a => a.id === 'enemy-caravan' && a.allegiance === 'friendly' && a.hp > 0);
+            if (shipment && distance(shipment, projectSegment(shipment, start, end)) < shipment.radius + projectile.radius) {
+              hurtTarget(ctx.world, s, 'shipment', projectile.damage); return false;
+            }
             for (const target of ['player', 'convoy'] as const) {
               const body = target === 'player' ? s.player : s.convoy;
               if (body.hp > 0 && distance(body, projectSegment(body, start, end)) < body.radius + projectile.radius) {
@@ -407,9 +563,9 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
       run(ctx) {
         const { s, input } = state(ctx), p = s.player, cart = s.convoy, all = actors(ctx.world);
         for (const post of s.outposts) {
-          post.defendersRemaining = all.filter(a => a.siteId === post.id && a.hp > 0).length;
+          post.defendersRemaining = all.filter(a => a.siteId === post.id && a.hp > 0 && a.allegiance !== 'friendly').length;
           if (post.owner === 'enemy') {
-            if (post.defendersRemaining === 0 && distance(p, post) <= post.captureRadius && input.interact && p.hp > 0) {
+            if (canCapturePost(s, post.id) && post.defendersRemaining === 0 && distance(p, post) <= post.captureRadius && input.interact && p.hp > 0) {
               post.captureProgress = Math.min(1, post.captureProgress + ctx.dt / 3);
               if (post.captureProgress >= 1) {
                 post.owner = 'player'; p.coins += 25;
@@ -418,7 +574,8 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
               }
             }
           }
-          if (post.owner === 'player' && !post.supplied && cart.hp > 0 &&
+          if (post.owner === 'player' && post.defendersRemaining === 0 && !post.supplied && cart.hp > 0 &&
+              (!s.military || s.military.directive !== null && (s.faction !== 'guard' || post.id === 'palace' || canCapturePost(s, post.id))) &&
               cart.cargo >= post.supplyRequired && distance(cart, post) < 6) {
             post.supplied = true; cart.cargo -= post.supplyRequired; cart.delivered += post.supplyRequired;
             p.coins += 20;
@@ -454,12 +611,12 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
           }
           const rest = distance(p, blueprint.sites.find(site => site.id === 'home')!) < 9 ||
             s.outposts.some(post => post.owner === 'player' && distance(p, post) < 7);
-          if (rest && !all.some(a => a.hp > 0 && a.kind !== 'caravan' && distance(a, p) < 13)) {
+          if (rest && !all.some(a => a.hp > 0 && a.kind !== 'caravan' && a.allegiance !== 'friendly' && distance(a, p) < 13)) {
             p.hp = Math.min(p.maxHp, p.hp + 25 * ctx.dt);
           }
         }
         const supplied = s.outposts.filter(post => post.supplied).length;
-        if (!s.fortress.unlocked && supplied >= 2 && s.raidComplete) {
+        if (!s.fortress.unlocked && militaryReady(s)) {
           s.fortress.unlocked = true;
           emit(ctx.world, s, 'fortress', 'event.fortress', s.fortress, supplied, 'fortress');
         }
@@ -471,7 +628,8 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
             s.fortress.reinforcementWaves++;
             for (let i = -1; i <= 1; i++) {
               createActor(ctx.world, 'soldier', `reinforcement-${++s.spawnSequence}`, 'fortress',
-                { x: s.fortress.x + i * 3, z: s.fortress.z + 5 }, 'villain');
+                { x: s.fortress.x + i * 3, z: s.fortress.z + 5 }, s.military && s.faction === 'villain' ? 'guard' : 'villain',
+                s.military ? 'hostile' : undefined);
             }
           }
         }
@@ -484,7 +642,7 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
         discoverNarrative(s, blueprint);
         resolveOutcome(ctx.world, s);
         for (const row of ctx.world.query({ has: [Combatant] })) {
-          if (row.get(Combatant).deadTime > 8) ctx.world.despawn(row.entity);
+          if (row.get(Combatant).deadTime > 8 && !(s.military && row.get(Combatant).kind === 'caravan')) ctx.world.despawn(row.entity);
         }
       },
     },

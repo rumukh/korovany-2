@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "status": "audition-only-awaiting-human-approval",
+  "provider": "azure-speech",
+  "preferred_region": "swedencentral",
+  "rationale": "Twenty character profiles, not twenty unique engines. Russian uses three GA neural timbres, including one male engine. English uses four GA British English timbres. Conservative rate/pitch distinctions preserve intelligibility; they cannot create genuinely separate actors or reliable age/texture.",
+  "pronunciation_note": "Proposed fictional-name stress: Mara, TO-man, E-lin, RA-ut, RA-dek, BE-ran, i-VE-ta. Human review must approve these choices; display text is never accented or rewritten.",
+  "engines": {
+    "ruD": "ru-RU-DmitryNeural",
+    "ruF": "ru-RU-DariyaNeural",
+    "ruS": "ru-RU-SvetlanaNeural",
+    "enR": "en-GB-RyanNeural",
+    "enT": "en-GB-ThomasNeural",
+    "enS": "en-GB-SoniaNeural",
+    "enL": "en-GB-LibbyNeural"
+  },
+  "profiles": {
+    "mara": {"note": "Grounded female innkeeper and convoy owner; low, practical, unshowy authority.", "ru": ["ruF", -6, -5], "en": ["enS", -6, -4]},
+    "toman": {"note": "Weathered male miller/witness; measured and reluctant, not a theatrical ghost voice.", "ru": ["ruD", -11, -7], "en": ["enR", -11, -7]},
+    "lida": {"note": "Mature female orchard keeper; firm, warm, matter-of-fact grief.", "ru": ["ruF", -3, -1], "en": ["enS", -3, 0]},
+    "yara": {"note": "Female hunt warden; brisk, clear authority.", "ru": ["ruS", 1, -2], "en": ["enL", 0, -4]},
+    "sella": {"note": "Female diver; brisk dry humor.", "ru": ["ruF", 3, -2], "en": ["enS", 3, -2]},
+    "ivet": {"note": "Female nurse; quiet steadiness without whispered consonants.", "ru": ["ruS", -8, -4], "en": ["enS", -8, -2]},
+    "oss": {"note": "Male ferryman; work-worn, hesitant when admitting responsibility.", "ru": ["ruD", -5, -4], "en": ["enR", -5, -4]},
+    "orsa": {"note": "Female grain factor; deliberate and precise.", "ru": ["ruF", -2, -4], "en": ["enS", -2, -5]},
+    "dren": {"note": "Male salvage leader; blunt and guarded.", "ru": ["ruD", 1, -6], "en": ["enR", 1, -6]},
+    "hana": {"note": "Female signal keeper; focused technical clarity.", "ru": ["ruS", 0, 0], "en": ["enL", -2, -1]},
+    "beran": {"note": "Male glass founder; restrained bass register, patient technical speech.", "ru": ["ruD", -7, -9], "en": ["enR", -7, -9]},
+    "tessa": {"note": "Female healer; energetic precision, no supernatural affect.", "ru": ["ruS", 2, 1], "en": ["enL", 2, 0]},
+    "vesk": {"note": "Male auditor; contained and exact, slightly quicker than Elin.", "ru": ["ruD", -1, 0], "en": ["enT", -1, -1]},
+    "radek": {"note": "Older male bell founder; spacious, grounded craft authority.", "ru": ["ruD", -9, -5], "en": ["enR", -9, -3]},
+    "nika": {"note": "Female mountain guide; firm, brisk instructions.", "ru": ["ruF", 1, 0], "en": ["enL", 1, -2]},
+    "lev": {"note": "Older male steward; calm hospitable rhythm.", "ru": ["ruD", -8, -3], "en": ["enT", -8, -5]},
+    "ada": {"note": "Older female burial keeper; gently weathered, deliberate rather than frail.", "ru": ["ruS", -12, -7], "en": ["enS", -12, -7]},
+    "mila": {"note": "Younger adult female seamstress; light and direct, not a child voice.", "ru": ["ruS", 1, 4], "en": ["enL", 1, 3]},
+    "elin": {"note": "Male scholar; quiet measured resolve, no villain or spectral processing.", "ru": ["ruD", -9, 1], "en": ["enT", -9, 1]},
+    "ren": {"note": "Male wheelwright; practical dry humor and a quicker rhythm.", "ru": ["ruD", 3, -1], "en": ["enR", 3, 0]},
+    "player": {"note": "Adult male captain, consistent with Russian authored first-person gender; direct neutral choices.", "ru": ["ruD", 0, 2], "en": ["enR", 0, 2]},
+    "narrator": {"note": "Neutral male evidence/epilogue narrator; clear, unhurried, no dramatic whisper.", "ru": ["ruD", -4, -2], "en": ["enT", -4, -2]}
+  },
+  "auditions": [
+    {"speaker": "mara", "source": "quest.missing-names.stage.0.prompt", "label": "Mara - grounded female innkeeper"},
+    {"speaker": "toman", "source": "quest.missing-names.stage.1.prompt", "label": "Toman - weathered male witness"},
+    {"speaker": "elin", "source": "npc.elin.belief", "label": "Elin - quiet male scholar"},
+    {"speaker": "player", "source": "action.names-start.choice", "label": "Player - direct male captain"},
+    {"speaker": "narrator", "source": "quest.missing-names.stage.2.prompt", "label": "Narrator - neutral inspection evidence"},
+    {"speaker": "mila", "source": "action.borrowed-restore.response", "label": "Mila - younger adult contrast"},
+    {"speaker": "ada", "source": "npc.ada.local", "label": "Ada - older adult contrast"}
+  ]
+}

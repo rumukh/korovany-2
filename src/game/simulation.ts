@@ -1,5 +1,6 @@
 import { createSchedule, createSimulation, createWorld, type World } from '@aegis/core';
 import { FACTIONS, TICK_RATE } from './config';
+import { configureFactionWorld, createMilitary, factionCampaignSnapshot, FACTION_CAMPAIGNS, SHIPMENT_NAME } from './faction-campaigns';
 import { assertRecord, boundedNumber, validatedUpgrades } from './profile';
 import { applyNarrative, createNarrative, discoverNarrative, narrativeSnapshot, pauseNarrative, validateNarrativeInput } from './narrative';
 import { campaignSystems, createActor, interaction, objective, resolveOutcome, shopItems } from './rules';
@@ -82,13 +83,15 @@ function initialState(options: CampaignOptions, blueprint: WorldBlueprint): Camp
     },
     outposts: blueprint.sites.filter(site => site.kind === 'outpost').map(site => ({
       id: site.id, nameKey: site.nameKey, faction: site.faction, x: site.x, z: site.z,
-      owner: 'enemy', captureProgress: 0, captureRadius: 6, defendersRemaining: 3, supplied: false, supplyRequired: 30,
+      owner: site.allegiance === 'friendly' ? 'player' : 'enemy', captureProgress: site.allegiance === 'friendly' ? 1 : 0,
+      captureRadius: 6, defendersRemaining: site.allegiance === 'friendly' && options.faction === 'villain' ? 0 : 3,
+      supplied: false, supplyRequired: 30,
     })),
     pickups: [], projectiles: [], effects: [], events: [],
     fortress: { id: 'fortress', x: fortress.x, z: fortress.z, unlocked: false, bossId: 'boss', bossDefeated: false, reinforcementWaves: 0 },
     rewards: null, raidComplete: false, eventSequence: 0, transientSequence: 0, spawnSequence: 0,
     followTimer: 0, convoyWeaponTimer: 0, reinforcementTimer: 0, dodgeDirection: { x: 0, z: 1 },
-    ...(blueprint.version === 2 ? { narrative: createNarrative(blueprint) } : {}),
+    ...(blueprint.version === 2 ? { narrative: createNarrative(blueprint, options.faction), military: createMilitary() } : {}),
   };
 }
 
@@ -105,6 +108,11 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
         if (!s.narrative) throw new Error('Narrative commands are not supported by legacy campaigns');
         world.setResource(Intent, {});
         applyNarrative(s, blueprint, actors(world), valid.narrative);
+        if (s.faction === 'villain' && s.military?.directive) {
+          for (const ally of actors(world).filter(a => a.siteId === 'home' && a.allegiance === 'friendly')) {
+            ally.home = { x: s.convoy.x, z: s.convoy.z };
+          }
+        }
         resolveOutcome(world, s);
         return;
       }
@@ -120,7 +128,8 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
       const s = campaign(world);
       const visibleActors = actors(world).map(a => {
         const { cooldown: _cooldown, damage: _damage, speed: _speed, deadTime: _deadTime,
-          attackPoint: _attackPoint, patrolDirection: _patrolDirection, ...visible } = a;
+          attackPoint: _attackPoint, patrolDirection: _patrolDirection,
+          marchRoute: _marchRoute, marchDestination: _marchDestination, ...visible } = a;
         return visible;
       });
       const projectiles = s.projectiles.map(p => {
@@ -132,9 +141,10 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
         seed: s.seed, runId: s.runId, faction: s.faction, world: blueprint,
         player: s.player, actors: visibleActors, convoy: s.convoy, outposts: s.outposts,
         pickups: s.pickups, projectiles, effects: s.effects, events: s.events,
-        objective: objective(s), fortress: s.fortress, interaction: interaction(s, blueprint),
+        objective: objective(s), fortress: s.fortress, interaction: interaction(s, blueprint, actors(world)),
         shop: shopItems(s, blueprint), rewards: s.rewards,
         ...(s.narrative ? { narrative: narrativeSnapshot(s, blueprint, actors(world)) } : {}),
+        ...(s.military ? { campaign: factionCampaignSnapshot(s) } : {}),
       });
     },
     serialize(): CampaignSave {
@@ -149,25 +159,40 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
 
 function populateActors(world: World, data: CampaignData, blueprint: WorldBlueprint): void {
   for (const post of data.outposts) {
-    createActor(world, 'soldier', `${post.id}-soldier`, post.id, { x: post.x - 3, z: post.z - 2 }, post.faction);
-    createActor(world, 'archer', `${post.id}-archer`, post.id, { x: post.x + 3, z: post.z + 2 }, post.faction);
-    createActor(world, 'captain', `${post.id}-captain`, post.id, { x: post.x, z: post.z }, post.faction);
+    const friendly = data.military && data.faction === 'villain' && post.id === 'forest';
+    const allegiance = data.military ? friendly ? 'friendly' : 'hostile' : undefined;
+    const faction = data.military && data.faction === 'guard' && post.id === 'palace' ? 'villain' :
+      data.military && data.faction === 'guard' && post.id === 'forest' ? 'elf' : friendly ? 'villain' : post.faction;
+    createActor(world, 'soldier', `${post.id}-soldier`, post.id, { x: post.x - 3, z: post.z - 2 }, faction, allegiance);
+    createActor(world, 'archer', `${post.id}-archer`, post.id, { x: post.x + 3, z: post.z + 2 }, faction, allegiance);
+    createActor(world, 'captain', `${post.id}-captain`, post.id, { x: post.x, z: post.z }, faction, allegiance);
   }
   const raid = blueprint.sites.find(site => site.kind === 'raid')!;
-  createActor(world, 'caravan', 'enemy-caravan', 'raid', raid, 'guard');
-  createActor(world, 'soldier', 'raid-guard-1', 'raid', { x: raid.x - 3, z: raid.z - 2 }, 'guard');
-  createActor(world, 'archer', 'raid-guard-2', 'raid', { x: raid.x - 3, z: raid.z + 2 }, 'guard');
-  createActor(world, 'boss', 'boss', 'fortress', data.fortress, 'villain');
+  createActor(world, 'caravan', 'enemy-caravan', 'raid', raid, 'guard',
+    data.military ? data.faction === 'guard' ? 'friendly' : 'neutral' : undefined);
+  const raidFaction = data.military && data.faction === 'guard' ? 'elf' : 'guard';
+  createActor(world, 'soldier', 'raid-guard-1', 'raid', { x: raid.x - 3, z: raid.z - 2 }, raidFaction, data.military ? 'hostile' : undefined);
+  createActor(world, 'archer', 'raid-guard-2', 'raid', { x: raid.x - 3, z: raid.z + 2 }, raidFaction, data.military ? 'hostile' : undefined);
+  const bossFaction = data.military && data.faction === 'villain' ? 'guard' : 'villain';
+  createActor(world, 'boss', 'boss', 'fortress', data.fortress, bossFaction, data.military ? 'hostile' : undefined);
   for (let i = -1; i <= 1; i += 2) {
     createActor(world, 'captain', `fortress-guard-${i}`, 'fortress',
-      { x: data.fortress.x + i * 4, z: data.fortress.z - 4 }, 'villain');
+      { x: data.fortress.x + i * 4, z: data.fortress.z - 4 }, bossFaction, data.military ? 'hostile' : undefined);
+  }
+  if (data.military) {
+    const home = blueprint.sites.find(s => s.id === 'home')!;
+    createActor(world, 'archer', 'home-watch-1', 'home', { x: home.x - 3, z: home.z }, data.faction, 'friendly');
+    createActor(world, 'soldier', 'home-watch-2', 'home', { x: home.x + 3, z: home.z }, data.faction, 'friendly');
+    actors(world).find(a => a.id === 'boss')!.name = FACTION_CAMPAIGNS[data.faction].boss.name;
+    actors(world).find(a => a.id === 'enemy-caravan')!.name = SHIPMENT_NAME;
   }
 }
 
 export function createCampaign(options: CampaignOptions): GameSession {
   assertRecord(options, 'Campaign options');
   if (options.worldVersion !== undefined && options.worldVersion !== 1 && options.worldVersion !== 2) throw new Error('Unsupported world version');
-  const blueprint = generateWorld(options.seed, options.worldVersion ?? 2);
+  validateFaction(options.faction);
+  const blueprint = configureFactionWorld(generateWorld(options.seed, options.worldVersion ?? 2), options.faction);
   const data = initialState(options, blueprint);
   discoverNarrative(data, blueprint);
   const world = createWorld({ seed: `korovany2:simulation:${blueprint.seed}` });
@@ -183,7 +208,14 @@ export function restoreCampaign(save: unknown): GameSession {
   if (typeof save.seed !== 'string' || normalizeSeed(save.seed) !== save.seed) throw new Error('Invalid saved seed');
   validateFaction(save.faction);
   if (typeof save.runId !== 'string' || !save.runId || save.runId.length > 128) throw new Error('Invalid saved run ID');
-  const blueprint = generateWorld(save.seed, save.version);
+  if (save.version === 2) {
+    assertRecord(save.engine, 'Engine save'); assertRecord(save.engine.resources, 'Saved resources');
+    assertRecord(save.engine.resources.KorovanyCampaign, 'Saved campaign');
+    const narrative = save.engine.resources.KorovanyCampaign.narrative;
+    assertRecord(narrative, 'Saved narrative');
+    if (narrative.version !== 3) throw new Error('Unsupported story version. Start a new faction campaign; older narrative journals cannot be migrated.');
+  }
+  const blueprint = configureFactionWorld(generateWorld(save.seed, save.version), save.faction);
   if (save.worldId !== blueprint.id) throw new Error('Saved world does not match the seed/version');
   const template = initialState({ seed: save.seed, faction: save.faction, runId: save.runId }, blueprint);
   const world = createWorld({ seed: `korovany2:simulation:${save.seed}` });

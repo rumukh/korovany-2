@@ -235,6 +235,58 @@ function structure(resources: ViewResources, obstacle: Obstacle, site: WorldSite
   return root;
 }
 
+export function oldFortStructure(resources: ViewResources, obstacle: Obstacle, home: Vec2): THREE.Group {
+  const root = new THREE.Group();
+  root.name = `old-fort:${obstacle.id}`;
+  root.position.set(obstacle.x, 0, obstacle.z);
+  root.rotation.y = Math.atan2(home.x - obstacle.x, home.z - obstacle.z);
+  const r = obstacle.radius, h = obstacle.height;
+  const curtain = obstacle.id.startsWith('old-fort-wall-') && h < 8;
+  const stone = regionThemes.frostspine!.stone;
+  if (curtain) {
+    part(resources, root, 'cylinder', palette.slate, [0, 0.16, 0], [r * 1.96, 0.32, r * 1.96]);
+    part(resources, root, 'box', palette.slate, [0, h * 0.1, 0], [r * 1.78, h * 0.2, r * 0.8]);
+    part(resources, root, 'box', stone, [0, h * 0.42, 0], [r * 1.7, h * 0.65, r * 0.65]);
+    part(resources, root, 'box', palette.stoneLight, [0, h * 0.75, 0], [r * 1.78, h * 0.09, r * 0.74]);
+    for (let index = 0; index < 3; index++) {
+      if (index === obstacle.variant % 3) continue;
+      part(resources, root, 'box', stone, [(index - 1) * r * 0.57, h * 0.87, 0], [r * 0.3, h * 0.25, r * 0.65]);
+    }
+    part(resources, root, 'box', palette.iron, [r * 0.22, h * 0.48, r * 0.335], [r * 0.085, h * 0.28, 0.025]);
+    return root;
+  }
+  const keep = obstacle.id === 'old-fort-building-2';
+  const body = keep ? 'box' : 'cylinder';
+  const diameter = keep ? r * 1.32 : r * 1.72;
+  part(resources, root, body, palette.slate, [0, h * 0.08, 0], [diameter * 1.04, h * 0.16, diameter * 1.04]);
+  part(resources, root, body, stone, [0, h * 0.45, 0], [diameter, h * 0.82, diameter]);
+  for (const y of [0.3, 0.58, 0.84]) {
+    part(resources, root, body, palette.stoneLight, [0, h * y, 0], [diameter * 1.04, h * 0.035, diameter * 1.04]);
+  }
+  part(resources, root, body, palette.slate, [0, h * 0.865, 0], [diameter * 0.87, h * 0.04, diameter * 0.87]);
+  const count = keep ? 4 : 8;
+  for (let index = 0; index < count; index++) {
+    if (index === (obstacle.variant + 2) % count) continue;
+    const angle = index * Math.PI * 2 / count + (keep ? Math.PI / 4 : 0);
+    const radius = keep ? r * 0.7 : r * 0.72;
+    const broken = index === (obstacle.variant + 3) % count;
+    part(resources, root, 'box', stone,
+      [Math.sin(angle) * radius, h * (broken ? 0.895 : 0.93), Math.cos(angle) * radius],
+      [r * 0.3, h * (broken ? 0.07 : 0.14), r * 0.3], [0, angle, 0]);
+  }
+  for (const side of [-1, 1]) {
+    for (const y of [0.34, 0.64]) {
+      const depth = keep ? r * 0.665 : r * 0.81;
+      part(resources, root, 'box', palette.ink, [side * r * 0.25, h * y, depth], [r * 0.08, h * 0.14, 0.025]);
+    }
+  }
+  const face = keep ? r * 0.675 : r * 0.87;
+  part(resources, root, 'box', palette.iron, [0, h * 0.15, face], [r * 0.36, h * 0.3, 0.035]);
+  part(resources, root, 'cloth', palette.villain, [0, h * 0.57, face], [r * 0.42, h * 0.24, 1]);
+  part(resources, root, 'box', palette.brass, [0, h * 0.59, face + 0.02], [r * 0.05, h * 0.1, 0.025]);
+  return root;
+}
+
 function addRoads(world: WorldBlueprint, batch: StaticBatch): void {
   for (const edge of world.roads.edges) {
     const from = world.roads.nodes.find((node) => node.id === edge.from);
@@ -354,6 +406,7 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
   const random = seededRandom(worldSeed(world.seed));
   const heroPosition = new THREE.Vector3();
   const flagAnchors = new Map<string, THREE.Vector3>();
+  const oldFort = world.exploration?.locations.find((place) => place.id === 'old-fort');
   const bounds = world.bounds;
   const width = bounds.maxX - bounds.minX;
   const depth = bounds.maxZ - bounds.minZ;
@@ -392,6 +445,10 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
         [obstacle.x, obstacle.height * 0.42, obstacle.z], [scale, obstacle.height, scale], [0, obstacle.variant * 0.61, 0]);
       batch.add('rock', theme?.patches ?? palette.moss, [obstacle.x, 0.04, obstacle.z], [obstacle.radius * 1.99, 0.12, obstacle.radius * 1.99], [0, obstacle.variant * 0.61, 0]);
     } else {
+      if (oldFort && (obstacle.id.startsWith('old-fort-building-') || obstacle.id.startsWith('old-fort-wall-'))) {
+        batch.append(oldFortStructure(resources, obstacle, oldFort));
+        continue;
+      }
       const place = world.exploration?.locations.find(candidate => obstacle.id.startsWith(`${candidate.id}-building-`));
       if (place && theme) {
         batch.append(locationStructure(resources, obstacle, place, theme));

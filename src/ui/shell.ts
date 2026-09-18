@@ -1,8 +1,9 @@
-import { FACTIONS, type FactionId, type GameEvent, type GameInput, type GameSnapshot, type MetaProfile, type NarrativeInput, type UpgradeId } from "../game";
+import { FACTIONS, FACTION_CAMPAIGNS, type FactionId, type GameEvent, type GameInput, type GameSnapshot, type MetaProfile, type NarrativeInput, type UpgradeId } from "../game";
 import { Atlas } from "./atlas";
 import { formatTime, translate } from "./locale";
 import type { Settings } from "./storage";
-import { dialogueContent, inspectionContent, journalContent, localText, questTarget, type QuestFilter } from "./story";
+import type { SpeechLine } from "../audio/speech";
+import { campaignContent, dialogueContent, inspectionContent, journalContent, localText, militaryObjective, questTarget, worldTarget, type QuestFilter } from "./story";
 
 export type Overlay = "menu" | "pause" | "map" | "journal" | "dialogue" | "inspection" | "settings" | "help" | "records" | "terminal" | "fatal" | null;
 export interface MetaOffer {
@@ -71,6 +72,7 @@ export class GameShell {
   private readonly overlayHost = element("div", "overlay-host");
   private readonly warnings = element("div", "warnings");
   private readonly live = element("div", "sr-only");
+  private readonly voiceCaption = element("div", "voice-caption");
   private readonly controller = new AbortController();
   private warningKeys: string[] = [];
   private snapshot: GameSnapshot | null = null;
@@ -89,10 +91,11 @@ export class GameShell {
     this.live.setAttribute("aria-live", "polite");
     this.live.setAttribute("aria-atomic", "true");
     this.warnings.setAttribute("aria-live", "polite");
+    this.voiceCaption.hidden = true;
     this.minimap.type = "button";
     this.minimap.addEventListener("click", () => dispatch({ type: "overlay", overlay: "map" }));
     this.hud.append(this.hudTop, this.minimap, this.hudBottom, this.controls);
-    root.replaceChildren(this.canvas, this.hud, this.overlayHost, this.warnings, this.live);
+    root.replaceChildren(this.canvas, this.hud, this.overlayHost, this.voiceCaption, this.warnings, this.live);
     window.addEventListener("keydown", (event) => this.overlayKey(event), { signal: this.controller.signal });
     this.applyLanguage();
     this.buildControls();
@@ -125,6 +128,7 @@ export class GameShell {
 
   setState(state: ShellState, rebuild = true): void {
     const languageChanged = state.settings.language !== this.state.settings.language;
+    const factionChanged = state.faction !== this.state.faction;
     this.state = state;
     this.applyLanguage();
     if (languageChanged) {
@@ -132,7 +136,10 @@ export class GameShell {
       this.renderWarnings();
       this.lastMapTick = -Infinity;
     }
-    if (rebuild) this.renderOverlay();
+    if (rebuild) this.renderOverlay(true);
+    if (factionChanged && this.currentOverlay === "menu") {
+      this.announceText(localText(FACTION_CAMPAIGNS[state.faction].introduction, state.settings.language));
+    }
     if (this.snapshot) this.update(this.snapshot);
   }
 
@@ -170,6 +177,17 @@ export class GameShell {
     }
   }
 
+  announceText(text: string): void {
+    this.live.textContent = text;
+  }
+
+  caption(line: SpeechLine | null): void {
+    const alreadyOnScreen = ["dialogue", "inspection", "terminal"].includes(this.currentOverlay ?? "") && line?.speaker !== "player";
+    this.voiceCaption.hidden = line === null || alreadyOnScreen;
+    this.voiceCaption.replaceChildren();
+    if (line) this.voiceCaption.append(element("strong", "", line.label), element("span", "", line.text));
+  }
+
   private renderWarnings(): void {
     this.warnings.replaceChildren();
     for (const key of this.warningKeys) {
@@ -202,40 +220,59 @@ export class GameShell {
     const crest = element("section", "hero-panel");
     crest.append(element("div", `faction-crest ${snapshot.faction}`, snapshot.faction === "elf" ? "↟" : snapshot.faction === "guard" ? "♜" : "◆"));
     const vitals = element("div", "hero-vitals");
-    vitals.append(this.label(FACTIONS[snapshot.faction].nameKey));
+    const language = this.state.settings.language;
+    vitals.append(snapshot.campaign
+      ? element("p", "eyebrow", localText(snapshot.campaign.identity.name, language))
+      : this.label(FACTIONS[snapshot.faction].nameKey));
     vitals.append(this.meter("health", snapshot.player.hp, snapshot.player.maxHp, "health"));
     vitals.append(this.meter("stamina", snapshot.player.stamina, snapshot.player.maxStamina, "stamina"));
     crest.append(vitals);
     const objective = element("section", "objective");
     objective.setAttribute("aria-label", this.t("progressLabel"));
     const story = snapshot.narrative;
-    const language = this.state.settings.language;
     const tracked = story?.quests.find((quest) => quest.id === story.trackedQuestId);
     const storyRemains = story && snapshot.fortress.bossDefeated && !story.ending;
     objective.append(element("p", "eyebrow", story ? localText(story.chapter, language) : this.t("chapter")),
       element("h2", "", tracked ? localText(tracked.title, language)
-        : storyRemains ? localText(story.title, language) : this.t(snapshot.objective.key)));
+        : storyRemains ? localText(story.title, language) : militaryObjective(snapshot, language)));
     if (!tracked && storyRemains) objective.append(element("p", "tracked-objective", localText(story.summary, language)));
     if (tracked) {
       objective.append(element("p", "tracked-objective", localText(tracked.objective, language)));
-      const target = questTarget(snapshot, tracked);
+      const target = questTarget(snapshot, tracked, language);
       if (target) objective.append(element("p", "quest-distance",
         `${Math.round(Math.hypot(target.x - snapshot.player.x, target.z - snapshot.player.z))} ${this.t("story.metres")} / J · ${this.t("story.journal")}`));
     }
-    objective.append(element("p", "objective-counts",
-      `${this.t("capturedCount")} ${snapshot.objective.captured}/${snapshot.objective.captureRequired} · ` +
-      `${this.t("suppliedCount")} ${snapshot.objective.supplied}/${snapshot.objective.supplyRequired}`));
-    const boss = snapshot.actors.find((actor) => actor.kind === "boss" && actor.hp > 0);
+    if (snapshot.campaign) {
+      const military = element("p", "military-cue", `${this.t("campaign.military")}: ${militaryObjective(snapshot, language)}`);
+      objective.append(military);
+      const completed = snapshot.campaign.requirements.filter((requirement) => requirement.complete).length;
+      objective.append(element("p", "objective-counts",
+        `${this.t("campaign.requirements")} ${completed}/${snapshot.campaign.requirements.length} · J · ${this.t("campaign.orders")}`));
+    } else {
+      objective.append(element("p", "objective-counts",
+        `${this.t("capturedCount")} ${snapshot.objective.captured}/${snapshot.objective.captureRequired} · ` +
+        `${this.t("suppliedCount")} ${snapshot.objective.supplied}/${snapshot.objective.supplyRequired}`));
+    }
+    const boss = snapshot.actors.find((actor) => actor.kind === "boss" && actor.hp > 0 &&
+      (actor.allegiance === undefined || actor.allegiance === "hostile"));
     if (boss && snapshot.fortress.unlocked && Math.hypot(boss.x - snapshot.player.x, boss.z - snapshot.player.z) < 32) {
-      objective.append(this.meter("boss", boss.hp, boss.maxHp, "boss"));
+      const name = boss.name ?? snapshot.campaign?.identity.boss.name;
+      if (name) objective.append(element("p", "boss-name", localText(name, language)));
+      objective.append(this.meter("boss", boss.hp, boss.maxHp, "boss", name ? localText(name, language) : undefined));
     }
     this.hudTop.replaceChildren(crest, objective);
     const convoy = element("section", "convoy-panel");
-    convoy.append(this.label(FACTIONS[snapshot.faction].convoyKey));
+    convoy.append(this.label(snapshot.campaign ? "convoy" : FACTIONS[snapshot.faction].convoyKey));
     convoy.append(this.meter("convoy", snapshot.convoy.hp, snapshot.convoy.maxHp, "convoy-health"));
     convoy.append(element("p", "cargo", `${this.t("cargo")} ${snapshot.convoy.cargo}/${snapshot.convoy.capacity} · ${this.t("order." + snapshot.convoy.mode)}`));
     if (snapshot.convoy.disabled) convoy.append(element("p", "danger-text", this.t("disabledConvoy")));
     convoy.append(element("p", "key-prompt", `C · ${this.t("orders")}`));
+    if (snapshot.campaign) {
+      const shipment = element("div", "shipment-status");
+      shipment.append(element("p", "eyebrow", localText(snapshot.campaign.shipment.role, language)),
+        element("p", "", localText(snapshot.campaign.shipment.status, language)));
+      convoy.append(shipment);
+    }
     const actions = element("section", "action-panel");
     if (story?.interaction) {
       const interaction = story.interaction;
@@ -249,7 +286,8 @@ export class GameShell {
     if (story?.notice) actions.append(element("p", "story-notice", localText(story.notice, language)));
     if (snapshot.interaction) {
       const interaction = element("div", `interaction ${snapshot.interaction.enabled ? "" : "unavailable"}`);
-      interaction.append(element("kbd", "", "E"), element("span", "", `${this.t("hold")} · ${this.t(snapshot.interaction.key)}`));
+      interaction.append(element("kbd", "", "E"), element("span", "", `${this.t("hold")} · ${snapshot.interaction.label
+        ? localText(snapshot.interaction.label, language) : this.t(snapshot.interaction.key)}`));
       if (snapshot.interaction.progress > 0) interaction.append(this.meter("interact", snapshot.interaction.progress, 1, "capture"));
       actions.append(interaction);
     }
@@ -277,11 +315,11 @@ export class GameShell {
     }
   }
 
-  private meter(key: string, value: number, max: number, className: string): HTMLElement {
+  private meter(key: string, value: number, max: number, className: string, label?: string): HTMLElement {
     const row = element("div", `meter-row ${className}`);
     const bar = element("div", "meter");
     bar.setAttribute("role", "meter");
-    bar.setAttribute("aria-label", this.t(key));
+    bar.setAttribute("aria-label", label ?? this.t(key));
     bar.setAttribute("aria-valuemin", "0");
     bar.setAttribute("aria-valuemax", String(Math.max(1, max)));
     bar.setAttribute("aria-valuenow", String(Math.max(0, Math.min(value, max))));
@@ -296,16 +334,20 @@ export class GameShell {
     let detail = "";
     if (event.kind === "convoy") {
       const site = snapshot.world.sites.find((item) => item.id === event.targetId);
-      detail = site ? this.t(site.nameKey) : ["hold", "follow", "return", "route"].includes(event.targetId) ? this.t(`order.${event.targetId}`) : "";
+      detail = site ? site.name ? localText(site.name, this.state.settings.language) : this.t(site.nameKey)
+        : ["hold", "follow", "return", "route"].includes(event.targetId) ? this.t(`order.${event.targetId}`) : "";
     } else if (["pickup", "delivery", "hurt"].includes(event.kind) && event.amount > 0) detail = String(event.amount);
     else if (event.kind === "capture") {
       const site = snapshot.world.sites.find((item) => item.id === event.targetId);
-      if (site) detail = this.t(site.nameKey);
+      if (site) detail = site.name ? localText(site.name, this.state.settings.language) : this.t(site.nameKey);
     }
-    return `${this.t(event.key)}${detail ? ` · ${detail}` : ""}`;
+    return `${event.label ? localText(event.label, this.state.settings.language) : this.t(event.key)}${detail ? ` · ${detail}` : ""}`;
   }
 
-  private renderOverlay(): void {
+  private renderOverlay(preserveContext = false): void {
+    const focusIndex = preserveContext
+      ? [...this.overlayHost.querySelectorAll("button, input, select, summary")].findIndex((node) => node === document.activeElement) : -1;
+    const scrollTop = preserveContext ? this.overlayHost.querySelector(".panel")?.scrollTop ?? 0 : 0;
     this.hud.hidden = this.currentOverlay !== null;
     this.overlayHost.replaceChildren();
     this.overlayHost.hidden = this.currentOverlay === null;
@@ -326,6 +368,9 @@ export class GameShell {
           : this.currentOverlay === "fatal" ? (this.fatalKind === "graphics" ? "graphicsFailure" : "gameFailure")
             : ["journal", "dialogue", "inspection"].includes(this.currentOverlay) ? `story.${this.currentOverlay}` : this.currentOverlay;
     panel.setAttribute("aria-label", this.t(headingKey));
+    if (this.currentOverlay === "terminal" && this.snapshot?.phase === "victory" && this.snapshot.campaign) {
+      panel.setAttribute("aria-label", localText(this.snapshot.campaign.identity.victoryTitle, this.state.settings.language));
+    }
     if (this.currentOverlay === "menu") this.menu(panel);
     else if (this.currentOverlay === "pause") this.pause(panel);
     else if (this.currentOverlay === "map") this.map(panel);
@@ -343,11 +388,21 @@ export class GameShell {
     else if (this.currentOverlay === "records") this.records(panel);
     else if (this.currentOverlay === "terminal") this.terminal(panel);
     else this.fatal(panel);
+    if (["dialogue", "inspection", "terminal"].includes(this.currentOverlay)) {
+      panel.append(this.button("settings", { type: "overlay", overlay: "settings" }, "button quiet speech-settings"));
+    }
     this.overlayHost.append(panel);
     panel.focus({ preventScroll: true });
+    if (preserveContext) {
+      panel.scrollTop = scrollTop;
+      const control = panel.querySelectorAll<HTMLElement>("button, input, select, summary")[focusIndex];
+      if (control && !control.matches(":disabled")) control.focus({ preventScroll: true });
+    }
   }
 
   private menu(panel: HTMLElement): void {
+    const language = this.state.settings.language;
+    const campaign = FACTION_CAMPAIGNS[this.state.faction];
     const masthead = element("div", "masthead");
     masthead.append(emblem(), this.label("edition"));
     const title = element("h1", "game-title");
@@ -358,17 +413,34 @@ export class GameShell {
     factions.setAttribute("role", "group");
     factions.setAttribute("aria-label", this.t("chooseFaction"));
     for (const id of ["elf", "guard", "villain"] as const) {
+      const identity = FACTION_CAMPAIGNS[id];
       const button = this.button(`faction.${id}`, { type: "faction", faction: id }, `faction-card ${id}`);
       button.textContent = "";
       button.setAttribute("aria-pressed", String(this.state.faction === id));
+      button.setAttribute("aria-controls", "campaign-introduction");
       button.dataset.faction = id;
-      button.append(element("span", "faction-mark", id === "elf" ? "↟" : id === "guard" ? "♜" : "◆"));
+      const mark = element("span", "faction-mark", id === "elf" ? "↟" : id === "guard" ? "♜" : "◆");
+      mark.setAttribute("aria-hidden", "true");
+      button.append(mark);
       const text = element("span", "faction-copy");
-      text.append(element("strong", "", this.t(`faction.${id}`)), element("span", "", this.t(`description.${id}`)));
+      text.append(element("strong", "", localText(identity.name, language)), element("span", "", localText(identity.role, language)));
       button.append(text);
       factions.append(button);
     }
     panel.append(factions);
+    const introduction = element("section", "campaign-introduction");
+    introduction.id = "campaign-introduction";
+    introduction.dataset.campaign = campaign.id;
+    introduction.setAttribute("aria-live", "polite");
+    introduction.setAttribute("aria-atomic", "true");
+    introduction.append(element("p", "eyebrow", localText(campaign.name, language)),
+      element("p", "guide-copy", localText(campaign.introduction, language)),
+      this.label("campaign.allegiance"), element("p", "small", localText(campaign.allegiance, language)),
+      this.label("campaign.military"), element("p", "small", localText(campaign.militaryObjective, language)));
+    const equipment = element("details", "campaign-equipment");
+    equipment.append(element("summary", "", this.t("campaign.equipment")), element("p", "small", this.t(`description.${campaign.id}`)));
+    introduction.append(equipment);
+    panel.append(introduction, element("p", "small muted neutral-note", this.t("campaign.neutral")));
     const seedRow = element("div", "seed-row");
     const label = element("label", "seed-label", this.t("seed"));
     const seed = element("input", "seed-input");
@@ -386,7 +458,11 @@ export class GameShell {
     hint.id = "seed-hint";
     panel.append(seedRow, hint);
     const launch = element("div", "launch-actions");
-    if (this.state.hasSave) launch.append(this.button("continue", { type: "continue" }, "button primary"));
+    if (this.state.hasSave) {
+      launch.append(this.button("continue", { type: "continue" }, "button primary"));
+      if (this.snapshot) launch.append(element("p", "small saved-campaign", `${this.t("campaign.saved")}: ${this.snapshot.campaign
+        ? localText(this.snapshot.campaign.identity.name, language) : this.t(FACTIONS[this.snapshot.faction].nameKey)}`));
+    }
     launch.append(this.button("start", { type: "start" }, `button ${this.state.hasSave ? "" : "primary"}`));
     panel.append(launch);
     const footer = element("nav", "title-footer");
@@ -395,11 +471,11 @@ export class GameShell {
       this.button("help", { type: "overlay", overlay: "help" }, "text-button"),
       this.button("settings", { type: "overlay", overlay: "settings" }, "text-button"),
     );
-    const language = element("button", "language-button", this.state.settings.language === "ru" ? "EN" : "RU");
-    language.type = "button";
-    language.setAttribute("aria-label", this.state.settings.language === "ru" ? "Switch to English" : "Переключить на русский");
-    language.addEventListener("click", () => this.dispatch({ type: "settings", settings: { ...this.state.settings, language: this.state.settings.language === "ru" ? "en" : "ru" } }));
-    footer.append(language);
+    const languageButton = element("button", "language-button", language === "ru" ? "EN" : "RU");
+    languageButton.type = "button";
+    languageButton.setAttribute("aria-label", language === "ru" ? "Switch to English" : "Переключить на русский");
+    languageButton.addEventListener("click", () => this.dispatch({ type: "settings", settings: { ...this.state.settings, language: language === "ru" ? "en" : "ru" } }));
+    footer.append(languageButton);
     panel.append(footer, element("p", "desktop-note", this.t("desktop")), element("p", "touch-note", this.t("touchNotice")),
       element("p", "attribution", this.t("powered")));
   }
@@ -417,6 +493,8 @@ export class GameShell {
       this.button("settings", { type: "overlay", overlay: "settings" }), this.button("titleReturn", { type: "title" }));
     panel.append(buttons);
     panel.append(element("p", "save-feedback small"));
+    if (this.snapshot?.campaign) panel.append(element("p", "campaign-orders guide-copy",
+      localText(this.snapshot.campaign.orders, this.state.settings.language)));
     if (this.snapshot) {
       panel.append(this.heading("upgrades", "h3"), element("p", "small muted", this.t("upgradeNote")));
       const shop = element("div", "upgrade-list");
@@ -447,18 +525,28 @@ export class GameShell {
       panel.append(toggle);
       const region = snapshot.world.exploration.regions.find(({ bounds }) => snapshot.player.x >= bounds.minX &&
         snapshot.player.x <= bounds.maxX && snapshot.player.z >= bounds.minZ && snapshot.player.z <= bounds.maxZ);
-      if (region) panel.append(element("p", "region-caption", localText(region.name, this.state.settings.language)),
-        element("p", "region-lore small muted", localText(region.description, this.state.settings.language)));
+      if (region) {
+        panel.append(element("p", "region-caption", localText(region.name, this.state.settings.language)),
+          element("p", "region-lore small muted", localText(region.description, this.state.settings.language)));
+        const political = snapshot.campaign?.standing.find((standing) => standing.id === region.politicalFaction);
+        if (political) panel.append(element("p", "region-affiliation small", `${this.t("campaign.territory")}: ${localText(political.name, this.state.settings.language)}`));
+      }
     }
     const layout = element("div", "atlas-layout");
     const map = element("div", "atlas-paper");
     map.append(this.atlas.draw(snapshot, this.state.settings.language, false, this.localMap));
     const sidebar = element("div", "atlas-sidebar");
-    sidebar.append(this.label("chapter"), element("h3", "", this.t(snapshot.objective.key)));
+    const language = this.state.settings.language;
+    sidebar.append(this.label(snapshot.campaign ? "campaign.military" : "chapter"),
+      element("h3", "", militaryObjective(snapshot, language)));
+    const target = snapshot.campaign ? worldTarget(snapshot, snapshot.objective.targetId, language) : null;
+    if (target) sidebar.append(element("p", "small military-target", `${this.t("objectiveTarget")}: ${target.name}`));
+    if (snapshot.campaign) sidebar.append(campaignContent(snapshot, language));
     for (const post of snapshot.outposts) {
+      const site = snapshot.world.sites.find((site) => site.id === post.id);
       const row = element("div", `post-record ${post.owner}`);
-      row.append(element("strong", "", this.t(post.nameKey)),
-        element("p", "small", this.t(post.supplied ? "supplied" : post.owner === "player" ? "captured" : "hostile")));
+      row.append(element("strong", "", site?.name ? localText(site.name, language) : this.t(post.nameKey)),
+        element("p", "small", this.t(post.supplied ? "supplied" : post.owner === "player" ? snapshot.campaign ? "campaign.controlled" : "captured" : "hostile")));
       if (post.captureProgress > 0 && post.owner !== "player") row.append(this.meter("captured", post.captureProgress, 1, "capture"));
       sidebar.append(row);
     }
@@ -477,7 +565,7 @@ export class GameShell {
     const sites = snapshot.world.sites.filter((site) => snapshot.world.roads.nodes.some((node) => node.id === site.id));
     const places = snapshot.world.exploration?.locations.filter((place) => snapshot.narrative?.discovered.includes(place.id)) ?? [];
     for (const site of sites) {
-      const option = element("option", "", this.t(site.nameKey));
+      const option = element("option", "", site.name ? localText(site.name, language) : this.t(site.nameKey));
       option.value = site.id;
       option.selected = snapshot.convoy.destination === site.id;
       destinations.append(option);
@@ -496,8 +584,10 @@ export class GameShell {
     sidebar.append(this.label("legend"));
     const legend = element("div", "map-legend");
     for (const key of ["hero", "convoy", "hostile", "captured", "supplied", "route", "unexplored"]) {
-      legend.append(element("span", `legend-item legend-${key}`, this.t(key)));
+      legend.append(element("span", `legend-item legend-${key}`, this.t(key === "captured" && snapshot.campaign ? "campaign.controlled" : key)));
     }
+    if (snapshot.campaign) legend.append(element("span", "legend-item legend-military", this.t("campaign.military")),
+      element("span", "legend-item legend-shipment", this.t("campaign.shipment")));
     sidebar.append(legend);
     if (snapshot.narrative) {
       sidebar.append(this.button("story.journal", { type: "overlay", overlay: "journal" }, "button quiet"));
@@ -572,11 +662,21 @@ export class GameShell {
   }
 
   private help(panel: HTMLElement): void {
-    panel.append(this.heading("help"), element("p", "prologue", this.t("guideIntro")));
+    const snapshot = this.returnOverlay === "menu" ? null : this.snapshot;
+    const campaign = snapshot?.campaign?.identity ?? (!snapshot ? FACTION_CAMPAIGNS[this.state.faction] : null);
+    const language = this.state.settings.language;
+    panel.append(this.heading("help"), element("p", "prologue", campaign ? localText(campaign.introduction, language) : this.t("guideIntro")));
+    if (campaign) {
+      panel.append(element("h3", "", localText(campaign.name, language)), element("p", "guide-copy", localText(campaign.allegiance, language)),
+        this.heading("campaign.military", "h3"), element("p", "guide-copy", localText(campaign.militaryObjective, language)));
+      if (snapshot?.campaign) panel.append(campaignContent(snapshot, language));
+    } else {
+      panel.append(this.heading("chapter", "h3"), element("p", "guide-copy", this.t("guideCampaign")));
+    }
     for (const [heading, paragraph] of [
-      ["chapter", "guideCampaign"], ["orders", "guideConvoy"], ["attack", "guideCombat"],
+      ["orders", "guideConvoy"], ["attack", "guideCombat"],
       ["upgrades", "guideRecovery"], ["map", "guideCamera"], ["save", "guideSave"],
-      ["story.journal", "story.guide"],
+      ["story.journal", campaign ? "campaign.storyGuide" : "story.guide"],
     ]) {
       if (heading && paragraph) panel.append(this.heading(heading, "h3"), element("p", "guide-copy", this.t(paragraph)));
     }
@@ -617,12 +717,15 @@ export class GameShell {
     const snapshot = this.snapshot;
     if (!snapshot) return;
     const victory = snapshot.phase === "victory";
-    panel.append(emblem(), this.label("edition"), this.heading(victory ? "victory" : "defeat"),
-      element("p", "prologue", this.t(victory ? "victoryStory" : "defeatStory")));
+    const identity = snapshot.campaign?.identity;
+    const language = this.state.settings.language;
+    panel.append(emblem(), this.label("edition"), victory && identity ? element("h2", "", localText(identity.victoryTitle, language))
+      : this.heading(victory ? "victory" : "defeat"),
+      element("p", "prologue", victory && identity ? localText(identity.victorySummary, language) : this.t(victory ? "victoryStory" : "defeatStory")));
     if (snapshot.narrative?.ending) panel.append(element("p", "quest-outcome", localText(snapshot.narrative.ending, this.state.settings.language)));
     const stats = element("div", "record-stats");
     stats.append(this.stat("campaignTime", formatTime(snapshot.elapsed)),
-      this.stat("capturedCount", snapshot.objective.captured), this.stat("suppliedCount", snapshot.objective.supplied),
+      this.stat(snapshot.campaign ? "campaign.securedCount" : "capturedCount", snapshot.objective.captured), this.stat("suppliedCount", snapshot.objective.supplied),
       this.stat("delivered", snapshot.convoy.delivered), this.stat("kills", snapshot.player.kills),
       this.stat("reward", snapshot.rewards?.renown ?? 0));
     panel.append(stats, element("p", "small", `${this.t("runSeed")}: ${snapshot.seed}`),
@@ -661,7 +764,7 @@ export class GameShell {
       return;
     }
     if (event.code === "Tab") {
-      const focusable = [...this.overlayHost.querySelectorAll<HTMLElement>("button:not(:disabled), input, select, [tabindex='0']")];
+      const focusable = [...this.overlayHost.querySelectorAll<HTMLElement>("button:not(:disabled), input, select, summary, [tabindex='0']")];
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       if (event.shiftKey && (document.activeElement === first || !focusable.includes(document.activeElement as HTMLElement))) {

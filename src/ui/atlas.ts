@@ -1,7 +1,7 @@
 import type { GameSnapshot } from "../game";
 import { translate } from "./locale";
 import type { Language } from "./storage";
-import { localText, questTarget } from "./story";
+import { localText, militaryObjective, questTarget, worldTarget } from "./story";
 
 const NS = "http://www.w3.org/2000/svg";
 const GRID = 28;
@@ -75,12 +75,13 @@ export class Atlas {
       role: "img",
       "aria-label": t("mapLabel"),
     });
-    const label = (name: string, px: number, pz: number, color = "#323c31", size = 3.2): void => {
+    const label = (name: string, px: number, pz: number, color = "#323c31", size = 3.2): SVGTextElement => {
       const text = svg("text", { x: px, y: pz, "text-anchor": "middle", fill: color,
         "font-size": size * scale, "font-family": "Georgia, serif", "font-weight": "bold",
         "paint-order": "stroke", stroke: "#e6dcc6", "stroke-width": 0.6 * scale });
       text.textContent = name;
       root.append(text);
+      return text;
     };
     root.append(svg("rect", { x: 0, y: 0, width, height, fill: "#d9d0b5" }));
     const regions = world.exploration?.regions.map((region) => ({ bounds: region.bounds, kind: region.biome })) ?? world.biomes;
@@ -131,10 +132,18 @@ export class Atlas {
       for (const region of world.exploration?.regions ?? []) {
         label(localText(region.name, language).toLocaleUpperCase(language),
           x((region.bounds.minX + region.bounds.maxX) / 2), z(region.bounds.minZ + 20), "#685f4c", 2.2);
+        const political = snapshot.campaign?.standing.find((standing) => standing.id === region.politicalFaction);
+        if (political) {
+          const affiliation = label(localText(political.name, language),
+            x((region.bounds.minX + region.bounds.maxX) / 2), z(region.bounds.minZ + 20) + 3.5 * scale, "#685f4c", 1.6);
+          affiliation.setAttribute("data-region-faction", political.id);
+          affiliation.setAttribute("data-region", region.id);
+        }
       }
     }
     const tracked = snapshot.narrative?.quests.find((quest) => quest.id === snapshot.narrative?.trackedQuestId);
-    const target = questTarget(snapshot, tracked);
+    const target = questTarget(snapshot, tracked, language);
+    const military = snapshot.campaign ? worldTarget(snapshot, snapshot.objective.targetId, language) : null;
     for (const place of world.exploration?.locations ?? []) {
       const discovered = snapshot.narrative?.discovered.includes(place.id);
       const targeted = target && Math.hypot(target.x - place.x, target.z - place.z) < place.radius;
@@ -155,21 +164,36 @@ export class Atlas {
         ? { x: x(site.x) - 1.5 * scale, y: z(site.z) - 1.5 * scale, width: 3 * scale, height: 3 * scale, fill: color }
         : { cx: x(site.x), cy: z(site.z), r: 1.5 * scale, fill: color });
       const title = svg("title", {});
-      title.textContent = t(site.nameKey);
+      const name = site.name ? localText(site.name, language) : t(site.nameKey);
+      title.textContent = name;
       marker.append(title);
       root.append(marker);
       const namedSettlement = world.exploration?.locations.some((place) =>
         snapshot.narrative?.discovered.includes(place.id) && Math.hypot(place.x - site.x, place.z - site.z) < 8);
-      if (!miniature && !namedSettlement && (local || width <= 200)) label(t(site.nameKey), x(site.x), z(site.z) - 4 * scale);
+      if (!miniature && !namedSettlement && (local || width <= 200)) label(name, x(site.x), z(site.z) - 4 * scale);
     }
     for (const npc of snapshot.narrative?.npcs ?? []) {
-      if (!npc.available || Math.hypot(npc.x - snapshot.player.x, npc.z - snapshot.player.z) > 38) continue;
+      if (Math.hypot(npc.x - snapshot.player.x, npc.z - snapshot.player.z) > 38) continue;
       const marker = svg("circle", { cx: x(npc.x), cy: z(npc.z), r: 0.85 * scale,
         fill: npc.questAvailable ? "#dba935" : "#398080", stroke: "#efe6d2", "stroke-width": 0.3 * scale, "data-npc": npc.id });
       const title = svg("title", {});
       title.textContent = localText(npc.name, language);
       marker.append(title);
       root.append(marker);
+    }
+    const mission = snapshot.campaign?.shipment;
+    const shipment = mission && snapshot.actors.find((actor) => actor.id === mission.targetId);
+    if (shipment && mission) {
+      const marker = svg("rect", {
+        x: x(shipment.x) - 2 * scale, y: z(shipment.z) - 1.4 * scale, width: 4 * scale, height: 2.8 * scale,
+        fill: shipment.allegiance === "hostile" ? "#a14e3d" : shipment.allegiance === "friendly" ? "#427b74" : "#80785f",
+        stroke: "#efe6d2", "stroke-width": 0.7 * scale, "data-shipment": shipment.id,
+      });
+      const title = svg("title", {});
+      title.textContent = `${localText(mission.role, language)}: ${localText(mission.status, language)}`;
+      marker.append(title);
+      root.append(marker);
+      if (!miniature && local && shipment.name) label(localText(shipment.name, language), x(shipment.x), z(shipment.z) - 4 * scale);
     }
     if (target) {
       const px = Math.max(left + 4 * scale, Math.min(left + span - 4 * scale, x(target.x)));
@@ -179,6 +203,18 @@ export class Atlas {
         svg("path", { d: "M0 -2 L1.5 0 L0 2 L-1.5 0 Z", fill: "#b87c22" }));
       const title = svg("title", {});
       title.textContent = tracked ? localText(tracked.objective, language) : "";
+      marker.append(title);
+      root.append(marker);
+    }
+    if (military) {
+      const px = Math.max(left + 4 * scale, Math.min(left + span - 4 * scale, x(military.x)));
+      const pz = Math.max(top + 4 * scale, Math.min(top + span - 4 * scale, z(military.z)));
+      const marker = svg("g", { "data-military-target": snapshot.objective.targetId ?? "",
+        transform: `translate(${px} ${pz}) scale(${scale})` });
+      marker.append(svg("rect", { x: -3.8, y: -3.8, width: 7.6, height: 7.6,
+        fill: "none", stroke: "#874b37", "stroke-width": 0.9 }));
+      const title = svg("title", {});
+      title.textContent = `${militaryObjective(snapshot, language)}: ${military.name}`;
       marker.append(title);
       root.append(marker);
     }

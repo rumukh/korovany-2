@@ -1,19 +1,31 @@
 import type { GameSnapshot, LocalizedText, NarrativeInput, QuestSnapshot, Vec2 } from "../game";
 import { translate } from "./locale";
+import { npcPortraitId, PLAYER_PORTRAITS, portraitContent } from "./portraits";
 import type { Language } from "./storage";
 
 export function localText(text: LocalizedText, language: Language): string {
   return text[language];
 }
 
-export function questTarget(snapshot: GameSnapshot, quest?: QuestSnapshot): (Vec2 & { name: string }) | null {
-  const id = quest?.targetId;
+export function worldTarget(snapshot: GameSnapshot, id: string | null | undefined, language: Language): (Vec2 & { name: string }) | null {
   if (!id) return null;
   const npc = snapshot.narrative?.npcs.find((entry) => entry.id === id);
+  if (npc) return { x: npc.x, z: npc.z, name: localText(npc.name, language) };
   const location = snapshot.world.exploration?.locations.find((entry) => entry.id === id);
+  if (location) return { x: location.x, z: location.z, name: localText(location.name, language) };
+  const actor = snapshot.actors.find((entry) => entry.id === id);
+  if (actor) return { x: actor.x, z: actor.z, name: actor.name ? localText(actor.name, language) : id };
+  if (id === snapshot.convoy.id) return { x: snapshot.convoy.x, z: snapshot.convoy.z, name: translate(language, "convoy") };
   const site = snapshot.world.sites.find((entry) => entry.id === id);
-  const point = npc ?? location ?? site;
-  return point ? { x: point.x, z: point.z, name: id } : null;
+  return site ? { x: site.x, z: site.z, name: site.name ? localText(site.name, language) : translate(language, site.nameKey) } : null;
+}
+
+export function questTarget(snapshot: GameSnapshot, quest?: QuestSnapshot, language: Language = "en"): (Vec2 & { name: string }) | null {
+  return worldTarget(snapshot, quest?.targetId, language);
+}
+
+export function militaryObjective(snapshot: GameSnapshot, language: Language): string {
+  return snapshot.campaign ? localText(snapshot.campaign.objectiveLabel, language) : translate(language, snapshot.objective.key);
 }
 
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, className = "", text?: string): HTMLElementTagNameMap[K] {
@@ -30,14 +42,55 @@ function button(text: string, action: () => void, className = "button"): HTMLBut
   return result;
 }
 
+export function campaignContent(snapshot: GameSnapshot, language: Language): HTMLElement {
+  const root = node("section", "campaign-briefing");
+  const campaign = snapshot.campaign;
+  if (!campaign) return root;
+  const text = (value: LocalizedText) => localText(value, language);
+  const t = (key: string) => translate(language, `campaign.${key}`);
+  root.dataset.campaign = campaign.identity.id;
+  root.setAttribute("aria-label", t("orders"));
+  const identity = node("div", "campaign-identity");
+  identity.append(node("p", "eyebrow", text(campaign.identity.name)),
+    node("h3", "", text(campaign.identity.role)));
+  const home = worldTarget(snapshot, campaign.identity.homeLocationId, language);
+  if (home) identity.append(node("p", "small campaign-home", `${t("home")}: ${home.name}`));
+  if (campaign.directive) identity.append(node("p", "small campaign-directive", `${t("directive")}: ${t(`directive.${campaign.directive}`)}`));
+  identity.append(node("p", "guide-copy campaign-allegiance", text(campaign.identity.allegiance)),
+    node("h3", "", t("orders")), node("p", "guide-copy campaign-orders", text(campaign.orders)));
+  const military = node("div", "campaign-military");
+  military.append(node("p", "eyebrow", t("military")), node("p", "campaign-objective", militaryObjective(snapshot, language)));
+  const requirements = node("ul", "campaign-requirements");
+  for (const requirement of campaign.requirements) {
+    const row = node("li", "", `${translate(language, requirement.complete ? "story.completed" : "story.active")}: ${text(requirement.label)}`);
+    row.dataset.requirement = requirement.id;
+    row.dataset.complete = String(requirement.complete);
+    const target = worldTarget(snapshot, requirement.targetId, language);
+    if (!requirement.complete && target) row.append(node("span", "small requirement-target", target.name));
+    requirements.append(row);
+  }
+  military.append(requirements, node("p", "small campaign-shipment", `${text(campaign.shipment.role)}: ${text(campaign.shipment.status)}`));
+  const relationships = node("div", "campaign-relationships");
+  relationships.append(node("h3", "", t("relationships")));
+  const standings = node("ul", "campaign-standings");
+  for (const standing of campaign.standing) {
+    const row = node("li", `campaign-standing ${standing.relation}`);
+    row.dataset.politicalFaction = standing.id;
+    row.append(node("span", "", text(standing.name)), node("strong", "", t(`relation.${standing.relation}`)));
+    standings.append(row);
+  }
+  relationships.append(standings);
+  root.append(identity, military, relationships);
+  return root;
+}
+
 export function dialogueContent(snapshot: GameSnapshot, language: Language, command: (input: NarrativeInput) => void): HTMLElement {
   const root = node("div", "conversation");
   const dialogue = snapshot.narrative?.dialogue;
   if (!dialogue) return root;
   const text = (value: LocalizedText) => localText(value, language);
   const header = node("header", "conversation-header");
-  const portrait = node("div", "speaker-seal", text(dialogue.name).slice(0, 1));
-  portrait.setAttribute("aria-hidden", "true");
+  const portrait = portraitContent(npcPortraitId(dialogue.npcId), text(dialogue.name), language);
   const identity = node("div");
   identity.append(node("p", "eyebrow", text(dialogue.role)), node("h2", "", text(dialogue.name)));
   header.append(portrait, identity);
@@ -45,6 +98,14 @@ export function dialogueContent(snapshot: GameSnapshot, language: Language, comm
   speech.id = "dialogue-speech";
   speech.setAttribute("aria-live", "polite");
   root.append(header, speech);
+  if (dialogue.choices.length) {
+    const player = node("div", "dialogue-player");
+    const role = snapshot.campaign ? text(snapshot.campaign.identity.role) : translate(language, `faction.${snapshot.faction}`);
+    const identity = node("div");
+    identity.append(node("p", "eyebrow", translate(language, "story.answers")), node("p", "player-identity", role));
+    player.append(portraitContent(PLAYER_PORTRAITS[snapshot.faction], `${translate(language, "hero")}: ${role}`, language), identity);
+    root.append(player);
+  }
   const choices = node("div", "dialogue-choices");
   choices.setAttribute("role", "group");
   choices.setAttribute("aria-label", translate(language, "story.answers"));
@@ -105,6 +166,7 @@ export function journalContent(
   }
   root.append(node("p", "eyebrow", text(story.chapter)), node("h2", "", text(story.title)),
     node("p", "prologue", text(story.summary)));
+  if (snapshot.campaign) root.append(campaignContent(snapshot, language));
   const tabs = node("div", "quest-filters");
   tabs.setAttribute("role", "group");
   tabs.setAttribute("aria-label", t("filter"));
@@ -137,7 +199,7 @@ export function journalContent(
       node("h3", "", text(selected.title)), node("p", "guide-copy", text(selected.description)));
     const objective = node("section", "quest-objective");
     objective.append(node("p", "eyebrow", t("next")), node("p", "", text(selected.objective)));
-    const target = questTarget(snapshot, selected);
+    const target = questTarget(snapshot, selected, language);
     if (target) objective.append(node("p", "small muted",
       `${Math.round(Math.hypot(target.x - snapshot.player.x, target.z - snapshot.player.z))} ${t("metres")} / ${t("mapTarget")}`));
     detail.append(objective);

@@ -1,4 +1,5 @@
 import type { FactionId, LocalizedText } from './types';
+import type { FactionDirective } from './faction-campaigns';
 
 export const text = (en: string, ru: string): LocalizedText => ({ en, ru });
 export const STORY_TITLE = text('The Hollow Road', 'Глухой тракт');
@@ -14,6 +15,7 @@ export interface StoryAction {
   reputation?: Partial<Record<CivicFaction, number>>;
   ending?: EndingId;
   gate?: 'conquest';
+  directive?: FactionDirective;
   requiresActions?: string[];
 }
 

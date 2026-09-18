@@ -88,7 +88,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
 
   beforeAll(async () => {
     if (captures) await mkdir(captures, { recursive: true });
-    server = await createServer({ configFile: false, server: { host: "127.0.0.1", port: 0 } });
+    server = await createServer({ configFile: false, server: { host: "127.0.0.1", port: 0, hmr: false, watch: null } });
     await server.listen();
     const url = server.resolvedUrls?.local[0];
     if (!url) throw new Error("Vite did not expose a local URL.");

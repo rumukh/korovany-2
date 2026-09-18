@@ -4,9 +4,12 @@ A standalone, single-player 3D action campaign built on
 [Aegis Engine](https://github.com/rumukh/aegis-engine), and a sequel to
 [Korovany](https://github.com/rumukh/korovany).
 
-You are a captain hired to escort a convoy. Mara's wagons have returned with their
-grain but without their people. Hidden beneath the sacks is black ward-glass:
-the first evidence connecting the cargo to disappearances along the road.
+Three factions enter the same mystery from different homes and with different
+authority: an elven partisan defending Greenhollow, a palace officer reporting
+to Commander Vesk at Crownbridge, or an independent mountain ruler commanding
+from the Old Fort. Mara is an independent carrier, not everyone's employer.
+Her wagons have returned with their grain but without their people. Black
+ward-glass hidden beneath the sacks connects the cargo to the disappearances.
 
 The Caller mimics the voices of the dead and draws people away from the road.
 Maintained bells and unbroken salt keep it out; answering a familiar voice can
@@ -14,12 +17,12 @@ lead someone beyond that protection. Yet the fortress convoys still travel
 where other crews disappear. Follow the cargo, compare accounts and discover
 what makes those wagons different.
 
-An original branching narrative sits alongside the physical convoy campaign:
-fight for supply posts, raid a rival caravan, and escort cargo to open the final
-stronghold. The supernatural threat is told through authored evidence and
-testimony, not a new monster-hunting mode or a dynamic night simulation.
-Choosing the finale is a plan, not an instant ending: its consequences appear
-only after the commander is defeated.
+The faction determines your opening, relationships, military obligations,
+investigation and final settlement, not just your weapon or colours. The Caller,
+Hollow Road and ward-glass remain shared. The supernatural threat is told through
+authored evidence and testimony, not a monster-hunting mode or dynamic night
+simulation. Final choices enact resolutions **after** the military objectives
+and final enemy are defeated; they are not pre-battle plans.
 
 ## Run locally
 
@@ -48,7 +51,7 @@ driver, with isolated browser profiles and no additional test dependencies:
 
 ```powershell
 $env:KOROVANY_BROWSER = '1'
-npm test -- tests\ui-browser.test.ts tests\story-browser.test.ts
+npm test -- tests\ui-browser.test.ts tests\story-browser.test.ts tests\faction-presentation.test.ts
 ```
 
 Set `AEGIS_BROWSER` to an executable path if the browser is not installed in a
@@ -62,23 +65,45 @@ local: no account, backend, external font service, or asset CDN is required.
 
 ## The campaign
 
-Choose a banner and a world seed. Woodland elves fight at range, palace guards
-can hold their ground with a bulwark, and the Iron company excels at close-range
-cleaves. These banners select the existing combat and convoy loadouts.
+Choose a faction and a world seed. Elves fight at range and answer to forest
+households. Palace guards use a bulwark, defend their existing post and obey
+Vesk's orders. The mountain ruler uses close-range cleaves and chooses
+conquest without an employer. Independent human settlements form a fourth,
+neutral political group: residents' clothing does not make them combat enemies.
 
-1. Defeat the defenders at two of the three supply posts, then hold **E** inside
-   the capture circle to claim them.
-2. Destroy the rival caravan and collect its supplies.
-3. Bring supplies to your convoy. Deliver 30 cargo to each of two captured posts;
-   supplying the third also weakens the final reinforcements.
-4. Defeat Commander Raut at the unlocked fortress. Complete the main
-   investigation and choose your finale plan to finish the campaign.
+Your opening chapter commits to **one irreversible directive**:
 
-The convoy follows actual roads and crosses the river at the bridge. Use its
-orders to move it, hold it safely behind the fighting, or send it home. A damaged
-or disabled convoy can be repaired by holding **E** nearby; losing its health
-does not permanently strand the campaign. Home and captured posts offer
-recovery and in-campaign upgrades.
+| Faction / directive | Physical obligations before the final battle |
+| --- | --- |
+| Elf / Shelter | Liberate and supply the forest depot; intercept the intact shipment and escort it to that depot. |
+| Elf / Interdict | The same forest recovery, plus capture and supply the palace supply gate. |
+| Guard / Relief | Repel the attack on your already-owned palace supply gate, supply it, and protect the Crown shipment's delivery there. |
+| Guard / Pursuit | Complete the relief and delivery first; only then may you capture and supply the quarry road post. |
+| Mountain ruler / Dominion | Take and supply the palace gate and quarry road post; appropriate the intact shipment and escort it to the palace gate. |
+| Mountain ruler / Plunder | Take and supply the palace gate, but physically escort the appropriated shipment back to the Old Fort. |
+
+Clear hostile defenders before holding **E** inside an authorized capture circle.
+Each required post consumes **30 cargo** from your nearby supply convoy.
+The mission shipment is a **separate wagon**, not a target to destroy for loot.
+Clear its hostile escort or attackers, then hold **E** beside it to take charge.
+Guards must first repel the palace attack. Stay within **22 metres** while the
+shipment follows its road route; opening a conversation does not claim it,
+deliver it or move it. A completed delivery provides supplies that can be
+collected and transferred to your own convoy with **E**.
+
+Your own convoy accepts hold, follow, return-home and road-destination orders.
+The mountain ruler's soldiers follow those logistics orders along the roads
+and engage hostile forces; they are not merely decorative starting guards.
+Both carts use real roads and bridges. Hold **E** nearby to repair a damaged or
+disabled cart for free; a wreck does not permanently strand the campaign.
+Home and secured posts provide recovery and in-campaign upgrades.
+
+Once your directive's shipment and supplied holdings are complete, the final
+battle unlocks. Elves and guards fight Raut's invasion redoubt; the mountain
+ruler assaults the **Royal Citadel** and its Palace Marshal. The citadel is the
+royal residence, distinct from the central palace supply gate. Military victory
+alone leaves the investigation playable: complete your faction's main chapters
+and select a resolution to finish the run.
 
 The same seed reproduces the world, not a promise of identical outcomes under
 different player inputs. New campaigns can apply purchased permanent upgrades.
@@ -87,16 +112,20 @@ Russian is the default language; English is available in the game.
 ## The borderlands and their stories
 
 The campaign explores a **980 x 980 metre** continuous world, **49 times the area**
-of the original military map. Eight named regions contain 24 authored locations:
+of the original military map. Eight named regions contain 26 authored locations:
 settlements, inns, ruins, shrines and landmarks. Interconnected roads and three
 bridges connect The Heartlands / Срединные земли to Greenmarch / Зелёное
 пограничье, The Fens / Топи, The Salt Coast / Соляной берег, The Ash Steppe /
 Пепельная степь, Crownlands / Коронные земли, Frostspine / Инейный хребет and
-Hollowvale / Глухая долина. The original military sites remain in The Heartlands.
+Hollowvale / Глухая долина. The forest depot, palace supply gate, quarry road
+post and shipment encounter remain in the central military area; faction homes
+and the mountain ruler's final palace assault extend beyond it.
 
-The campaign has **five main chapters**, **eight branching side quests**, **20
-named NPCs**, and **three mutually exclusive endings**. Begin with Mara at
-Roadward Inn / Трактовый двор, near your home convoy. **T** talks to a nearby resident
+Each faction has **five main chapters**, **eight branching local side quests**,
+**20 named NPCs**, and **three mutually exclusive resolutions**: nine
+faction-specific endings across the game. Begin with Toman in Greenhollow,
+Vesk at Crownbridge, or Ren at the Old Fort. Shared local stories do not turn
+their residents into soldiers of your faction. **T** talks to a nearby resident
 or examines a landmark; the on-screen prompt tells you what is available.
 Conversations and inspections pause the simulation. Inspected evidence opens
 in a scrollable reading overlay, rather than only flashing in a HUD notice.
@@ -106,14 +135,40 @@ reading panel and resumes play. Residents offer local stories,
 testimony and decisions with persistent consequences, not repeatable reward
 dispensers.
 
+Dialogue, player replies, inspections, military status and all nine epilogues
+have local Russian and English recordings: **1,332 bilingual blocks / 3,115
+unique Ogg clips**, about **158 minutes** of unique speech. The established
+20 NPC profiles plus player/narrator are preserved, using three Russian and four
+British English engine voices rather than claiming 22 different actors.
+Selected player replies play before NPC responses without advancing the paused
+simulation. Settings remain accessible during dialogue, inspection and endings;
+language changes replace the speech queue, and the existing sound toggle mutes
+speech, music and effects. There is no browser text-to-speech fallback.
+
+The complete recording was accepted with documented metric limitations on
+2026-09-18. Those flags remain in `public\audio\voices\provenance.json`, not
+relabeled automatic PASS. See `scripts\voices\README.md` for production,
+pronunciation, exact coverage and the separate human release records.
+
 <details>
 <summary>Ending requirements (spoilers)</summary>
 
-The three endings are **Three Bells / Три колокола**, **The Cloister's Prisoner /
-Узник скита**, and **Broken Glass / Разбитое стекло**. Three Bells requires
-the completed `bell-mourn` and `stag-dependents` side outcomes: the allies must
-actually be secured, not merely promised. The other two plans can be chosen
-without completing side quests. The final epilogue follows military victory.
+Every final response requires the chosen directive, its physically delivered
+shipment, its secured and supplied posts, the defeated final enemy, and the
+preceding investigation. Responses that need local allies require their
+completed side-quest outcomes, not promises to help. Declining an optional
+alliance blocks the resolutions that depend on it, not the entire campaign;
+other resolutions remain available. The dialogue shows the missing requirements.
+
+| Faction | Resolutions |
+| --- | --- |
+| Elven resistance | The Uncrowned Watches / Дозоры без короны; One Door Left Shut / Одна запертая дверь; The Forest Takes the Night / Лес принимает ночь |
+| Palace guard | The Charter of Three Watches / Грамота трёх дозоров; The Watch Without Relief / Караул без смены; An Oath in Daylight / Присяга при дневном свете |
+| Mountain ruler | A Throne with Three Limits / Трон с тремя пределами; The Keeper and the Conqueror / Смотритель и завоеватель; No Rival's Glass / Стекло не достанется сопернику |
+
+The first resolution in each row needs both the completed bell alliance and
+stag-shrine dependents' outcome (`<faction>-bell-mourn` and
+`<faction>-stag-dependents`). The remaining two do not require those alliances.
 
 </details>
 
@@ -121,8 +176,9 @@ Reputation tracks the Border Villages / Приграничные общины, C
 Коронный гарнизон and Candlekeepers / Свечники.
 
 **J** opens the quest journal. It records objectives, testimony, outcomes and
-faction reputation. Track a quest to mark its destination on the atlas and show
-distance on the HUD. **M** opens the atlas; switch between the whole borderlands
+faction reputation, military orders and their completion state. Track a quest
+to mark its destination on the atlas and show distance on the HUD. **M** opens
+the atlas; switch between the whole borderlands
 and local surroundings. The minimap stays local so nearby roads and people remain
 readable. Locations become discovered through exploration.
 
@@ -158,7 +214,8 @@ Escape to return to the road.
 
 Campaign, profile, and settings are stored locally in the browser under the
 `korovany2:` namespace, separately from the original game. Saved campaigns retain
-simulation state, including the convoy and ongoing encounters. Terminal run
+simulation state, including faction, irreversible directive, both carts' routes
+and condition, deliveries, supplied posts and ongoing encounters. Terminal run
 rewards are claimed once per run ID. Clearing browser site data removes these
 saves; private browsing or blocked storage can prevent persistence.
 
@@ -166,11 +223,13 @@ Story saves also retain discoveries, testimony, reputation, quest outcomes,
 tracked objectives, open conversations and open inspections. Continuing a save
 with an open reading panel or conversation returns to that paused scene.
 
-This campaign uses **narrative version 2**. Earlier narrative saves are incompatible
+This campaign uses **narrative version 3**. Earlier narrative saves are incompatible
 and are rejected, not migrated or automatically deleted. Start a new campaign to
 play The Hollow Road. This replaces the campaign record but retains the separate
 profile, permanent upgrades and settings. Damaged or unsupported records produce
 a visible storage warning rather than silently loading a different campaign.
+Explicit `worldVersion: 1` simulation runs retain the original military-only
+rules and saves; they do not acquire a faction story on restoration.
 
 ## Architecture
 
