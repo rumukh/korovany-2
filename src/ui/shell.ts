@@ -855,7 +855,9 @@ export class GameShell {
     };
     choices("language", ["ru", "en"], ["Русский", "English"]);
     choices("quality", ["high", "low"], [this.t("high"), this.t("low")]);
-    for (const [key, label] of [["muted", "muted"], ["reducedMotion", "reducedMotion"]] as const) {
+    for (const [key, label] of [
+      ["muted", "muted"], ["reducedMotion", "reducedMotion"], ["invertControllerCameraX", "invertControllerCameraX"],
+    ] as const) {
       const row = element("label", "setting-row", this.t(label));
       const input = element("input");
       input.type = "checkbox";

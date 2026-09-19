@@ -5,6 +5,7 @@ export interface Settings {
   language: Language;
   quality: "low" | "high";
   reducedMotion: boolean;
+  invertControllerCameraX: boolean;
   muted: boolean;
   audio: AudioMix;
 }
@@ -28,6 +29,7 @@ export function defaultSettings(): Settings {
     language: "ru",
     quality: "high",
     reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    invertControllerCameraX: false,
     muted: false,
     audio: defaultMix(),
   };
@@ -38,13 +40,15 @@ export function parseSettings(value: unknown): Settings | null {
   const fields = value as Record<string, unknown>;
   if ((fields.language !== "ru" && fields.language !== "en") ||
     (fields.quality !== "low" && fields.quality !== "high") ||
-    typeof fields.reducedMotion !== "boolean" || typeof fields.muted !== "boolean") return null;
+    typeof fields.reducedMotion !== "boolean" || typeof fields.muted !== "boolean" ||
+    (fields.invertControllerCameraX !== undefined && typeof fields.invertControllerCameraX !== "boolean")) return null;
   const audio = fields.audio === undefined ? defaultMix() : parseMix(fields.audio);
   if (!audio) return null;
   return {
     language: fields.language,
     quality: fields.quality,
     reducedMotion: fields.reducedMotion,
+    invertControllerCameraX: fields.invertControllerCameraX ?? false,
     muted: fields.muted,
     audio,
   };

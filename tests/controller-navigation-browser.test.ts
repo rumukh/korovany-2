@@ -20,7 +20,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller-owned DOM navig
 
   async function key(code: string, shift = false): Promise<void> {
     for (const type of ["keyDown", "keyUp"]) {
-      await cdp.send("Input.dispatchKeyEvent", { type, code, key: code,
+      await cdp.send("Input.dispatchKeyEvent", { type, code, key: code === "Space" ? " " : code,
         windowsVirtualKeyCode: ({ Tab: 9, Escape: 27, Enter: 13, Space: 32 } as Record<string, number>)[code],
         modifiers: shift ? 8 : 0 });
     }
@@ -183,6 +183,17 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller-owned DOM navig
     await focus('[data-controller-key="setting:reducedMotion"]');
     expect(await tap({ confirm: true })).toBe(true);
     expect(await run("return window.ui.state.settings.reducedMotion;")).toBe(true);
+    await focus('[data-controller-key="setting:invertControllerCameraX"]');
+    expect(await run("return document.activeElement.checked;")).toBe(false);
+    expect(await tap({ confirm: true })).toBe(true);
+    expect(await run("return window.ui.state.settings.invertControllerCameraX;")).toBe(true);
+    expect(await active()).toBe("setting:invertControllerCameraX");
+    expect(await run("return document.activeElement.closest('label').textContent;")).toBe("Инверсия камеры по горизонтали (геймпад)");
+    await clickControl('[data-controller-key="setting:invertControllerCameraX"]');
+    expect(await run("return window.ui.state.settings.invertControllerCameraX;")).toBe(false);
+    await key("Space");
+    expect(await run("return window.ui.state.settings.invertControllerCameraX;")).toBe(true);
+    await run("window.ui.keyboardEvents = 0;");
     await focus('[data-audio-channel="music"]');
     const before = await run<Record<string, number>>("window.ui.slider = document.activeElement; return {...window.ui.state.settings.audio};");
     expect(await tap({ moveX: -1 })).toBe(true);

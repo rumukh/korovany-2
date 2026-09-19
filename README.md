@@ -259,7 +259,7 @@ Non-standard layouts and blocked browser permissions are reported, not guessed.
 | Controller | Action |
 | --- | --- |
 | Left stick | Camera-relative analog movement |
-| Right stick | Orbit camera |
+| Right stick | Orbit camera; left looks left, right looks right |
 | LT + right stick | Aim independently; camera stays still |
 | RT | Attack |
 | A (hold) / X | Contextual interaction / Talk or inspect |
@@ -267,6 +267,11 @@ Non-standard layouts and blocked browser permissions are reported, not guessed.
 | LB (hold) / RB | Sprint / Cycle convoy orders |
 | Menu / View | Pause / Atlas |
 | D-pad up / Left or right | Journal / Camera zoom |
+
+Horizontal camera control follows the stick by default. Enable **Invert
+horizontal camera (controller)** in Settings to restore the opposite direction.
+The preference is saved in this browser and applies immediately; it does not
+change vertical camera control, LT aiming, menu scrolling, or mouse controls.
 
 In overlays, use the D-pad or left stick to navigate, A to confirm and B to
 return. Right stick scrolls long text; left/right adjusts focused selectors

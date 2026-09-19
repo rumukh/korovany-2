@@ -70,7 +70,9 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     driver.toNode("roadward");
     driver.walk(game.snapshot().narrative!.npcs.find(npc => npc.id === "mara")!, 0.2);
     const save = game.serialize();
-    const settings: Omit<Settings, "audio"> = { language: "en", quality: "high", reducedMotion: false, muted: false };
+    const settings: Omit<Settings, "audio"> = {
+      language: "en", quality: "high", reducedMotion: false, muted: false, invertControllerCameraX: false,
+    };
     await evaluate(cdp, `(() => {
       localStorage.setItem(${JSON.stringify(storageKeys.campaign)}, ${JSON.stringify(JSON.stringify(save))});
       localStorage.setItem(${JSON.stringify(storageKeys.settings)}, ${JSON.stringify(JSON.stringify(settings))});

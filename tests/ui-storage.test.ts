@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { BrowserStorage, DirtySave, parseSettings, storageKeys } from "../src/ui/storage";
+import { BrowserStorage, DirtySave, defaultSettings, parseSettings, storageKeys } from "../src/ui/storage";
 import { parseChart } from "../src/ui/atlas";
 import { translate } from "../src/ui/locale";
 import { defaultMix, mixChannels } from "../src/audio/mix";
@@ -43,6 +43,24 @@ describe("isolated browser persistence", () => {
       expect(translate("ru", `audio.${channel}`)).not.toBe(`audio.${channel}`);
     }
   });
+
+  it("defaults older settings to natural camera control and validates the saved inversion preference", () => {
+    vi.stubGlobal("window", { matchMedia: () => ({ matches: false }) });
+    expect(defaultSettings().invertControllerCameraX).toBe(false);
+    const old = { language: "en", quality: "high", reducedMotion: false, muted: true, audio: defaultMix() };
+    expect(parseSettings(old)).toEqual({ ...old, invertControllerCameraX: false });
+    for (const inverted of [false, true]) {
+      const saved = { ...old, invertControllerCameraX: inverted };
+      expect(parseSettings(JSON.parse(JSON.stringify(saved)))).toEqual(saved);
+    }
+    for (const invalid of ["false", 0, 1, null, {}]) {
+      expect(parseSettings({ ...old, invertControllerCameraX: invalid })).toBeNull();
+    }
+    for (const language of ["en", "ru"] as const) {
+      expect(translate(language, "invertControllerCameraX")).not.toBe("invertControllerCameraX");
+    }
+  });
+
   it("bounds and validates the independently persisted visited atlas cells", () => {
     expect(parseChart({ runId: "journey", explored: [0, 783] })).not.toBeNull();
     expect(parseChart({ runId: "journey", explored: [784] })).toBeNull();

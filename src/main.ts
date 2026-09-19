@@ -494,7 +494,7 @@ function stopForError(error: unknown, kind: "graphics" | "game"): void {
 
 function pollController(delta: number): void {
   if (!controllerInput || !shell) return;
-  const frame = controllerInput.poll(running, delta);
+  const frame = controllerInput.poll(running, delta, settings.invertControllerCameraX);
   if (frame.becameActive) input?.useGamepad();
   shell.updateController({
     active: controllerInput.active,

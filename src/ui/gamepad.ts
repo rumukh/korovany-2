@@ -69,7 +69,7 @@ export class ControllerInput {
     this.usingController = false;
   }
 
-  poll(gameplay: boolean, dt: number): ControllerFrame {
+  poll(gameplay: boolean, dt: number, invertCameraX = false): ControllerFrame {
     if (!Number.isFinite(dt) || dt < 0) throw new Error("Controller frame time must be finite and nonnegative.");
     const sample = this.pad.sample();
     const becameActive = sample.activity !== this.lastActivity;
@@ -99,7 +99,8 @@ export class ControllerInput {
       sample, becameActive, disconnected: this.usingController && deviceLost,
       overlay: gameplay ? pressed("Pause") ? "pause" : pressed("Map") ? "map" : pressed("Up") ? "journal" : null : null,
       camera: {
-        yaw: looking ? lookX * seconds * 2.1 : 0,
+        // Orbit position rotates opposite to the camera's look direction.
+        yaw: looking ? lookX * seconds * 2.1 * (invertCameraX ? 1 : -1) : 0,
         pitch: looking ? lookY * seconds * 1.3 : 0,
         zoom: gameplay ? horizontal * seconds * 700 : 0,
       },

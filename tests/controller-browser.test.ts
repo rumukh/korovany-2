@@ -16,6 +16,7 @@ interface Inspection {
   snapshot: GameSnapshot | null;
   overlay: string | null;
   running: boolean;
+  settings: { invertControllerCameraX: boolean };
   moveBasis: { forward: { x: number; z: number }; right: { x: number; z: number } };
   controller: { active: boolean; armed: boolean; status: string };
 }
@@ -58,6 +59,14 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller through the rea
   async function ticks(count: number): Promise<void> {
     const before = (await inspect()).snapshot!.tick;
     await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= before + count, 30_000);
+  }
+  async function horizontalTurn(direction: number): Promise<number> {
+    const before = (await inspect()).moveBasis;
+    await pad([0, 0, direction, 0]);
+    await ticks(8);
+    await pad();
+    const after = (await inspect()).moveBasis.forward;
+    return (after.x * before.right.x + after.z * before.right.z) * direction;
   }
   const attacks = (snapshot: GameSnapshot) => snapshot.events.filter(event => event.kind === "attack" && event.targetId === "player").at(-1)?.id ?? 0;
 
@@ -107,11 +116,10 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller through the rea
     await pad();
     const moved = (await inspect()).snapshot!.player;
     expect(Math.hypot(moved.x - start.x, moved.z - start.z)).toBeGreaterThan(0.3);
-    const basis = (await inspect()).moveBasis.forward;
-    await pad([0, 0, 1, 0]);
-    await ticks(8);
-    await pad();
-    expect((await inspect()).moveBasis.forward).not.toEqual(basis);
+    expect((await inspect()).settings.invertControllerCameraX).toBe(false);
+    for (const direction of [1, -1]) {
+      expect(await horizontalTurn(direction)).toBeGreaterThan(0);
+    }
 
     const aimingBasis = (await inspect()).moveBasis;
     await pad([0, 0, 1, 0], [6, 7]);
@@ -137,6 +145,37 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller through the rea
     expect((await inspect()).overlay).toBe("pause");
     await capture("controller-pause");
     await tap(9);
+    expect((await inspect()).running).toBe(true);
+  }, 120_000);
+
+  it("applies optional horizontal camera inversion from Settings and keeps it after reloading", async () => {
+    const runId = (await inspect()).snapshot!.runId;
+    await tap(9);
+    await activate('[data-action="open-settings"]');
+    await activate('[data-controller-key="setting:invertControllerCameraX"]');
+    expect((await inspect()).settings.invertControllerCameraX).toBe(true);
+    expect(await evaluate(cdp, "document.querySelector('[data-controller-key=\"setting:invertControllerCameraX\"]').checked")).toBe(true);
+    expect(await evaluate(cdp, `JSON.parse(localStorage.getItem(${JSON.stringify(storageKeys.settings)})).invertControllerCameraX`)).toBe(true);
+    await tap(1);
+    await tap(9);
+    expect((await inspect()).running).toBe(true);
+    for (const direction of [1, -1]) {
+      expect(await horizontalTurn(direction)).toBeLessThan(0);
+    }
+    const aimingBasis = (await inspect()).moveBasis;
+    await pad([0, 0, 1, 0], [6]);
+    await ticks(8);
+    const aimed = await inspect();
+    expect(aimed.moveBasis).toEqual(aimingBasis);
+    expect(Math.sin(aimed.snapshot!.player.heading)).toBeCloseTo(aimingBasis.right.x);
+    expect(Math.cos(aimed.snapshot!.player.heading)).toBeCloseTo(aimingBasis.right.z);
+    await pad();
+    await tap(9);
+    await reloadTestPage(cdp);
+    await frames();
+    expect((await inspect()).settings.invertControllerCameraX).toBe(true);
+    await activate('[data-action="continue"]');
+    expect((await inspect()).snapshot!.runId).toBe(runId);
     expect((await inspect()).running).toBe(true);
   }, 120_000);
 

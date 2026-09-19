@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { createGamepadInput } from "@aegis/render-three/input";
 import { ControllerInput, controllerBindings } from "../src/ui/gamepad";
+import { FollowCamera } from "../src/view/camera";
 
 function device() {
   return {
@@ -53,10 +54,39 @@ describe("Korovany shared-engine controller input", () => {
         yaw += input.poll(true, 1 / hz).camera.yaw;
         for (let tick = 0; tick < 6; tick++) input.consume(frame * 6 + tick);
       }
-      expect(yaw).toBeCloseTo(2.1);
+      expect(yaw).toBeCloseTo(-2.1);
       expect(input.poll(false, 1 / 30).camera.yaw).toBe(0);
-      expect(input.poll(true, 10).camera.yaw).toBeCloseTo(0.21);
+      expect(input.poll(true, 10).camera.yaw).toBeCloseTo(-0.21);
       expect(() => input.poll(true, NaN)).toThrow("finite");
+    }
+  });
+
+  it.each([false, true])("applies horizontal camera inversion=%s without reversing aim or UI scrolling", (inverted) => {
+    for (const direction of [-1, 1]) for (const startingYaw of [0, 0.7, -2.1]) {
+      const { input, pad, button } = setup();
+      const camera = new FollowCamera({
+        getBoundingClientRect: () => ({
+          x: 0, y: 0, width: 960, height: 640, top: 0, left: 0, right: 960, bottom: 640, toJSON: () => ({}),
+        }),
+      });
+      camera.orbit(startingYaw);
+      const before = camera.getMoveBasis();
+      pad.axes = [0, 0, direction, 0];
+      const frame = input.poll(true, 0.05, inverted);
+      camera.orbit(frame.camera.yaw, frame.camera.pitch);
+      const after = camera.getMoveBasis();
+      const expectedDirection = direction * (inverted ? -1 : 1);
+      expect((after.forward.x * before.right.x + after.forward.z * before.right.z) * expectedDirection).toBeGreaterThan(0);
+      expect(frame.camera.pitch).toBe(0);
+      expect(frame.ui.scrollX).toBe(direction);
+      expect(input.poll(true, 0.05, !inverted).camera.yaw).toBeCloseTo(-frame.camera.yaw);
+
+      button(6, 1);
+      expect(input.poll(true, 0.05, inverted).camera).toEqual({ yaw: 0, pitch: 0, zoom: 0 });
+      expect(input.consume(1).aim).toEqual({ x: direction, z: -0 });
+      button(6, 0);
+      pad.axes = [0, 0, 0, direction];
+      expect(input.poll(true, 0.05, inverted).camera.pitch).toBeCloseTo(direction * 0.05 * 1.3);
     }
   });
 
