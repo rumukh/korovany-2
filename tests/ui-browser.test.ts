@@ -51,7 +51,9 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
   async function clickSelector(selector: string): Promise<void> {
     const point = await evaluate<{ x: number; y: number }>(cdp, `(() => {
       const element = document.querySelector(${JSON.stringify(selector)});
-      if (!element || element.disabled) throw new Error('Missing or disabled control: ' + ${JSON.stringify(selector)});
+      if (!element || element.disabled) throw new Error('Missing or disabled control: ' + ${JSON.stringify(selector)} +
+        ' state=' + JSON.stringify({overlay:window.korovany.inspect().overlay,running:window.korovany.inspect().running,
+          locked:!!document.pointerLockElement,events:window.inputEvents,warnings:document.querySelector('.warnings').textContent}));
       element.scrollIntoView({block: 'center'});
       const rect = element.getBoundingClientRect();
       return {x:rect.x + rect.width / 2, y:rect.y + rect.height / 2};
@@ -140,9 +142,8 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     await capture("gameplay-en-desktop");
 
     const initialBasis = (await inspect()).moveBasis.forward;
-    await cdp.send("Input.dispatchMouseEvent", { type: "mousePressed", x: 800, y: 430, button: "right", buttons: 2, clickCount: 1 });
-    await cdp.send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 850, y: 440, button: "right", buttons: 2 });
-    await cdp.send("Input.dispatchMouseEvent", { type: "mouseReleased", x: 850, y: 440, button: "right", buttons: 0, clickCount: 1 });
+    await until(cdp, "document.pointerLockElement === document.querySelector('canvas.world')", Boolean, 10_000);
+    await cdp.send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 850, y: 440, button: "none", buttons: 0 });
     expect((await inspect()).moveBasis.forward).not.toEqual(initialBasis);
     start = await inspect();
     await press("KeyW", true);
@@ -335,6 +336,16 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
 
   it("never rolls back a newer save when an untouched stale title tab closes and loads latest on Continue", async () => {
     await reload();
+    await evaluate(cdp, `(() => {
+      window.inputEvents=[];
+      for(const type of ['keydown','keyup','pointerlockchange','pointerlockerror','blur','focus']) {
+        (type.startsWith('pointerlock')?document:window).addEventListener(type,event=>{
+          window.inputEvents.push({type,key:event.code,at:performance.now(),locked:!!document.pointerLockElement,
+            overlay:window.korovany.inspect().overlay});
+          window.inputEvents=window.inputEvents.slice(-20);
+        },true);
+      }
+    })()`);
     await clickSelector('[data-action="continue"]');
     await tap("Escape");
     await clickSelector('[data-action="title"]');

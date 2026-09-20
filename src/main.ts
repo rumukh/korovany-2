@@ -66,7 +66,6 @@ let atTitle = true;
 let disposed = false;
 let fatal = false;
 let raf = 0;
-let cameraDrag: { x: number; y: number } | null = null;
 const lifecycle = new AbortController();
 const sound = new Soundscape(() => shell?.warn("audioFailure"), (line) => shell?.caption(line));
 const audio = new AudioPresentation(sound);
@@ -157,7 +156,6 @@ function freeze(silence = true): void {
   input?.setEnabled(false);
   controllerInput?.clear();
   queued = {};
-  cameraDrag = null;
   accumulator = 0;
   lastFrame = null;
   if (silence) sound.setActive(false);
@@ -438,16 +436,8 @@ function sampleInput(): CampaignInput {
     return { narrative: target.kind === "talk" ? { type: "talk", npcId: target.targetId }
       : { type: "inspect", locationId: target.targetId } };
   }
-  if (sample.keyboardAim) lastAim = worldDirection(sample.keyboardAim);
-  else if (sample.pointer) {
-    const point = view?.screenToWorld(sample.pointer.x, sample.pointer.y);
-    if (point) {
-      const x = point.x - snapshot.player.x;
-      const z = point.z - snapshot.player.z;
-      const length = Math.hypot(x, z);
-      if (length > 0.05) lastAim = { x: x / length, z: z / length };
-    }
-  }
+  if (sample.mouseLook) lastAim = worldDirection({ x: 0, z: 1 });
+  else if (sample.keyboardAim) lastAim = worldDirection(sample.keyboardAim);
   const value: CampaignInput = {
     move: worldDirection(sample.move), aim: lastAim,
     attack: sample.attack, sprint: sample.sprint, interact: sample.interact,
@@ -577,14 +567,19 @@ window.addEventListener("keydown", (event) => {
   }
 }, { signal: lifecycle.signal, capture: true });
 window.addEventListener("pointermove", (event) => {
-  if (event.movementX || event.movementY) controllerInput?.useKeyboardOrMouse();
+  if (!running && (event.movementX || event.movementY)) controllerInput?.useKeyboardOrMouse();
 }, { signal: lifecycle.signal, capture: true });
 window.addEventListener("wheel", () => controllerInput?.useKeyboardOrMouse(),
   { signal: lifecycle.signal, capture: true, passive: true });
 
 shell = new GameShell(root, state(), dispatch);
 pendingWarnings.forEach((key) => shell?.warn(key));
-input = new GameInput(shell.canvas, (overlay) => changeOverlay(overlay), () => changeOverlay("pause"));
+input = new GameInput(shell.canvas, (overlay) => changeOverlay(overlay), () => changeOverlay("pause"),
+  (x, y) => {
+    controllerInput?.useKeyboardOrMouse();
+    view?.orbit(-x * 0.006, y * 0.004);
+  },
+  () => shell?.warn("mouseLookUnavailable"));
 controllerInput = new ControllerInput();
 const storedChart = storage.read(storageKeys.atlas, parseChart);
 if (storedChart.status === "ok") shell.atlas.restore(storedChart.value);
@@ -598,20 +593,6 @@ for (const type of ["input", "change"]) window.addEventListener(type, (event) =>
 window.addEventListener("blur", () => audio.setFocused(false), { signal: lifecycle.signal });
 window.addEventListener("focus", () => audio.setFocused(!document.hidden), { signal: lifecycle.signal });
 document.addEventListener("visibilitychange", () => audio.setFocused(!document.hidden && document.hasFocus()), { signal: lifecycle.signal });
-shell.canvas.addEventListener("pointerdown", (event) => {
-  if (!running || event.button !== 2) return;
-  event.preventDefault();
-  cameraDrag = { x: event.clientX, y: event.clientY };
-  shell?.canvas.setPointerCapture(event.pointerId);
-}, { signal: lifecycle.signal });
-shell.canvas.addEventListener("pointermove", (event) => {
-  if (!running || !cameraDrag) return;
-  view?.orbit((event.clientX - cameraDrag.x) * 0.006, (event.clientY - cameraDrag.y) * 0.004);
-  cameraDrag = { x: event.clientX, y: event.clientY };
-}, { signal: lifecycle.signal });
-window.addEventListener("pointerup", (event) => {
-  if (event.button === 2) cameraDrag = null;
-}, { signal: lifecycle.signal });
 shell.canvas.addEventListener("wheel", (event) => {
   if (!running) return;
   event.preventDefault();
@@ -653,6 +634,7 @@ Object.defineProperty(window, "korovany", {
       profile: { ...profile, upgrades: { ...profile.upgrades }, completedRuns: [...profile.completedRuns] },
       viewWorldId,
       moveBasis: view?.getMoveBasis() ?? null,
+      mouseLook: input?.mouseLocked ?? false,
       controller: {
         active: controllerInput?.active ?? false,
         status: controllerInput?.sample?.status ?? "no-device",

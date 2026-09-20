@@ -61,7 +61,7 @@ jobs:
           - shard: 2
             files: tests/story-browser.test.ts tests/ui-browser.test.ts
           - shard: 3
-            files: tests/audio-assets-browser.test.ts tests/audio-browser.test.ts tests/voice-browser.test.ts
+            files: tests/audio-assets-browser.test.ts tests/audio-browser.test.ts tests/voice-browser.test.ts tests/mouse-look-browser.test.ts
           - shard: 4
             files: tests/faction-presentation.test.ts tests/portraits-browser.test.ts tests/world-browser.test.ts
     steps:

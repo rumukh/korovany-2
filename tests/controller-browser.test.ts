@@ -110,6 +110,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller through the rea
     await activate('[data-action="start"]');
     await until(cdp, "window.korovany.inspect().running", Boolean, 20_000);
     expect((await inspect()).controller.active).toBe(true);
+    expect(await evaluate(cdp, "document.pointerLockElement")).toBeNull();
     const start = (await inspect()).snapshot!.player;
     await pad([0, -1, 0, 0]);
     await ticks(12);

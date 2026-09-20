@@ -231,9 +231,9 @@ unrestricted teleport out of combat.
 | Control | Action |
 | --- | --- |
 | WASD | Move relative to the camera |
-| Mouse / Arrow keys | Aim |
+| Mouse (captured) / Arrow keys (uncaptured) | Look and aim together / Aim |
 | Left mouse / Space | Attack |
-| Right mouse drag / Mouse wheel | Orbit camera / Zoom |
+| Mouse movement / Mouse wheel | Turn camera and character together / Zoom |
 | Shift | Sprint |
 | Q | Dodge |
 | F | Faction ability |
@@ -245,8 +245,15 @@ unrestricted teleport out of combat.
 | M / Tab | Campaign map |
 | Escape | Pause / close overlay |
 
-Opening menus pauses the campaign. Browser focus loss pauses play and releases
-held controls. Once the atlas is open, Tab navigates its controls; use M or
+Starting or resuming with a mouse click captures and hides the cursor. Mouse
+movement then turns the camera and character together without holding any button;
+WASD movement does not turn your aim away from the camera. Clicking the game world
+also captures the mouse, without attacking on that first click. Escape pauses and
+releases the cursor. Opening menus or losing browser focus also releases capture
+and held controls. After a keyboard-only resume, click the world to recapture.
+If the browser denies capture, the game reports it; keyboard-only aiming and
+controller input remain available. A controller takeover releases the cursor
+without pausing. Once the atlas is open, Tab navigates its controls; use M or
 Escape to return to the road.
 
 ### Xbox-style controllers

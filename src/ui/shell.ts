@@ -498,6 +498,7 @@ export class GameShell {
       slots.append(slot);
     }
     actions.append(slots, element("p", "movement-prompt", this.controllerFeedback.active ? this.t("controller.movement") : `WASD · ${this.t("move")} / Shift · ${this.t("sprint")}`));
+    if (!this.controllerFeedback.active) actions.append(element("p", "movement-prompt", this.t("mouseLookHint")));
     const journal = element("section", "journal");
     journal.setAttribute("aria-label", this.t("events"));
     journal.append(element("div", "purse", `${this.t("coins")} ${snapshot.player.coins} · ${this.t("supplies")} ${snapshot.player.supplies}`));

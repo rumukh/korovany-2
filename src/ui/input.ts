@@ -1,4 +1,5 @@
 import type { ControllerGameplay } from "./gamepad";
+import { MouseLook } from "./mouse-look";
 
 export interface InputVector {
   x: number;
@@ -8,7 +9,7 @@ export interface InputVector {
 export interface InputSample {
   move: InputVector;
   keyboardAim: InputVector | null;
-  pointer: { x: number; y: number } | null;
+  mouseLook: boolean;
   attack: boolean;
   sprint: boolean;
   dodge: boolean;
@@ -48,18 +49,27 @@ export class GameInput {
   private readonly blockedKeys = new Set<string>();
   private readonly edges = new Set<Edge>();
   private readonly controller = new AbortController();
+  private readonly mouse: MouseLook;
   private enabled = false;
   private pointerDown = false;
-  private pointer: InputSample["pointer"] = null;
-  private aimSource: "keyboard" | "pointer" = "keyboard";
+  private escapeDown = false;
 
   constructor(
     private readonly surface: HTMLElement,
     onOverlay: (overlay: "pause" | "map" | "journal") => void,
     onFocusLost: () => void,
+    onLook: (x: number, y: number) => void,
+    onMouseLookError: () => void,
   ) {
     const signal = this.controller.signal;
+    this.mouse = new MouseLook(surface, {
+      move: (x, y) => { if (this.enabled) onLook(x, y); },
+      change: () => { this.pointerDown = false; this.edges.delete("attack"); },
+      lost: () => { this.release(); if (this.enabled) onFocusLost(); },
+      error: onMouseLookError,
+    });
     window.addEventListener("keydown", (event) => {
+      if (event.code === "Escape") this.escapeDown = true;
       if (this.blockedKeys.has(event.code)) return;
       if (!this.enabled || event.defaultPrevented || editable(event.target)) {
         if (gameKeys.has(event.code)) this.blockedKeys.add(event.code);
@@ -77,11 +87,17 @@ export class GameInput {
         if (edge) this.edges.add(edge);
       }
       this.keys.add(event.code);
-      if (event.code.startsWith("Arrow")) {
-        this.aimSource = "keyboard";
-      }
     }, { signal });
     window.addEventListener("keyup", (event) => {
+      if (event.code === "Escape") {
+        // Browsers may consume Escape's key-down while acquiring/releasing pointer lock.
+        const browserConsumed = !this.escapeDown;
+        this.escapeDown = false;
+        if (browserConsumed && this.enabled) {
+          this.mouse.unlock();
+          onOverlay("pause");
+        }
+      }
       this.blockedKeys.delete(event.code);
       this.keys.delete(event.code);
       if (this.enabled && gameKeys.has(event.code)) event.preventDefault();
@@ -90,15 +106,16 @@ export class GameInput {
       if (!this.enabled || event.button !== 0 || editable(event.target)) return;
       event.preventDefault();
       surface.focus({ preventScroll: true });
+      if (!this.mouse.active) {
+        this.mouse.request();
+        return;
+      }
       this.pointerDown = true;
       this.edges.add("attack");
-      this.pointer = { x: event.clientX, y: event.clientY };
-      this.aimSource = "pointer";
     }, { signal });
-    surface.addEventListener("pointermove", (event) => {
-      if (!this.enabled || (event.movementX === 0 && event.movementY === 0)) return;
-      this.pointer = { x: event.clientX, y: event.clientY };
-      this.aimSource = "pointer";
+    window.addEventListener("click", (event) => {
+      // A real menu click may have just started/resumed play; synthetic controller clicks must not capture.
+      if (this.enabled && event.isTrusted && event.detail > 0 && event.target !== surface) this.mouse.request();
     }, { signal });
     window.addEventListener("pointerup", (event) => {
       if (event.button === 0) this.pointerDown = false;
@@ -109,11 +126,13 @@ export class GameInput {
     }, { signal });
     window.addEventListener("blur", () => {
       this.release();
+      this.mouse.unlock();
       if (this.enabled) onFocusLost();
     }, { signal });
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         this.release();
+        this.mouse.unlock();
         if (this.enabled) onFocusLost();
       }
     }, { signal });
@@ -122,12 +141,16 @@ export class GameInput {
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
     this.release();
+    if (!enabled) this.mouse.unlock();
     if (enabled) this.surface.focus({ preventScroll: true });
   }
 
+  get mouseLocked(): boolean { return this.mouse.locked; }
+
   useGamepad(): void {
-    this.pointer = null;
-    this.aimSource = "keyboard";
+    this.pointerDown = false;
+    this.edges.delete("attack");
+    this.mouse.unlock();
   }
 
   consume(controller?: ControllerGameplay): InputSample {
@@ -139,10 +162,9 @@ export class GameInput {
     const aim = vector(axis("ArrowRight", "ArrowLeft"), axis("ArrowUp", "ArrowDown"));
     const sample: InputSample = {
       move,
-      keyboardAim: controller?.active ? controller.aim : this.aimSource === "keyboard"
-        ? (aim.x || aim.z ? aim : keyboardMove.x || keyboardMove.z ? keyboardMove : null)
-        : null,
-      pointer: !controller?.active && this.aimSource === "pointer" ? this.pointer : null,
+      keyboardAim: controller?.active ? controller.aim : this.mouse.active ? null
+        : (aim.x || aim.z ? aim : keyboardMove.x || keyboardMove.z ? keyboardMove : null),
+      mouseLook: this.enabled && !controller?.active && this.mouse.active,
       attack: this.pointerDown || this.keys.has("Space") || this.edges.has("attack") || controller?.attack === true,
       sprint: this.keys.has("ShiftLeft") || this.keys.has("ShiftRight") || controller?.sprint === true,
       dodge: this.edges.has("dodge") || controller?.dodge === true,
@@ -160,12 +182,11 @@ export class GameInput {
     this.keys.clear();
     this.edges.clear();
     this.pointerDown = false;
-    this.pointer = null;
-    this.aimSource = "keyboard";
   }
 
   dispose(): void {
     this.release();
+    this.mouse.dispose();
     this.controller.abort();
   }
 }

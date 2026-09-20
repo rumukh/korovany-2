@@ -5,6 +5,7 @@ import type { ControllerGameplay } from "../src/ui/gamepad";
 class Surface extends EventTarget {
   focus = vi.fn();
   closest = vi.fn<() => Surface | null>(() => null);
+  requestPointerLock = vi.fn<() => Promise<void> | void>();
 }
 
 function event(type: string, values: Record<string, unknown> = {}): Event {
@@ -15,21 +16,41 @@ function event(type: string, values: Record<string, unknown> = {}): Event {
 
 describe("browser input tick boundary", () => {
   let windowTarget: EventTarget;
-  let documentTarget: EventTarget & { hidden: boolean };
+  let documentTarget: EventTarget & { hidden: boolean; pointerLockElement: Surface | null; exitPointerLock: () => void };
   let surface: Surface;
   let input: GameInput;
   const overlay = vi.fn();
   const focusLost = vi.fn();
+  const look = vi.fn();
+  const lookError = vi.fn();
+
+  function grantLock(): void {
+    documentTarget.pointerLockElement = surface;
+    documentTarget.dispatchEvent(event("pointerlockchange"));
+  }
+
+  function captureMouse(): void {
+    surface.dispatchEvent(event("pointerdown", { button: 0 }));
+    windowTarget.dispatchEvent(event("pointerup", { button: 0 }));
+  }
 
   beforeEach(() => {
     windowTarget = new EventTarget();
-    documentTarget = Object.assign(new EventTarget(), { hidden: false });
+    documentTarget = Object.assign(new EventTarget(), {
+      hidden: false,
+      pointerLockElement: null as Surface | null,
+      exitPointerLock: vi.fn(() => {
+        documentTarget.pointerLockElement = null;
+        documentTarget.dispatchEvent(event("pointerlockchange"));
+      }),
+    });
     surface = new Surface();
+    surface.requestPointerLock.mockImplementation(grantLock);
     vi.stubGlobal("window", windowTarget);
     vi.stubGlobal("document", documentTarget);
     vi.stubGlobal("Element", Surface);
     vi.stubGlobal("HTMLElement", Surface);
-    input = new GameInput(surface as unknown as HTMLElement, overlay, focusLost);
+    input = new GameInput(surface as unknown as HTMLElement, overlay, focusLost, look, lookError);
     input.setEnabled(true);
   });
   afterEach(() => {
@@ -39,6 +60,7 @@ describe("browser input tick boundary", () => {
   });
 
   it("retains quick key and click edges until a tick and consumes pulses only once", () => {
+    captureMouse();
     windowTarget.dispatchEvent(event("keydown", { code: "KeyQ", repeat: false }));
     windowTarget.dispatchEvent(event("keyup", { code: "KeyQ" }));
     surface.dispatchEvent(event("pointerdown", { button: 0, clientX: 100, clientY: 120 }));
@@ -46,7 +68,7 @@ describe("browser input tick boundary", () => {
     const first = input.consume();
     expect(first.dodge).toBe(true);
     expect(first.attack).toBe(true);
-    expect(first.pointer).toEqual({ x: 100, y: 120 });
+    expect(first.mouseLook).toBe(true);
     expect(input.consume()).toMatchObject({ dodge: false, attack: false });
   });
 
@@ -81,18 +103,115 @@ describe("browser input tick boundary", () => {
     expect(input.consume().talk).toBe(false);
   });
 
-  it("keeps mouse aiming while moving and clears all held controls on blur or overlays", () => {
-    surface.dispatchEvent(event("pointermove", { clientX: 80, clientY: 90, movementX: 1, movementY: 1 }));
+  it("keeps mouse look while strafing and clears all held controls and capture on blur or overlays", () => {
+    captureMouse();
+    documentTarget.dispatchEvent(event("mousemove", { movementX: 10, movementY: -5 }));
+    expect(look).toHaveBeenCalledExactlyOnceWith(10, -5);
     windowTarget.dispatchEvent(event("keydown", { code: "KeyW", repeat: false }));
-    expect(input.consume()).toMatchObject({ pointer: { x: 80, y: 90 }, keyboardAim: null });
+    windowTarget.dispatchEvent(event("keydown", { code: "KeyD", repeat: false }));
+    expect(input.consume()).toMatchObject({ mouseLook: true, keyboardAim: null });
     windowTarget.dispatchEvent(event("blur"));
     expect(focusLost).toHaveBeenCalledOnce();
-    expect(input.consume()).toMatchObject({ move: { x: 0, z: 0 }, pointer: null, attack: false });
+    expect(documentTarget.pointerLockElement).toBeNull();
+    expect(input.consume()).toMatchObject({ move: { x: 0, z: 0 }, mouseLook: false, attack: false });
     input.setEnabled(false);
     windowTarget.dispatchEvent(event("keydown", { code: "KeyW", repeat: false }));
     expect(input.consume().move).toEqual({ x: 0, z: 0 });
   });
 
+  it("uses the first click only to capture and requires another press to attack", () => {
+    captureMouse();
+    expect(input.consume()).toMatchObject({ mouseLook: true, attack: false });
+    documentTarget.dispatchEvent(event("mousemove", { movementX: 0, movementY: 0 }));
+    expect(look).not.toHaveBeenCalled();
+    surface.dispatchEvent(event("pointerdown", { button: 0 }));
+    expect(input.consume().attack).toBe(true);
+    input.setEnabled(false);
+    expect(input.mouseLocked).toBe(false);
+    expect(input.consume()).toMatchObject({ mouseLook: false, attack: false });
+    expect(focusLost).not.toHaveBeenCalled();
+    input.setEnabled(true);
+    documentTarget.dispatchEvent(event("mousemove", { movementX: 10, movementY: 5 }));
+    expect(look).not.toHaveBeenCalled();
+    expect(surface.requestPointerLock).toHaveBeenCalledOnce();
+  });
+
+  it("pauses on an unexpected browser unlock and does not recapture automatically", () => {
+    captureMouse();
+    windowTarget.dispatchEvent(event("keydown", { code: "KeyW", repeat: false }));
+    surface.dispatchEvent(event("pointerdown", { button: 0 }));
+    documentTarget.exitPointerLock();
+    expect(focusLost).toHaveBeenCalledOnce();
+    expect(input.consume()).toMatchObject({ move: { x: 0, z: 0 }, mouseLook: false, attack: false });
+    expect(surface.requestPointerLock).toHaveBeenCalledOnce();
+  });
+
+  it("handles a browser-consumed Escape key-down during capture without undoing a keyboard resume", () => {
+    surface.requestPointerLock.mockImplementation(() => {});
+    captureMouse();
+    documentTarget.pointerLockElement = surface;
+    windowTarget.dispatchEvent(event("keyup", { code: "Escape" }));
+    expect(overlay).toHaveBeenCalledExactlyOnceWith("pause");
+    expect(input.mouseLocked).toBe(false);
+    grantLock();
+    expect(input.mouseLocked).toBe(false);
+
+    input.setEnabled(false);
+    const resume = event("keydown", { code: "Escape", repeat: false });
+    resume.preventDefault();
+    windowTarget.dispatchEvent(resume);
+    input.setEnabled(true);
+    windowTarget.dispatchEvent(event("keyup", { code: "Escape" }));
+    expect(overlay).toHaveBeenCalledOnce();
+  });
+
+  it("hands control to a gamepad without pausing or retaining mouse attack", () => {
+    captureMouse();
+    windowTarget.dispatchEvent(event("keydown", { code: "KeyW", repeat: false }));
+    surface.dispatchEvent(event("pointerdown", { button: 0 }));
+    input.useGamepad();
+    expect(input.consume()).toMatchObject({ move: { x: 0, z: 1 }, mouseLook: false, attack: false });
+    expect(focusLost).not.toHaveBeenCalled();
+    documentTarget.dispatchEvent(event("mousemove", { movementX: 40, movementY: 20 }));
+    expect(look).not.toHaveBeenCalled();
+  });
+
+  it.each(["menu", "controller", "dispose"])("releases a late pointer-lock grant after %s without pausing or attacking", (context) => {
+    surface.requestPointerLock.mockImplementation(() => {});
+    captureMouse();
+    if (context === "menu") { input.setEnabled(false); input.setEnabled(true); }
+    else if (context === "controller") input.useGamepad();
+    else input.dispose();
+    grantLock();
+    expect(documentTarget.pointerLockElement).toBeNull();
+    expect(input.consume()).toMatchObject({ mouseLook: false, attack: false });
+    expect(focusLost).not.toHaveBeenCalled();
+    expect(lookError).not.toHaveBeenCalled();
+  });
+
+  it("reports rejected capture once and allows a later retry", async () => {
+    let reject!: (error: Error) => void;
+    surface.requestPointerLock.mockImplementationOnce(() => new Promise<void>((_, fail) => { reject = fail; }));
+    captureMouse();
+    captureMouse();
+    expect(surface.requestPointerLock).toHaveBeenCalledOnce();
+    documentTarget.dispatchEvent(event("pointerlockerror"));
+    reject(new Error("denied"));
+    await Promise.resolve();
+    expect(lookError).toHaveBeenCalledOnce();
+    expect(input.consume()).toMatchObject({ mouseLook: false, attack: false });
+    captureMouse();
+    expect(input.mouseLocked).toBe(true);
+  });
+
+  it("reports unavailable capture explicitly and leaves keyboard controls available", () => {
+    Object.defineProperty(surface, "requestPointerLock", { value: undefined });
+    captureMouse();
+    expect(lookError).toHaveBeenCalledOnce();
+    windowTarget.dispatchEvent(event("keydown", { code: "ArrowRight", repeat: false }));
+    windowTarget.dispatchEvent(event("keydown", { code: "Space", repeat: false }));
+    expect(input.consume()).toMatchObject({ keyboardAim: { x: 1, z: 0 }, attack: true, mouseLook: false });
+  });
   it("does not reopen an overlay after another listener consumed its closing key", () => {
     const close = event("keydown", { code: "Tab", repeat: false });
     close.preventDefault();
