@@ -12,7 +12,7 @@ import { factionColors, palette } from "../src/view/palette";
 import { ViewResources } from "../src/view/resources";
 import { distanceToSegment, oldFortStructure } from "../src/view/world";
 import {
-  click, evaluate, launchBrowser, openPage, screenshot, until,
+  click, closeAllPages, evaluate, launchBrowser, openPage, screenshot, until,
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
 import { closeTestBrowser } from "./browser-cleanup";
@@ -263,10 +263,10 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
   }, 90_000);
 
   afterEach(async () => {
-    for (const cdp of pages) {
-      try {
-        await cdp.send("Page.close");
-      } finally {
+    try {
+      if (browser) await closeAllPages(browser.port);
+    } finally {
+      for (const cdp of pages) {
         cdp.close();
         pages.delete(cdp);
       }
@@ -326,6 +326,14 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
 
     beforeEach(async () => {
       continuation = await fixture("continuation");
+      // Bound SwiftShader's pixel cost for identity checks; layout and world tests retain desktop size.
+      await continuation.cdp.send("Emulation.setDeviceMetricsOverride", {
+        width: 720, height: 500, deviceScaleFactor: 1, mobile: false,
+      });
+      await until(continuation.cdp,
+        "document.querySelector('canvas').width === 720 && document.querySelector('canvas').height === 500",
+        Boolean, 30_000);
+      expect(await evaluate(continuation.cdp, "window.korovany.inspect().settings.quality")).toBe("high");
     }, 90_000);
 
     it("starts the chosen home campaign, restores its identity and does not turn a continued guard run into the menu's new selection", async () => {
