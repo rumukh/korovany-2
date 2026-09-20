@@ -3,12 +3,14 @@ import argparse
 from pathlib import Path
 
 from prepare import digest, load, save
+from pronunciation_policy import NATURAL, pronunciation_mode
 
 
 def freeze(qa, asr, production, output):
     if output.exists():
         raise RuntimeError("Release review is immutable; use a fresh output directory.")
     summary = load(qa / "qa-summary.json")
+    mode = pronunciation_mode(summary)
     if summary["missing_ids"] or summary["technical_defect_ids"]:
         raise RuntimeError("Cannot freeze an incomplete or technically defective corpus.")
     flags = load(qa / "review-index.json")
@@ -77,6 +79,10 @@ def freeze(qa, asr, production, output):
     save(output / "review-lock.json", {
         "version": 1, "status": "awaiting-informed-human-release-decision",
         "inventory_source_hash": summary["inventory_source_hash"],
+        "pronunciation_mode": mode,
+        "production_report_sha256": {
+            path.name: digest(path) for path in sorted(production.glob("production-report-*.json"))
+        },
         "files": {path.name: digest(path) for path in sorted(output.glob("*.json"))},
         "audio_sha256": {item["id"]: item["sha256"] for item in flags + representatives + campaigns + historical},
         "counts": {"raw_retained_flags": len(flags), "previously_approved_exact_master_flags": summary["flagged_already_human_approved"],
@@ -89,11 +95,16 @@ def freeze(qa, asr, production, output):
             f"Retained automated flags: {summary['flagged']}; historically accepted unchanged flags: {summary['flagged_already_human_approved']}; new flags: {summary['flagged_new']}. They are not relabeled automated PASS.",
             f"Exact possessive-token bookkeeping corrections: {summary['possessive_target_bookkeeping_corrections']}; original evidence retained.",
             "Some Russian function words merge naturally in speech; ASR alone cannot prove they were omitted.",
-            "Roman chapter labels are deliberately spoken as numbers. Short utterances and names remain recognition caveats; corroboration is not pronunciation approval.",
+            ("Natural delivery preserves chapter labels as exact text without phonemes; expected chapter IPA is only a listening reference."
+             if mode == NATURAL else "Roman chapter labels are deliberately spoken as numbers.")
+            + " Short utterances and names remain recognition caveats; corroboration is not pronunciation approval.",
             "Review the priority index for possible omissions, empty transcripts and low acoustic scores. NISQA scores do not certify pronunciation or acting; short unscored samples are not padded.",
             "Historically accepted unchanged acoustic caveats: " + "; ".join(
                 f"{item['id']} MOS {item['acoustic_scores']['minimum_mos']}" for item in historical),
-            "New generation uses the established cast, not historical listening approval. Final recording release remains a separate human decision.",
+            "Cast and mode are revision-specific; generation authorization is not historical listening approval. Final recording release remains a separate human decision.",
+            ("Natural-reviewed delivery does not enforce IPA. Failed capability evidence is retained; name and homograph stress require explicit review. "
+             "Target scores are automated metrics only. Final acceptance covers disclosed limitations, not a claim that every line was individually heard."
+             if mode == NATURAL else "Phoneme-enforced generation requires a successful sentinel even when probe metric flags are accepted."),
         ],
     })
     print({"review_lock": str(output / "review-lock.json"), "sha256": digest(output / "review-lock.json"),

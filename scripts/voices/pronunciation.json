@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "Spoken IPA only. Keys are exact words; inflected names are separate. Case-insensitive matching preserves visible spelling. Names and homographs require human listening, not only ASR.",
+  "note": "Keys are exact words; inflected names are separate. In phoneme-enforced mode these are spoken IPA; in natural-reviewed mode they are listening references only and are not sent to the voice. Case-insensitive matching preserves visible spelling. Names and homographs require human listening, not only ASR. Current войны occurrences mean singular genitive war (войнЫ), not plural wars (вОйны).",
   "ru": {
     "Мара": "ˈma.rə", "Мары": "ˈma.rɨ", "Маре": "ˈma.rʲɪ", "Мару": "ˈma.rʊ", "Марой": "ˈma.rəj",
     "Томан": "ˈto.mən", "Томана": "ˈto.mə.nə", "Томану": "ˈto.mə.nʊ", "Томаном": "ˈto.mə.nəm",
@@ -25,6 +25,7 @@
     "Рен": "rʲen", "Рена": "ˈrʲe.nə", "Рену": "ˈrʲe.nʊ",
     "Аля": "ˈa.lʲə", "Али": "ˈa.lʲɪ", "Алю": "ˈa.lʲʊ",
     "Оклик": "ˈo.klʲɪk", "Оклика": "ˈo.klʲɪ.kə", "Оклику": "ˈo.klʲɪ.kʊ",
+    "войны": "vɐj.ˈnɨ",
     "замок": "zɐ.ˈmok", "замком": "zɐm.ˈkom",
     "мука": "mʊ.ˈka", "муки": "mʊ.ˈkʲi", "муку": "mʊ.ˈku",
     "полы": "ˈpo.lɨ", "облучки": "ɐ.blʊtɕ.ˈkʲi",

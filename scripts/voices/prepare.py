@@ -6,6 +6,8 @@ import json
 import re
 from pathlib import Path
 
+from pronunciation_policy import ENFORCED, NATURAL, natural_metadata, pronunciation_mode
+
 HERE = Path(__file__).resolve().parent
 QUALITY = {
     "min_accuracy": 90, "min_fluency": 70, "min_completeness": 90,
@@ -30,8 +32,14 @@ def phoneme(word, ipa):
     return f'<phoneme alphabet="ipa" ph="{html.escape(ipa, quote=True)}">{html.escape(word)}</phoneme>'
 
 
-def wrap(body, voice, rate=0, pitch=0):
+def wrap(body, voice, rate=0, pitch=0, mode=ENFORCED):
+    pronunciation_mode({"pronunciation_mode": mode})
     locale = "-".join(voice.split("-")[:2])
+    if mode == NATURAL:
+        if type(rate) is not int or type(pitch) is not int or rate != 0 or pitch != 0:
+            raise RuntimeError("Natural-reviewed profiles require zero rate/pitch; these controls are unvalidated.")
+        return (f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="{locale}">'
+                f'<voice name="{html.escape(voice, quote=True)}">{body}</voice></speak>')
     return (f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="{locale}">'
             f'<voice name="{voice}"><prosody rate="{rate:+d}%" pitch="{pitch:+d}%">'
             f'{body}</prosody></voice></speak>')
@@ -68,7 +76,7 @@ def context_lexicon(text, language, pronunciation):
     return lexicon
 
 
-def probe(voice):
+def probe(voice, mode=ENFORCED):
     ru = voice.startswith("ru-")
     words = ["Мара", "замок", "Томан", "замок", "Элин"] if ru else ["Mara", "read", "Toman", "read", "Elin"]
     chunks = ["", " говорит: ", ". ", " повторяет: ", ". ", " слушает."] if ru else [
@@ -88,13 +96,14 @@ def probe(voice):
         "correct_variant_id": "correct", "sentinel_variant_id": "sentinel",
         "expected_sentinel_transcript_contains": "собака" if ru else "banana",
         "target_words": words, "min_correct_word_accuracy": 95,
-        "variants": [{"id": key, "ssml": wrap(line(value), voice)} for key, value in [
+        "variants": [{"id": key, "ssml": wrap(line(value), voice, mode=mode)} for key, value in [
             ("plain", None), ("correct", correct), ("swapped", swapped), ("sentinel", sentinel)]],
     }
 
 
 def prepare(inventory_path, output, samples_path=None):
     inventory, cast, pronunciation = load(inventory_path), load(HERE / "cast.json"), load(HERE / "pronunciation.json")
+    mode = pronunciation_mode(cast)
     entries = inventory["entries"]
     roles = load(samples_path) if samples_path else cast["auditions"]
     for role in roles:
@@ -109,7 +118,8 @@ def prepare(inventory_path, output, samples_path=None):
         base = {
             "schema_version": "1.0", "language": "-".join(voice.split("-")[:2]), "default_voice": voice,
             "backend": {"provider": "azure-speech", "preferred_region": cast["preferred_region"]},
-            "quality": QUALITY, "capability_probe": probe(voice), "segments": [],
+            "quality": QUALITY, "capability_probe": probe(voice, mode), "segments": [],
+            "pronunciation_mode": mode,
         }
         manifests[key] = base
         full_manifests[key] = {**base, "segments": []}
@@ -132,14 +142,22 @@ def prepare(inventory_path, output, samples_path=None):
                 body = phoneme(roman[1], ipa) + body[len(roman[1]):]
                 required.insert(0, ipa)
                 targets.insert(0, roman[1])
-            rendered = {**segment, "speaker": speaker, "voice": voice,
-                        "ssml": wrap(body, voice, rate, pitch), "required_ipa": required,
+            rendered = {**segment, "speaker": speaker, "voice": voice, "pronunciation_mode": mode,
+                        "ssml": wrap(html.escape(segment["text"]) if mode == NATURAL else body,
+                                     voice, rate, pitch, mode), "required_ipa": required,
                         "target_words": targets, "track": f"{language}-{speaker}", "critical": bool(targets)}
+            if mode == NATURAL:
+                rendered.update(natural_metadata({**rendered, "expected_ipa": required}))
             full_manifests[engine]["segments"].append(rendered)
             if targets or re.search(r"\d", segment["text"]):
                 pronunciation_review.append({"id": segment["id"], "language": language, "speaker": speaker,
                                              "text": segment["text"], "targets": targets, "ipa": required,
-                                             "note": "Roman chapter numbers are spoken as numbers; ASR may spell them as words." if roman else ""})
+                                             "expected_ipa": required, "pronunciation_mode": mode,
+                                             "phoneme_enforced": mode == ENFORCED,
+                                             "pronunciation_review_required": mode == NATURAL and bool(targets),
+                                             "note": ("Expected IPA is a listening reference only; names and homograph stress are not enforced."
+                                                      if mode == NATURAL else
+                                                      "Roman chapter numbers are spoken as numbers; ASR may spell them as words." if roman else "")})
             if role and ("segment_indices" not in role or index in role["segment_indices"]):
                 manifests[engine]["segments"].append(rendered)
                 sampled.append(segment)
@@ -151,7 +169,11 @@ def prepare(inventory_path, output, samples_path=None):
                 "id": identifier, "title": role["label"], "language": language,
                 "voice": voice, "engine": engine, "path": str((output / "playable" / f"{identifier}.wav").resolve()),
                 "text": " ".join(s["text"] for s in sampled),
-                "note": cast["profiles"][speaker]["note"] + f" Rate {rate:+d}%; pitch {pitch:+d}%. New recording; not yet human approved.",
+                "pronunciation_mode": mode,
+                "note": cast["profiles"][speaker]["note"] + (
+                    " Native delivery; no phoneme markup. Unvalidated rate/pitch controls omitted. Names and stress require listening."
+                    if mode == NATURAL else f" Rate {rate:+d}%; pitch {pitch:+d}%."
+                ) + " New recording; not yet human approved.",
                 "kind": "voice", "segment_ids": [s["id"] for s in sampled],
             })
     for key in manifests:
@@ -164,6 +186,7 @@ def prepare(inventory_path, output, samples_path=None):
     save(output / "source-lock.json", {
         "version": 1, "inventory_sha256": digest(inventory_path),
         "inventory_source_hash": inventory["sourceHash"], "cast_sha256": digest(HERE / "cast.json"),
+        "pronunciation_mode": mode,
         "pronunciation_sha256": digest(HERE / "pronunciation.json"),
         "preparer_sha256": digest(Path(__file__)),
         "sample_selectors_sha256": digest(samples_path) if samples_path else None,

@@ -8,11 +8,13 @@ import numpy as np
 import soundfile as sf
 
 from prepare import digest, load, save
+from pronunciation_policy import NATURAL, pronunciation_mode, retain_natural_review, validate_natural_segment
 
 
 def audition(root, skill):
     index = load(root / "audition-index.json")
     lock = load(root / "source-lock.json")
+    mode = pronunciation_mode(lock)
     reports = {}
     ready = []
     for manifest in sorted((root / "manifests").glob("audition-*.json")):
@@ -31,13 +33,35 @@ def audition(root, skill):
                 raise RuntimeError(f"Audition interrupted for {engine}; see {root / (engine + '.log')}")
         report = load(report_path)
         source = load(manifest)
+        if pronunciation_mode(source) != mode:
+            raise RuntimeError(f"Audition pronunciation_mode differs from its source lock: {engine}")
         if report.get("default_voice") != source["default_voice"]:
             raise RuntimeError(f"Audition report engine mismatch: {engine}")
         for segment in source["segments"]:
             recorded = next(s for s in report["segments"] if s["id"] == segment["id"])
             if recorded["text"] != segment["text"] or Path(recorded["ssml_path"]).read_text(encoding="utf-8") != segment["ssml"]:
                 raise RuntimeError(f"Audition report source mismatch: {segment['id']}")
+        if mode == NATURAL:
+            if pronunciation_mode(report) != NATURAL:
+                original = output / "skill-production-report.json"
+                if original.exists() and load(original) != report:
+                    raise RuntimeError("Original skill report changed; use a new audition revision.")
+                save(original, report)
+            for segment in source["segments"]:
+                validate_natural_segment(segment)
+                recorded = next(s for s in report["segments"] if s["id"] == segment["id"])
+                retain_natural_review(recorded, segment)
+            report.update(pronunciation_mode=mode, phoneme_enforced=False,
+                          audition_manifest_sha256=digest(manifest), cast_sha256=lock["cast_sha256"])
+            report["summary"]["failed_ids"] = [s["id"] for s in report["segments"] if s["decision"] != "PASS"]
+            report["summary"]["pronunciation_review_required_ids"] = [
+                s["id"] for s in report["segments"] if s["pronunciation_review_required"]
+            ]
+            if report["summary"]["failed_ids"] or report["capability_probe"]["decision"] != "PASS":
+                report["decision"] = "FAIL"
+            save(report_path, report)
         reports[engine] = {
+            "pronunciation_mode": mode, "phoneme_enforced": mode != NATURAL,
             "decision": report["decision"], "capability_probe": report["capability_probe"],
             "summary": report["summary"], "report_path": str(report_path),
             "report_sha256": digest(report_path),
@@ -60,6 +84,10 @@ def audition(root, skill):
             flagged = [s["id"] for s in report["segments"] if s["id"] in role["segment_ids"] and s["decision"] != "PASS"]
             ready.append({k: v for k, v in role.items() if k not in ("segment_ids", "engine")} | {
                 "path": str(target), "sha256": digest(target), "automated_flagged_ids": flagged,
+                "pronunciation_review_targets": [
+                    {"id": s["id"], "target_words": s["target_words"], "expected_ipa": s["expected_ipa"]}
+                    for s in source["segments"] if mode == NATURAL and s["id"] in role["segment_ids"]
+                ],
                 "note": role["note"] + (" Automated review flags: " + ", ".join(flagged) if flagged else ""),
             })
         for variant, item in report["capability_probe"]["variants"].items():
@@ -75,7 +103,10 @@ def audition(root, skill):
                         + ". Required probe target threshold: 95. Human stress/name listening required.",
             })
         save(root / "auditions-ready.json", ready)
-        save(root / "audition-report.json", {"version": 1, "engines": reports, "human_approval": "pending"})
+        save(root / "audition-report.json", {
+            "version": 1, "pronunciation_mode": mode, "engines": reports, "human_approval": "pending",
+            "note": "Natural mode acceptance binds the exact engine reports; it is not individual audition listening or final recording approval.",
+        })
         print(f"{engine}: {report['decision']}; playable roles/probes available: {len(ready)}", flush=True)
 
 

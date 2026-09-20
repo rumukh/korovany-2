@@ -330,18 +330,25 @@ without closing the scene. Closing a reading scene cancels its narration.
 
 The full voice bank contains **1,332 localized blocks** (666 per language),
 with 3,772 segment references sharing **3,115 unique clips**: approximately
-158 minutes across all three campaigns, not one playthrough. All 20 NPCs,
-the player and the narrator have recorded parts. Their established profiles use
-three Russian and four British English engine voices, not 22 separate actors.
-Delivery is local 24 kHz mono Ogg Vorbis, about 67.55 MiB; lossless masters,
-pronunciation markup and production receipts are retained separately.
+184 minutes across all three campaigns, not one playthrough. All 20 NPCs,
+the player and the narrator have recorded parts. Azure **MAI-Voice-2** supplies
+two native Russian voices (Lev/Masha) and four US English voices
+(Ethan/Grant/Harper/Olivia), not 22 separate actors. Delivery is local 24 kHz mono
+Ogg Vorbis, about 73.8 MiB, with uniform 3 dB headroom to prevent lossy-codec
+overshoot. Lossless masters and exact production receipts are retained separately;
+there is no pitch shifting or time compression.
 
 The complete recording was accepted with documented metric limitations on
-2026-09-18. All 403 accepted-but-retained flags remain in
+2026-09-20. MAI's tested voices ignore forced IPA, so this recording uses the
+explicitly approved natural-delivery workflow: names and ambiguous stress are
+listening targets, not claimed to be enforced. All 944 accepted-but-retained
+review flags (557 listening-only and 387 other metric flags) remain in
 `public/audio/voices/provenance.json`, distinctly from automatic passes.
 Acceptance covers the reviewed recording and does not claim that every flagged
-clip was individually heard. Production, exact coverage and hash-bound human
-release records are documented in `scripts/voices/README.md`.
+clip was individually heard or that every pronunciation is correct. Six low
+acoustic-score representatives and short-word/chapter-number recognition caveats
+remain disclosed. Production, exact coverage and hash-bound human release
+records are documented in `scripts/voices/README.md`.
 
 Settings provide independent **Master**, **Music**, **Ambience**, **Sound effects**
 and **Voices** sliders, as well as the existing mute switch. Old settings without

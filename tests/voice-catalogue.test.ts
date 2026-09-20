@@ -44,20 +44,27 @@ describe('complete faction-aware exact-match bilingual voice inventory', () => {
           e.sources.some(s => s.startsWith(`faction.${faction}.`)))).toBe(true);
       }
     }
-    expect(Object.values(cast.engines).filter(v => v.startsWith('ru-RU-'))).toHaveLength(3);
-    expect(Object.values(cast.engines).filter(v => v.startsWith('en-GB-'))).toHaveLength(4);
+    expect(cast.model).toBe('MAI-Voice-2');
+    expect(cast.pronunciation_mode).toBe('natural-reviewed');
+    expect(Object.values(cast.engines).sort()).toEqual([
+      'en-US-Ethan:MAI-Voice-2', 'en-US-Grant:MAI-Voice-2',
+      'en-US-Harper:MAI-Voice-2', 'en-US-Olivia:MAI-Voice-2',
+      'ru-RU-Lev:MAI-Voice-2', 'ru-RU-Masha:MAI-Voice-2',
+    ]);
     for (const profile of Object.values(cast.profiles)) for (const language of languages) {
       const [engine, rate, pitch] = profile[language];
       expect(Object.hasOwn(cast.engines, engine!)).toBe(true);
-      expect(typeof rate).toBe('number');
-      expect(typeof pitch).toBe('number');
-      expect(rate).toBeGreaterThanOrEqual(-15);
-      expect(rate).toBeLessThanOrEqual(5);
-      expect(pitch).toBeGreaterThanOrEqual(-10);
-      expect(pitch).toBeLessThanOrEqual(5);
+      const voice = Object.entries(cast.engines).find(([id]) => id === engine)?.[1];
+      expect(voice?.startsWith(language === 'ru' ? 'ru-RU-' : 'en-US-')).toBe(true);
+      expect(rate).toBe(0);
+      expect(pitch).toBe(0);
     }
-    for (const role of samples) for (const language of languages) {
-      expect(entries.filter(e => e.language === language && e.speaker === role.speaker && e.sources.includes(role.source))).toHaveLength(1);
+    for (const role of [...samples, ...cast.auditions]) for (const language of languages) {
+      const selected = entries.filter(e => e.language === language && e.speaker === role.speaker && e.sources.includes(role.source));
+      expect(selected).toHaveLength(1);
+      if ('segment_indices' in role) for (const index of role.segment_indices ?? []) {
+        expect(selected[0]!.segments[index]).toBeDefined();
+      }
     }
     for (const entry of entries) {
       expect(entry.segments.map(s => s.text).join(' ').replace(/\s+/g, ' ')).toBe(entry.text.replace(/\s+/g, ' '));

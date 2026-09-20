@@ -8,8 +8,9 @@ import numpy as np
 import soundfile as sf
 
 from prepare import digest, load, save
-from produce import require_approval
+from produce import natural_sources, require_approval
 from metric_evidence import correct_possessive_targets
+from pronunciation_policy import NATURAL, pronunciation_mode, validate_natural_receipt
 
 
 def tokens(text):
@@ -19,6 +20,8 @@ def tokens(text):
 def audit(inventory_path, production, prepared, approval_path, output, require_complete=False, reuse_path=None):
     inventory = load(inventory_path)
     lock, approval = require_approval(prepared, approval_path)
+    mode = pronunciation_mode(lock)
+    sources = natural_sources(prepared, lock) if mode == NATURAL else {}
     if inventory["sourceHash"] != lock["inventory_source_hash"]:
         raise RuntimeError("QA inventory differs from the approved source.")
     expected = {s["id"]: (entry, s) for entry in inventory["entries"] for s in entry["segments"]}
@@ -34,6 +37,10 @@ def audit(inventory_path, production, prepared, approval_path, output, require_c
         for kind in ("raw", "final", "ssml"):
             if digest(receipt[f"{kind}_path"]) != receipt[f"{kind}_sha256"]:
                 raise RuntimeError(f"QA {kind} hash mismatch {identifier}")
+        if mode == NATURAL:
+            validate_natural_receipt(receipt, sources[identifier])
+            if Path(receipt["ssml_path"]).read_text(encoding="utf-8") != sources[identifier]["ssml"]:
+                raise RuntimeError(f"QA natural plaintext mismatch {identifier}")
         receipts[identifier] = correct_possessive_targets(receipt)
     missing = sorted(set(expected) - set(receipts))
     if require_complete and missing:
@@ -70,7 +77,7 @@ def audit(inventory_path, production, prepared, approval_path, output, require_c
             technical.append(identifier)
         if receipt["decision"] == "PASS":
             continue
-        approved = approved_samples.get(identifier) == receipt["final_sha256"]
+        approved = mode != NATURAL and approved_samples.get(identifier) == receipt["final_sha256"]
         if approved:
             accepted[identifier] = {
                 "accepted": True, "audio_sha256": receipt["final_sha256"],
@@ -99,7 +106,14 @@ def audit(inventory_path, production, prepared, approval_path, output, require_c
                                "omission-candidate" if omission_candidates else "score-or-recognition-only",
             "scores": {key: receipt[key] for key in ("accuracy_score", "fluency_score", "completeness_score")},
             "target_occurrences": receipt["target_occurrences"],
+            "pronunciation_mode": mode,
+            "pronunciation_review_required": receipt.get("pronunciation_review_required", False),
+            "expected_ipa": receipt.get("expected_ipa", receipt.get("required_ipa", [])),
         })
+        if mode == NATURAL and receipt["pronunciation_review_required"]:
+            review_index[-1]["note"] += " Expected IPA is a listening reference only; target scores do not approve names or homograph stress."
+            if not omission_candidates:
+                review_index[-1]["review_priority"] = "unenforced-pronunciation"
     def whole_block(chosen, directory, identifier, title):
         chunks = []
         for segment in chosen["segments"]:
@@ -175,6 +189,9 @@ def audit(inventory_path, production, prepared, approval_path, output, require_c
     save(output / "historical-acoustic-index.json", historical_acoustic)
     summary = {
         "version": 1, "inventory_source_hash": inventory["sourceHash"], "expected_segments": len(expected),
+        "pronunciation_mode": mode, "phoneme_enforced": mode != NATURAL,
+        "cast_sha256": lock["cast_sha256"], "human_casting_approval": approval,
+        "pronunciation_review_required_ids": [id for id, r in receipts.items() if r.get("pronunciation_review_required")],
         "produced_segments": len(receipts), "missing_ids": missing, "technical_defect_ids": technical,
         "automatic_pass": sum(r["decision"] == "PASS" for r in receipts.values()),
         "flagged": len(review_index), "flagged_already_human_approved": len(accepted),
@@ -192,7 +209,7 @@ def audit(inventory_path, production, prepared, approval_path, output, require_c
         "representative_blocks": len(acoustic_index),
         "campaign_opening_and_ending_blocks": len(campaign_index),
         "historical_unchanged_acoustic_flags": len(historical_acoustic),
-        "decision": "NEEDS_REVIEW" if technical or missing or len(review_index) > len(accepted) or
+        "decision": "NEEDS_REVIEW" if mode == NATURAL or technical or missing or len(review_index) > len(accepted) or
                     approval.get("approval_kind") == "existing-cast-regeneration" else "READY_TO_PUBLISH",
     }
     save(output / "qa-summary.json", summary)

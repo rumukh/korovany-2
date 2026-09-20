@@ -3,6 +3,7 @@ import argparse
 from pathlib import Path
 
 from prepare import digest, load, save
+from pronunciation_policy import NATURAL, pronunciation_mode
 
 
 def record(review_dir, decision_path, output):
@@ -14,6 +15,11 @@ def record(review_dir, decision_path, output):
     if digest(lock_path) != decision["review_lock_sha256"]:
         raise RuntimeError("Human release does not cover this frozen review revision.")
     lock = load(lock_path)
+    mode = pronunciation_mode(lock)
+    if mode == NATURAL and (
+        decision.get("pronunciation_mode") != mode or decision.get("accepts_unenforced_pronunciation") is not True
+    ):
+        raise RuntimeError("Natural recording release requires explicit acceptance of unenforced pronunciation.")
     for name, expected_hash in lock["files"].items():
         path = review_dir / name
         if path.parent != review_dir or digest(path) != expected_hash:
@@ -29,6 +35,8 @@ def record(review_dir, decision_path, output):
         "version": 1,
         "release_approval": {
             **decision, "inventory_source_hash": lock["inventory_source_hash"],
+            "pronunciation_mode": mode,
+            "production_report_sha256": lock.get("production_report_sha256", {}),
             "review_counts": lock["counts"], "caveats": lock["caveats"],
             "scope": "Informed release acceptance of unchanged recordings with disclosed metrics; not a claim that every flagged line was listened to individually.",
         },

@@ -4,7 +4,65 @@ This directory owns speech assets only. Story text remains in the narrative
 data and snapshot renderer. No browser speech fallback or placeholder public
 manifest is generated.
 
-## Approved three-faction recording
+## Approved MAI-Voice-2 recording
+
+On 2026-09-20, the user approved the complete remake with **"Approve the recording
+with disclosed flags; commit and deploy to main"**. The recording is bound to
+review-lock SHA-256
+`40990dc2cda61eb6c220f8e0f16515ea11ed219429f865c870711f62abaf8a45`
+and unchanged narrative inventory
+`aae9981aee2e22e981957764e2071aeb5cb8cb0a24b7355287a4a8be4e23ad99`.
+This is a separate final recording acceptance, not merely the earlier model or
+cast choice. Deployment completion still requires a successful `Game` workflow
+for remote `main` containing these assets.
+
+The bank has **1,332 blocks / 3,772 segment references / 3,115 unique clips**,
+666 blocks per language. Unique speech is 11,036.70218 seconds (about 184 minutes);
+the Ogg payload is 77,341,620 bytes. Every old recording was replaced; only
+45 sentence masters from the newly approved MAI auditions were reused unchanged.
+There is no pitch shifting or time compression. All original masters, requests,
+four-way capability probes and complete assessment receipts remain in the
+external production archive.
+
+Delivery is mono 24 kHz Vorbis quality 3 with uniform **-3 dB delivery gain**.
+The first unattenuated Ogg revision exposed a codec overshoot in native Chromium.
+The corrected, profile-addressed revision fully decodes below full scale:
+maximum measured 48 kHz float peak 0.791960597. All 3,115 clips and actual RU/EN
+dialogue and nine ending queues were exercised in the existing browser suite.
+Final integration copies the approved staged bytes, not a new encode.
+
+**944 accepted review flags remain:** 557 require listening without another
+metric failure; 387 have other automated metric flags. In total, 702 segment
+references contain unenforced pronunciation targets, overlapping those groups.
+All WAV and encoded-audio technical checks pass. Sixty-nine exact-source English
+possessive-token corrections retain original evidence and thresholds.
+
+CPU NISQA covered 44 complete speaker/language representatives. Six scored
+below 4: English Hana and Russian Hana, Mara, Nika, Sella and Tessa; the minimum
+was 3.1828 for Russian Nika. A cached full-file ASR pass covered 700 flagged
+references; five short utterances remained NoMatch. Possible initial-word and
+chapter-number discrepancies were disclosed alongside the war-stress reference
+`войнЫ`, not `вОйны`, in 17 focused listening items. These remain review signals,
+not proven errors or automatic acceptance. Final acceptance does not claim every
+line is correct or that every flag was individually heard.
+
+The user's earlier informed choice, **"Use MAI-Voice-2 for both Russian and English
+(Recommended)"**, authorizes the explicitly disclosed natural-delivery approach:
+MAI-Voice-2 ignores forced IPA, dialogue stays unchanged, and names and ambiguous
+stress need explicit review rather than being described as enforced. This is
+neither individual audition-listening acceptance nor final-recording acceptance.
+The final decision above separately accepts the complete frozen recording.
+
+The subsequent cast decision, **"Approve this MAI cast with the disclosed sample
+flags; regenerate everything"**, covers 20 native-delivery audition blocks
+(45 sentence samples) and six engines: Russian Lev/Masha and US English
+Ethan/Grant/Harper/Olivia. Seven numerical sample flags remain, separately from
+mandatory name/stress listening flags. The full recording uses this approved
+cast without pitch/rate processing or historical speech reuse; only byte-identical
+new audition masters may be carried into production. This changes English casting
+from British to US English and does not claim 22 independent actors.
+
+## Previously approved three-faction recording
 
 On 2026-09-18, the user explicitly selected **"Approve the complete recording
 with documented flags; integrate it"** after the separate final-recording review.
@@ -37,8 +95,8 @@ CPU NISQA covered 44 complete speaker/language representatives, with a minimum
 score of 4.4438. The unchanged historical Russian Ivet block retains its earlier
 accepted 3.8962 score and a separate listening entry. The new representative
 scores do not erase that caveat or certify pronunciation, acting or every line.
-Current `public\audio\voices\provenance.json` retains the exact release response,
-scope, frozen lock, all metric flags, source/cast settings and Ogg hashes.
+That release's provenance remains in Git history and the external archive.
+The current `public\audio\voices\provenance.json` describes the MAI remake.
 
 The current extractor reads `getFactionStory` from the local checkout, not the
 historical global story or remote narrative. It covers all three factions, nine
@@ -60,22 +118,22 @@ Use `publish.py --stage-only --reused-staging <historical-staging-root>` to copy
 matching historical Oggs without re-encoding; both their encoded hashes and
 lossless master hashes must match.
 
-The cast is unchanged. The new regular Russian `Марой` inflection retains the
+For that historical release, the cast was unchanged. The regular Russian `Марой` inflection retains the
 approved stress of `Мара`; English `read` uses audited past/present contexts.
 Unknown contexts fail preparation instead of silently choosing a pronunciation.
 `prepare.py --samples <selectors.json>` selects finite representative new lines
 without changing the approved cast file. It records the preparer and selection
-hashes alongside all manifests. The current selectors are retained in
-`faction-samples.json`; the selectors inside the unchanged cast file describe
-the historical corpus only. `review.py --index <auditions-ready.json> --port
+hashes alongside all manifests. Historical faction selectors are retained in
+`faction-samples.json`; the current `cast.json` contains the MAI remake's
+audition selectors. `review.py --index <auditions-ready.json> --port
 <local-port>` provides a loopback-only, hash-checked listening page.
 
-The user's regeneration request authorizes generation using the established
-cast; it is not final listening approval. Fresh flagged probe reports still need
+That historical regeneration request authorized generation using the established
+cast; it was not final listening approval. Fresh flagged probe reports still need
 explicit, hash-bound human acceptance. A generation receipt for this workflow
 uses `approval_kind: "existing-cast-regeneration"` and binds `reuse_plan_sha256`.
 Pass the same plan to `produce.py --reuse-plan` and `qa_corpus.py --reuse-plan`.
-Publishing this new corpus requires its own informed final recording release
+Publishing a regenerated corpus requires its own informed final recording release
 even if all automated scores pass. Pending that decision, only external
 `publish.py --stage-only` output is permitted.
 
@@ -175,11 +233,14 @@ $python = 'C:\AI\SpeechProduction\.venv\Scripts\python.exe'
 & $python scripts\voices\audition.py --output-dir <prepared-directory>
 ```
 
-The seven GA engine voices have four probes each: plain, correct, swapped
+Every selected engine must retain four probes: plain, correct, swapped
 stress/phonemes, and a sentinel with unchanged visible text but a different
-spoken word. Russian uses three engine timbres (only one male), English four
-British English timbres. Twenty profiles are **not** twenty unique actors.
-`cast.json` records controlled rate/pitch choices and realistic limitations.
+spoken word. The historical seven GA voices used three Russian engine timbres
+(only one male) and four British English timbres. Twenty profiles are **not**
+twenty unique actors.
+`cast.json` records engine/profile choices, pronunciation mode and limitations;
+historical strict profiles used rate/pitch controls, while this natural revision
+uses neutral/default native delivery without those controls.
 `pronunciation.json` records proposed name stress, inflections and homographs.
 `pronunciation-review.json` lists flagged segments for listening.
 
@@ -196,14 +257,21 @@ inventory, prepared manifest directory and external audition directory.
 using a changed audition manifest; it refuses text/engine/threshold changes
 and retains the original report, SSML and WAV evidence.
 
-## Approved production
+## Approved production: strict default
+
+An absent `cast.json.pronunciation_mode` means **`phoneme-enforced`**. It can
+also be set explicitly. The only other accepted value is **`natural-reviewed`**;
+unknown modes and approval/source-lock/cast mode disagreement fail closed.
+Legacy locks and approvals without a mode keep the strict meaning.
 
 After explicit human approval, create an external approval receipt with
 `approved: true`, `human_approval_reference`, `parent_session_id`, and the exact
 `inventory_source_hash`, `cast_sha256`, `pronunciation_sha256` from
 `source-lock.json`. A probe whose sentinel follows but whose target scores
 fail additionally requires `accepted_probe_report_sha256[engine]` tied to
-human listening. An engine with an ignored sentinel cannot proceed.
+human listening. In strict mode an engine with an ignored sentinel cannot
+proceed, even with hash-bound human metric acceptance. Selecting the natural
+policy below is a new prepared revision, never an implicit failed-sentinel bypass.
 
 ```powershell
 & $python scripts\voices\produce.py --prepared-dir <prepared-directory> --output-dir <external-masters> --approval <approval.json> --engine ruD
@@ -221,8 +289,107 @@ score chasing occurs. There is no time compression; maximum fit factor is
 To repair an actual bad segment, use a new revision rather than overwriting
 the approved evidence.
 
-Run `python scripts\voices\test_pipeline.py` for offline approval/concurrency/
-resume regression checks. These use a mock backend, not Azure.
+Run `C:\AI\SpeechProduction\.venv\Scripts\python.exe scripts\voices\test_pipeline.py`
+for offline approval, strict-sentinel, natural-mode, plaintext, review/release,
+technical-defect, concurrency and resume regression checks. These use a mock
+backend, not Azure. Isolated test workspaces are created beneath the current
+checkout and removed afterward; no real cast, lexicon or approved assets change.
+
+## Explicit natural-reviewed production
+
+Set `pronunciation_mode: "natural-reviewed"` at the **cast level**, then prepare
+a fresh revision. Profiles remain `[engine, rate, pitch]`. This implementation
+requires integer zero rate and pitch for every natural profile and omits
+`prosody` entirely, including in the probes: rate/pitch are **unvalidated**, not
+proved unsupported. The [official MAI documentation](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/mai-voices)
+documents `express-as` style/styledegree controls, but this revision deliberately
+uses neutral/default native delivery without styles. Style controls are not
+implemented here. There is no validated MAI-specific contract here for
+rate/pitch, sub/lexicon or freeform pronunciation instructions.
+Native voice names determine the language as before. Display text, inventory
+IDs and sample selectors are never rewritten.
+
+Narrative SSML contains the exact XML-escaped original text, with no phonemes,
+prosody, aliases, accent substitutions or chapter-label substitutions.
+`required_ipa` is empty. `target_words` and aligned `expected_ipa` retain the
+lexicon's names, inflections and homographs (including `войны` when present)
+and chapter-number listening references. Expected IPA is **reviewer data, not
+enforced markup**. Unknown English `read` contexts still fail preparation.
+Numerical quality thresholds, conformance limits and all technical/hash checks
+are unchanged.
+
+Run the same finite `audition.py` flow first. Only the capability probes contain
+phonemes, and all four WAV/SSML variants remain hash-checked evidence. The
+original skill report is retained as `skill-production-report.json`; the
+mode-aware `production-report.json` adds review metadata without changing
+scores. A failed sentinel remains `FAIL`, not a claimed capability success.
+Use the **mode-aware report hashes after `audition.py` completes** for approval.
+
+Full generation requires the existing approval fields plus this explicit
+contract (placeholders below are not an approval or valid hashes):
+
+```json
+{
+  "approved": true,
+  "parent_session_id": "<relaying session>",
+  "human_approval_reference": "<exact human decision reference>",
+  "human_response": "<exact relayed informed mode-choice response>",
+  "inventory_source_hash": "<source-lock value>",
+  "cast_sha256": "<source-lock value>",
+  "pronunciation_sha256": "<source-lock value>",
+  "pronunciation_mode": "natural-reviewed",
+  "accepts_unenforced_pronunciation": true,
+  "pronunciation_evidence_reference": "<ignored-IPA evidence and disclosure reference>",
+  "accepted_unenforced_pronunciation_report_sha256": {
+    "<each actual cast engine key>": "<SHA-256 of prepared\\engines\\ENGINE\\production-report.json>"
+  }
+}
+```
+
+The engine/hash map must cover **exactly every engine** in the hash-bound cast
+and prepared audition manifests. Missing hashes, changed reports, changed probe
+or audition audio/SSML, another voice, changed manifests or mode disagreement
+block generation. The cast hash binds the selected mode in the source lock.
+The map accepts the disclosed lack of enforcement for production; it does
+**not** assert that the user individually heard or approved every audition.
+`accepted_probe_report_sha256` cannot substitute for it, and the old
+`accepted_audition_report_sha256` does not confer final natural-recording
+acceptance. Keep the prepared evidence available for QA and publication.
+
+Natural requests, receipts, production/QA reports and final provenance retain
+the mode. Every target-bearing natural segment has
+`pronunciation_review_required: true` and a persistent
+`checks.pronunciation_review: false`, even when
+`checks.target_pronunciation` and every numerical metric pass. QA lists those
+names/stress cases as `unenforced-pronunciation` listening priorities (possible
+omissions retain their higher priority). Possessive-token bookkeeping
+corrections cannot clear the review check. Release acceptance retains that
+false check rather than relabeling pronunciation as automated PASS.
+
+All natural recordings, **including lines with no targets and perfect scores**,
+need a separate informed final release. External `--stage-only` remains
+available, but creates no public runtime manifest or final provenance.
+Use the usual QA, acoustic assessment and `freeze_review.py` flow. The frozen
+lock discloses the natural-mode limitation and binds the complete production
+report hashes as well as master hashes and listening evidence.
+For `record_release.py`, the separate final human decision requires the existing
+fields (`approved`, `accepts_disclosed_metric_flags`, `human_response`,
+`timestamp`, `parent_session_id`, `human_review_reference`,
+`review_lock_sha256`) **plus**:
+
+```json
+{
+  "pronunciation_mode": "natural-reviewed",
+  "accepts_unenforced_pronunciation": true
+}
+```
+
+`record_release.py` carries the frozen production-report hashes into the
+release receipt; publication checks them again. An old casting response or old
+recording approval is not that final decision. Final provenance identifies
+engine/model names, mode, actual probe capability (including IPA ignored in the retained probes),
+exact generation and final human approvals, expected IPA references and every
+retained flag. Technical failures remain nonoverrideable.
 
 Acoustic scoring uses the existing film-assessment CPU implementation:
 
@@ -275,7 +442,73 @@ normal publishing with `--review <release-review.json> --staged-dir <staging-pub
 validates and copies the exact staged Oggs without synthesizing or re-encoding.
 The normal publish guard still applies to every retained metric flag.
 
-Deployment uses 24 kHz mono Vorbis quality 3, fully decoded and duration-checked.
+### Explicit delivery headroom
+
+Vorbis encoding and resampling can overshoot even when the lossless master
+passes waveform checks. The publisher fully decodes **every unique delivery
+clip**, including resumed/copied clips, to mono **48 kHz float32 PCM**. It
+requires finite, nonempty, non-silent audio with absolute peak **strictly below
+1.0**, in addition to the existing codec, duration and hash checks. Decoding to
+integer PCM would hide overshoot by clipping and is not used for this check.
+The native-browser full-bank peak check remains mandatory: FFmpeg validation
+does not replace Chrome/Web Audio validation.
+
+Use a **fresh external staging revision** with explicit uniform attenuation:
+
+```powershell
+& $python scripts\voices\publish.py --inventory <inventory.json> --production-dir <external-masters> --public-dir <new-staging-public> --stage-only --delivery-gain-db -3
+```
+
+`--delivery-gain-db` defaults to `0` for historical compatibility and accepts
+only finite nonpositive numbers. Nonzero gain applies only FFmpeg's
+`volume=<gain>dB:precision=double` filter during delivery encoding. There is no
+normalization, limiting, clipping, resynthesis, retiming or master modification.
+Production reports and their release-bound hashes are not rewritten.
+The Python `publish(...)` function appends `delivery_gain_db=0.0` after its
+existing positional arguments.
+
+Encoded receipts, staging indexes and final provenance include
+`delivery_profile` and `delivery_profile_sha256`. For this `-3 dB` revision:
+
+```json
+{
+  "version": 1,
+  "codec": "libvorbis",
+  "sample_rate_hz": 24000,
+  "channels": 1,
+  "vorbis_quality": 3,
+  "gain_db": -3.0
+}
+```
+
+The profile hash is SHA-256 of sorted-key, compact JSON
+(`sort_keys=True, separators=(",", ":")`). Nonzero-gain clip filenames append
+`-delivery-<first-12-profile-hash-characters>` after the unchanged master-hash
+suffix. Different gains therefore have distinct clip URLs and encoded receipt
+names; zero gain keeps the historical filenames and encoding command.
+Both signed zeros canonicalize to `0.0`.
+
+Input staging/historical profiles and cached encoded receipts must match the
+requested gain and encoding exactly. Legacy metadata without either profile
+field is accepted **only at zero gain**. Reusing an existing staging directory
+at another gain is rejected; preserve the original revision instead. Previously
+published clips remain untouched when a new profile is published under new
+URLs. Receipts record `decoded_audio` (`sample_rate_hz`, `sample_count`, `peak`);
+staging/provenance delivery statistics record `decoded_sample_rate_hz` and
+`maximum_decoded_peak`.
+
+After full browser validation and separate final human release, pass the same
+gain when copying the exact staged bytes:
+
+```powershell
+& $python scripts\voices\publish.py --inventory <inventory.json> --production-dir <external-masters> --public-dir public --review <release-review.json> --staged-dir <new-staging-public> --delivery-gain-db -3
+```
+
+This verifies the staged profile/hashes and decodes the copied bytes without
+re-encoding or applying the gain again. A decoded overshoot or other technical
+failure blocks staging/publication regardless of human metric acceptance.
+
+Deployment uses 24 kHz mono Vorbis quality 3, fully float-decoded and duration-checked.
 Existing hash-addressed Oggs are verified and reused on resume, never blindly
 re-encoded. The runtime manifest is published last. The provenance manifest records
 source/cast approval, master/delivery formats, retained limitations and every

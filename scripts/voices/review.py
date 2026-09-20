@@ -25,35 +25,56 @@ def serve(index_path, port):
                             if group not in groups:
                                 groups.append(group)
                         label = "Previously accepted identical recording" if item.get("already_human_approved") else "Current review recording"
+                        references = list(zip(item.get("target_words", []), item.get("expected_ipa", [])))
+                        if not references and item.get("expected_ipa"):
+                            references = list(zip([target["target"] for target in item.get("target_occurrences", [])],
+                                                  item["expected_ipa"]))
+                        references.extend((word, ipa) for segment in item.get("pronunciation_review_targets", [])
+                                          for word, ipa in zip(segment["target_words"], segment["expected_ipa"]))
+                        reference_note = ("<p>Expected IPA (listening references, not proof): "
+                                          + html.escape("; ".join(f"{word}: {ipa}" for word, ipa in references)) + "</p>") if references else ""
                         cards.append(
-                            f'<article data-groups="{html.escape(json.dumps(memberships), quote=True)}">'
+                            f'<article data-groups="{html.escape(json.dumps(memberships), quote=True)}" '
+                            f'data-language="{html.escape(item["language"], quote=True)}">'
                             f'<h2>{html.escape(item["title"])}</h2><p>{label} | '
                             f'{html.escape(item["language"])} | {html.escape(item["voice"])}</p>'
                             f'<audio controls preload="none" src="/audio/{quote(item["id"])}"></audio>'
                             f'<p>{html.escape(item["text"])}</p><p class="note">{html.escape(item["note"])}</p>'
+                            f'{reference_note}'
                             f'<small>{html.escape(item["id"])}</small></article>'
                         )
                     choices = "".join(f'<option value="{html.escape(group, quote=True)}">{html.escape(group)}</option>' for group in groups)
                     page = ('<!doctype html><html lang="en"><meta charset="utf-8">'
                             '<meta name="viewport" content="width=device-width,initial-scale=1">'
-                            '<title>Korovany II - faction voice samples</title><style>'
+                            '<title>Korovany II - recording review</title><style>'
                             'body{max-width:1000px;margin:2rem auto;padding:0 1rem;background:#152021;color:#eee9d9;'
                             'font:16px/1.5 system-ui}article{border:1px solid #647169;padding:1rem;margin:1rem 0}'
                             'h2{font-size:1.1rem}audio{width:100%}.note,small{color:#c9c2a9}</style>'
-                            '<h1>Korovany II - faction recording review</h1>'
-                            '<p><strong>Listening is separate from approval.</strong> Established cast retained. New recordings '
+                            '<h1>Korovany II - recording review</h1>'
+                            '<p><strong>Listening is separate from approval.</strong> Cast and pronunciation mode are revision-specific. New recordings '
                             'are not covered by the old final-recording approval. Automated flags remain flags. '
                             'Probe sentinel words are deliberately different from the displayed token.</p>'
                             '<p>Review retained pronunciation and recognition flags in the notes. Sentinel success '
                             'proves payload control, not naturalness or correct stress. Human decisions are recorded '
-                            'separately against immutable hashes, never inferred from this player.</p>'
+                            'separately; natural-reviewed delivery does not enforce IPA. Decisions are bound '
+                            'to immutable hashes, never inferred from this player.</p>'
                             '<label>Review group <select id="group">' + choices + '<option value="">Everything</option></select></label>'
+                            '<label> Language <select id="language"><option value="">Both</option>'
+                            '<option value="ru">Russian</option><option value="en">English</option></select></label>'
+                            '<p><label>Find text, speaker or clip ID <input id="search" type="search"></label></p>'
+                            '<p id="count" role="status" aria-live="polite"></p>'
                             + "".join(cards) + '<script>'
                             'const select=document.querySelector("#group");'
-                            'function filter(){for(const card of document.querySelectorAll("article")){'
-                            'card.hidden=Boolean(select.value)&&!JSON.parse(card.dataset.groups).includes(select.value);'
-                            'if(card.hidden)card.querySelector("audio").pause();}}'
-                            'select.addEventListener("change",filter);filter();'
+                            'const language=document.querySelector("#language"),search=document.querySelector("#search");'
+                            'function filter(){let visible=0;const query=search.value.trim().toLocaleLowerCase();'
+                            'for(const card of document.querySelectorAll("article")){'
+                            'card.hidden=(Boolean(select.value)&&!JSON.parse(card.dataset.groups).includes(select.value))'
+                            '||(Boolean(language.value)&&card.dataset.language!==language.value)'
+                            '||(Boolean(query)&&!card.textContent.toLocaleLowerCase().includes(query));'
+                            'if(card.hidden)card.querySelector("audio").pause();else visible++;}'
+                            'document.querySelector("#count").textContent=visible+" recordings shown";}'
+                            'select.addEventListener("change",filter);language.addEventListener("change",filter);'
+                            'search.addEventListener("input",filter);filter();'
                             'document.addEventListener("play",event=>{for(const audio of document.querySelectorAll("audio"))'
                             'if(audio!==event.target)audio.pause();},true);'
                             '</script></html>').encode("utf-8")
