@@ -152,14 +152,15 @@ input[type="checkbox"] { width: 21px; height: 21px; accent-color: var(--brass); 
 .boss-name { margin-top: 10px; font-size: 12px; color: #ecc7ab; }
 .boss { margin-top: 15px; }
 .boss .meter-fill { background: #d66b50; }
+.hud-rail { position: absolute; top: 22px; right: 26px; width: 180px; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
 .minimap {
-  position: absolute; right: 26px; top: 22px; width: 156px; padding: 5px;
+  width: 156px; padding: 5px;
   border: 1px solid #dac5928f; background: #d4c8a8; color: #293d31; pointer-events: auto;
   box-shadow: 0 3px 20px #0003;
 }
 .minimap > span { display: block; padding: 4px; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; }
 .atlas-svg { width: 100%; height: auto; display: block; }
-.hud-controls { position: absolute; top: 205px; right: 26px; display: flex; gap: 5px; pointer-events: auto; max-width: 180px; }
+.hud-controls { display: flex; gap: 5px; pointer-events: auto; }
 .hud-button { background: #152a20bc; border: 1px solid #c8c19555; padding: 7px 9px; font-size: 10px; }
 .hud-bottom { position: absolute; left: 28px; right: 28px; bottom: 25px; display: grid; grid-template-columns: 235px 1fr 250px; align-items: end; gap: 24px; }
 .convoy-panel, .journal { background: linear-gradient(90deg, #102419bf, #10241900); padding: 12px 12px 8px; border-left: 1px solid #c1aa6980; }
@@ -230,8 +231,8 @@ kbd { font: 11px "Segoe UI", sans-serif; display: inline-grid; place-items: cent
 @media (max-width: 1100px) {
   .menu-panel { width: 55%; padding-left: 28px; padding-right: 28px; }
   .hud-top { grid-template-columns: 200px 1fr; gap: 18px; right: 170px; left: 18px; top: 18px; }
-  .minimap { width: 128px; right: 18px; top: 18px; }
-  .hud-controls { top: 172px; right: 18px; }
+  .hud-rail { top: 18px; right: 18px; }
+  .minimap { width: 128px; }
   .hud-bottom { grid-template-columns: 195px 1fr; left: 18px; right: 18px; gap: 15px; bottom: 18px; }
   .journal { display: none; }
   .action-slots { gap: 6px; padding-left: 5px; padding-right: 5px; }
@@ -259,9 +260,9 @@ kbd { font: 11px "Segoe UI", sans-serif; display: inline-grid; place-items: cent
   .objective h2 { font-size: 16px; }
   .objective-counts { font-size: 9px; }
   .objective > .eyebrow { display: none; }
-  .minimap { width: 102px; right: 12px; top: 16px; }
+  .hud-rail { top: 16px; right: 12px; width: 110px; }
+  .minimap { width: 102px; }
   .minimap > span { font-size: 8px; }
-  .hud-controls { right: 12px; top: 142px; max-width: 110px; flex-wrap: wrap; }
   .hud-button { font-size: 9px; padding: 5px 6px; }
   .hud-bottom { grid-template-columns: 1fr; bottom: 12px; left: 12px; right: 12px; gap: 10px; }
   .convoy-panel { width: 200px; padding: 6px 10px; }

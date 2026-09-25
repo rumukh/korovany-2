@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
 import { createCampaign, type GameSnapshot } from "../src/game";
+import { translate } from "../src/ui/locale";
 import { FactionStoryDriver } from "./faction-driver";
 import { closeTestBrowser } from "./browser-cleanup";
 import {
@@ -443,5 +444,67 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller-owned DOM navig
     expect(await run("return [...document.querySelectorAll('.action-slot kbd')].map(node => node.textContent);")).toEqual(["RT", "B", "Y"]);
     await run("window.ui.feedback({active:false});");
     expect(await run("return [...document.querySelectorAll('.action-slot kbd')].map(node => node.textContent);")).toEqual(["Пробел", "Q", "F"]);
+  });
+
+  it("stacks controller notices below the HUD controls without covering HUD elements", async () => {
+    const resize = (width: number, height: number) => cdp.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: false });
+    const layout = () => run<{ notice: string; warning?: string; announced: string; live: number[]; covered: string[] }>(`
+      const box = node => node && node.getClientRects().length ? node.getBoundingClientRect() : null;
+      const overlaps = (a, b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0.5 &&
+        Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0.5;
+      const notice = document.querySelector('.hud-controller-status'), status = document.querySelector('.controller-status');
+      const rail = [document.querySelector('.minimap'), ...document.querySelectorAll('.hud-controls > button'), notice];
+      const hud = document.querySelectorAll('.hero-panel, .objective, .objective > *, .convoy-panel, .action-panel > *, .journal');
+      const covered = [];
+      rail.forEach((node, index) => {
+        const rect = box(node);
+        for (const other of [...rail.slice(index + 1), ...(node === notice ? hud : [])]) {
+          const target = box(other);
+          if (rect && target && overlaps(rect, target)) covered.push(node.className + ' covers ' + other.className + ': ' + other.textContent.slice(0, 40));
+        }
+      });
+      const live = status.hidden ? [] : [status.getBoundingClientRect().width, status.getBoundingClientRect().height];
+      return { notice: box(notice) ? notice.textContent : '', warning: notice.dataset.warning, announced: status.textContent, live, covered };
+    `);
+    await run("window.ui.show(null);");
+    try {
+      for (const language of ["en", "ru"] as const) {
+        await run(`
+          const state = {...window.ui.state, settings:{...window.ui.state.settings, language:${JSON.stringify(language)}}};
+          window.ui.shell.setState(state); Object.assign(window.ui.state, state);
+        `);
+        const ready = translate(language, "controller.ready");
+        for (const [width, height] of [[1920, 1080], [1280, 720], [1100, 700], [960, 640], [760, 600], [720, 450], [430, 900]] as const) {
+          await resize(width, height);
+          const result = await layout();
+          const context = JSON.stringify({ language, width, height, ...result });
+          expect(result.covered, context).toEqual([]);
+          expect(result.notice, context).toBe(ready);
+          expect(result.announced, context).toBe(ready);
+          // The live region still announces during play, but only the HUD rail copy occupies space.
+          expect(result.live.length === 2 && Math.max(...result.live) <= 1, context).toBe(true);
+        }
+        await run("window.ui.feedback({armed:false,audioLocked:true});");
+        for (const [width, height] of [[1280, 720], [960, 640]] as const) {
+          await resize(width, height);
+          const result = await layout();
+          const context = JSON.stringify({ language, width, height, ...result });
+          expect(result.covered, context).toEqual([]);
+          expect(result.notice, context).toContain(translate(language, "controller.rearm"));
+          expect(result.notice, context).toContain(translate(language, "controller.audio"));
+          expect(result.warning, context).toBe("true");
+          expect(result.announced, context).toBe(result.notice);
+        }
+        await run("window.ui.feedback({armed:true,audioLocked:false});");
+      }
+      await run("window.ui.show('pause');");
+      const paused = await layout();
+      expect(paused.notice).toBe("");
+      expect(paused.announced).toBe(translate("ru", "controller.ready"));
+      expect(paused.live[0]).toBeGreaterThan(100);
+      expect(paused.live[1]).toBeGreaterThan(20);
+    } finally {
+      await resize(1280, 800);
+    }
   });
 });

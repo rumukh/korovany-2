@@ -71,8 +71,10 @@ export class GameShell {
   private readonly hud = element("div", "hud");
   private readonly hudTop = element("div", "hud-top");
   private readonly hudBottom = element("div", "hud-bottom");
+  private readonly hudRail = element("div", "hud-rail");
   private readonly minimap = element("button", "minimap");
   private readonly controls = element("div", "hud-controls");
+  private readonly hudControllerStatus = element("div", "hud-controller-status");
   private readonly overlayHost = element("div", "overlay-host");
   private readonly warnings = element("div", "warnings");
   private readonly live = element("div", "sr-only");
@@ -109,10 +111,14 @@ export class GameShell {
     this.controllerStatus.hidden = true;
     this.controllerStatus.setAttribute("role", "status");
     this.controllerStatus.setAttribute("aria-live", "polite");
+    // A visual copy that flows below the HUD controls; the live region above announces the same text.
+    this.hudControllerStatus.hidden = true;
+    this.hudControllerStatus.setAttribute("aria-hidden", "true");
     this.confirmationHost.hidden = true;
     this.minimap.type = "button";
     this.minimap.addEventListener("click", () => dispatch({ type: "overlay", overlay: "map" }));
-    this.hud.append(this.hudTop, this.minimap, this.hudBottom, this.controls);
+    this.hudRail.append(this.minimap, this.controls, this.hudControllerStatus);
+    this.hud.append(this.hudTop, this.hudRail, this.hudBottom);
     this.voiceCaption.setAttribute("aria-live", "polite");
     this.voiceCaption.setAttribute("aria-atomic", "true");
     root.replaceChildren(this.canvas, this.hud, this.overlayHost, this.warnings, this.live, this.voiceCaption, this.controllerStatus, this.confirmationHost);
@@ -323,10 +329,13 @@ export class GameShell {
     else if (feedback.active && feedback.connected) statusKey = "controller.ready";
     let text = statusKey ? this.t(statusKey) : "";
     if (feedback.active && feedback.audioLocked) text += `${text ? " · " : ""}${this.t("controller.audio")}`;
-    this.controllerStatus.hidden = !text;
+    const warning = String(Boolean(statusKey && statusKey !== "controller.ready") || feedback.active && feedback.audioLocked);
     this.controllerStatus.dataset.overlay = String(this.currentOverlay !== null);
-    this.controllerStatus.dataset.warning = String(Boolean(statusKey && statusKey !== "controller.ready") || feedback.active && feedback.audioLocked);
-    if (this.controllerStatus.textContent !== text) this.controllerStatus.textContent = text;
+    for (const node of [this.controllerStatus, this.hudControllerStatus]) {
+      node.hidden = !text;
+      node.dataset.warning = warning;
+      if (node.textContent !== text) node.textContent = text;
+    }
   }
 
   private applyLanguage(): void {
