@@ -3,10 +3,61 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { factionColors, palette, type ViewFaction } from './palette';
 import { beam, joint, part, shapeGeometry } from './primitives';
 import { ViewResources } from './resources';
+import { CharacterInstance, type LoadedModel } from './models';
 
-export type ActorLook = 'hero' | 'guard' | 'archer' | 'brute' | 'boss';
+export type ActorLook = 'hero' | 'archer' | 'brute' | 'boss';
 export type ViewAllegiance = 'friendly' | 'hostile' | 'neutral';
 const leather = '#594735';
+
+function allegianceOf(affiliation: boolean | ViewAllegiance): ViewAllegiance {
+  return typeof affiliation === 'boolean' ? affiliation ? 'friendly' : 'hostile' : affiliation;
+}
+
+/** Uniform colour rules shared by procedural and modelled soldiers; allegiance is shown by rings, not coats. */
+export function coatColor(look: ActorLook | 'soldier', faction: ViewFaction, affiliation: boolean | ViewAllegiance): string {
+  const allegiance = allegianceOf(affiliation);
+  return look === 'hero' || allegiance === 'friendly' || affiliation === 'hostile' ? factionColors[faction]
+    : allegiance === 'neutral' ? palette.stone : look === 'boss' ? palette.villain : palette.hostile;
+}
+
+function allegianceRing(resources: ViewResources, root: THREE.Object3D, allegiance: ViewAllegiance, scale: number): void {
+  if (allegiance === 'hostile') return;
+  const ring = new THREE.Mesh(shapeGeometry(resources, 'ring'),
+    resources.material(allegiance === 'friendly' ? palette.teal : palette.stone, { unlit: true }));
+  ring.name = 'allegiance-ring';
+  ring.scale.setScalar(1.35 * scale);
+  ring.position.y = 0.065;
+  root.add(ring);
+}
+
+export interface ModelActor {
+  root: THREE.Group;
+  height: number;
+  character: CharacterInstance;
+}
+
+/** The cooked line soldier for every faction's `soldier` actor, dyed by faction without extra shaders. */
+export function createModelSoldier(
+  resources: ViewResources, model: LoadedModel, faction: ViewFaction, affiliation: boolean | ViewAllegiance, startDead = false,
+): ModelActor {
+  const root = new THREE.Group();
+  const allegiance = allegianceOf(affiliation);
+  root.userData.allegiance = allegiance;
+  const coat = coatColor('soldier', faction, affiliation);
+  let body: THREE.Material | undefined;
+  let items: THREE.Material | undefined;
+  model.scene.traverse(object => {
+    if (!(object instanceof THREE.Mesh) || Array.isArray(object.material)) return;
+    if (object instanceof THREE.SkinnedMesh) body ??= object.material;
+    else items ??= object.material;
+  });
+  if (!body || !items) throw new Error(`Model ${model.id} is missing its body or item material.`);
+  const character = new CharacterInstance(model,
+    { body: resources.dyed(body, coat), items: resources.dyed(items, coat), depth: resources.modelDepthMaterial() }, startDead);
+  root.add(character.root);
+  allegianceRing(resources, root, allegiance, 1);
+  return { root, height: model.bounds.max.y + 0.22, character };
+}
 
 export interface ActorPose {
   moving: number;
@@ -26,18 +77,17 @@ export interface ActorModel {
 
 export function createActor(resources: ViewResources, look: ActorLook, faction: ViewFaction, affiliation: boolean | ViewAllegiance = false): ActorModel {
   const root = new THREE.Group();
-  const allegiance = typeof affiliation === 'boolean' ? affiliation ? 'friendly' : 'hostile' : affiliation;
+  const allegiance = allegianceOf(affiliation);
   root.userData.allegiance = allegiance;
   const large = look === 'brute' || look === 'boss';
   const hero = look === 'hero';
   const scale = look === 'boss' ? 1.7 : large ? 1.2 : 1;
-  const coat = hero || allegiance === 'friendly' || affiliation === 'hostile' ? factionColors[faction]
-    : allegiance === 'neutral' ? palette.stone : look === 'boss' ? palette.villain : palette.hostile;
+  const coat = coatColor(look, faction, affiliation);
   const body = joint(root, [0, 0, 0]);
   body.scale.setScalar(scale);
   const hips = joint(body, [0, 0.75, 0]);
   const torso = joint(body, [0, 1.1, 0]);
-  const armored = large || look === 'guard' || (hero && faction !== 'elf');
+  const armored = large || (hero && faction !== 'elf');
   const ranger = (hero && faction === 'elf') || look === 'archer';
   const sinister = (hero && faction === 'villain') || look === 'boss';
   body.name = 'actor-body';
@@ -83,12 +133,7 @@ export function createActor(resources: ViewResources, look: ActorLook, faction: 
     inner.position.y = 0.068;
     root.add(inner);
   } else if (allegiance !== 'hostile') {
-    const ring = new THREE.Mesh(shapeGeometry(resources, 'ring'),
-      resources.material(allegiance === 'friendly' ? palette.teal : palette.stone, { unlit: true }));
-    ring.name = 'allegiance-ring';
-    ring.scale.setScalar(1.35 * scale);
-    ring.position.y = 0.065;
-    root.add(ring);
+    allegianceRing(resources, root, allegiance, scale);
   }
 
   if (ranger) {
@@ -203,7 +248,7 @@ export interface WagonModel {
 
 export function createWagon(resources: ViewResources, affiliation: boolean | ViewAllegiance): WagonModel {
   const root = new THREE.Group();
-  const allegiance = typeof affiliation === 'boolean' ? affiliation ? 'friendly' : 'hostile' : affiliation;
+  const allegiance = allegianceOf(affiliation);
   root.userData.allegiance = allegiance;
   const cart = joint(root, [0, 0, 0]);
   const wheels: THREE.Group[] = [];

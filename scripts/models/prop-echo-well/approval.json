@@ -1,0 +1,29 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "prop-echo-well",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "A - weathered shrine well, seed 5101 (Recommended)",
+      "decidedAt": "2026-09-26T21:12:43.2220689+02:00",
+      "question": "Gate 1, Echo Well: which concept should go to TRELLIS?",
+      "sha256": "320fd98304d0239b0428c2eb61e62da08c7f12356cdb46efe0e78ccc0a8e37bf",
+      "approvedFileSha256": "b83b9319e2795e6e717d97a6ee13fb71645a03c3fb3975f28c1f691938014c3b",
+      "pixelSha256": "2b44a34566c73597071401135e44072887c7d0c15d685665c49250332b2dadf5"
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve hd-s42 for cooking (Recommended)",
+      "decidedAt": "2026-09-26T21:44:42.8085988+02:00",
+      "question": "Gate 2, Echo Well: approve a candidate for cooking, regenerate with a new seed, or revise the concept?",
+      "sha256": "3277e51462444c5fa90adf9f3aa6e78f70c44e803b192e95f06bb34ad3908716"
+    },
+    {
+      "gate": "in-game",
+      "decision": "Approve both for shipping",
+      "decidedAt": "2026-09-27T10:37:54+00:00",
+      "question": "Gate 3 final approval: ship the line soldier (cook-015) and the Echo Well to main, as shown in the running game (review board _reviews/gate3/board.json and a playable build of the same code)?",
+      "sha256": "888827c4da0083eb0398762c63e5d2cfb5812b654dd94da22cb96468bb02b1ba"
+    }
+  ]
+}

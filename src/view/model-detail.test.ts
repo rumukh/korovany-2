@@ -37,9 +37,9 @@ describe('crafted frontier models', () => {
     };
     try {
       for (const allegiance of affiliations) {
-        const actor = createActor(resources, 'guard', 'villain', allegiance);
+        const actor = createActor(resources, 'brute', 'villain', allegiance);
         expect(actor.root.userData.allegiance).toBe(allegiance);
-        expect(actor.root.getObjectByName('actor-shield')).toBeDefined();
+        expect(actor.root.getObjectByName('actor-hammer')).toBeDefined();
         expect(Boolean(actor.root.getObjectByName('allegiance-ring'))).toBe(allegiance !== 'hostile');
         expect(meshes(actor.root).filter(part => part.geometry instanceof THREE.IcosahedronGeometry).length).toBeGreaterThan(12);
         expect(meshes(actor.root).every(mesh => mesh.customDepthMaterial === resources.depthMaterial()
@@ -68,7 +68,7 @@ describe('crafted frontier models', () => {
       expect(resources.textureStatus.pending).toBe(0);
       expect(resources.textureStatus.error).toBeNull();
       const count = textures.length;
-      createActor(resources, 'guard', 'villain', 'friendly');
+      createActor(resources, 'brute', 'villain', 'friendly');
       createWagon(resources, 'friendly');
       expect(textures).toHaveLength(count);
       const disposed = vi.fn();
@@ -83,7 +83,7 @@ describe('crafted frontier models', () => {
 
   test('keeps rounded faction rigs bounded and resets animated poses without reallocating meshes', () => {
     const resources = new ViewResources();
-    const looks: ActorLook[] = ['hero', 'guard', 'archer', 'brute', 'boss'];
+    const looks: ActorLook[] = ['hero', 'archer', 'brute', 'boss'];
     for (const faction of ['elf', 'guard', 'villain'] as const) {
       for (const look of looks) {
         const actor = createActor(resources, look, faction, true);

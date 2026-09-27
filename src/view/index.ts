@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { ActorSnapshot, GameSnapshot, OutpostSnapshot, WorldBlueprint } from '../game/types';
-import { createActor, createWagon, type ActorLook, type ActorModel, type ViewAllegiance, type WagonModel } from './actors';
+import { createActor, createModelSoldier, createWagon, type ActorLook, type ActorModel, type ViewAllegiance, type WagonModel } from './actors';
 import { FollowCamera, type GroundPoint, type MovementBasis } from './camera';
 import { WorldEffects } from './effects';
 import { factionColors, palette } from './palette';
@@ -10,13 +10,41 @@ import { WorldResidents } from './residents';
 import { createWorldScenery, type WorldScenery } from './world';
 import { lightWorld, positionSun, skyEnvironment } from './atmosphere';
 import { WorldPostprocessing } from './postprocessing';
+import { gltfModelSource, ModelLibrary, propInstance, type CharacterInstance, type ModelStatus } from './models';
 
 export type { GroundPoint, MovementBasis } from './camera';
+export type { ModelStatus } from './models';
 export type ViewQuality = 'low' | 'high';
+
+/** Result of compiling the cooked-model programs before gameplay. */
+export interface ModelWarmup {
+  programsBefore: number;
+  programsAfter: number;
+  milliseconds: number;
+}
 
 export interface GameViewOptions {
   quality?: ViewQuality;
   reducedMotion?: boolean;
+  /** Page-lifetime model library; created and owned by the view when omitted. */
+  models?: ModelLibrary;
+  /**
+   * Page-lifetime renderer from `createRenderer`, shared by successive views so cooked-model uploads and shader
+   * programs survive a world change. Created and owned by the view when omitted; a borrowed renderer is never
+   * disposed by the view.
+   */
+  renderer?: THREE.WebGLRenderer;
+}
+
+/** The game's WebGL 2 renderer for `canvas`. Share one across successive views and dispose it after the last. */
+export function createRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
+  try {
+    const context = canvas.getContext('webgl2', { alpha: false, antialias: true, powerPreference: 'high-performance' });
+    if (!context) throw new Error('WebGL 2 is not available in this browser.');
+    return new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: false });
+  } catch (cause) {
+    throw new Error('Korovany II could not start its 3D renderer. Enable hardware acceleration and WebGL 2, then reload.', { cause });
+  }
 }
 
 export interface GameView {
@@ -32,6 +60,10 @@ export interface GameView {
   zoom(delta: number): void;
   setQuality(quality: ViewQuality): void;
   setReducedMotion(reducedMotion: boolean): void;
+  /** Model loading state. Nothing is presented until every model is ready; failures are thrown by `render`. */
+  readonly models: ModelStatus;
+  /** The latest cooked-model shader warm-up (after a presentation is built or quality changes), if any. */
+  readonly warmup: ModelWarmup | undefined;
   dispose(): void;
 }
 
@@ -44,6 +76,7 @@ interface ActorVisual {
   appearance: string;
   root: THREE.Group;
   actor?: ActorModel;
+  character?: CharacterInstance;
   wagon?: WagonModel;
   bar: HealthBar;
   tell: THREE.Group;
@@ -51,6 +84,7 @@ interface ActorVisual {
   tellLine: THREE.Mesh;
   lastX: number;
   lastZ: number;
+  lastHp: number;
   speed: number;
   state: string;
   stateDuration: number;
@@ -123,6 +157,7 @@ export class Presentation {
   private convoyDistance = 0;
   private convoySpeed = 0;
   private cosmeticTime = 0;
+  private sinceTick = 0;
 
   constructor(readonly world: WorldBlueprint, readonly resources = new ViewResources(), environment?: THREE.Texture) {
     this.scenery = createWorldScenery(this.resources, world);
@@ -160,24 +195,105 @@ export class Presentation {
     this.sun.castShadow = !low;
   }
 
-  private makeActor(snapshot: ActorSnapshot): ActorVisual {
+  /**
+   * Compiles every cooked-model shader program before gameplay (aegis-engine #6): the skinned, dyed soldier body,
+   * its items, the Echo Well and their shadow-depth variants, with this scene's real lights, fog, environment and
+   * quality. Temporary instances are placed at (x, z) and drawn alone: every other renderable is hidden for the
+   * warm-up, so the main and shadow passes cost almost nothing while the lights, fog, environment and output path
+   * that decide program keys stay those of a real frame. `draw` renders with the real frame's state (it may shade
+   * almost no pixels), then the instances are removed and the scene restored. Call it in the same task as the real
+   * frame so no warm-up pixel reaches the screen. Returns the renderer's program count before and after, and the
+   * time spent.
+   */
+  warmModels(renderer: THREE.WebGLRenderer, x: number, z: number, draw: () => void): ModelWarmup {
+    const started = performance.now();
+    const programsBefore = renderer.info.programs?.length ?? 0;
+    const soldierModel = this.resources.model('char-line-soldier');
+    const wellModel = this.resources.model('prop-echo-well');
+    if (!soldierModel || !wellModel) return { programsBefore, programsAfter: programsBefore, milliseconds: 0 };
+    const group = new THREE.Group();
+    group.name = 'model-warmup';
+    // A complete soldier visual (model, allegiance ring, health bar and attack tell), exactly as gameplay shows one.
+    const actor = {
+      id: 'model-warmup', kind: 'soldier', faction: 'guard', allegiance: 'friendly', x: x + 1.5, z: z + 1.5, heading: 0,
+      hp: 1, maxHp: 2, state: 'windup', stateTime: 0.25, radius: 0.7, attackRange: 2.3,
+    } as unknown as ActorSnapshot;
+    const visual = this.makeActor(actor, false);
+    visual.root.position.set(actor.x, 0.08, actor.z);
+    visual.bar.root.visible = true;
+    visual.tell.visible = true;
+    visual.tell.position.set(actor.x, 0, actor.z);
+    const well = propInstance(wellModel, this.resources.modelDepthMaterial(), 2.8);
+    well.position.set(x - 2.5, 0.08, z + 2.5);
+    group.add(well);
+    this.scene.add(group);
+    const warming = new Set<THREE.Object3D>();
+    for (const root of [group, visual.root, visual.bar.root, visual.tell]) root.traverse(object => warming.add(object));
+    const hidden: THREE.Object3D[] = [];
+    this.scene.traverseVisible(object => {
+      const drawn = object as THREE.Object3D & { isMesh?: boolean; isLine?: boolean; isPoints?: boolean; isSprite?: boolean };
+      if ((drawn.isMesh || drawn.isLine || drawn.isPoints || drawn.isSprite) && !warming.has(object)) hidden.push(object);
+    });
+    for (const object of hidden) object.visible = false;
+    try {
+      // Two draws: the shared shadow-depth material picks its program in draw order, and one draw was measured to
+      // miss two depth variants that the first soldier would then compile (models-browser program-growth test).
+      draw();
+      draw();
+    } finally {
+      for (const object of hidden) object.visible = true;
+      group.removeFromParent();
+      this.removeActor(actor.id, visual);
+    }
+    return { programsBefore, programsAfter: renderer.info.programs?.length ?? 0, milliseconds: performance.now() - started };
+  }
+
+  private makeActor(snapshot: ActorSnapshot, dead: boolean): ActorVisual {
     const affiliation = snapshot.allegiance ?? false;
-    const actor = snapshot.kind === 'caravan' ? undefined : createActor(this.resources,
-      ({ soldier: 'guard', archer: 'archer', captain: 'brute', boss: 'boss' } satisfies Record<Exclude<ActorSnapshot['kind'], 'caravan'>, ActorLook>)[snapshot.kind],
-      snapshot.faction, affiliation);
+    let actor: ActorModel | undefined;
+    let character: CharacterInstance | undefined;
+    let root: THREE.Group | undefined;
+    let height = 2.95;
+    if (snapshot.kind === 'soldier') {
+      const model = this.resources.model('char-line-soldier');
+      if (model) {
+        const soldier = createModelSoldier(this.resources, model, snapshot.faction, affiliation, dead);
+        character = soldier.character;
+        root = soldier.root;
+        height = soldier.height;
+      } else {
+        // DOM-free geometry tests construct resources without models; browser views always have them.
+        root = new THREE.Group();
+        root.userData.allegiance = typeof affiliation === 'boolean' ? affiliation ? 'friendly' : 'hostile' : affiliation;
+        height = 2.47;
+      }
+    } else if (snapshot.kind !== 'caravan') {
+      actor = createActor(this.resources,
+        ({ archer: 'archer', captain: 'brute', boss: 'boss' } satisfies Record<Exclude<ActorSnapshot['kind'], 'caravan' | 'soldier'>, ActorLook>)[snapshot.kind],
+        snapshot.faction, affiliation);
+      root = actor.root;
+      height = actor.height;
+    }
     const wagon = snapshot.kind === 'caravan' ? createWagon(this.resources, affiliation) : undefined;
-    const root = actor?.root ?? wagon?.root;
+    root ??= wagon?.root;
     if (!root) throw new Error(`Unsupported actor kind: ${snapshot.kind}`);
     root.name = `actor:${snapshot.id}`;
     this.scene.add(root);
-    const bar = healthBar(this.resources, root, actor?.height ?? 2.95, affiliation);
+    const bar = healthBar(this.resources, root, height, affiliation);
     const tell = createTell(this.resources, this.scene);
     tell.group.name = `tell:${snapshot.id}`;
     return {
       appearance: `${snapshot.kind}:${snapshot.faction}:${snapshot.allegiance ?? 'legacy'}`,
-      root, actor, wagon, bar, tell: tell.group, tellRing: tell.ring, tellLine: tell.line,
-      lastX: snapshot.x, lastZ: snapshot.z, speed: 0, state: snapshot.state, stateDuration: snapshot.stateTime,
+      root, actor, character, wagon, bar, tell: tell.group, tellRing: tell.ring, tellLine: tell.line,
+      lastX: snapshot.x, lastZ: snapshot.z, lastHp: snapshot.hp, speed: 0, state: snapshot.state, stateDuration: snapshot.stateTime,
     };
+  }
+
+  private removeActor(id: string, visual: ActorVisual): void {
+    visual.character?.dispose();
+    visual.root.removeFromParent();
+    visual.tell.removeFromParent();
+    this.actorVisuals.delete(id);
   }
 
   private makePost(post: OutpostSnapshot): PostVisual {
@@ -293,22 +409,25 @@ export class Presentation {
     }
     const activeIds = new Set<string>();
     let corpses = 0;
+    if (tickChanged) this.sinceTick = 0;
+    else this.sinceTick += dt;
+    const storyOpen = Boolean(snapshot.narrative?.dialogue || snapshot.narrative?.inspection);
+    // A stalled tick means the shell paused the simulation: never run in place.
+    const paused = storyOpen || snapshot.phase !== 'playing' || this.sinceTick > 0.1;
     for (const actor of snapshot.actors) {
       activeIds.add(actor.id);
       let visual = this.actorVisuals.get(actor.id);
       const appearance = `${actor.kind}:${actor.faction}:${actor.allegiance ?? 'legacy'}`;
+      const disabledShipment = snapshot.campaign?.shipment.targetId === actor.id && actor.state !== 'dead' && actor.hp <= 0;
+      const dead = actor.state === 'dead' || (actor.hp <= 0 && !disabledShipment);
       if (visual && visual.appearance !== appearance) {
-        visual.root.removeFromParent();
-        visual.tell.removeFromParent();
-        this.actorVisuals.delete(actor.id);
+        this.removeActor(actor.id, visual);
         visual = undefined;
       }
       if (!visual) {
-        visual = this.makeActor(actor);
+        visual = this.makeActor(actor, dead);
         this.actorVisuals.set(actor.id, visual);
       }
-      const disabledShipment = snapshot.campaign?.shipment.targetId === actor.id && actor.state !== 'dead' && actor.hp <= 0;
-      const dead = actor.state === 'dead' || (actor.hp <= 0 && !disabledShipment);
       if (dead) corpses += 1;
       visual.root.visible = !dead || corpses <= 8;
       visual.root.position.set(actor.x, 0.08, actor.z);
@@ -325,6 +444,17 @@ export class Presentation {
         visual.stateDuration = actor.stateTime;
       }
       const progress = THREE.MathUtils.clamp(1 - actor.stateTime / Math.max(visual.stateDuration, 0.01), 0, 1);
+      const hit = tickChanged && actor.hp < visual.lastHp;
+      if (tickChanged) visual.lastHp = actor.hp;
+      visual.character?.update({
+        state: dead ? 'dead' : actor.state === 'windup' || actor.state === 'attack' || actor.state === 'recovery' ? actor.state
+          : !paused && visual.speed > 0.35 ? 'move' : 'idle',
+        progress,
+        speed: paused ? 0 : visual.speed,
+        hit,
+        relaxed: storyOpen,
+        reducedMotion,
+      }, dt);
       visual.actor?.animate({
         moving: visual.speed / 4,
         time: snapshot.elapsed,
@@ -350,9 +480,7 @@ export class Presentation {
     }
     for (const [id, visual] of this.actorVisuals) {
       if (activeIds.has(id)) continue;
-      visual.root.removeFromParent();
-      visual.tell.removeFromParent();
-      this.actorVisuals.delete(id);
+      this.removeActor(id, visual);
     }
 
     for (const post of snapshot.outposts) {
@@ -377,6 +505,7 @@ export class Presentation {
   }
 
   dispose(): void {
+    for (const visual of this.actorVisuals.values()) visual.character?.dispose();
     this.effects.dispose();
     this.residents.dispose();
     this.scenery.dispose();
@@ -389,29 +518,51 @@ export class Presentation {
 }
 
 /**
+ * Renders `scene` with a real frame's lights, fog, shadow maps and output path while shading almost no pixels, so a
+ * shader warm-up pays for program compilation, not for extra full frames (SwiftShader and low-end GPUs). Program keys
+ * depend on whether a frame renders into a target, not on its size: pass a tiny `target` when real frames render
+ * through post-processing, or null when they render straight to the canvas.
+ */
+export function compileFrame(
+  renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera, target: THREE.WebGLRenderTarget | null,
+): void {
+  if (target) {
+    const previous = renderer.getRenderTarget();
+    renderer.setRenderTarget(target);
+    renderer.render(scene, camera);
+    renderer.setRenderTarget(previous);
+    return;
+  }
+  const scissor = renderer.getScissor(new THREE.Vector4());
+  const scissorTest = renderer.getScissorTest();
+  renderer.setScissor(0, 0, 1, 1);
+  renderer.setScissorTest(true);
+  renderer.render(scene, camera);
+  renderer.setScissor(scissor);
+  renderer.setScissorTest(scissorTest);
+}
+
+/**
  * Browser-only Three presenter. It owns GPU resources, not input, RAF or game rules.
  * A changed world/run/faction rebuilds the mirror and releases the previous run.
+ * Nothing is presented until every cooked model is loaded; a load failure is thrown by `render`.
  * Import from this module, never from the Aegis Node renderer entry point.
  */
 export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBlueprint, options: GameViewOptions = {}): GameView {
-  let renderer: THREE.WebGLRenderer;
-  try {
-    const context = canvas.getContext('webgl2', { alpha: false, antialias: true, powerPreference: 'high-performance' });
-    if (!context) throw new Error('WebGL 2 is not available in this browser.');
-    renderer = new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: false });
-  } catch (cause) {
-    throw new Error('Korovany II could not start its 3D renderer. Enable hardware acceleration and WebGL 2, then reload.', { cause });
-  }
+  const ownsRenderer = options.renderer === undefined;
+  const renderer = options.renderer ?? createRenderer(canvas);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.setClearColor(palette.ink);
   const camera = new FollowCamera(canvas);
-  const createResources = () => new ViewResources(new THREE.TextureLoader(), renderer.capabilities.getMaxAnisotropy());
-  let presentation = new Presentation(blueprint, createResources());
-  const environment = skyEnvironment(renderer, presentation.scenery.group);
-  presentation.scene.environment = environment.texture;
+  const ownsModels = options.models === undefined;
+  const models = options.models ?? new ModelLibrary(gltfModelSource());
+  const createResources = () => new ViewResources(new THREE.TextureLoader(), renderer.capabilities.getMaxAnisotropy(), models);
+  let presentation: Presentation | undefined;
+  let environment: THREE.WebGLRenderTarget | undefined;
   let postprocessing: WorldPostprocessing | undefined;
   let quality: ViewQuality = options.quality ?? 'high';
   let reducedMotion = options.reducedMotion ?? false;
@@ -420,6 +571,9 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
   let runId: string | undefined;
   let faction: GameSnapshot['faction'] | undefined;
   let lastTick = -1;
+  let needsWarmup = true;
+  let warmup: ModelWarmup | undefined;
+  const warmTarget = new THREE.WebGLRenderTarget(4, 4);
 
   function assertUsable(): void {
     if (disposed) throw new Error('The Korovany II view has already been disposed.');
@@ -436,9 +590,11 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
     postprocessing?.resize(width, height, renderer.getPixelRatio());
   }
   function applyQuality(): void {
-    presentation.setQuality(quality === 'low');
+    presentation?.setQuality(quality === 'low');
     renderer.shadowMap.enabled = quality !== 'low';
-    if (quality === 'low') {
+    // Shadow and post-processing changes alter program keys; recompile the model variants before the next frame.
+    needsWarmup = true;
+    if (quality === 'low' || !presentation) {
       postprocessing?.dispose();
       postprocessing = undefined;
     } else if (!postprocessing) {
@@ -446,6 +602,18 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
       const size = renderer.getSize(new THREE.Vector2());
       postprocessing.resize(size.x, size.y, renderer.getPixelRatio());
     }
+  }
+  function present(world: WorldBlueprint): Presentation {
+    postprocessing?.dispose();
+    postprocessing = undefined;
+    presentation?.dispose();
+    const next = new Presentation(world, createResources(), environment?.texture);
+    environment ??= skyEnvironment(renderer, next.scenery.group);
+    next.scene.environment = environment.texture;
+    presentation = next;
+    camera.reset();
+    applyQuality();
+    return next;
   }
   function onContextLost(event: Event): void {
     event.preventDefault();
@@ -457,29 +625,42 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
   canvas.addEventListener('webglcontextlost', onContextLost);
   canvas.addEventListener('webglcontextrestored', onContextRestored);
   camera.setReducedMotion(reducedMotion);
-  applyQuality();
   resize();
+  if (models.isReady) present(blueprint);
+  else applyQuality();
 
   return {
     render(snapshot, dt): void {
       assertUsable();
       if (!Number.isFinite(dt) || dt < 0) throw new Error('View frame time must be a finite nonnegative number.');
-      if (snapshot.world.id !== presentation.world.id || (runId !== undefined && (runId !== snapshot.runId || faction !== snapshot.faction || snapshot.tick < lastTick))) {
-        postprocessing?.dispose();
-        postprocessing = undefined;
-        presentation.dispose();
-        presentation = new Presentation(snapshot.world, createResources(), environment.texture);
-        camera.reset();
-        applyQuality();
+      models.assert();
+      if (!models.isReady) {
+        renderer.setRenderTarget(null);
+        renderer.clear();
+        return;
+      }
+      let current = presentation;
+      if (!current || snapshot.world.id !== current.world.id
+        || (runId !== undefined && (runId !== snapshot.runId || faction !== snapshot.faction || snapshot.tick < lastTick))) {
+        current = present(snapshot.world);
       }
       runId = snapshot.runId;
       faction = snapshot.faction;
       lastTick = snapshot.tick;
       const frameDt = Math.min(dt, 0.1);
       camera.update(snapshot.player, frameDt);
-      presentation.update(snapshot, frameDt, camera.camera, reducedMotion);
-      if (postprocessing) postprocessing.render();
-      else renderer.render(presentation.scene, camera.camera);
+      current.update(snapshot, frameDt, camera.camera, reducedMotion);
+      const draw = (): void => {
+        if (postprocessing) postprocessing.render();
+        else renderer.render(current.scene, camera.camera);
+      };
+      if (needsWarmup) {
+        // Same task as the real frame below, which overwrites any warm-up pixel before the canvas is presented.
+        warmup = current.warmModels(renderer, snapshot.player.x, snapshot.player.z,
+          () => compileFrame(renderer, current.scene, camera.camera, postprocessing ? warmTarget : null));
+        needsWarmup = false;
+      }
+      draw();
     },
     getMoveBasis: () => camera.getMoveBasis(),
     screenToWorld: (clientX, clientY) => camera.screenToWorld(clientX, clientY),
@@ -504,15 +685,27 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
       reducedMotion = value;
       camera.setReducedMotion(value);
     },
+    get models(): ModelStatus {
+      return models.status;
+    },
+    get warmup(): ModelWarmup | undefined {
+      return warmup;
+    },
     dispose(): void {
       if (disposed) return;
       disposed = true;
       canvas.removeEventListener('webglcontextlost', onContextLost);
       canvas.removeEventListener('webglcontextrestored', onContextRestored);
-      presentation.dispose();
+      presentation?.dispose();
       postprocessing?.dispose();
-      environment.dispose();
-      renderer.dispose();
+      environment?.dispose();
+      warmTarget.dispose();
+      if (ownsModels) models.dispose();
+      if (ownsRenderer) {
+        // A borrowed library's GPU copies belong to this renderer; release them before it goes away.
+        if (!ownsModels) models.releaseGpu();
+        renderer.dispose();
+      }
     },
   };
 }

@@ -19,6 +19,7 @@ import { FollowCamera } from '/src/view/camera.ts';
 import { lightWorld, positionSun, skyEnvironment } from '/src/view/atmosphere.ts';
 import { WorldPostprocessing } from '/src/view/postprocessing.ts';
 import { createActor, createWagon } from '/src/view/actors.ts';
+import { part } from '/src/view/primitives.ts';
 const world = generateWorld('view-frontier');
 const resources = new ViewResources(new THREE.TextureLoader(),8);
 const scenery = createWorldScenery(resources, world);
@@ -47,6 +48,16 @@ let instanceCount = 0;
 scenery.group.traverse(object => {
   if (object.isInstancedMesh) { instanceCount++; object.addEventListener('dispose',()=>disposedInstances++); }
 });
+// The cooked Echo Well replaced the procedural wells whose instanced cloth banners were this scenery-only preview's
+// ordinary users of the fort cutaway's double-sided program; one ordinary instanced banner keeps the sharing check
+// below meaningful.
+const bannerSite = world.exploration.locations.find(place=>place.id==='roadward');
+const bannerPart = part(resources,new THREE.Group(),'cloth','#b7d5ac',[0,0,0],[1,1,1]);
+const banner = new THREE.InstancedMesh(bannerPart.geometry,bannerPart.material,1);
+banner.setMatrixAt(0,new THREE.Matrix4().compose(new THREE.Vector3(bannerSite.x+1.5,0.6,bannerSite.z+1.5),new THREE.Quaternion(),new THREE.Vector3(0.4,0.5,1)));
+banner.castShadow = true;
+banner.customDepthMaterial = bannerPart.customDepthMaterial;
+scenery.group.add(banner);
 function renderLocation(id,low=false) {
   scenery.group.visible = true;
   if (modelStage) modelStage.visible = false;

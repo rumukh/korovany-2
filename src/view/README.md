@@ -1,6 +1,6 @@
 # Game-owned Three presentation
 
-Import `createGameView`, `GameView` and `GameViewOptions` from `src/view/index.ts`.
+Import `createGameView`, `createRenderer`, `GameView` and `GameViewOptions` from `src/view/index.ts`.
 The browser presenter imports Three directly, never the Node-only engine renderer.
 
 ```ts
@@ -23,7 +23,7 @@ view.render(campaign.snapshot(), frameSeconds);
 | `resize()` | Matches the drawing buffer to the canvas CSS dimensions, without changing CSS. |
 | `setQuality('low' \| 'high')` | Low caps DPR at 1, disables shadows, grasses and ambient motes, simplifies tree crowns and releases HDR postprocessing buffers; high caps DPR at 1.75 and enables subtle bloom with multisampled HDR targets. Generated textures remain in both modes. |
 | `setReducedMotion(boolean)` | Removes camera lag, ambient motes, water/cape flourishes and dodge trails; reduces gait animation. |
-| `dispose()` | Idempotently releases shared geometry/materials/textures, the sky reflection environment, shadow and HDR buffers, instance buffers, renderer resources and owned canvas listeners. |
+| `dispose()` | Idempotently releases shared geometry/materials/textures, the sky reflection environment, shadow and HDR buffers, instance buffers, renderer resources and owned canvas listeners. A renderer passed in `GameViewOptions.renderer` is borrowed and left for its owner to dispose. |
 
 The shell owns RAF, keyboard/pointer/wheel input, pause, canvas layout and recovery
 UI. WebGL 2 creation/context-loss errors are explicit exceptions. There are no
@@ -115,3 +115,59 @@ Shadow depth materials are game-owned as well as visible materials, so changing
 runs releases their shader programs rather than retaining Three's implicit shadow
 materials. Outpost ownership and deliveries change their heraldry; fortress
 heraldry distinguishes locked, unlocked and defeated states without a false gate.
+
+## Cooked 3D models
+
+Two cooked glTF models replace procedural presentation: the line soldier
+(`public/models/char-line-soldier/`), used by every faction's `soldier` actor,
+and the Echo Well (`public/models/prop-echo-well/`), used by the Echo Well and
+the matching Cinderwell structure. `ModelLibrary` (`models.ts`) starts loading
+them through `GLTFLoader` as the page opens, behind the title menu. Until every
+model is ready the world is not drawn and the simulation does not step; a small
+status line says so, and a run started early still captures the mouse from its
+own click and begins on the first frame the player can see. A load failure stops
+on the fatal "assets" panel with the failing URL. There is no primitive fallback;
+only DOM-free geometry tests construct `ViewResources` without models.
+
+Soldier instances are `SkeletonUtils` clones driven by an `AnimationMixer` from
+snapshot state and render time: `Idle`, `AtEase` (while a story scene is open),
+`Run` (moving faster than 0.35 m/s), `Windup`, `Strike` and `Recovery` (scrubbed
+by snapshot progress), an additive `Hit` on health loss, and `Death`, which is held
+as the corpse. Reduced motion freezes the idle breathing and suppresses hit
+reactions. Clips carry no root motion; position, heading, collision and timing stay
+authoritative. Faction and allegiance colour the tabard and shield through one
+dyed material program (`korovany-dye-v1`, dye mask in the base-colour alpha), so
+colour variants add no shader variants. Because that alpha is a mask rather than
+coverage, dye-masked base colour is encoded with libwebp's `exact` option
+(`pipeline/webp_exact.py`): the default lossy mode discards the colour of every
+texel whose alpha is 0, which is every undyed surface. The well scales uniformly
+into its circular blocker and shares one geometry and material across instances.
+
+After a world mirror is built and after every quality change, `createGameView`
+calls `Presentation.warmModels()` in the same task as the next real frame: a
+temporary soldier visual (model, ring, health bar, tell) and well are drawn twice,
+alone, with the scene's real lights, fog, shadow maps and output path, then
+removed, so no model shader compiles when a soldier first appears (aegis-engine
+#6). Every other renderable is hidden for those two draws, and they shade a single
+scissored pixel (`compileFrame`), or a 4×4 target when frames go through
+post-processing, so warming pays for compiling the model programs rather than for
+extra full-scene shadow and vertex passes on software GL. Without
+warming, the first soldier creates seven programs (two dyed lit programs, four
+shadow-depth variants and the shared unlit health-bar program); `GameView.warmup`
+reports the latest warm-up. Instances and skeletons are released with the world
+mirror. The page-lifetime library owns the shared geometry, textures, dyed
+variants and the model shadow-depth material, and `main.ts` passes one renderer
+from `createRenderer()` to every view it creates, so model uploads and model
+programs are paid once per page rather than on every title, faction or run
+change. A view that creates its own renderer releases the library's GPU copies
+(`releaseGpu`) before disposing it.
+
+Each model's concept, recipe, provenance and three approval decisions are in
+`scripts/models/<id>/`, with the Blender cooking scripts in `scripts/models/pipeline/`.
+The models were reconstructed with TRELLIS-image-large, whose textured export
+depends on components licensed for research and evaluation only; no commercial
+clearance exists for this output, and the project owner acknowledged publishing
+it on the public site. `tests/models.test.ts` checks every shipped byte against
+its provenance and verifies every 60 Hz frame of every soldier clip (weights,
+foot contact and sliding, loop closure, clearance, joint scale, rigid parts and
+crease strain), including deliberately broken copies that must fail.

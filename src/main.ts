@@ -3,7 +3,8 @@ import {
   purchaseMetaUpgrade, metaUpgradeCost, MAX_UPGRADE_LEVEL,
   type GameSession, type GameSnapshot, type GameInput as CampaignInput, type MetaProfile, type RunRewards, type UpgradeId, type Vec2,
 } from "./game";
-import { createGameView, type GameView } from "./view";
+import { createGameView, createRenderer, type GameView } from "./view";
+import { gltfModelSource, ModelLibrary } from "./view/models";
 import { Soundscape } from "./audio/soundscape";
 import { AudioPresentation, type SpeechSelection } from "./audio/presentation";
 import { GameInput } from "./ui/input";
@@ -67,6 +68,11 @@ let disposed = false;
 let fatal = false;
 let raf = 0;
 const lifecycle = new AbortController();
+// Cooked models load once per page, before any run is presented; there is no primitive fallback.
+const models = new ModelLibrary(gltfModelSource());
+// One renderer for the page, so model uploads and shader programs survive the title, faction and run changes
+// that replace the world mirror.
+let renderer: ReturnType<typeof createRenderer> | undefined;
 const sound = new Soundscape(() => shell?.warn("audioFailure"), (line) => shell?.caption(line));
 const audio = new AudioPresentation(sound);
 sound.configure(settings.muted, settings.audio);
@@ -190,9 +196,12 @@ function rendererFor(next: GameSnapshot): void {
   view?.dispose();
   view = null;
   viewWorldId = null;
+  renderer ??= createRenderer(shell.canvas);
   view = createGameView(shell.canvas, next.world, {
     quality: settings.quality,
     reducedMotion: settings.reducedMotion,
+    models,
+    renderer,
   });
   viewWorldId = next.world.id;
   view.resize();
@@ -472,7 +481,7 @@ function events(next: GameSnapshot): void {
   if (next.tick - lastSaveTick >= 600 || (important && next.tick - lastSaveTick >= 120)) saveCampaign();
 }
 
-function stopForError(error: unknown, kind: "graphics" | "game"): void {
+function stopForError(error: unknown, kind: "graphics" | "game" | "assets"): void {
   console.error(`Korovany II ${kind} failure.`, error);
   fatal = true;
   freeze();
@@ -512,7 +521,10 @@ function frame(time: number): void {
       raf = requestAnimationFrame(frame);
       return;
     }
-    if (running && campaign) {
+    // Until the cooked models are ready the world is not drawn, so the simulation holds as well: a run that
+    // starts early (its click still captures the mouse) begins on the first frame the player can see.
+    shell?.setModelsLoading(!models.isReady);
+    if (running && campaign && models.isReady) {
       accumulator += delta;
       let stepped = false;
       while (accumulator >= STEP) {
@@ -546,7 +558,7 @@ function frame(time: number): void {
       console.error("Korovany II recovery controls failed.", error);
       return;
     }
-    stopForError(error, "game");
+    stopForError(error, models.status.error ? "assets" : "game");
     return;
   }
   raf = requestAnimationFrame(frame);
@@ -633,6 +645,7 @@ Object.defineProperty(window, "korovany", {
       audio: sound.inspect(),
       profile: { ...profile, upgrades: { ...profile.upgrades }, completedRuns: [...profile.completedRuns] },
       viewWorldId,
+      models: models.status,
       moveBasis: view?.getMoveBasis() ?? null,
       mouseLook: input?.mouseLocked ?? false,
       controller: {
@@ -654,6 +667,8 @@ function dispose(): void {
   input?.dispose();
   controllerInput?.dispose();
   view?.dispose();
+  models.dispose();
+  renderer?.dispose();
   sound.dispose();
   shell?.dispose();
 }
@@ -663,6 +678,9 @@ if (import.meta.hot) import.meta.hot.dispose(dispose);
 try {
   updatePreview();
   raf = requestAnimationFrame(frame);
+  models.ready.catch((error: unknown) => {
+    if (!disposed && !fatal) stopForError(error, "assets");
+  });
 } catch (error) {
   stopForError(error, "graphics");
 }

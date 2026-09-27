@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Obstacle, Vec2, WorldBlueprint, WorldLocation } from '../game/types';
+import { propInstance } from './models';
 import { palette } from './palette';
 import { beam, part } from './primitives';
 import type { ViewResources } from './resources';
@@ -119,6 +120,12 @@ export function locationStructure(resources: ViewResources, obstacle: Obstacle, 
   root.position.set(obstacle.x, 0, obstacle.z);
   root.rotation.y = Math.atan2(place.x - obstacle.x, place.z - obstacle.z);
   const r = obstacle.radius, h = obstacle.height;
+  if (place.id === 'name-well' || place.id === 'cinderwell' && obstacle.variant === 0) {
+    // The cooked Echo Well carries its own flagstone platform. DOM-free resources have no models.
+    const well = resources.model('prop-echo-well');
+    if (well) root.add(propInstance(well, resources.modelDepthMaterial(), r));
+    return root;
+  }
   part(resources, root, 'disc', theme.stone, [0, 0.08, 0], [r * 1.96, 0.16, r * 1.96], [0, 0, 0], 'stone');
 
   if (place.id === 'glass-quarry') {
@@ -136,16 +143,6 @@ export function locationStructure(resources: ViewResources, obstacle: Obstacle, 
       part(resources, root, 'foliage', theme.foliage[1], [side * r * 0.4, h * 0.84, 0], [r, h * 0.36, r * 1.25]);
       part(resources, root, 'box', theme.accent, [side * r * 0.4, h * 0.45, r * 0.13], [0.24, 0.32, 0.05]);
     }
-  } else if (place.id === 'name-well' || place.id === 'cinderwell' && obstacle.variant === 0) {
-    part(resources, root, 'cylinder', theme.stone, [0, 0.72, 0], [r * 1.4, 1.35, r * 1.4], [0, 0, 0], 'stone');
-    part(resources, root, 'disc', palette.ink, [0, 1.405, 0], [r, 0.04, r]);
-    part(resources, root, 'torus', theme.stone, [0, 1.4, 0], [r * 1.45, r * 1.45, r * 0.6], [Math.PI / 2, 0, 0], 'stone');
-    arch(resources, root, r, h, palette.timber);
-    gabledRoof(resources, root, r, h * 0.8, h * 0.2, theme.roof);
-    part(resources, root, 'cylinder', palette.timberLight, [0, h * 0.51, 0], [0.16, r * 1.3, 0.16], [0, 0, Math.PI / 2]);
-    part(resources, root, 'box', palette.bark, [0, h * 0.4, 0], [0.055, h * 0.34, 0.055]);
-    part(resources, root, 'cylinder', palette.timber, [0, h * 0.22, 0], [r * 0.2, r * 0.23, r * 0.2]);
-    for (const side of [-1, 1]) part(resources, root, 'cloth', theme.accent, [side * r * 0.32, h * 0.61, 0], [r * 0.21, h * 0.26, 1]);
   } else if (place.id === 'ash-cairn') {
     for (let tier = 0; tier < 5; tier++) {
       const width = r * (1.9 - tier * 0.3);

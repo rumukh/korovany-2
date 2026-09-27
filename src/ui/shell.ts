@@ -79,6 +79,7 @@ export class GameShell {
   private readonly warnings = element("div", "warnings");
   private readonly live = element("div", "sr-only");
   private readonly voiceCaption = element("div", "voice-caption");
+  private readonly modelStatus = element("div", "model-status");
   private readonly controllerStatus = element("div", "controller-status");
   private readonly confirmationHost = element("div", "confirmation-host");
   private readonly navigation = new ControllerNavigation();
@@ -95,7 +96,7 @@ export class GameShell {
   private returnOverlay: Overlay = "menu";
   private state: ShellState;
   private lastMapTick = -Infinity;
-  private fatalKind: "graphics" | "game" = "graphics";
+  private fatalKind: "graphics" | "game" | "assets" = "graphics";
   private selectedQuest: string | null = null;
   private questFilter: QuestFilter = "active";
   private localMap = false;
@@ -121,7 +122,10 @@ export class GameShell {
     this.hud.append(this.hudTop, this.hudRail, this.hudBottom);
     this.voiceCaption.setAttribute("aria-live", "polite");
     this.voiceCaption.setAttribute("aria-atomic", "true");
-    root.replaceChildren(this.canvas, this.hud, this.overlayHost, this.warnings, this.live, this.voiceCaption, this.controllerStatus, this.confirmationHost);
+    this.modelStatus.hidden = true;
+    this.modelStatus.setAttribute("role", "status");
+    root.replaceChildren(this.canvas, this.hud, this.overlayHost, this.warnings, this.live, this.voiceCaption, this.modelStatus,
+      this.controllerStatus, this.confirmationHost);
     window.addEventListener("keydown", (event) => this.overlayKey(event), { signal: this.controller.signal, capture: true });
     window.addEventListener("focusin", (event) => {
       if (this.confirmation && event.target instanceof Node && !this.confirmationHost.contains(event.target)) {
@@ -344,6 +348,13 @@ export class GameShell {
     document.title = `${this.t("title")} II — ${this.t("subtitle")}`;
     this.canvas.setAttribute("aria-label", this.t("worldLabel"));
     this.minimap.setAttribute("aria-label", this.t("map"));
+    this.modelStatus.textContent = this.t("loadingModels");
+  }
+
+  /** A non-blocking notice while the cooked models load; the world is not drawn and the simulation holds meanwhile. */
+  setModelsLoading(loading: boolean): void {
+    if (this.modelStatus.hidden === !loading) return;
+    this.modelStatus.hidden = !loading;
   }
 
   show(overlay: Overlay): void {
@@ -356,8 +367,9 @@ export class GameShell {
     this.renderOverlay(sameOverlay);
   }
 
-  fail(kind: "graphics" | "game"): void {
+  fail(kind: "graphics" | "game" | "assets"): void {
     if (this.confirmation) this.closeConfirmation(false);
+    this.modelStatus.hidden = true;
     this.fatalKind = kind;
     this.show("fatal");
   }
@@ -569,7 +581,7 @@ export class GameShell {
     const headingKey = this.currentOverlay === "menu" ? "menuLabel"
       : this.currentOverlay === "pause" ? "paused"
         : this.currentOverlay === "terminal" ? (this.snapshot?.phase === "victory" ? "victory" : "defeat")
-          : this.currentOverlay === "fatal" ? (this.fatalKind === "graphics" ? "graphicsFailure" : "gameFailure")
+          : this.currentOverlay === "fatal" ? this.fatalHeading()
             : ["journal", "dialogue", "inspection"].includes(this.currentOverlay) ? `story.${this.currentOverlay}` : this.currentOverlay;
     panel.setAttribute("aria-label", this.t(headingKey));
     if (this.currentOverlay === "terminal" && this.snapshot?.phase === "victory" && this.snapshot.campaign) {
@@ -993,9 +1005,14 @@ export class GameShell {
     panel.append(actions);
   }
 
+  private fatalHeading(): string {
+    return this.fatalKind === "graphics" ? "graphicsFailure" : this.fatalKind === "assets" ? "assetFailure" : "gameFailure";
+  }
+
   private fatal(panel: HTMLElement): void {
-    panel.append(emblem(), this.heading(this.fatalKind === "graphics" ? "graphicsFailure" : "gameFailure"),
-      element("p", "guide-copy", this.t(this.fatalKind === "graphics" ? "graphicsDetail" : "gameFailureDetail")),
+    panel.append(emblem(), this.heading(this.fatalHeading()),
+      element("p", "guide-copy", this.t(this.fatalKind === "graphics" ? "graphicsDetail"
+        : this.fatalKind === "assets" ? "assetFailureDetail" : "gameFailureDetail")),
       this.button("reload", { type: "reload" }, "button primary"));
   }
 

@@ -106,6 +106,27 @@ Material provenance and hashes live in `public/textures/frontier/manifest*.json`
 image-generation service. Normal/roughness maps are artistically derived from
 the generated images, not measured scans.
 
+### Cooked 3D models
+
+The line soldier worn by every faction's soldiers and the Echo Well are cooked
+glTF models (`public/models`, about 2.9 MB together) instead of procedural
+meshes. Their concepts were generated locally with Qwen Image Edit Plus 2511
+from original Blender reference renders, reconstructed with TRELLIS-image-large,
+and cooked, rigged and animated in Blender 5.2.2 LTS. The soldier's back comes
+from an approved rear-view concept projected onto the mesh. Faction and
+allegiance colour the tabard and shield without extra shader variants. The game
+waits for both models before presenting a run and stops with an explicit asset
+error if either fails to load.
+
+**Licensing limitation:** TRELLIS code and weights are MIT-licensed, but its
+textured export depends on components restricted to research and evaluation.
+No commercial clearance exists for these two models; the project owner
+acknowledged publishing them here. Concepts, recipes, provenance, approvals and
+the cooking scripts are in `scripts/models`. The rest of the world, including
+the heroes, residents and caravan, is still procedural, so the models currently
+read as more realistic than their surroundings. They are not AAA assets: see each
+`provenance.json` for measured limitations.
+
 ## The campaign
 
 Choose a faction and a world seed. Elves fight at range and answer to forest
@@ -409,7 +430,7 @@ rules and saves; they do not acquire a faction story on restoration.
 | Location | Responsibility |
 | --- | --- |
 | `src/game` | Aegis ECS components, ordered systems, deterministic world, campaign rules, saves, and profile progression |
-| `src/view` | Procedural Three.js scenery, character animation, camera, and effects |
+| `src/view` | Game-owned Three.js presentation: procedural scenery and characters, cooked glTF models, camera, and effects |
 | `src/ui`, `src/audio`, `src/main.ts` | Interface, localization, controls, browser lifecycle, and local-media audio |
 | `tests` | Headless game and integration coverage |
 | `vendor/aegis-engine` | Unmodified engine submodule |
@@ -435,6 +456,8 @@ deployment. Local builds do not require GitHub.
 Aegis packages declare MIT; Three.js is MIT. Runtime notices are included in
 [`public/THIRD_PARTY_NOTICES.txt`](public/THIRD_PARTY_NOTICES.txt) and copied into
 the production build. The engine remains pinned with its upstream provenance.
-The sequel uses newly authored procedural visuals and original audio rather
-than copying the original game's implementation or asset library. No
-project-wide redistribution license is assigned here.
+The sequel uses newly authored procedural visuals, two locally generated and
+cooked 3D models (research/evaluation-only TRELLIS export, see "Cooked 3D
+models" above) and original audio rather than copying the original game's
+implementation or asset library. No project-wide redistribution license is
+assigned here.
