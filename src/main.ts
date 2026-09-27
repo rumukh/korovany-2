@@ -4,6 +4,7 @@ import {
   type GameSession, type GameSnapshot, type GameInput as CampaignInput, type MetaProfile, type RunRewards, type UpgradeId, type Vec2,
 } from "./game";
 import { createGameView, type GameView } from "./view";
+import { gltfModelSource, ModelLibrary } from "./view/models";
 import { Soundscape } from "./audio/soundscape";
 import { AudioPresentation, type SpeechSelection } from "./audio/presentation";
 import { GameInput } from "./ui/input";
@@ -67,6 +68,9 @@ let disposed = false;
 let fatal = false;
 let raf = 0;
 const lifecycle = new AbortController();
+// Cooked models load once per page, before any run is presented; there is no primitive fallback.
+const models = new ModelLibrary(gltfModelSource());
+let awaitingModels = false;
 const sound = new Soundscape(() => shell?.warn("audioFailure"), (line) => shell?.caption(line));
 const audio = new AudioPresentation(sound);
 sound.configure(settings.muted, settings.audio);
@@ -177,12 +181,29 @@ function changeOverlay(overlay: Overlay, selection?: SpeechSelection): void {
     shell?.warn("storage.conflict");
     overlay = "pause";
   } else if (overlay === null) overlay = narrativeOverlay();
+  if (overlay === null && !models.isReady) {
+    overlay = "loading";
+    awaitModels(selection);
+  }
   shell?.show(overlay);
   if (overlay === null && campaign && snapshot?.phase === "playing") {
     running = true;
     input?.setEnabled(true);
   }
   syncAudio(selection);
+}
+
+/** A run is never presented before its models are ready; the loading panel resumes it automatically. */
+function awaitModels(selection?: SpeechSelection): void {
+  if (awaitingModels) return;
+  awaitingModels = true;
+  models.ready.then(() => {
+    awaitingModels = false;
+    if (!disposed && !fatal && shell?.overlay === "loading") changeOverlay(null, selection);
+  }, (error: unknown) => {
+    awaitingModels = false;
+    if (!disposed) stopForError(error, "assets");
+  });
 }
 
 function rendererFor(next: GameSnapshot): void {
@@ -193,6 +214,7 @@ function rendererFor(next: GameSnapshot): void {
   view = createGameView(shell.canvas, next.world, {
     quality: settings.quality,
     reducedMotion: settings.reducedMotion,
+    models,
   });
   viewWorldId = next.world.id;
   view.resize();
@@ -472,7 +494,7 @@ function events(next: GameSnapshot): void {
   if (next.tick - lastSaveTick >= 600 || (important && next.tick - lastSaveTick >= 120)) saveCampaign();
 }
 
-function stopForError(error: unknown, kind: "graphics" | "game"): void {
+function stopForError(error: unknown, kind: "graphics" | "game" | "assets"): void {
   console.error(`Korovany II ${kind} failure.`, error);
   fatal = true;
   freeze();
@@ -546,7 +568,7 @@ function frame(time: number): void {
       console.error("Korovany II recovery controls failed.", error);
       return;
     }
-    stopForError(error, "game");
+    stopForError(error, models.status.error ? "assets" : "game");
     return;
   }
   raf = requestAnimationFrame(frame);
@@ -633,6 +655,7 @@ Object.defineProperty(window, "korovany", {
       audio: sound.inspect(),
       profile: { ...profile, upgrades: { ...profile.upgrades }, completedRuns: [...profile.completedRuns] },
       viewWorldId,
+      models: models.status,
       moveBasis: view?.getMoveBasis() ?? null,
       mouseLook: input?.mouseLocked ?? false,
       controller: {
@@ -654,6 +677,7 @@ function dispose(): void {
   input?.dispose();
   controllerInput?.dispose();
   view?.dispose();
+  models.dispose();
   sound.dispose();
   shell?.dispose();
 }
@@ -663,6 +687,9 @@ if (import.meta.hot) import.meta.hot.dispose(dispose);
 try {
   updatePreview();
   raf = requestAnimationFrame(frame);
+  models.ready.catch((error: unknown) => {
+    if (!disposed && !fatal) stopForError(error, "assets");
+  });
 } catch (error) {
   stopForError(error, "graphics");
 }

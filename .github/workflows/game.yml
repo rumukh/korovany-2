@@ -59,7 +59,7 @@ jobs:
           - shard: 1
             files: tests/voice-assets-browser.test.ts tests/controller-browser.test.ts tests/controller-navigation-browser.test.ts
           - shard: 2
-            files: tests/story-browser.test.ts tests/ui-browser.test.ts
+            files: tests/story-browser.test.ts tests/ui-browser.test.ts tests/models-browser.test.ts
           - shard: 3
             files: tests/audio-assets-browser.test.ts tests/audio-browser.test.ts tests/voice-browser.test.ts tests/mouse-look-browser.test.ts
           - shard: 4

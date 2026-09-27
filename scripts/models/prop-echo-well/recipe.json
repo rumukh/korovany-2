@@ -1,0 +1,75 @@
+{
+  "schema": "korovany2-prop-recipe/1",
+  "id": "prop-echo-well",
+  "source": {
+    "candidate": "hd-s42",
+    "tool": "TRELLIS-image-large 25e0d31 (source 442aa1e), offline",
+    "seed": 42,
+    "textureSize": 2048,
+    "simplify": 0.85,
+    "glbSha256": "3277e51462444c5fa90adf9f3aa6e78f70c44e803b192e95f06bb34ad3908716",
+    "conceptSha256": "b83b9319e2795e6e717d97a6ee13fb71645a03c3fb3975f28c1f691938014c3b"
+  },
+  "reachMeters": 2.8,
+  "yawDegrees": 0,
+  "triangleBudget": 15000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    1024,
+    2048
+  ],
+  "material": {
+    "mapsSize": 1024,
+    "cageExtrusionMeters": 0.03,
+    "maxRayMeters": 0.08,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.82,
+    "roughnessFromDetail": 0.6,
+    "roughnessMax": 0.97,
+    "metal": {
+      "maxValue": 0.14,
+      "maxSaturation": 0.3,
+      "weight": 0.85,
+      "regions": [
+        {
+          "min": [
+            -2.45,
+            -0.6,
+            2.0
+          ],
+          "max": [
+            -1.35,
+            0.6,
+            3.4
+          ]
+        },
+        {
+          "min": [
+            1.35,
+            -0.6,
+            2.0
+          ],
+          "max": [
+            2.45,
+            0.6,
+            3.4
+          ]
+        }
+      ]
+    },
+    "reliefStrength": 8,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0,
+    "roughnessByClass": {
+      "moss": 0.95,
+      "salt": 0.68,
+      "ceramic": 0.72,
+      "stone": 0.88,
+      "iron": 0.55
+    },
+    "roughnessMin": 0.4
+  },
+  "runtime": "propInstance scales uniformly by obstacle radius * 0.98 / horizontal reach; +Z faces the location centre."
+}

@@ -56,3 +56,15 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+----
+
+Cooked 3D models (models/char-line-soldier, models/prop-echo-well)
+
+Reconstructed from original, locally generated concepts with Microsoft
+TRELLIS-image-large (https://github.com/microsoft/TRELLIS, model revision
+25e0d31ffbebe4b5a97464dd851910efc3002d96). TRELLIS code and weights are
+MIT-licensed, but the textured export these models went through depends on
+components restricted to research and evaluation (the Gaussian export path and
+diffoctreerast). No commercial clearance has been established for this output.
+Provenance, recipes and approvals are kept with the game source in scripts/models.

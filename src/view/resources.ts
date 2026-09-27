@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { palette } from './palette';
 import { surfaceForColor, surfaceUrl, type Surface } from './surfaces';
 import { applySightlineDither } from './sightline';
+import { dyedMaterial, type LoadedModel, type ModelId, type ModelLibrary } from './models';
 
 /** One owner for shared GPU assets, including assets held by invisible pools. */
 export class ViewResources {
@@ -16,9 +17,14 @@ export class ViewResources {
   private textureError: Error | undefined;
   private disposed = false;
 
+  /**
+   * `models` is the page-lifetime GLB library. It is omitted only by DOM-free geometry tests;
+   * `createGameView` always supplies it and never builds a presentation before it is ready.
+   */
   constructor(
     private readonly loader?: Pick<THREE.TextureLoader, 'load'>,
     private readonly anisotropy = 1,
+    readonly models?: ModelLibrary,
   ) {}
 
   get textureStatus(): { pending: number; error: string | null; surfaces: number } {
@@ -27,6 +33,20 @@ export class ViewResources {
 
   assertTextures(): void {
     if (this.textureError) throw this.textureError;
+  }
+
+  /** A loaded model template, or undefined in DOM-free tests that construct resources without models. */
+  model(id: ModelId): LoadedModel | undefined {
+    return this.models?.require(id);
+  }
+
+  /** Faction-tinted copy of a model material; all tints share one shader program. */
+  dyed(base: THREE.Material, color: string): THREE.Material {
+    if (!(base instanceof THREE.MeshStandardMaterial)) throw new Error(`Model material ${base.name} cannot be dyed.`);
+    const key = `dye:${base.uuid}:${color}`;
+    const existing = this.materials.get(key);
+    if (existing) return existing;
+    return this.ownMaterial(key, dyedMaterial(base, color));
   }
 
   private maps(surface: Surface): { map: THREE.Texture; normalMap: THREE.Texture; roughnessMap: THREE.Texture } | undefined {

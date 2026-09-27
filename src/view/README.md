@@ -115,3 +115,49 @@ Shadow depth materials are game-owned as well as visible materials, so changing
 runs releases their shader programs rather than retaining Three's implicit shadow
 materials. Outpost ownership and deliveries change their heraldry; fortress
 heraldry distinguishes locked, unlocked and defeated states without a false gate.
+
+## Cooked 3D models
+
+Two cooked glTF models replace procedural presentation: the line soldier
+(`public/models/char-line-soldier/`), used by every faction's `soldier` actor,
+and the Echo Well (`public/models/prop-echo-well/`), used by the Echo Well and
+the matching Cinderwell structure. `ModelLibrary` (`models.ts`) loads them once
+per page through `GLTFLoader`; `main.ts` shows a loading panel and presents no
+run until every model is ready. A load failure stops on the fatal "assets" panel
+with the failing URL. There is no primitive fallback; only DOM-free geometry
+tests construct `ViewResources` without models.
+
+Soldier instances are `SkeletonUtils` clones driven by an `AnimationMixer` from
+snapshot state and render time: `Idle`, `AtEase` (while a story scene is open),
+`Run` (moving faster than 0.35 m/s), `Windup`, `Strike` and `Recovery` (scrubbed
+by snapshot progress), an additive `Hit` on health loss, and `Death`, which is held
+as the corpse. Reduced motion freezes the idle breathing and suppresses hit
+reactions. Clips carry no root motion; position, heading, collision and timing stay
+authoritative. Faction and allegiance colour the tabard and shield through one
+dyed material program (`korovany-dye-v1`, dye mask in the base-colour alpha), so
+colour variants add no shader variants. Because that alpha is a mask rather than
+coverage, dye-masked base colour is encoded with libwebp's `exact` option
+(`pipeline/webp_exact.py`): the default lossy mode discards the colour of every
+texel whose alpha is 0, which is every undyed surface. The well scales uniformly
+into its circular blocker and shares one geometry and material across instances.
+
+After a world mirror is built and after every quality change, `createGameView`
+calls `Presentation.warmModels()` in the same task as the next real frame: a
+temporary soldier visual (model, ring, health bar, tell) and well are drawn twice
+with the scene's real lights, fog, shadows and post-processing, then removed, so
+no model shader compiles when a soldier first appears (aegis-engine #6). Without
+warming, the first soldier creates seven programs (two dyed lit programs, four
+shadow-depth variants and the shared unlit health-bar program); `GameView.warmup`
+reports the latest warm-up. Instances, skeletons and game-owned depth materials
+are released with the world mirror; the page-lifetime library releases the
+shared geometry, materials and textures.
+
+Each model's concept, recipe, provenance and three approval decisions are in
+`scripts/models/<id>/`, with the Blender cooking scripts in `scripts/models/pipeline/`.
+The models were reconstructed with TRELLIS-image-large, whose textured export
+depends on components licensed for research and evaluation only; no commercial
+clearance exists for this output, and the project owner acknowledged publishing
+it on the public site. `tests/models.test.ts` checks every shipped byte against
+its provenance and verifies every 60 Hz frame of every soldier clip (weights,
+foot contact and sliding, loop closure, clearance, joint scale, rigid parts and
+crease strain), including deliberately broken copies that must fail.

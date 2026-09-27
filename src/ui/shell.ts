@@ -9,7 +9,7 @@ import { captureControllerContext, ControllerNavigation, controllerControls, con
 import type { ControllerFeedback, ControllerUiFrame } from "./controller-types";
 import "./controller.css";
 
-export type Overlay = "menu" | "pause" | "map" | "journal" | "dialogue" | "inspection" | "settings" | "help" | "records" | "terminal" | "fatal" | null;
+export type Overlay = "menu" | "pause" | "map" | "journal" | "dialogue" | "inspection" | "settings" | "help" | "records" | "terminal" | "loading" | "fatal" | null;
 export interface MetaOffer {
   id: UpgradeId;
   level: number;
@@ -95,7 +95,7 @@ export class GameShell {
   private returnOverlay: Overlay = "menu";
   private state: ShellState;
   private lastMapTick = -Infinity;
-  private fatalKind: "graphics" | "game" = "graphics";
+  private fatalKind: "graphics" | "game" | "assets" = "graphics";
   private selectedQuest: string | null = null;
   private questFilter: QuestFilter = "active";
   private localMap = false;
@@ -356,7 +356,7 @@ export class GameShell {
     this.renderOverlay(sameOverlay);
   }
 
-  fail(kind: "graphics" | "game"): void {
+  fail(kind: "graphics" | "game" | "assets"): void {
     if (this.confirmation) this.closeConfirmation(false);
     this.fatalKind = kind;
     this.show("fatal");
@@ -569,7 +569,7 @@ export class GameShell {
     const headingKey = this.currentOverlay === "menu" ? "menuLabel"
       : this.currentOverlay === "pause" ? "paused"
         : this.currentOverlay === "terminal" ? (this.snapshot?.phase === "victory" ? "victory" : "defeat")
-          : this.currentOverlay === "fatal" ? (this.fatalKind === "graphics" ? "graphicsFailure" : "gameFailure")
+          : this.currentOverlay === "fatal" ? this.fatalHeading()
             : ["journal", "dialogue", "inspection"].includes(this.currentOverlay) ? `story.${this.currentOverlay}` : this.currentOverlay;
     panel.setAttribute("aria-label", this.t(headingKey));
     if (this.currentOverlay === "terminal" && this.snapshot?.phase === "victory" && this.snapshot.campaign) {
@@ -599,6 +599,10 @@ export class GameShell {
     else if (this.currentOverlay === "help") this.help(panel);
     else if (this.currentOverlay === "records") this.records(panel);
     else if (this.currentOverlay === "terminal") this.terminal(panel);
+    else if (this.currentOverlay === "loading") {
+      panel.setAttribute("aria-busy", "true");
+      panel.append(emblem(), this.heading("loading"), element("p", "guide-copy", this.t("loadingModels")));
+    }
     else this.fatal(panel);
     if (["dialogue", "inspection", "terminal"].includes(this.currentOverlay)) {
       panel.append(this.button("settings", { type: "overlay", overlay: "settings" }, "button quiet speech-settings"));
@@ -993,9 +997,14 @@ export class GameShell {
     panel.append(actions);
   }
 
+  private fatalHeading(): string {
+    return this.fatalKind === "graphics" ? "graphicsFailure" : this.fatalKind === "assets" ? "assetFailure" : "gameFailure";
+  }
+
   private fatal(panel: HTMLElement): void {
-    panel.append(emblem(), this.heading(this.fatalKind === "graphics" ? "graphicsFailure" : "gameFailure"),
-      element("p", "guide-copy", this.t(this.fatalKind === "graphics" ? "graphicsDetail" : "gameFailureDetail")),
+    panel.append(emblem(), this.heading(this.fatalHeading()),
+      element("p", "guide-copy", this.t(this.fatalKind === "graphics" ? "graphicsDetail"
+        : this.fatalKind === "assets" ? "assetFailureDetail" : "gameFailureDetail")),
       this.button("reload", { type: "reload" }, "button primary"));
   }
 

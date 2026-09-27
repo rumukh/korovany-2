@@ -1,0 +1,211 @@
+{
+  "schema": "korovany2-model-provenance/1",
+  "id": "prop-echo-well",
+  "output": {
+    "file": "public/models/prop-echo-well/prop-echo-well.glb",
+    "sha256": "888827c4da0083eb0398762c63e5d2cfb5812b654dd94da22cb96468bb02b1ba",
+    "bytes": 1377252
+  },
+  "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from original Blender reference renders; no third-party or real-person likeness was used as input.",
+  "acknowledgment": {
+    "decidedAt": "2026-09-26T23:06:17.4391138+02:00",
+    "decision": "I acknowledge this for korovany-2: commit TRELLIS-derived assets with the restriction recorded",
+    "project": "rumukh/korovany-2"
+  },
+  "tools": [
+    {
+      "name": "Qwen Image Edit Plus 2511",
+      "runtime": "WanGP (local, CLI)",
+      "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+      "textEncoder": "Qwen2.5-VL-7B-Instruct_quanto_bf16_int8",
+      "steps": 50,
+      "guidanceScale": 4.0,
+      "role": "concept art"
+    },
+    {
+      "name": "Blender 5.2.2 LTS",
+      "build": "d13f752e3b9c",
+      "role": "reference renders, cooking, baking, rig, clips (CPU Cycles)"
+    },
+    {
+      "name": "TRELLIS-image-large",
+      "model": "microsoft/TRELLIS-image-large",
+      "modelRevision": "25e0d31ffbebe4b5a97464dd851910efc3002d96",
+      "sourceRevision": "442aa1e1afb9014e80681d3bf604e8d728a86ee7",
+      "runnerSha256": "aef0d6a863b77b65869d9f2ce6a127abf7231863e2aae428ad1322df281eea69",
+      "seed": 42,
+      "settings": {
+        "sparseStructureSampler": {
+          "name": "FlowEulerGuidanceIntervalSampler",
+          "args": {
+            "sigma_min": 1e-05
+          },
+          "params": {
+            "steps": 25,
+            "cfg_strength": 5.0,
+            "cfg_interval": [
+              0.5,
+              1.0
+            ],
+            "rescale_t": 3.0
+          }
+        },
+        "slatSampler": {
+          "name": "FlowEulerGuidanceIntervalSampler",
+          "args": {
+            "sigma_min": 1e-05
+          },
+          "params": {
+            "steps": 25,
+            "cfg_strength": 5.0,
+            "cfg_interval": [
+              0.5,
+              1.0
+            ],
+            "rescale_t": 3.0
+          }
+        },
+        "formats": [
+          "gaussian",
+          "mesh"
+        ],
+        "unusedRadianceFieldDecoderLoaded": false,
+        "attention": "xformers",
+        "spconvAlgorithm": "native",
+        "modelPrecision": "unchanged upstream checkpoint config",
+        "localLoader": "LocalPipeline replaces only DINOv2 code/weight discovery; strict same state dict and normalization",
+        "export": {
+          "simplify": 0.85,
+          "fillHoles": true,
+          "fillHolesMaxSize": 0.04,
+          "textureSize": 2048,
+          "bakingMode": "opt",
+          "bakingSteps": 2500,
+          "bakingViews": 100,
+          "bakingViewResolution": 1024,
+          "holeFillViews": 1000,
+          "holeFillResolution": 1024
+        }
+      },
+      "offline": true,
+      "networkCheck": "[Errno 101] Network is unreachable",
+      "inferenceSeconds": 151.7,
+      "peakTorchReservedBytes": 16101933056,
+      "output": {
+        "sha256": "3277e51462444c5fa90adf9f3aa6e78f70c44e803b192e95f06bb34ad3908716",
+        "bytes": 7199452
+      },
+      "licensing": {
+        "wholeToolchainMit": false,
+        "commercialClearanceEstablished": false
+      }
+    }
+  ],
+  "source": {
+    "reference": {
+      "description": "Original Blender block-out render of the well (make_references.py); no third-party input."
+    },
+    "concept": {
+      "file": "concept.png",
+      "sha256": "320fd98304d0239b0428c2eb61e62da08c7f12356cdb46efe0e78ccc0a8e37bf",
+      "pixelSha256": "2b44a34566c73597071401135e44072887c7d0c15d685665c49250332b2dadf5",
+      "approvedFileSha256": "b83b9319e2795e6e717d97a6ee13fb71645a03c3fb3975f28c1f691938014c3b",
+      "seed": 5101,
+      "prompt": "concept-prompt.txt",
+      "negativePrompt": "concept-negative.txt",
+      "note": "Generator metadata (an iTXt comment) was stripped; pixels are identical to the approved file."
+    }
+  },
+  "cook": {
+    "script": "pipeline/cook_prop.py",
+    "recipe": "recipe.json",
+    "status": "cooked-pending-review",
+    "normalization": {
+      "uniformScale": 5.586121101073672,
+      "sourceReach": 0.501242266205405,
+      "reachMeters": 2.8,
+      "yawDegrees": 0,
+      "heightMeters": 5.058049201965332,
+      "baseCentre": [
+        -0.0007063448429107666,
+        -6.493926048278809e-05,
+        -0.44923877716064453
+      ],
+      "axes": "glTF +Y up/+Z forward -> Blender import -> glTF export_yup; no extra axis rotation"
+    },
+    "topology": {
+      "vertices": 7375,
+      "faces": 14774,
+      "triangles": 14774,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "components": 1,
+      "componentVertexCounts": [
+        7375
+      ],
+      "degenerateFaces": 0,
+      "inconsistentWindingEdges": 0
+    },
+    "decimation": {
+      "applied": true,
+      "before": 80712,
+      "triangles": 14774,
+      "ratio": 0.18305828129646148
+    },
+    "materials": {
+      "bakeSize": 2048,
+      "mapsSize": 1024,
+      "albedoSizes": [
+        1024,
+        2048
+      ],
+      "albedoGain": 1.0,
+      "cageExtrusionMeters": 0.03,
+      "maxRayMeters": 0.08,
+      "atlasCoverage": 0.6188154220581055,
+      "metalFractionOfSurface": 0.005489501059526103,
+      "roughnessClassFractions": {
+        "moss": 0.06894548256597959,
+        "salt": 0.06533615873627432,
+        "ceramic": 0.015639375842804854,
+        "stone": 0.1912833750722404
+      },
+      "roughnessMean": 0.8283118605613708,
+      "aoMean": 0.7355717420578003,
+      "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved TRELLIS source mesh; tangent normals baked from the approved source mesh and whiteout-blended with relief derived from colour; AO baked from the decimated geometry; roughness and metalness derived from colour. Artistic derivation, not measured PBR."
+    },
+    "shippedOutput": {
+      "file": "prop-echo-well-albedo1024.glb",
+      "albedoSize": 1024,
+      "bytes": 1377252,
+      "sha256": "888827c4da0083eb0398762c63e5d2cfb5812b654dd94da22cb96468bb02b1ba",
+      "images": [
+        [
+          "prop-normal",
+          217614
+        ],
+        [
+          "prop-orm",
+          198700
+        ],
+        [
+          "prop-base-1024",
+          202148
+        ]
+      ]
+    },
+    "albedoChoice": "1024: differs from 2048 in 14 pixels at 18 m and none at 26/40 m in the game renderer; saves 337 KB.",
+    "scripts": {
+      "cook_prop.py": "3b455cc39ec2c4cc79f70b3c5ddd7679b86bdd6a7e156a16450edcdd91feaf8d",
+      "k2cook.py": "5a45a6b874107b0cd165b45dfd4ffd7f49cd7dac282a08c0dbaa258f9112bd08",
+      "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5"
+    },
+    "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
+    "seconds": 26.1
+  },
+  "limitations": [
+    "Single-view TRELLIS reconstruction; small props (bowls, bucket, rope) are simplified lumps at close range.",
+    "Roughness and metalness derived from colour classes and declared iron regions, not measured PBR.",
+    "Decimated from 81k to under 15k triangles with detail carried by a baked normal map."
+  ]
+}

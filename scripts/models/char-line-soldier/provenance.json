@@ -1,0 +1,470 @@
+{
+  "schema": "korovany2-model-provenance/1",
+  "id": "char-line-soldier",
+  "output": {
+    "file": "public/models/char-line-soldier/char-line-soldier.glb",
+    "sha256": "89fc0b7b2cfbf1ef28895eb64dc369d38d1fcd3f9456d31640057e03d333749a",
+    "bytes": 1572556
+  },
+  "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from original Blender reference renders; no third-party or real-person likeness was used as input.",
+  "acknowledgment": {
+    "decidedAt": "2026-09-26T23:06:17.4391138+02:00",
+    "decision": "I acknowledge this for korovany-2: commit TRELLIS-derived assets with the restriction recorded",
+    "project": "rumukh/korovany-2"
+  },
+  "tools": [
+    {
+      "name": "Qwen Image Edit Plus 2511",
+      "runtime": "WanGP (local, CLI)",
+      "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+      "textEncoder": "Qwen2.5-VL-7B-Instruct_quanto_bf16_int8",
+      "steps": 50,
+      "guidanceScale": 4.0,
+      "role": "concept art"
+    },
+    {
+      "name": "Blender 5.2.2 LTS",
+      "build": "d13f752e3b9c",
+      "role": "reference renders, cooking, baking, rig, clips (CPU Cycles)"
+    },
+    {
+      "name": "TRELLIS-image-large",
+      "model": "microsoft/TRELLIS-image-large",
+      "modelRevision": "25e0d31ffbebe4b5a97464dd851910efc3002d96",
+      "sourceRevision": "442aa1e1afb9014e80681d3bf604e8d728a86ee7",
+      "runnerSha256": "aef0d6a863b77b65869d9f2ce6a127abf7231863e2aae428ad1322df281eea69",
+      "seed": 505,
+      "settings": {
+        "sparseStructureSampler": {
+          "name": "FlowEulerGuidanceIntervalSampler",
+          "args": {
+            "sigma_min": 1e-05
+          },
+          "params": {
+            "steps": 25,
+            "cfg_strength": 5.0,
+            "cfg_interval": [
+              0.5,
+              1.0
+            ],
+            "rescale_t": 3.0
+          }
+        },
+        "slatSampler": {
+          "name": "FlowEulerGuidanceIntervalSampler",
+          "args": {
+            "sigma_min": 1e-05
+          },
+          "params": {
+            "steps": 25,
+            "cfg_strength": 5.0,
+            "cfg_interval": [
+              0.5,
+              1.0
+            ],
+            "rescale_t": 3.0
+          }
+        },
+        "formats": [
+          "gaussian",
+          "mesh"
+        ],
+        "unusedRadianceFieldDecoderLoaded": false,
+        "attention": "xformers",
+        "spconvAlgorithm": "native",
+        "modelPrecision": "unchanged upstream checkpoint config",
+        "localLoader": "LocalPipeline replaces only DINOv2 code/weight discovery; strict same state dict and normalization",
+        "export": {
+          "simplify": 0.85,
+          "fillHoles": true,
+          "fillHolesMaxSize": 0.04,
+          "textureSize": 2048,
+          "bakingMode": "opt",
+          "bakingSteps": 2500,
+          "bakingViews": 100,
+          "bakingViewResolution": 1024,
+          "holeFillViews": 1000,
+          "holeFillResolution": 1024
+        }
+      },
+      "offline": true,
+      "networkCheck": "[Errno 101] Network is unreachable",
+      "inferenceSeconds": 91.1,
+      "peakTorchReservedBytes": 12830375936,
+      "output": {
+        "sha256": "f7e156b25b38ead0a8a1ac60e7a34b2140917659c91feff2472858b7bdccac84",
+        "bytes": 5075260
+      },
+      "licensing": {
+        "wholeToolchainMit": false,
+        "commercialClearanceEstablished": false
+      }
+    }
+  ],
+  "source": {
+    "reference": {
+      "description": "Original Blender mannequin render for pose, proportions and camera (make_references.py); no third-party input."
+    },
+    "concept": {
+      "file": "concept.png",
+      "sha256": "251314f984527bdf71908039b85c2571249874fe7effa82241ea9239877bee7f",
+      "pixelSha256": "927a9b3a1a1c480d94ae4ea1a2b5764d87edbd322014e2d2984fbc70969ef61e",
+      "approvedFileSha256": "058a043abd587a41691de6f5e71cf2f638c61edce6fd554d554c6b56db97a6de",
+      "seed": 4101,
+      "prompt": "concept-prompt.txt",
+      "negativePrompt": "concept-negative.txt",
+      "note": "Generator metadata (an iTXt comment) was stripped; pixels are identical to the approved file."
+    },
+    "rearConcept": {
+      "file": "concept-rear.png",
+      "sha256": "5044cfb528ff938e44ca2fc31bd8cf10bba9382c5678c1345a908a5ec68fcd7a",
+      "pixelSha256": "82807499fe418c7f701b052bfc2204dacf9db46f202a246c9d7514f5bc9da74c",
+      "approvedFileSha256": "0c1721ee10ad2f78b426f7e57c57a8da11c5c3f3efb3fb7c66e999c78efc725b",
+      "seed": 7101,
+      "prompt": "concept-rear-prompt.txt",
+      "negativePrompt": "concept-rear-negative.txt",
+      "method": "Qwen Scene mode repainting an orthographic back render of the approved mesh, with the front concept as identity reference"
+    },
+    "rearProjection": {
+      "script": "pipeline/project_rear.py",
+      "registration": {
+        "mirrored": true,
+        "iouFinal": 0.9469,
+        "scaleX": 0.99,
+        "scaleY": 1.0025,
+        "shiftPx": [
+          1.0,
+          2.0
+        ]
+      },
+      "texels": {
+        "covered": 2585412,
+        "candidates": 1265083,
+        "visible": 615836,
+        "painted": 615836,
+        "fullyPainted": 463700
+      },
+      "frontTexelsChanged": 0,
+      "backTorsoValue": {
+        "before": 0.03426674008369446,
+        "after": 0.2642258405685425
+      },
+      "sourceGlbSha256": "f153d4e1c2608273e52e7f3cb69fd87d341f12fb48a41cf5319bc254627045fb"
+    }
+  },
+  "cook": {
+    "script": "pipeline/cook_soldier.py",
+    "recipe": "recipe.json",
+    "status": "cooked-pending-verification",
+    "topology": {
+      "vertices": 5789,
+      "faces": 11622,
+      "triangles": 11622,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 3,
+      "components": 1,
+      "componentVertexCounts": [
+        5789
+      ],
+      "degenerateFaces": 0,
+      "inconsistentWindingEdges": 0
+    },
+    "decimation": {
+      "applied": true,
+      "before": 45404,
+      "triangles": 11622,
+      "ratio": 0.25599066161571665
+    },
+    "materials": {
+      "bakeSize": 2048,
+      "textureSize": 1024,
+      "atlasCoverage": 0.5733013153076172,
+      "dyeFractionOfSurface": 0.16393911669300507,
+      "metalFractionOfSurface": 0.2058105298178491,
+      "dyeFills": {
+        "tabard": {
+          "texels": 2473,
+          "radius": 5,
+          "minValue": 0.42,
+          "maxSaturation": 0.5,
+          "exclude": [
+            "belt-pouch",
+            "face",
+            "hands"
+          ]
+        }
+      },
+      "toneMatch": [
+        {
+          "regions": [
+            "coif-mail",
+            "sleeves-mail"
+          ],
+          "frontMean": [
+            0.15299999713897705,
+            0.13600000739097595,
+            0.12200000137090683
+          ],
+          "backMeanBefore": [
+            0.1459999978542328,
+            0.1420000046491623,
+            0.1379999965429306
+          ],
+          "backMeanAfter": [
+            0.1469999998807907,
+            0.13300000131130219,
+            0.12099999934434891
+          ],
+          "frontStd": [
+            0.1754000037908554,
+            0.1615999937057495,
+            0.14830000698566437
+          ],
+          "backStdBefore": [
+            0.1826000064611435,
+            0.17919999361038208,
+            0.17550000548362732
+          ],
+          "contrastApplied": [
+            0.9610000252723694,
+            0.9020000100135803,
+            0.8450000286102295
+          ],
+          "backStdAfter": [
+            0.17970000207424164,
+            0.16459999978542328,
+            0.15060000121593475
+          ],
+          "texels": 80770
+        },
+        {
+          "regions": [
+            "helmet"
+          ],
+          "frontMean": [
+            0.20900000631809235,
+            0.1770000010728836,
+            0.1509999930858612
+          ],
+          "backMeanBefore": [
+            0.2199999988079071,
+            0.22300000488758087,
+            0.2290000021457672
+          ],
+          "backMeanAfter": [
+            0.20800000429153442,
+            0.18799999356269836,
+            0.17499999701976776
+          ],
+          "frontStd": [
+            0.1859000027179718,
+            0.16429999470710754,
+            0.15369999408721924
+          ],
+          "backStdBefore": [
+            0.22040000557899475,
+            0.22579999268054962,
+            0.23520000278949738
+          ],
+          "contrastApplied": [
+            0.843999981880188,
+            0.7279999852180481,
+            0.6539999842643738
+          ],
+          "backStdAfter": [
+            0.19740000367164612,
+            0.18060000240802765,
+            0.17419999837875366
+          ],
+          "texels": 43633
+        },
+        {
+          "regions": [
+            "tabard"
+          ],
+          "frontMean": [
+            0.7310000061988831,
+            0.7020000219345093,
+            0.6510000228881836
+          ],
+          "backMeanBefore": [
+            0.7929999828338623,
+            0.7350000143051147,
+            0.6620000004768372
+          ],
+          "backMeanAfter": [
+            0.7369999885559082,
+            0.7049999833106995,
+            0.6520000100135803
+          ],
+          "frontStd": [
+            0.06480000168085098,
+            0.07259999960660934,
+            0.0820000022649765
+          ],
+          "backStdBefore": [
+            0.1316000074148178,
+            0.13910000026226044,
+            0.14069999754428864
+          ],
+          "contrastApplied": [
+            0.492000013589859,
+            0.5220000147819519,
+            0.5830000042915344
+          ],
+          "backStdAfter": [
+            0.07199999690055847,
+            0.07980000227689743,
+            0.08829999715089798
+          ],
+          "texels": 99004
+        }
+      ],
+      "roughnessMean": 0.7434471249580383,
+      "aoMean": 0.6462069153785706,
+      "albedoGain": 1.0,
+      "reliefStrength": 4.0,
+      "aoSamples": 64,
+      "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved source mesh, whose back carries the approved rear-view concept projection; tangent normals baked from the source geometry and whiteout-blended with colour relief; AO baked from the decimated geometry; roughness, metalness and dye mask derived from colour inside declared regions. Artistic derivation, not measured PBR."
+    },
+    "baseEncoding": {
+      "encoder": "Pillow 9.4.0 / libwebp 1.2.4",
+      "script": "webp_exact.py",
+      "scriptSha256": "87f340d373c6807260f3704dff4f5b42bda80e47ff6030022d166def26c2773d",
+      "settings": {
+        "quality": 90,
+        "method": 6,
+        "exact": true,
+        "alpha": "lossless"
+      },
+      "reason": "Base-colour alpha is the dye mask; libwebp's default lossy mode discards RGB under alpha 0.",
+      "images": [
+        {
+          "image": "body-base",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 181302,
+          "sha256": "e00818160524518b4a9f3bcf3cea9fa5642808b8289839757f54abc9a1a5a001",
+          "bytesBefore": 92270,
+          "meanAbsRgbError": {
+            "dyed": 1.427,
+            "undyed": 1.26
+          },
+          "meanAbsRgbErrorBefore": {
+            "dyed": 1.303,
+            "undyed": 31.657
+          },
+          "undyedFraction": 0.8578
+        },
+        {
+          "image": "items-base",
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 5866,
+          "sha256": "cb530f1cb206e85331ec016d426081deb05812ac8b30471e40873f22afdddf03",
+          "bytesBefore": 3650,
+          "meanAbsRgbError": {
+            "dyed": 0.973,
+            "undyed": 0.996
+          },
+          "meanAbsRgbErrorBefore": {
+            "dyed": 0.923,
+            "undyed": 28.871
+          },
+          "undyedFraction": 0.782
+        }
+      ]
+    },
+    "weights": {
+      "method": "bone-heat",
+      "joints": 29,
+      "maxInfluences": 4,
+      "relaxationIterations": 16,
+      "finalRelaxation": 2,
+      "lockedVertices": 65
+    },
+    "clips": [
+      {
+        "name": "Idle",
+        "frames": 144,
+        "seconds": 2.4
+      },
+      {
+        "name": "AtEase",
+        "frames": 192,
+        "seconds": 3.2
+      },
+      {
+        "name": "Run",
+        "frames": 38,
+        "seconds": 0.6333333333333333
+      },
+      {
+        "name": "Windup",
+        "frames": 30,
+        "seconds": 0.5
+      },
+      {
+        "name": "Strike",
+        "frames": 7,
+        "seconds": 0.11666666666666667
+      },
+      {
+        "name": "Recovery",
+        "frames": 39,
+        "seconds": 0.65
+      },
+      {
+        "name": "Hit",
+        "frames": 21,
+        "seconds": 0.35
+      },
+      {
+        "name": "Death",
+        "frames": 60,
+        "seconds": 1.0,
+        "groundClamp": {
+          "lowestBefore": -0.05827587842941284,
+          "maxLift": 0.06327587842941285,
+          "lowestAfter": 0.0049997419118881226
+        }
+      }
+    ],
+    "items": {
+      "textureSize": 256,
+      "authoring": "Blender-authored low-poly meshes with a baked paint/metal/roughness/dye atlas"
+    },
+    "animationPruning": {
+      "removedChannels": {
+        "scale": 256,
+        "translation": 244,
+        "rotation": 87
+      },
+      "keptChannels": 181,
+      "bytesBefore": 2102620,
+      "bytesAfter": 1481308,
+      "tolerance": 1e-06
+    },
+    "scripts": {
+      "cook_soldier.py": "484b3bc867277f8a3a04fe57e4c0a4b68604527096bd38bee5a25e8e0bd0628e",
+      "k2cook.py": "5a45a6b874107b0cd165b45dfd4ffd7f49cd7dac282a08c0dbaa258f9112bd08",
+      "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
+      "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b"
+    },
+    "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
+    "seconds": 30.5
+  },
+  "limitations": [
+    "Single-view TRELLIS reconstruction: fused 3-4 finger 'mitten' hands and a soft, low-detail face; mail rings, laces and buckles exist only as texture and baked normal relief.",
+    "The back of the body is a projected rear-view concept blended into TRELLIS's texture at the sides; a thin dark strip remains where neither view reaches.",
+    "Maps are 1024 px on the decimated TRELLIS atlas (57% coverage, about 2.7 texels per cm), whose charts touch, so filtering can show faint seams. A fresh unwrap was tried and rejected: it covered only 37% of the texture.",
+    "Roughness, metalness and the faction-dye mask are derived from colour inside declared regions, not measured PBR or hand-painted masks.",
+    "Linear blend skinning with half-rotation shoulder and knee helpers; creases stretch up to about 2x at the 99.5th percentile in combat and running frames, and single edges up to about 6x at armpit and knee creases.",
+    "Sword and shield are low-poly Blender-authored meshes with flat painted colour, not reconstructed from a concept.",
+    "Procedural clips authored in Blender (no motion capture); no root motion."
+  ]
+}

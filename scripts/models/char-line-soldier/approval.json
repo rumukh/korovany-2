@@ -1,0 +1,53 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-line-soldier",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "A - tabard soldier, seed 4101 (Recommended)",
+      "decidedAt": "2026-09-26T20:48:59.8668696+02:00",
+      "question": "Gate 1, line soldier: which concept should go to TRELLIS?",
+      "sha256": "251314f984527bdf71908039b85c2571249874fe7effa82241ea9239877bee7f",
+      "approvedFileSha256": "058a043abd587a41691de6f5e71cf2f638c61edce6fd554d554c6b56db97a6de",
+      "pixelSha256": "927a9b3a1a1c480d94ae4ea1a2b5764d87edbd322014e2d2984fbc70969ef61e"
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve hd-s505, add a rear-view concept (3 Qwen candidates, ~36 min GPU) and project it onto the back in the cook (Recommended)",
+      "decidedAt": "2026-09-26T22:24:33.7712671+02:00",
+      "question": "Gate 2, round 2 (line soldier): none of six new seeds fixed the invented near-black back (7 of 7 seeds). How should I proceed?",
+      "sha256": "f7e156b25b38ead0a8a1ac60e7a34b2140917659c91feff2472858b7bdccac84",
+      "candidate": "hd-s505",
+      "rounds": [
+        {
+          "round": 1,
+          "decision": "Regenerate from the same concept with a new seed",
+          "decidedAt": "2026-09-26T21:42:04.9221659+02:00"
+        },
+        {
+          "round": 2,
+          "decision": "Approve hd-s505, add a rear-view concept (3 Qwen candidates, ~36 min GPU) and project it onto the back in the cook (Recommended)",
+          "decidedAt": "2026-09-26T22:24:33.7712671+02:00"
+        }
+      ]
+    },
+    {
+      "gate": "in-game",
+      "decision": "Approve both for shipping",
+      "decidedAt": "2026-09-27T10:37:54+00:00",
+      "question": "Gate 3 final approval: ship the line soldier (cook-015) and the Echo Well to main, as shown in the running game (review board _reviews/gate3/board.json and a playable build of the same code)?",
+      "sha256": "89fc0b7b2cfbf1ef28895eb64dc369d38d1fcd3f9456d31640057e03d333749a"
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Rear 7101 (Recommended)",
+      "decidedAt": "2026-09-26T23:57:56.6463895+02:00",
+      "question": "Rear-view concept for the line soldier: which projected rear view should the soldier use?",
+      "sha256": "5044cfb528ff938e44ca2fc31bd8cf10bba9382c5678c1345a908a5ec68fcd7a",
+      "approvedFileSha256": "0c1721ee10ad2f78b426f7e57c57a8da11c5c3f3efb3fb7c66e999c78efc725b",
+      "pixelSha256": "82807499fe418c7f701b052bfc2204dacf9db46f202a246c9d7514f5bc9da74c"
+    }
+  ]
+}
