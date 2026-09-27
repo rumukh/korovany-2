@@ -145,12 +145,13 @@ into its circular blocker and shares one geometry and material across instances.
 
 After a world mirror is built and after every quality change, `createGameView`
 calls `Presentation.warmModels()` in the same task as the next real frame: a
-temporary soldier visual (model, ring, health bar, tell) and well are drawn twice
-with the scene's real lights, fog, shadow maps and output path, then removed, so
-no model shader compiles when a soldier first appears (aegis-engine #6). The
-warm-up draws (`compileFrame`) shade a single scissored pixel, or a 4×4 target
-when frames go through post-processing, so warming pays for compilation rather
-than for extra full frames on software GL. Without
+temporary soldier visual (model, ring, health bar, tell) and well are drawn twice,
+alone, with the scene's real lights, fog, shadow maps and output path, then
+removed, so no model shader compiles when a soldier first appears (aegis-engine
+#6). Every other renderable is hidden for those two draws, and they shade a single
+scissored pixel (`compileFrame`), or a 4×4 target when frames go through
+post-processing, so warming pays for compiling the model programs rather than for
+extra full-scene shadow and vertex passes on software GL. Without
 warming, the first soldier creates seven programs (two dyed lit programs, four
 shadow-depth variants and the shared unlit health-bar program); `GameView.warmup`
 reports the latest warm-up. Instances, skeletons and game-owned depth materials

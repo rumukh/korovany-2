@@ -181,9 +181,12 @@ export class Presentation {
   /**
    * Compiles every cooked-model shader program before gameplay (aegis-engine #6): the skinned, dyed soldier body,
    * its items, the Echo Well and their shadow-depth variants, with this scene's real lights, fog, environment and
-   * quality. Temporary instances are placed at (x, z), `draw` renders them with the real frame's state (it may shade
-   * almost no pixels), and the instances are removed again. Call it in the same task as the real frame so no warm-up
-   * pixel reaches the screen. Returns the renderer's program count before and after, and the time spent.
+   * quality. Temporary instances are placed at (x, z) and drawn alone: every other renderable is hidden for the
+   * warm-up, so the main and shadow passes cost almost nothing while the lights, fog, environment and output path
+   * that decide program keys stay those of a real frame. `draw` renders with the real frame's state (it may shade
+   * almost no pixels), then the instances are removed and the scene restored. Call it in the same task as the real
+   * frame so no warm-up pixel reaches the screen. Returns the renderer's program count before and after, and the
+   * time spent.
    */
   warmModels(renderer: THREE.WebGLRenderer, x: number, z: number, draw: () => void): ModelWarmup {
     const started = performance.now();
@@ -207,10 +210,21 @@ export class Presentation {
     well.position.set(x - 2.5, 0.08, z + 2.5);
     group.add(well);
     this.scene.add(group);
+    const warming = new Set<THREE.Object3D>();
+    for (const root of [group, visual.root, visual.bar.root, visual.tell]) root.traverse(object => warming.add(object));
+    const hidden: THREE.Object3D[] = [];
+    this.scene.traverseVisible(object => {
+      const drawn = object as THREE.Object3D & { isMesh?: boolean; isLine?: boolean; isPoints?: boolean; isSprite?: boolean };
+      if ((drawn.isMesh || drawn.isLine || drawn.isPoints || drawn.isSprite) && !warming.has(object)) hidden.push(object);
+    });
+    for (const object of hidden) object.visible = false;
     try {
+      // Two draws: the shared shadow-depth material picks its program in draw order, and one draw was measured to
+      // miss two depth variants that the first soldier would then compile (models-browser program-growth test).
       draw();
       draw();
     } finally {
+      for (const object of hidden) object.visible = true;
       group.removeFromParent();
       this.removeActor(actor.id, visual);
     }
