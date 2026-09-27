@@ -123,7 +123,7 @@ export function locationStructure(resources: ViewResources, obstacle: Obstacle, 
   if (place.id === 'name-well' || place.id === 'cinderwell' && obstacle.variant === 0) {
     // The cooked Echo Well carries its own flagstone platform. DOM-free resources have no models.
     const well = resources.model('prop-echo-well');
-    if (well) root.add(propInstance(well, resources.depthMaterial(), r));
+    if (well) root.add(propInstance(well, resources.modelDepthMaterial(), r));
     return root;
   }
   part(resources, root, 'disc', theme.stone, [0, 0.08, 0], [r * 1.96, 0.16, r * 1.96], [0, 0, 0], 'stone');

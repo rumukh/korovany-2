@@ -3,7 +3,7 @@ import {
   purchaseMetaUpgrade, metaUpgradeCost, MAX_UPGRADE_LEVEL,
   type GameSession, type GameSnapshot, type GameInput as CampaignInput, type MetaProfile, type RunRewards, type UpgradeId, type Vec2,
 } from "./game";
-import { createGameView, type GameView } from "./view";
+import { createGameView, createRenderer, type GameView } from "./view";
 import { gltfModelSource, ModelLibrary } from "./view/models";
 import { Soundscape } from "./audio/soundscape";
 import { AudioPresentation, type SpeechSelection } from "./audio/presentation";
@@ -70,6 +70,9 @@ let raf = 0;
 const lifecycle = new AbortController();
 // Cooked models load once per page, before any run is presented; there is no primitive fallback.
 const models = new ModelLibrary(gltfModelSource());
+// One renderer for the page, so model uploads and shader programs survive the title, faction and run changes
+// that replace the world mirror.
+let renderer: ReturnType<typeof createRenderer> | undefined;
 const sound = new Soundscape(() => shell?.warn("audioFailure"), (line) => shell?.caption(line));
 const audio = new AudioPresentation(sound);
 sound.configure(settings.muted, settings.audio);
@@ -193,10 +196,12 @@ function rendererFor(next: GameSnapshot): void {
   view?.dispose();
   view = null;
   viewWorldId = null;
+  renderer ??= createRenderer(shell.canvas);
   view = createGameView(shell.canvas, next.world, {
     quality: settings.quality,
     reducedMotion: settings.reducedMotion,
     models,
+    renderer,
   });
   viewWorldId = next.world.id;
   view.resize();
@@ -663,6 +668,7 @@ function dispose(): void {
   controllerInput?.dispose();
   view?.dispose();
   models.dispose();
+  renderer?.dispose();
   sound.dispose();
   shell?.dispose();
 }

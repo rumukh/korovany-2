@@ -53,7 +53,7 @@ export function createModelSoldier(
   });
   if (!body || !items) throw new Error(`Model ${model.id} is missing its body or item material.`);
   const character = new CharacterInstance(model,
-    { body: resources.dyed(body, coat), items: resources.dyed(items, coat), depth: resources.depthMaterial() }, startDead);
+    { body: resources.dyed(body, coat), items: resources.dyed(items, coat), depth: resources.modelDepthMaterial() }, startDead);
   root.add(character.root);
   allegianceRing(resources, root, allegiance, 1);
   return { root, height: model.bounds.max.y + 0.22, character };

@@ -93,12 +93,15 @@ function validate(id: ModelId, scene: THREE.Object3D, clips: ReadonlyMap<string,
 }
 
 /**
- * Owns parsed models for the lifetime of the page. Presentations borrow templates; only this library
- * disposes their geometry, materials and textures. `releaseGpu` frees one renderer's copies so a
- * replacement renderer can upload the same parsed data again.
+ * Owns parsed models for the lifetime of the page. Presentations borrow templates, dyed variants and the model
+ * shadow-depth material; only this library disposes their geometry, materials and textures, so a page-lifetime
+ * renderer keeps the uploads and shader programs across world mirrors. `releaseGpu` frees one renderer's copies
+ * so a replacement renderer can upload the same parsed data again.
  */
 export class ModelLibrary {
   private readonly models = new Map<ModelId, LoadedModel>();
+  private readonly dyes = new Map<string, THREE.MeshStandardMaterial>();
+  private shadowDepth: THREE.MeshDepthMaterial | undefined;
   private failure: Error | undefined;
   private pendingCount: number;
   private disposed = false;
@@ -152,6 +155,30 @@ export class ModelLibrary {
     return model;
   }
 
+  /** Faction-tinted copy of a model material, shared by every presentation; all tints share one program. */
+  dyed(base: THREE.MeshStandardMaterial, color: string): THREE.MeshStandardMaterial {
+    const key = `${base.uuid}:${color}`;
+    let material = this.dyes.get(key);
+    if (!material) {
+      material = dyedMaterial(base, color);
+      this.dyes.set(key, material);
+    }
+    return material;
+  }
+
+  /** Shadow-depth material for model casters. It matches the world's, so rigid casters share its programs. */
+  depthMaterial(): THREE.MeshDepthMaterial {
+    this.shadowDepth ??= new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
+    return this.shadowDepth;
+  }
+
+  private releaseShared(): void {
+    for (const material of this.dyes.values()) material.dispose();
+    this.dyes.clear();
+    this.shadowDepth?.dispose();
+    this.shadowDepth = undefined;
+  }
+
   private static release(model: LoadedModel, close: boolean): void {
     const textures = new Set<THREE.Texture>();
     model.scene.traverse(object => {
@@ -172,12 +199,14 @@ export class ModelLibrary {
 
   /** Frees GPU copies owned by the current renderer while keeping parsed data for the next one. */
   releaseGpu(): void {
+    this.releaseShared();
     for (const model of this.models.values()) ModelLibrary.release(model, false);
   }
 
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.releaseShared();
     for (const model of this.models.values()) ModelLibrary.release(model, true);
     this.models.clear();
   }

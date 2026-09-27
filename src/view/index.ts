@@ -28,6 +28,23 @@ export interface GameViewOptions {
   reducedMotion?: boolean;
   /** Page-lifetime model library; created and owned by the view when omitted. */
   models?: ModelLibrary;
+  /**
+   * Page-lifetime renderer from `createRenderer`, shared by successive views so cooked-model uploads and shader
+   * programs survive a world change. Created and owned by the view when omitted; a borrowed renderer is never
+   * disposed by the view.
+   */
+  renderer?: THREE.WebGLRenderer;
+}
+
+/** The game's WebGL 2 renderer for `canvas`. Share one across successive views and dispose it after the last. */
+export function createRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
+  try {
+    const context = canvas.getContext('webgl2', { alpha: false, antialias: true, powerPreference: 'high-performance' });
+    if (!context) throw new Error('WebGL 2 is not available in this browser.');
+    return new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: false });
+  } catch (cause) {
+    throw new Error('Korovany II could not start its 3D renderer. Enable hardware acceleration and WebGL 2, then reload.', { cause });
+  }
 }
 
 export interface GameView {
@@ -206,7 +223,7 @@ export class Presentation {
     visual.bar.root.visible = true;
     visual.tell.visible = true;
     visual.tell.position.set(actor.x, 0, actor.z);
-    const well = propInstance(wellModel, this.resources.depthMaterial(), 2.8);
+    const well = propInstance(wellModel, this.resources.modelDepthMaterial(), 2.8);
     well.position.set(x - 2.5, 0.08, z + 2.5);
     group.add(well);
     this.scene.add(group);
@@ -532,14 +549,8 @@ export function compileFrame(
  * Import from this module, never from the Aegis Node renderer entry point.
  */
 export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBlueprint, options: GameViewOptions = {}): GameView {
-  let renderer: THREE.WebGLRenderer;
-  try {
-    const context = canvas.getContext('webgl2', { alpha: false, antialias: true, powerPreference: 'high-performance' });
-    if (!context) throw new Error('WebGL 2 is not available in this browser.');
-    renderer = new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: false });
-  } catch (cause) {
-    throw new Error('Korovany II could not start its 3D renderer. Enable hardware acceleration and WebGL 2, then reload.', { cause });
-  }
+  const ownsRenderer = options.renderer === undefined;
+  const renderer = options.renderer ?? createRenderer(canvas);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1;
@@ -689,10 +700,12 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
       postprocessing?.dispose();
       environment?.dispose();
       warmTarget.dispose();
-      // GPU copies belong to this renderer; release them before it goes away.
       if (ownsModels) models.dispose();
-      else models.releaseGpu();
-      renderer.dispose();
+      if (ownsRenderer) {
+        // A borrowed library's GPU copies belong to this renderer; release them before it goes away.
+        if (!ownsModels) models.releaseGpu();
+        renderer.dispose();
+      }
     },
   };
 }

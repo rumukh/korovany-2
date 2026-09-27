@@ -256,7 +256,8 @@ describe('model presentation without a DOM', () => {
         const material = skinned[0]!.material as THREE.MeshStandardMaterial;
         keys.add(material.customProgramCacheKey());
         colours.set(`${soldier.faction}:${soldier.allegiance}`, `#${(material.userData.dye.dyeColor.value as THREE.Color).getHexString()}`);
-        expect(skinned[0]!.customDepthMaterial).toBe(resources.depthMaterial());
+        expect(skinned[0]!.customDepthMaterial).toBe(library.depthMaterial());
+        expect(resources.modelDepthMaterial()).toBe(library.depthMaterial());
         expect(Boolean(root.getObjectByName('allegiance-ring'))).toBe(soldier.allegiance !== 'hostile');
         expect(root.getObjectByName('item-sword')).toBeDefined();
         expect(root.getObjectByName('item-shield')).toBeDefined();
@@ -301,6 +302,31 @@ describe('model presentation without a DOM', () => {
     library.dispose();
     expect(geometryDispose).toHaveBeenCalled();
   }, 60_000);
+
+  test('keeps dyed variants and the model shadow-depth material for the page, across presentations', async () => {
+    const library = new ModelLibrary(nodeSource, ['char-line-soldier']);
+    await library.ready;
+    let body: THREE.Material | undefined;
+    library.require('char-line-soldier').scene.traverse(object => {
+      if (object instanceof THREE.SkinnedMesh) body = object.material as THREE.Material;
+    });
+    const first = new ViewResources(undefined, 1, library);
+    const second = new ViewResources(undefined, 1, library);
+    const coat = coatColor('soldier', 'villain', 'hostile');
+    const tinted = first.dyed(body!, coat);
+    // A later world mirror reuses the same objects, so the renderer keeps their programs instead of recompiling.
+    expect(second.dyed(body!, coat)).toBe(tinted);
+    expect(second.modelDepthMaterial()).toBe(first.modelDepthMaterial());
+    expect(first.modelDepthMaterial()).not.toBe(first.depthMaterial());
+    const released = vi.fn();
+    tinted.addEventListener('dispose', released);
+    first.modelDepthMaterial().addEventListener('dispose', released);
+    first.dispose();
+    second.dispose();
+    expect(released).not.toHaveBeenCalled();
+    library.dispose();
+    expect(released).toHaveBeenCalledTimes(2);
+  });
 
   test('reduced motion holds a still stance and skips hit reactions; normal motion breathes and flinches', async () => {
     const library = new ModelLibrary(nodeSource, ['char-line-soldier']);

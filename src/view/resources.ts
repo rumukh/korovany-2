@@ -40,13 +40,22 @@ export class ViewResources {
     return this.models?.require(id);
   }
 
-  /** Faction-tinted copy of a model material; all tints share one shader program. */
+  /**
+   * Faction-tinted copy of a model material; all tints share one shader program. With a model library the copy is
+   * the library's page-lifetime variant, so its program outlives this presentation.
+   */
   dyed(base: THREE.Material, color: string): THREE.Material {
     if (!(base instanceof THREE.MeshStandardMaterial)) throw new Error(`Model material ${base.name} cannot be dyed.`);
+    if (this.models) return this.models.dyed(base, color);
     const key = `dye:${base.uuid}:${color}`;
     const existing = this.materials.get(key);
     if (existing) return existing;
     return this.ownMaterial(key, dyedMaterial(base, color));
+  }
+
+  /** Shadow-depth material for cooked models: the library's page-lifetime one, or the world's without a library. */
+  modelDepthMaterial(): THREE.MeshDepthMaterial {
+    return this.models?.depthMaterial() ?? this.depthMaterial();
   }
 
   private maps(surface: Surface): { map: THREE.Texture; normalMap: THREE.Texture; roughnessMap: THREE.Texture } | undefined {

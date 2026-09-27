@@ -1,6 +1,6 @@
 # Game-owned Three presentation
 
-Import `createGameView`, `GameView` and `GameViewOptions` from `src/view/index.ts`.
+Import `createGameView`, `createRenderer`, `GameView` and `GameViewOptions` from `src/view/index.ts`.
 The browser presenter imports Three directly, never the Node-only engine renderer.
 
 ```ts
@@ -23,7 +23,7 @@ view.render(campaign.snapshot(), frameSeconds);
 | `resize()` | Matches the drawing buffer to the canvas CSS dimensions, without changing CSS. |
 | `setQuality('low' \| 'high')` | Low caps DPR at 1, disables shadows, grasses and ambient motes, simplifies tree crowns and releases HDR postprocessing buffers; high caps DPR at 1.75 and enables subtle bloom with multisampled HDR targets. Generated textures remain in both modes. |
 | `setReducedMotion(boolean)` | Removes camera lag, ambient motes, water/cape flourishes and dodge trails; reduces gait animation. |
-| `dispose()` | Idempotently releases shared geometry/materials/textures, the sky reflection environment, shadow and HDR buffers, instance buffers, renderer resources and owned canvas listeners. |
+| `dispose()` | Idempotently releases shared geometry/materials/textures, the sky reflection environment, shadow and HDR buffers, instance buffers, renderer resources and owned canvas listeners. A renderer passed in `GameViewOptions.renderer` is borrowed and left for its owner to dispose. |
 
 The shell owns RAF, keyboard/pointer/wheel input, pause, canvas layout and recovery
 UI. WebGL 2 creation/context-loss errors are explicit exceptions. There are no
@@ -154,9 +154,13 @@ post-processing, so warming pays for compiling the model programs rather than fo
 extra full-scene shadow and vertex passes on software GL. Without
 warming, the first soldier creates seven programs (two dyed lit programs, four
 shadow-depth variants and the shared unlit health-bar program); `GameView.warmup`
-reports the latest warm-up. Instances, skeletons and game-owned depth materials
-are released with the world mirror; the page-lifetime library releases the
-shared geometry, materials and textures.
+reports the latest warm-up. Instances and skeletons are released with the world
+mirror. The page-lifetime library owns the shared geometry, textures, dyed
+variants and the model shadow-depth material, and `main.ts` passes one renderer
+from `createRenderer()` to every view it creates, so model uploads and model
+programs are paid once per page rather than on every title, faction or run
+change. A view that creates its own renderer releases the library's GPU copies
+(`releaseGpu`) before disposing it.
 
 Each model's concept, recipe, provenance and three approval decisions are in
 `scripts/models/<id>/`, with the Blender cooking scripts in `scripts/models/pipeline/`.
