@@ -13,7 +13,7 @@ html,body{margin:0;overflow:hidden;background:#151e1b}canvas{display:block}</sty
 <script type="module">
 import * as THREE from 'three';
 import { createCampaign } from '/src/game/index.ts';
-import { Presentation } from '/src/view/index.ts';
+import { compileFrame, Presentation } from '/src/view/index.ts';
 import { ViewResources } from '/src/view/resources.ts';
 import { ModelLibrary, gltfModelSource } from '/src/view/models.ts';
 import { FollowCamera } from '/src/view/camera.ts';
@@ -101,8 +101,9 @@ window.modelHarness = {
     let warmup = null;
     if (warm) {
       presentation.update(snapshot, 1 / 60, camera.camera, false);
+      // The game's own warm-up draw: real lights, fog and shadow maps, one scissored pixel of shading.
       warmup = presentation.warmModels(renderer, snapshot.player.x, snapshot.player.z,
-        () => renderer.render(presentation.scene, camera.camera));
+        () => compileFrame(renderer, presentation.scene, camera.camera, null));
     }
     return { ...render(), warmup };
   },

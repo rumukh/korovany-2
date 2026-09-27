@@ -181,9 +181,9 @@ export class Presentation {
   /**
    * Compiles every cooked-model shader program before gameplay (aegis-engine #6): the skinned, dyed soldier body,
    * its items, the Echo Well and their shadow-depth variants, with this scene's real lights, fog, environment and
-   * quality. Temporary instances are placed at (x, z), `draw` renders exactly as a real frame would, and the
-   * instances are removed again. Call it in the same task as the real frame so the warm-up draw never reaches the
-   * screen. Returns the renderer's program count before and after, and the time spent.
+   * quality. Temporary instances are placed at (x, z), `draw` renders them with the real frame's state (it may shade
+   * almost no pixels), and the instances are removed again. Call it in the same task as the real frame so no warm-up
+   * pixel reaches the screen. Returns the renderer's program count before and after, and the time spent.
    */
   warmModels(renderer: THREE.WebGLRenderer, x: number, z: number, draw: () => void): ModelWarmup {
     const started = performance.now();
@@ -487,6 +487,31 @@ export class Presentation {
 }
 
 /**
+ * Renders `scene` with a real frame's lights, fog, shadow maps and output path while shading almost no pixels, so a
+ * shader warm-up pays for program compilation, not for extra full frames (SwiftShader and low-end GPUs). Program keys
+ * depend on whether a frame renders into a target, not on its size: pass a tiny `target` when real frames render
+ * through post-processing, or null when they render straight to the canvas.
+ */
+export function compileFrame(
+  renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera, target: THREE.WebGLRenderTarget | null,
+): void {
+  if (target) {
+    const previous = renderer.getRenderTarget();
+    renderer.setRenderTarget(target);
+    renderer.render(scene, camera);
+    renderer.setRenderTarget(previous);
+    return;
+  }
+  const scissor = renderer.getScissor(new THREE.Vector4());
+  const scissorTest = renderer.getScissorTest();
+  renderer.setScissor(0, 0, 1, 1);
+  renderer.setScissorTest(true);
+  renderer.render(scene, camera);
+  renderer.setScissor(scissor);
+  renderer.setScissorTest(scissorTest);
+}
+
+/**
  * Browser-only Three presenter. It owns GPU resources, not input, RAF or game rules.
  * A changed world/run/faction rebuilds the mirror and releases the previous run.
  * Nothing is presented until every cooked model is loaded; a load failure is thrown by `render`.
@@ -523,6 +548,7 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
   let lastTick = -1;
   let needsWarmup = true;
   let warmup: ModelWarmup | undefined;
+  const warmTarget = new THREE.WebGLRenderTarget(4, 4);
 
   function assertUsable(): void {
     if (disposed) throw new Error('The Korovany II view has already been disposed.');
@@ -604,8 +630,9 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
         else renderer.render(current.scene, camera.camera);
       };
       if (needsWarmup) {
-        // Same task as the real frame below, which overwrites the warm-up draw before the canvas is presented.
-        warmup = current.warmModels(renderer, snapshot.player.x, snapshot.player.z, draw);
+        // Same task as the real frame below, which overwrites any warm-up pixel before the canvas is presented.
+        warmup = current.warmModels(renderer, snapshot.player.x, snapshot.player.z,
+          () => compileFrame(renderer, current.scene, camera.camera, postprocessing ? warmTarget : null));
         needsWarmup = false;
       }
       draw();
@@ -647,6 +674,7 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
       presentation?.dispose();
       postprocessing?.dispose();
       environment?.dispose();
+      warmTarget.dispose();
       // GPU copies belong to this renderer; release them before it goes away.
       if (ownsModels) models.dispose();
       else models.releaseGpu();
