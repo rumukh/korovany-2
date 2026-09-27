@@ -70,7 +70,6 @@ let raf = 0;
 const lifecycle = new AbortController();
 // Cooked models load once per page, before any run is presented; there is no primitive fallback.
 const models = new ModelLibrary(gltfModelSource());
-let awaitingModels = false;
 const sound = new Soundscape(() => shell?.warn("audioFailure"), (line) => shell?.caption(line));
 const audio = new AudioPresentation(sound);
 sound.configure(settings.muted, settings.audio);
@@ -181,29 +180,12 @@ function changeOverlay(overlay: Overlay, selection?: SpeechSelection): void {
     shell?.warn("storage.conflict");
     overlay = "pause";
   } else if (overlay === null) overlay = narrativeOverlay();
-  if (overlay === null && !models.isReady) {
-    overlay = "loading";
-    awaitModels(selection);
-  }
   shell?.show(overlay);
   if (overlay === null && campaign && snapshot?.phase === "playing") {
     running = true;
     input?.setEnabled(true);
   }
   syncAudio(selection);
-}
-
-/** A run is never presented before its models are ready; the loading panel resumes it automatically. */
-function awaitModels(selection?: SpeechSelection): void {
-  if (awaitingModels) return;
-  awaitingModels = true;
-  models.ready.then(() => {
-    awaitingModels = false;
-    if (!disposed && !fatal && shell?.overlay === "loading") changeOverlay(null, selection);
-  }, (error: unknown) => {
-    awaitingModels = false;
-    if (!disposed) stopForError(error, "assets");
-  });
 }
 
 function rendererFor(next: GameSnapshot): void {
@@ -534,7 +516,10 @@ function frame(time: number): void {
       raf = requestAnimationFrame(frame);
       return;
     }
-    if (running && campaign) {
+    // Until the cooked models are ready the world is not drawn, so the simulation holds as well: a run that
+    // starts early (its click still captures the mouse) begins on the first frame the player can see.
+    shell?.setModelsLoading(!models.isReady);
+    if (running && campaign && models.isReady) {
       accumulator += delta;
       let stepped = false;
       while (accumulator >= STEP) {

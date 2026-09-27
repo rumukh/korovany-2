@@ -9,7 +9,7 @@ import { captureControllerContext, ControllerNavigation, controllerControls, con
 import type { ControllerFeedback, ControllerUiFrame } from "./controller-types";
 import "./controller.css";
 
-export type Overlay = "menu" | "pause" | "map" | "journal" | "dialogue" | "inspection" | "settings" | "help" | "records" | "terminal" | "loading" | "fatal" | null;
+export type Overlay = "menu" | "pause" | "map" | "journal" | "dialogue" | "inspection" | "settings" | "help" | "records" | "terminal" | "fatal" | null;
 export interface MetaOffer {
   id: UpgradeId;
   level: number;
@@ -79,6 +79,7 @@ export class GameShell {
   private readonly warnings = element("div", "warnings");
   private readonly live = element("div", "sr-only");
   private readonly voiceCaption = element("div", "voice-caption");
+  private readonly modelStatus = element("div", "model-status");
   private readonly controllerStatus = element("div", "controller-status");
   private readonly confirmationHost = element("div", "confirmation-host");
   private readonly navigation = new ControllerNavigation();
@@ -121,7 +122,10 @@ export class GameShell {
     this.hud.append(this.hudTop, this.hudRail, this.hudBottom);
     this.voiceCaption.setAttribute("aria-live", "polite");
     this.voiceCaption.setAttribute("aria-atomic", "true");
-    root.replaceChildren(this.canvas, this.hud, this.overlayHost, this.warnings, this.live, this.voiceCaption, this.controllerStatus, this.confirmationHost);
+    this.modelStatus.hidden = true;
+    this.modelStatus.setAttribute("role", "status");
+    root.replaceChildren(this.canvas, this.hud, this.overlayHost, this.warnings, this.live, this.voiceCaption, this.modelStatus,
+      this.controllerStatus, this.confirmationHost);
     window.addEventListener("keydown", (event) => this.overlayKey(event), { signal: this.controller.signal, capture: true });
     window.addEventListener("focusin", (event) => {
       if (this.confirmation && event.target instanceof Node && !this.confirmationHost.contains(event.target)) {
@@ -344,6 +348,13 @@ export class GameShell {
     document.title = `${this.t("title")} II — ${this.t("subtitle")}`;
     this.canvas.setAttribute("aria-label", this.t("worldLabel"));
     this.minimap.setAttribute("aria-label", this.t("map"));
+    this.modelStatus.textContent = this.t("loadingModels");
+  }
+
+  /** A non-blocking notice while the cooked models load; the world is not drawn and the simulation holds meanwhile. */
+  setModelsLoading(loading: boolean): void {
+    if (this.modelStatus.hidden === !loading) return;
+    this.modelStatus.hidden = !loading;
   }
 
   show(overlay: Overlay): void {
@@ -358,6 +369,7 @@ export class GameShell {
 
   fail(kind: "graphics" | "game" | "assets"): void {
     if (this.confirmation) this.closeConfirmation(false);
+    this.modelStatus.hidden = true;
     this.fatalKind = kind;
     this.show("fatal");
   }
@@ -599,10 +611,6 @@ export class GameShell {
     else if (this.currentOverlay === "help") this.help(panel);
     else if (this.currentOverlay === "records") this.records(panel);
     else if (this.currentOverlay === "terminal") this.terminal(panel);
-    else if (this.currentOverlay === "loading") {
-      panel.setAttribute("aria-busy", "true");
-      panel.append(emblem(), this.heading("loading"), element("p", "guide-copy", this.t("loadingModels")));
-    }
     else this.fatal(panel);
     if (["dialogue", "inspection", "terminal"].includes(this.currentOverlay)) {
       panel.append(this.button("settings", { type: "overlay", overlay: "settings" }, "button quiet speech-settings"));

@@ -121,11 +121,13 @@ heraldry distinguishes locked, unlocked and defeated states without a false gate
 Two cooked glTF models replace procedural presentation: the line soldier
 (`public/models/char-line-soldier/`), used by every faction's `soldier` actor,
 and the Echo Well (`public/models/prop-echo-well/`), used by the Echo Well and
-the matching Cinderwell structure. `ModelLibrary` (`models.ts`) loads them once
-per page through `GLTFLoader`; `main.ts` shows a loading panel and presents no
-run until every model is ready. A load failure stops on the fatal "assets" panel
-with the failing URL. There is no primitive fallback; only DOM-free geometry
-tests construct `ViewResources` without models.
+the matching Cinderwell structure. `ModelLibrary` (`models.ts`) starts loading
+them through `GLTFLoader` as the page opens, behind the title menu. Until every
+model is ready the world is not drawn and the simulation does not step; a small
+status line says so, and a run started early still captures the mouse from its
+own click and begins on the first frame the player can see. A load failure stops
+on the fatal "assets" panel with the failing URL. There is no primitive fallback;
+only DOM-free geometry tests construct `ViewResources` without models.
 
 Soldier instances are `SkeletonUtils` clones driven by an `AnimationMixer` from
 snapshot state and render time: `Idle`, `AtEase` (while a story scene is open),
