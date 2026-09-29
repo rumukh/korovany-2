@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { ActorSnapshot, GameSnapshot, OutpostSnapshot, WorldBlueprint } from '../game/types';
-import { createActor, createModelSoldier, createWagon, type ActorLook, type ActorModel, type ViewAllegiance, type WagonModel } from './actors';
+import { createActor, createModelHero, createModelSoldier, createWagon, type ActorLook, type ActorModel, type ViewAllegiance, type WagonModel } from './actors';
 import { FollowCamera, type GroundPoint, type MovementBasis } from './camera';
 import { WorldEffects } from './effects';
 import { factionColors, palette } from './palette';
@@ -10,7 +10,7 @@ import { WorldResidents } from './residents';
 import { createWorldScenery, type WorldScenery } from './world';
 import { lightWorld, positionSun, skyEnvironment } from './atmosphere';
 import { WorldPostprocessing } from './postprocessing';
-import { gltfModelSource, ModelLibrary, propInstance, type CharacterInstance, type ModelStatus } from './models';
+import { gltfModelSource, HEROES, ModelLibrary, propInstance, type CharacterInstance, type HeroInstance, type ModelStatus } from './models';
 
 export type { GroundPoint, MovementBasis } from './camera';
 export type { ModelStatus } from './models';
@@ -142,7 +142,8 @@ export class Presentation {
   readonly residents: WorldResidents;
   private readonly actorVisuals = new Map<string, ActorVisual>();
   private readonly postVisuals = new Map<string, PostVisual>();
-  private hero: ActorModel | undefined;
+  /** The cooked hero; the procedural one only without a model library (DOM-free and cutaway tests). */
+  private hero: { root: THREE.Group; actor?: ActorModel; character?: HeroInstance } | undefined;
   private convoy: WagonModel | undefined;
   private convoyBar: HealthBar | undefined;
   private convoyCargo: THREE.Group | undefined;
@@ -152,6 +153,12 @@ export class Presentation {
   private lastPlayerX = 0;
   private lastPlayerZ = 0;
   private playerSpeed = 0;
+  private playerVelocityX = 0;
+  private playerVelocityZ = 0;
+  private lastPlayerHp = 0;
+  private lastHeroEvent = 0;
+  private lastInteraction: { targetId: string; progress: number } | null = null;
+  private workingUntil = -1;
   private lastConvoyX = 0;
   private lastConvoyZ = 0;
   private convoyDistance = 0;
@@ -228,7 +235,8 @@ export class Presentation {
     group.add(well);
     this.scene.add(group);
     const warming = new Set<THREE.Object3D>();
-    for (const root of [group, visual.root, visual.bar.root, visual.tell]) root.traverse(object => warming.add(object));
+    // The hero, when already built, shares the soldier's programs; drawing it here also uploads its own textures.
+    for (const root of [group, visual.root, visual.bar.root, visual.tell, this.hero?.root]) root?.traverse(object => warming.add(object));
     const hidden: THREE.Object3D[] = [];
     this.scene.traverseVisible(object => {
       const drawn = object as THREE.Object3D & { isMesh?: boolean; isLine?: boolean; isPoints?: boolean; isSprite?: boolean };
@@ -329,8 +337,18 @@ export class Presentation {
     this.resources.assertTextures();
     this.cosmeticTime += dt;
     if (!this.hero) {
-      this.hero = createActor(this.resources, 'hero', snapshot.faction, true);
+      const model = this.resources.model(HEROES[snapshot.faction].id);
+      if (model) {
+        this.hero = createModelHero(this.resources, model, snapshot.faction, snapshot.player.state === 'dead');
+      } else {
+        // DOM-free geometry tests construct resources without models; browser views always have them.
+        const actor = createActor(this.resources, 'hero', snapshot.faction, true);
+        this.hero = { root: actor.root, actor };
+      }
       this.scene.add(this.hero.root);
+      this.lastPlayerHp = snapshot.player.hp;
+      // A rebuilt mirror never replays attacks that happened before it existed.
+      this.lastHeroEvent = snapshot.events.reduce((latest, event) => Math.max(latest, event.id), 0);
       this.convoy = createWagon(this.resources, true);
       this.scene.add(this.convoy.root);
       this.convoyBar = healthBar(this.resources, this.convoy.root, 2.92, true);
@@ -358,7 +376,9 @@ export class Presentation {
     const tickChanged = snapshot.tick !== this.lastTick;
     const tickDt = this.lastTick < 0 ? 1 / 60 : Math.max(1 / 60, (snapshot.tick - this.lastTick) / 60);
     if (tickChanged) {
-      this.playerSpeed = Math.hypot(snapshot.player.x - this.lastPlayerX, snapshot.player.z - this.lastPlayerZ) / tickDt;
+      this.playerVelocityX = (snapshot.player.x - this.lastPlayerX) / tickDt;
+      this.playerVelocityZ = (snapshot.player.z - this.lastPlayerZ) / tickDt;
+      this.playerSpeed = Math.hypot(this.playerVelocityX, this.playerVelocityZ);
       this.convoyDistance = Math.hypot(snapshot.convoy.x - this.lastConvoyX, snapshot.convoy.z - this.lastConvoyZ);
       this.convoySpeed = this.convoyDistance / tickDt;
       this.lastPlayerX = snapshot.player.x;
@@ -366,18 +386,59 @@ export class Presentation {
       this.lastConvoyX = snapshot.convoy.x;
       this.lastConvoyZ = snapshot.convoy.z;
     }
+    if (tickChanged) this.sinceTick = 0;
+    else this.sinceTick += dt;
+    const storyOpen = Boolean(snapshot.narrative?.dialogue || snapshot.narrative?.inspection);
+    // A stalled tick means the shell paused the simulation: never run in place.
+    const paused = storyOpen || snapshot.phase !== 'playing' || this.sinceTick > 0.1;
     const heroRoot = this.hero.root;
     heroRoot.position.set(snapshot.player.x, 0.08, snapshot.player.z);
     heroRoot.rotation.y = snapshot.player.heading;
-    this.hero.animate({
-      moving: this.playerSpeed / Math.max(1, snapshot.player.speed),
-      time: snapshot.elapsed,
-      attacking: snapshot.player.state === 'attack' ? THREE.MathUtils.clamp(1 - snapshot.player.attackCooldown / 0.6, 0, 1) : 0,
-      winding: 0,
-      dodging: snapshot.player.state === 'dodge',
-      dead: snapshot.player.state === 'dead',
-      reducedMotion,
-    });
+    if (this.hero.character) {
+      let attack = false;
+      let ability = false;
+      for (const event of snapshot.events) {
+        if (event.id <= this.lastHeroEvent) continue;
+        this.lastHeroEvent = event.id;
+        if (event.kind === 'attack' && event.targetId === 'player') attack = true;
+        if (event.kind === 'ability') ability = true;
+      }
+      const hit = tickChanged && snapshot.player.hp < this.lastPlayerHp;
+      const interaction = snapshot.interaction;
+      if (tickChanged) {
+        this.lastPlayerHp = snapshot.player.hp;
+        // Capture, repair and rest progress rises only while the interaction is held; a pickup or heal jumps instead.
+        const last = this.lastInteraction;
+        const rise = interaction && last?.targetId === interaction.targetId ? interaction.progress - last.progress : 0;
+        if (interaction?.enabled && rise > 1e-6 && rise < 0.02) this.workingUntil = this.cosmeticTime + 0.25;
+        this.lastInteraction = interaction ? { targetId: interaction.targetId, progress: interaction.progress } : null;
+      }
+      // Teleports (fast travel, a rebuilt run) are not movement.
+      const moving = !paused && this.playerSpeed < 30;
+      const cos = Math.cos(snapshot.player.heading), sin = Math.sin(snapshot.player.heading);
+      const vx = moving ? this.playerVelocityX : 0, vz = moving ? this.playerVelocityZ : 0;
+      this.hero.character.update({
+        velocity: { x: vx * cos - vz * sin, z: vx * sin + vz * cos },
+        dodging: snapshot.player.state === 'dodge',
+        dead: snapshot.player.state === 'dead' || snapshot.player.hp <= 0,
+        attack,
+        ability,
+        hit,
+        working: !paused && this.cosmeticTime < this.workingUntil,
+        relaxed: storyOpen,
+        reducedMotion,
+      }, dt);
+    } else {
+      this.hero.actor!.animate({
+        moving: this.playerSpeed / Math.max(1, snapshot.player.speed),
+        time: snapshot.elapsed,
+        attacking: snapshot.player.state === 'attack' ? THREE.MathUtils.clamp(1 - snapshot.player.attackCooldown / 0.6, 0, 1) : 0,
+        winding: 0,
+        dodging: snapshot.player.state === 'dodge',
+        dead: snapshot.player.state === 'dead',
+        reducedMotion,
+      });
+    }
     this.scenery.heroPosition.set(snapshot.player.x, 1.15, snapshot.player.z);
     this.scenery.update(this.cosmeticTime, reducedMotion);
     const fortress = snapshot.world.sites.find((site) => site.kind === 'fortress');
@@ -409,11 +470,6 @@ export class Presentation {
     }
     const activeIds = new Set<string>();
     let corpses = 0;
-    if (tickChanged) this.sinceTick = 0;
-    else this.sinceTick += dt;
-    const storyOpen = Boolean(snapshot.narrative?.dialogue || snapshot.narrative?.inspection);
-    // A stalled tick means the shell paused the simulation: never run in place.
-    const paused = storyOpen || snapshot.phase !== 'playing' || this.sinceTick > 0.1;
     for (const actor of snapshot.actors) {
       activeIds.add(actor.id);
       let visual = this.actorVisuals.get(actor.id);
@@ -506,6 +562,7 @@ export class Presentation {
 
   dispose(): void {
     for (const visual of this.actorVisuals.values()) visual.character?.dispose();
+    this.hero?.character?.dispose();
     this.effects.dispose();
     this.residents.dispose();
     this.scenery.dispose();

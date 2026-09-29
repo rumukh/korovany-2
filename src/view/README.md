@@ -118,10 +118,12 @@ heraldry distinguishes locked, unlocked and defeated states without a false gate
 
 ## Cooked 3D models
 
-Two cooked glTF models replace procedural presentation: the line soldier
+Five cooked glTF models replace procedural presentation: the line soldier
 (`public/models/char-line-soldier/`), used by every faction's `soldier` actor,
-and the Echo Well (`public/models/prop-echo-well/`), used by the Echo Well and
-the matching Cinderwell structure. `ModelLibrary` (`models.ts`) starts loading
+the Echo Well (`public/models/prop-echo-well/`), used by the Echo Well and
+the matching Cinderwell structure, and one hero per faction
+(`public/models/char-hero-elf/`, `char-hero-guard/` and `char-hero-villain/`),
+used for the player. `ModelLibrary` (`models.ts`) starts loading
 them through `GLTFLoader` as the page opens, behind the title menu. Until every
 model is ready the world is not drawn and the simulation does not step; a small
 status line says so, and a run started early still captures the mouse from its
@@ -143,11 +145,28 @@ coverage, dye-masked base colour is encoded with libwebp's `exact` option
 texel whose alpha is 0, which is every undyed surface. The well scales uniformly
 into its circular blocker and shares one geometry and material across instances.
 
+The hero (`HeroInstance`) is a `SkeletonUtils` clone with 14 clips: `Idle`,
+`AtEase` (while a story scene is open), `Interact` (while interaction progress
+rises), the directional runs `Run`, `RunBack`, `RunLeft` and `RunRight`, `Sprint`
+(blended in by ground speed), `Dodge` (while the player dodges), the `Attack`
+and `AttackB` swings (alternating, on the player's own attack events), `Ability`,
+an additive `Hit` on health loss, and the held `Death`. Movement comes from the
+snapshot's velocity in the hero's frame. Every locomotion clip shares one stride
+phase advanced by that ground speed, so planted feet keep the authored stride.
+Diagonal travel uses orientation warping rather than a stride blend: the body
+turns by up to 55 degrees onto the nearest directional clip's travel axis, and
+spine and chest counter-twist (at most 60 degrees) back towards the heading.
+Attacks and the ability drive the whole body while the hero stands and only the
+upper body while it moves. Reduced motion holds a still stance and suppresses the
+flinch. The heroes share the soldier's dyed program; only the palace officer's
+shield face is dyed, so a hero adds no shader program.
+
 After a world mirror is built and after every quality change, `createGameView`
 calls `Presentation.warmModels()` in the same task as the next real frame: a
 temporary soldier visual (model, ring, health bar, tell) and well are drawn twice,
-alone, with the scene's real lights, fog, shadow maps and output path, then
-removed, so no model shader compiles when a soldier first appears (aegis-engine
+alone, together with the current hero, with the scene's real lights, fog, shadow
+maps and output path, then removed, so no model shader compiles when a soldier
+first appears (aegis-engine
 #6). Every other renderable is hidden for those two draws, and they shade a single
 scissored pixel (`compileFrame`), or a 4×4 target when frames go through
 post-processing, so warming pays for compiling the model programs rather than for
@@ -171,3 +190,6 @@ it on the public site. `tests/models.test.ts` checks every shipped byte against
 its provenance and verifies every 60 Hz frame of every soldier clip (weights,
 foot contact and sliding, loop closure, clearance, joint scale, rigid parts and
 crease strain), including deliberately broken copies that must fail.
+`tests/hero-models.test.ts` does the same for every hero clip, drives each hero
+through the presenter with real campaign inputs, and checks foot planting in
+eight directions.

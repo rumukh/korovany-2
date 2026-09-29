@@ -19,10 +19,16 @@ import k2cook as k  # noqa: E402
 import k2materials as km  # noqa: E402
 
 args = sys.argv[sys.argv.index("--") + 1:]
+backdrop_arg = None
+if "--backdrop" in args:
+    at = args.index("--backdrop")
+    backdrop_arg = tuple(int(v) for v in args[at + 1].split(","))
+    del args[at:at + 2]
 source, out = Path(args[0]), Path(args[1])
 width, height = (int(args[2]), int(args[3])) if len(args) >= 4 else (928, 1664)
 out.mkdir(parents=True, exist_ok=True)
-BACKDROP_SRGB = (193, 185, 168)          # measured corners of the approved front concept
+# Measured corners of the approved front concept (soldier 4101 by default; heroes pass their own with --backdrop).
+BACKDROP_SRGB = backdrop_arg or (193, 185, 168)
 CLAY = (0.42, 0.42, 0.42, 1.0)
 
 

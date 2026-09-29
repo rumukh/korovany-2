@@ -288,7 +288,9 @@ def author_clips(rig, defs, body=None, items=()):
 
     def run(t):
         R = C["run"]
-        cycle = R["seconds"]
+        # A loop must span whole frames: bake_clip keys round(seconds * 60) frames, so the cycle is snapped to that
+        # period and the last key equals the first (0.64 s = 38.4 frames left a 47.8 mm pop at every loop).
+        cycle = round(R["seconds"] * 60) / 60
         stride = R["speed"] * cycle
         phase = (t / cycle) % 1.0
         bob = R["bob"] * (0.5 - 0.5 * math.cos(4 * math.pi * phase))
