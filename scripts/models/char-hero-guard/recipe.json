@@ -1,0 +1,1714 @@
+{
+  "id": "char-hero-guard",
+  "note": "Palace officer hero (Crown). Approved TRELLIS mesh hd-s505 with its approved rear-view projection. Cooked metres, Blender axes (+Z up, front -Y, character left +X).",
+  "style": "swordShield",
+  "heightMeters": 2.23,
+  "triangleBudget": 14200,
+  "fillHoleSides": 12,
+  "baseQuality": 90,
+  "ormQuality": 85,
+  "landmarks": {
+    "pelvis": [
+      0.0,
+      0.02,
+      1.09
+    ],
+    "spine": [
+      0.0,
+      0.02,
+      1.29
+    ],
+    "chest": [
+      0.0,
+      0.02,
+      1.505
+    ],
+    "neck": [
+      0.0,
+      0.03,
+      1.79
+    ],
+    "head": [
+      0.0,
+      0.02,
+      1.87
+    ],
+    "crown": [
+      0.0,
+      0.0,
+      2.23
+    ],
+    "clavicle": [
+      0.06,
+      0.0,
+      1.745
+    ],
+    "shoulder": [
+      0.29,
+      0.05,
+      1.69
+    ],
+    "elbow": [
+      0.495,
+      0.025,
+      1.41
+    ],
+    "wrist": [
+      0.63,
+      -0.065,
+      1.195
+    ],
+    "knuckle": [
+      0.672,
+      -0.09,
+      1.105
+    ],
+    "fingertip": [
+      0.7,
+      -0.105,
+      1.05
+    ],
+    "hip": [
+      0.119,
+      0.02,
+      1.05
+    ],
+    "knee": [
+      0.182,
+      0.04,
+      0.575
+    ],
+    "ankle": [
+      0.212,
+      0.07,
+      0.11
+    ],
+    "ball": [
+      0.215,
+      -0.09,
+      0.04
+    ],
+    "toe": [
+      0.215,
+      -0.19,
+      0.03
+    ],
+    "skirtFront": [
+      0.0,
+      -0.17,
+      1.12
+    ],
+    "skirtFrontTip": [
+      0.0,
+      -0.22,
+      0.66
+    ],
+    "skirtBack": [
+      0.0,
+      0.21,
+      1.12
+    ],
+    "skirtBackTip": [
+      0.0,
+      0.26,
+      0.66
+    ]
+  },
+  "sockets": [
+    {
+      "name": "socket_hand_r",
+      "kind": "grip",
+      "side": "r",
+      "t": 0.6
+    },
+    {
+      "name": "socket_forearm_l",
+      "kind": "strap",
+      "side": "l",
+      "t": 0.55,
+      "offset": [
+        0.08,
+        0,
+        0
+      ]
+    }
+  ],
+  "regions": {
+    "torsoHalfWidth": 0.33,
+    "lateralMargin": 0.05,
+    "armpitHeight": 1.5,
+    "handMinHeight": 0.98,
+    "crotchHeight": 0.95,
+    "neckHeight": 1.8,
+    "soleHeight": 0.025,
+    "skirtTop": 1.2,
+    "skirtHemHeight": 0.61,
+    "skirtHalfWidth": 0.36,
+    "headMinHeight": 1.9,
+    "headHalfWidth": 0.2,
+    "helmetMinHeight": 2.0
+  },
+  "weights": {
+    "relax": 16,
+    "partRadius": {
+      "pelvis": 0.3,
+      "spine": 0.3,
+      "chest": 0.3,
+      "clavicle": 0.12,
+      "neck": 0.12,
+      "head": 0.2,
+      "upperarm": 0.14,
+      "forearm": 0.11,
+      "hand": 0.08,
+      "fingers": 0.06,
+      "thigh": 0.15,
+      "shin": 0.11,
+      "foot": 0.1,
+      "toe": 0.08,
+      "skirt_front": 0.1,
+      "skirt_back": 0.1,
+      "shoulderhelper": 0.14,
+      "kneehelper": 0.12
+    },
+    "bands": {
+      "shoulder": 0.2,
+      "hip": 0.12,
+      "neck": 0.06,
+      "armpit": 0.16,
+      "armpitOffset": [
+        0.06,
+        0.0,
+        -0.16
+      ]
+    },
+    "shoulderBlend": {
+      "band": 0.2,
+      "ramp": 0.1
+    },
+    "skirtBlend": {
+      "zTop": 1.0,
+      "zHem": 0.62,
+      "sideRamp": 0.12,
+      "maxShare": 0.3
+    },
+    "elbowBlend": {
+      "band": 0.12,
+      "ramp": 0.06
+    },
+    "kneeBlend": {
+      "band": 0.18,
+      "ramp": 0.09,
+      "shift": 0.03
+    },
+    "helpers": true,
+    "finalRelax": 2,
+    "ambiguity": 1.25,
+    "seamSoften": {
+      "iterations": 8,
+      "rings": 4
+    }
+  },
+  "body": {
+    "bakeSize": 2048,
+    "textureSize": 1024,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.05,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.4,
+    "reliefStrength": 4.0,
+    "roughnessFromDetail": 0.5,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0,
+    "toneGamma": 0.83,
+    "toneCalibration": "Luma power fitted in the game so the hero's mean luma from the default follow camera (world yaw pi, pitch 0.48, 18 and 26 m, 8 facings, high and low quality, hero-only pixels) equals the approved TRELLIS input's foreground mean luma (44.1/255); 36.1/255 as cooked without it.",
+    "defaultRoughness": 0.86,
+    "regions": [
+      {
+        "name": "boots",
+        "zMax": 0.56,
+        "roughness": 0.55
+      },
+      {
+        "name": "trousers",
+        "zMin": 0.5,
+        "zMax": 0.64,
+        "xMax": 0.34,
+        "colour": {
+          "maxValue": 0.3
+        },
+        "roughness": 0.92
+      },
+      {
+        "name": "coat",
+        "zMin": 0.6,
+        "zMax": 1.96,
+        "colour": {
+          "maxSaturation": 0.45,
+          "maxValue": 0.5
+        },
+        "roughness": 0.9
+      },
+      {
+        "name": "belt-pouch",
+        "zMin": 1.05,
+        "zMax": 1.34,
+        "xMax": 0.38,
+        "colour": {
+          "minSaturation": 0.3,
+          "maxValue": 0.55
+        },
+        "roughness": 0.6
+      },
+      {
+        "name": "pauldrons",
+        "zMin": 1.6,
+        "zMax": 1.93,
+        "xMin": 0.17,
+        "xMax": 0.52,
+        "colour": {
+          "maxSaturation": 0.22,
+          "minValue": 0.3
+        },
+        "roughness": 0.36,
+        "metal": 1.0
+      },
+      {
+        "name": "brass",
+        "zMin": 1.0,
+        "zMax": 1.95,
+        "colour": {
+          "minSaturation": 0.35,
+          "minValue": 0.5
+        },
+        "roughness": 0.38,
+        "metal": 1.0
+      },
+      {
+        "name": "gloves",
+        "zMax": 1.24,
+        "xMin": 0.57,
+        "roughness": 0.6
+      },
+      {
+        "name": "face",
+        "zMin": 1.84,
+        "zMax": 2.02,
+        "xMax": 0.12,
+        "yMax": -0.04,
+        "colour": {
+          "minSaturation": 0.25
+        },
+        "roughness": 0.6,
+        "metal": 0.0
+      },
+      {
+        "name": "cravat",
+        "zMin": 1.75,
+        "zMax": 1.9,
+        "xMax": 0.1,
+        "yMax": -0.03,
+        "colour": {
+          "minValue": 0.55,
+          "maxSaturation": 0.35
+        },
+        "roughness": 0.85,
+        "metal": 0.0
+      }
+    ],
+    "toneMatch": [
+      {
+        "regions": [
+          "coat"
+        ],
+        "strength": 0.9,
+        "weightFrom": "position",
+        "backStart": 0.02,
+        "backFull": 0.1
+      },
+      {
+        "regions": [
+          "pauldrons"
+        ],
+        "strength": 0.8,
+        "weightFrom": "position",
+        "backStart": 0.02,
+        "backFull": 0.1
+      }
+    ]
+  },
+  "items": {
+    "textureSize": 256,
+    "list": [
+      {
+        "name": "item-sword",
+        "kind": "sword",
+        "socket": "socket_hand_r",
+        "alongWorld": [
+          0,
+          -1,
+          0.15
+        ],
+        "faceWorld": [
+          1,
+          0,
+          0
+        ],
+        "bladeLength": 0.95,
+        "bladeWidth": 0.056,
+        "bladeThickness": 0.012,
+        "guardWidth": 0.23,
+        "gripLength": 0.16,
+        "gripRadius": 0.018,
+        "pommel": 0.032,
+        "guardColor": [
+          0.55,
+          0.42,
+          0.2
+        ],
+        "pommelColor": [
+          0.55,
+          0.42,
+          0.2
+        ],
+        "bladeColor": [
+          0.66,
+          0.68,
+          0.7
+        ]
+      },
+      {
+        "name": "item-shield",
+        "kind": "shield",
+        "socket": "socket_forearm_l",
+        "alongWorld": [
+          0.643,
+          0,
+          -0.766
+        ],
+        "faceWorld": [
+          0.7,
+          -0.7,
+          0
+        ],
+        "width": 0.62,
+        "height": 0.8,
+        "curve": 0.05,
+        "thickness": 0.03,
+        "boss": 0.055,
+        "faceColor": [
+          0.5,
+          0.48,
+          0.44
+        ],
+        "faceDye": 1.0,
+        "backColor": [
+          0.047,
+          0.0245,
+          0.0116
+        ],
+        "rimColor": [
+          0.55,
+          0.42,
+          0.2
+        ],
+        "bossColor": [
+          0.55,
+          0.42,
+          0.2
+        ],
+        "emblem": {
+          "width": 0.26,
+          "height": 0.17,
+          "y": 0.04,
+          "color": [
+            0.62,
+            0.48,
+            0.22
+          ]
+        }
+      }
+    ]
+  },
+  "clips": {
+    "stanceHalfWidth": 0.22,
+    "stagger": 0.05,
+    "sink": 0.03,
+    "idleSeconds": 2.4,
+    "easeSeconds": 3.2,
+    "hitSeconds": 0.35,
+    "poleBias": 0.45,
+    "skirtFollow": [
+      0.55,
+      0.5
+    ],
+    "poses": {
+      "ready": {
+        "chest": [
+          0,
+          0,
+          -6
+        ],
+        "head": [
+          0,
+          0,
+          5
+        ],
+        "l": {
+          "wrist": [
+            0.2,
+            -0.38,
+            1.32
+          ],
+          "pole": [
+            1.0,
+            0.4,
+            -0.6
+          ],
+          "curl": 55
+        },
+        "r": {
+          "at": [
+            -0.28,
+            -0.34,
+            1.22
+          ],
+          "grip": {
+            "along": [
+              0.15,
+              -0.8,
+              0.58
+            ],
+            "face": [
+              0.95,
+              0.1,
+              -0.1
+            ]
+          },
+          "curl": 85,
+          "pole": [
+            -1.0,
+            0.4,
+            -0.6
+          ]
+        }
+      },
+      "ease": {
+        "sink": 0.015,
+        "l": {
+          "wrist": [
+            0.46,
+            -0.06,
+            1.08
+          ],
+          "pole": [
+            1.0,
+            0.6,
+            0.0
+          ],
+          "curl": 35
+        },
+        "r": {
+          "at": [
+            -0.44,
+            -0.12,
+            1.06
+          ],
+          "grip": {
+            "along": [
+              0.0,
+              -0.87,
+              -0.5
+            ],
+            "face": [
+              0.95,
+              0.2,
+              0.0
+            ]
+          },
+          "curl": 80,
+          "pole": [
+            -1.0,
+            0.6,
+            0.0
+          ]
+        }
+      },
+      "carry": {
+        "l": {
+          "wrist": [
+            0.24,
+            -0.32,
+            1.3
+          ],
+          "pole": [
+            1.0,
+            0.4,
+            -0.6
+          ],
+          "curl": 55
+        },
+        "r": {
+          "at": [
+            -0.38,
+            -0.16,
+            1.14
+          ],
+          "grip": {
+            "along": [
+              0.05,
+              -0.7,
+              0.71
+            ],
+            "face": [
+              0.95,
+              0.2,
+              0.1
+            ]
+          },
+          "curl": 85,
+          "pole": [
+            -1.0,
+            0.6,
+            -0.3
+          ]
+        }
+      },
+      "sprintCarry": {
+        "l": {
+          "wrist": [
+            0.3,
+            -0.22,
+            1.26
+          ],
+          "pole": [
+            1.0,
+            0.5,
+            -0.5
+          ],
+          "curl": 55
+        },
+        "r": {
+          "at": [
+            -0.38,
+            -0.06,
+            1.12
+          ],
+          "grip": {
+            "along": [
+              0.0,
+              0.95,
+              -0.3
+            ],
+            "face": [
+              0.95,
+              0.25,
+              0.1
+            ]
+          },
+          "curl": 85,
+          "pole": [
+            -1.0,
+            0.6,
+            -0.3
+          ]
+        }
+      },
+      "windup": {
+        "pelvis": [
+          0,
+          0,
+          -12
+        ],
+        "spine": [
+          0,
+          0,
+          -10
+        ],
+        "chest": [
+          0,
+          0,
+          -25
+        ],
+        "head": [
+          0,
+          0,
+          22
+        ],
+        "sink": 0.06,
+        "l": {
+          "wrist": [
+            0.22,
+            -0.36,
+            1.3
+          ],
+          "pole": [
+            1.0,
+            0.4,
+            -0.6
+          ],
+          "curl": 55
+        },
+        "r": {
+          "at": [
+            -0.42,
+            -0.04,
+            1.42
+          ],
+          "grip": {
+            "along": [
+              -0.3,
+              0.45,
+              0.84
+            ],
+            "face": [
+              0.6,
+              -0.7,
+              0.1
+            ]
+          },
+          "curl": 85,
+          "pole": [
+            -1.0,
+            0.5,
+            -0.3
+          ]
+        }
+      },
+      "through": {
+        "pelvis": [
+          0,
+          0,
+          4
+        ],
+        "spine": [
+          2,
+          0,
+          2
+        ],
+        "chest": [
+          4,
+          0,
+          6
+        ],
+        "head": [
+          0,
+          0,
+          -6
+        ],
+        "sink": 0.08,
+        "l": {
+          "wrist": [
+            0.28,
+            -0.26,
+            1.26
+          ],
+          "pole": [
+            1.0,
+            0.4,
+            -0.6
+          ],
+          "curl": 55
+        },
+        "r": {
+          "at": [
+            -0.05,
+            -0.58,
+            1.32
+          ],
+          "grip": {
+            "along": [
+              0.8,
+              -0.55,
+              0.1
+            ],
+            "face": [
+              0.05,
+              0.1,
+              -0.99
+            ]
+          },
+          "curl": 85,
+          "pole": [
+            -0.9,
+            0.3,
+            -0.5
+          ]
+        }
+      },
+      "follow": {
+        "pelvis": [
+          0,
+          0,
+          12
+        ],
+        "spine": [
+          3,
+          0,
+          8
+        ],
+        "chest": [
+          5,
+          0,
+          22
+        ],
+        "head": [
+          0,
+          0,
+          -24
+        ],
+        "sink": 0.08,
+        "l": {
+          "wrist": [
+            0.3,
+            -0.2,
+            1.22
+          ],
+          "pole": [
+            1.0,
+            0.4,
+            -0.6
+          ],
+          "curl": 55
+        },
+        "r": {
+          "at": [
+            0.3,
+            -0.36,
+            1.16
+          ],
+          "grip": {
+            "along": [
+              0.75,
+              0.55,
+              -0.2
+            ],
+            "face": [
+              0.0,
+              0.2,
+              -0.98
+            ]
+          },
+          "curl": 85,
+          "pole": [
+            -0.6,
+            0.2,
+            -0.8
+          ]
+        }
+      },
+      "raiseB": {
+        "pelvis": [
+          0,
+          0,
+          10
+        ],
+        "spine": [
+          0,
+          0,
+          8
+        ],
+        "chest": [
+          -2,
+          0,
+          18
+        ],
+        "head": [
+          0,
+          0,
+          -18
+        ],
+        "sink": 0.05,
+        "l": {
+          "wrist": [
+            0.3,
+            -0.24,
+            1.28
+          ],
+          "pole": [
+            1.0,
+            0.4,
+            -0.6
+          ],
+          "curl": 55
+        },
+        "r": {
+          "at": [
+            0.12,
+            -0.36,
+            1.12
+          ],
+          "grip": {
+            "along": [
+              0.55,
+              -0.55,
+              -0.62
+            ],
+            "face": [
+              -0.2,
+              0.3,
+              0.93
+            ]
+          },
+          "curl": 85,
+          "pole": [
+            -0.6,
+            0.3,
+            -0.7
+          ]
+        }
+      },
+      "throughB": {
+        "pelvis": [
+          0,
+          0,
+          -3
+        ],
+        "spine": [
+          2,
+          0,
+          -3
+        ],
+        "chest": [
+          4,
+          0,
+          -6
+        ],
+        "head": [
+          0,
+          0,
+          4
+        ],
+        "sink": 0.08,
+        "l": {
+          "wrist": [
+            0.22,
+            -0.36,
+            1.28
+          ],
+          "pole": [
+            1.0,
+            0.4,
+            -0.6
+          ],
+          "curl": 55
+        },
+        "r": {
+          "at": [
+            -0.16,
+            -0.56,
+            1.46
+          ],
+          "grip": {
+            "along": [
+              -0.55,
+              -0.65,
+              0.52
+            ],
+            "face": [
+              0.1,
+              0.4,
+              0.9
+            ]
+          },
+          "curl": 85,
+          "pole": [
+            -1.0,
+            0.3,
+            -0.4
+          ]
+        }
+      },
+      "followB": {
+        "pelvis": [
+          0,
+          0,
+          -10
+        ],
+        "spine": [
+          3,
+          0,
+          -8
+        ],
+        "chest": [
+          5,
+          0,
+          -20
+        ],
+        "head": [
+          0,
+          0,
+          18
+        ],
+        "sink": 0.07,
+        "l": {
+          "wrist": [
+            0.2,
+            -0.38,
+            1.3
+          ],
+          "pole": [
+            1.0,
+            0.4,
+            -0.6
+          ],
+          "curl": 55
+        },
+        "r": {
+          "at": [
+            -0.4,
+            -0.28,
+            1.66
+          ],
+          "grip": {
+            "along": [
+              -0.45,
+              0.3,
+              0.84
+            ],
+            "face": [
+              0.6,
+              0.6,
+              0.4
+            ]
+          },
+          "curl": 85,
+          "pole": [
+            -1.0,
+            0.2,
+            -0.2
+          ]
+        }
+      },
+      "brace": {
+        "chest": [
+          8,
+          0,
+          12
+        ],
+        "pelvis": [
+          4,
+          0,
+          4
+        ],
+        "sink": 0.12,
+        "head": [
+          -6,
+          0,
+          -8
+        ],
+        "l": {
+          "wrist": [
+            0.14,
+            -0.3,
+            1.4
+          ],
+          "pole": [
+            1.0,
+            0.2,
+            -0.5
+          ],
+          "curl": 55
+        },
+        "r": {
+          "at": [
+            -0.36,
+            -0.12,
+            1.18
+          ],
+          "grip": {
+            "along": [
+              0.1,
+              -0.6,
+              0.8
+            ],
+            "face": [
+              0.95,
+              0.2,
+              0.0
+            ]
+          },
+          "curl": 85,
+          "pole": [
+            -1.0,
+            0.6,
+            -0.3
+          ]
+        }
+      },
+      "bash": {
+        "chest": [
+          2,
+          0,
+          -16
+        ],
+        "pelvis": [
+          2,
+          0,
+          -6
+        ],
+        "sink": 0.08,
+        "head": [
+          -2,
+          0,
+          10
+        ],
+        "l": {
+          "wrist": [
+            0.08,
+            -0.66,
+            1.4
+          ],
+          "pole": [
+            1.0,
+            0.3,
+            -0.4
+          ],
+          "curl": 55
+        },
+        "r": {
+          "at": [
+            -0.42,
+            -0.04,
+            1.2
+          ],
+          "grip": {
+            "along": [
+              0.0,
+              -0.4,
+              0.92
+            ],
+            "face": [
+              0.95,
+              0.2,
+              0.0
+            ]
+          },
+          "curl": 85,
+          "pole": [
+            -1.0,
+            0.6,
+            -0.3
+          ]
+        }
+      },
+      "dashTuck": {
+        "sink": 0.1,
+        "pelvis": [
+          10,
+          0,
+          0
+        ],
+        "spine": [
+          8,
+          0,
+          0
+        ],
+        "chest": [
+          6,
+          0,
+          0
+        ],
+        "head": [
+          -16,
+          0,
+          0
+        ],
+        "l": {
+          "wrist": [
+            0.18,
+            -0.3,
+            1.36
+          ],
+          "pole": [
+            1.0,
+            0.4,
+            -0.6
+          ],
+          "curl": 55
+        },
+        "r": {
+          "at": [
+            -0.3,
+            -0.2,
+            1.38
+          ],
+          "grip": {
+            "along": [
+              -0.1,
+              0.35,
+              0.93
+            ],
+            "face": [
+              0.95,
+              0.2,
+              0.0
+            ]
+          },
+          "curl": 85,
+          "pole": [
+            -1.0,
+            0.6,
+            -0.3
+          ]
+        }
+      },
+      "dashLand": {
+        "sink": 0.17,
+        "pelvis": [
+          8,
+          0,
+          0
+        ],
+        "spine": [
+          5,
+          0,
+          0
+        ],
+        "chest": [
+          3,
+          0,
+          0
+        ],
+        "head": [
+          -10,
+          0,
+          0
+        ],
+        "hold": true,
+        "l": {
+          "wrist": [
+            0.2,
+            -0.36,
+            1.3
+          ],
+          "pole": [
+            1.0,
+            0.4,
+            -0.6
+          ],
+          "curl": 55
+        },
+        "r": {
+          "at": [
+            -0.34,
+            -0.2,
+            1.16
+          ],
+          "grip": {
+            "along": [
+              0.05,
+              -0.6,
+              0.8
+            ],
+            "face": [
+              0.95,
+              0.2,
+              0.1
+            ]
+          },
+          "curl": 85,
+          "pole": [
+            -1.0,
+            0.5,
+            -0.5
+          ]
+        }
+      },
+      "kneel": {
+        "sink": 0.43,
+        "offset": [
+          0,
+          0.04,
+          0
+        ],
+        "pelvis": [
+          6,
+          0,
+          0
+        ],
+        "spine": [
+          8,
+          0,
+          0
+        ],
+        "chest": [
+          6,
+          0,
+          -6
+        ],
+        "head": [
+          10,
+          0,
+          0
+        ],
+        "l": {
+          "wrist": [
+            0.3,
+            -0.3,
+            1.14
+          ],
+          "pole": [
+            1.0,
+            0.3,
+            -0.6
+          ],
+          "curl": 55
+        },
+        "r": {
+          "at": [
+            -0.3,
+            -0.62,
+            1.07
+          ],
+          "grip": {
+            "along": [
+              0.0,
+              -0.35,
+              -0.94
+            ],
+            "face": [
+              0.95,
+              0.1,
+              0.1
+            ]
+          },
+          "curl": 85,
+          "pole": [
+            -1.0,
+            0.4,
+            -0.6
+          ],
+          "space": "root"
+        }
+      },
+      "deathFling": {
+        "l": {
+          "wrist": [
+            0.46,
+            0.02,
+            1.24
+          ],
+          "pole": [
+            1.0,
+            0.0,
+            -0.5
+          ],
+          "curl": 40
+        },
+        "r": {
+          "at": [
+            -0.5,
+            0.0,
+            1.22
+          ],
+          "grip": {
+            "along": [
+              -0.3,
+              0.3,
+              0.9
+            ],
+            "face": [
+              0.95,
+              0.2,
+              0.0
+            ]
+          },
+          "curl": 60,
+          "pole": [
+            -1.0,
+            0.0,
+            -0.5
+          ]
+        }
+      },
+      "deathRest": {
+        "l": {
+          "wrist": [
+            0.4,
+            0.12,
+            0.98
+          ],
+          "pole": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "curl": 30
+        },
+        "r": {
+          "at": [
+            -0.46,
+            0.12,
+            1.0
+          ],
+          "grip": {
+            "along": [
+              -0.2,
+              -0.95,
+              0.2
+            ],
+            "face": [
+              0.95,
+              0.0,
+              0.2
+            ]
+          },
+          "curl": 40,
+          "pole": [
+            -1.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "run": {
+      "pose": "carry",
+      "seconds": 0.64,
+      "speed": 6.3,
+      "duty": 0.21,
+      "lift": 0.16,
+      "bob": 0.035,
+      "sink": 0.09,
+      "lean": 12,
+      "trackHalfWidth": 0.14,
+      "toePitch": -20,
+      "pelvisTwist": 7,
+      "chestTwist": 9,
+      "spineTwist": 2,
+      "headTwist": 3,
+      "skirtSwing": 6,
+      "hipYawShare": 0.5,
+      "footYawShare": 0.5,
+      "armSwing": {
+        "r": [
+          0.14,
+          0.05,
+          0.0
+        ],
+        "l": [
+          0.04,
+          0.02,
+          0.0
+        ]
+      }
+    },
+    "sprint": {
+      "pose": "sprintCarry",
+      "seconds": 0.54,
+      "speed": 9.765,
+      "duty": 0.16,
+      "lift": 0.2,
+      "bob": 0.04,
+      "sink": 0.1,
+      "lean": 18,
+      "trackHalfWidth": 0.13,
+      "toePitch": -25,
+      "pelvisTwist": 9,
+      "chestTwist": 12,
+      "spineTwist": 2,
+      "headTwist": 3,
+      "skirtSwing": 9,
+      "armSwing": {
+        "r": [
+          0.2,
+          0.08,
+          0.0
+        ],
+        "l": [
+          0.06,
+          0.03,
+          0.0
+        ]
+      },
+      "skirtFollow": [
+        0.45,
+        0.4
+      ]
+    },
+    "dodge": {
+      "seconds": 0.5,
+      "keys": [
+        [
+          0,
+          "ready"
+        ],
+        [
+          0.08,
+          "dashTuck"
+        ],
+        [
+          0.3,
+          "dashLand"
+        ],
+        [
+          0.5,
+          "ready"
+        ]
+      ],
+      "feet": [
+        [
+          0,
+          {
+            "l": [
+              0,
+              0,
+              0
+            ],
+            "r": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "l": 0,
+            "r": 0
+          }
+        ],
+        [
+          0.1,
+          {
+            "l": [
+              0,
+              0.3,
+              0.2
+            ],
+            "r": [
+              0,
+              -0.26,
+              0.2
+            ]
+          },
+          {
+            "l": -35,
+            "r": 12
+          }
+        ],
+        [
+          0.3,
+          {
+            "l": [
+              0,
+              0.28,
+              0.14
+            ],
+            "r": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "l": -25,
+            "r": 0
+          }
+        ],
+        [
+          0.45,
+          {
+            "l": [
+              0,
+              0,
+              0
+            ],
+            "r": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "l": 0,
+            "r": 0
+          }
+        ]
+      ]
+    },
+    "attack": {
+      "seconds": 0.55,
+      "keys": [
+        [
+          0,
+          "ready"
+        ],
+        [
+          0.05,
+          "windup"
+        ],
+        [
+          0.11,
+          "through"
+        ],
+        [
+          0.18,
+          "follow"
+        ],
+        [
+          0.26,
+          {
+            "from": "follow",
+            "hold": true
+          }
+        ],
+        [
+          0.55,
+          "ready"
+        ]
+      ]
+    },
+    "attackB": {
+      "seconds": 0.55,
+      "keys": [
+        [
+          0,
+          "ready"
+        ],
+        [
+          0.06,
+          "raiseB"
+        ],
+        [
+          0.13,
+          "throughB"
+        ],
+        [
+          0.2,
+          "followB"
+        ],
+        [
+          0.28,
+          {
+            "from": "followB",
+            "hold": true
+          }
+        ],
+        [
+          0.55,
+          "ready"
+        ]
+      ]
+    },
+    "ability": {
+      "seconds": 0.8,
+      "keys": [
+        [
+          0,
+          "ready"
+        ],
+        [
+          0.16,
+          "brace"
+        ],
+        [
+          0.3,
+          "bash"
+        ],
+        [
+          0.42,
+          {
+            "from": "bash",
+            "hold": true
+          }
+        ],
+        [
+          0.8,
+          "ready"
+        ]
+      ]
+    },
+    "interact": {
+      "seconds": 2.0,
+      "pose": "kneel",
+      "skirtFollow": [
+        0.28,
+        0.24
+      ],
+      "workHand": "r",
+      "work": [
+        0.03,
+        0.02,
+        0.02
+      ],
+      "feet": {
+        "l": [
+          0.0,
+          -0.36,
+          0.0
+        ],
+        "r": [
+          0.0,
+          0.37,
+          0.17
+        ]
+      },
+      "pitch": {
+        "l": 0,
+        "r": 55
+      }
+    },
+    "death": {
+      "seconds": 1.0,
+      "buckleBack": 0.06,
+      "buckleDrop": 0.14,
+      "pelvisEnd": [
+        0,
+        0.8,
+        0.26
+      ],
+      "tilt": 78,
+      "twist": 8,
+      "headPitch": 18,
+      "headYaw": 15,
+      "footEnd_l": [
+        0.26,
+        -0.1,
+        0.1
+      ],
+      "footEnd_r": [
+        -0.18,
+        -0.02,
+        0.1
+      ],
+      "footPitch": -35,
+      "groundClearance": 0.005,
+      "fling": "deathFling",
+      "rest": "deathRest",
+      "drops": [
+        {
+          "socket": "socket_hand_r",
+          "start": 0.35,
+          "end": 0.8,
+          "along": [
+            -0.45,
+            -0.9,
+            0
+          ],
+          "offset": [
+            -0.18,
+            -0.05
+          ],
+          "height": 0.035,
+          "faceUp": true
+        },
+        {
+          "socket": "socket_forearm_l",
+          "start": 0.45,
+          "end": 0.9,
+          "along": [
+            0.25,
+            -1.0,
+            0
+          ],
+          "offset": [
+            0.22,
+            0.0
+          ],
+          "height": 0.03,
+          "faceUp": true
+        }
+      ]
+    }
+  }
+}

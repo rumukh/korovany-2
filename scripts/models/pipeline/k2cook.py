@@ -323,9 +323,12 @@ def bind_heat(body, rig, definitions, allowed, locked=None, relax=4, max_influen
     blend_facts = []
     for spec in blends:
         if spec.get("kind") == "skirt":
-            # Vertical ramp: hem follows the thighs (split left/right by x), the waist follows pelvis/tabard.
+            # Vertical ramp: hem follows the thighs (split left/right by x), the waist follows pelvis/tabard. With
+            # hip helpers ("middle", left then right), the ramp passes through the half-rotation helper so the hem
+            # never interpolates the full thigh swing in one linear blend.
             left, right = names.index(spec["distal"][0]), names.index(spec["distal"][1])
             proximal = [names.index(b) for b in spec["proximal"] if b in names]
+            middle = [names.index(b) for b in spec.get("middle", []) if b in names]
             inside = spec["mask"]
             zt = np.clip((spec["zTop"] - points[:, 2]) / (spec["zTop"] - spec["zHem"]), 0, 1)
             share = zt * zt * (3 - 2 * zt) * spec.get("maxShare", 1.0)
@@ -334,16 +337,26 @@ def bind_heat(body, rig, definitions, allowed, locked=None, relax=4, max_influen
             rows = np.flatnonzero(inside)
             for row in rows:
                 p_sum = weights[row, proximal].sum()
-                mass = max(p_sum + weights[row, left] + weights[row, right], 1e-6)
+                m_sum = weights[row, middle].sum() if len(middle) == 2 else 0.0
+                mass = max(p_sum + weights[row, left] + weights[row, right] + m_sum, 1e-6)
                 p_share = weights[row, proximal] / p_sum if p_sum > 1e-9 else np.where(allowed[row, proximal], 1.0, 0) / max(1, allowed[row, proximal].sum())
-                weights[row, left] = share[row] * side[row] * mass
-                weights[row, right] = share[row] * (1 - side[row]) * mass
-                weights[row, proximal] = p_share * (1 - share[row]) * mass
-            blend_facts.append({"kind": "skirt", "vertices": int(len(rows))})
+                s = share[row]
+                if len(middle) == 2:
+                    d, h, p = max(0.0, 2 * s - 1), 1 - abs(2 * s - 1), max(0.0, 1 - 2 * s)
+                    weights[row, middle[0]] = h * side[row] * mass
+                    weights[row, middle[1]] = h * (1 - side[row]) * mass
+                else:
+                    d, p = s, 1 - s
+                weights[row, left] = d * side[row] * mass
+                weights[row, right] = d * (1 - side[row]) * mass
+                weights[row, proximal] = p_share * p * mass
+            blend_facts.append({"kind": "skirt", "vertices": int(len(rows)), "helpers": len(middle) == 2})
             continue
         joint, axis = np.array(spec["joint"]), np.array(spec["axis"], dtype=np.float64)
         axis /= np.linalg.norm(axis)
         inside = np.linalg.norm(points - joint, axis=1) < spec["band"]
+        if spec.get("mask") is not None:
+            inside &= spec["mask"]
         along = (points - joint) @ axis - spec.get("shift", 0.0)
         t = np.clip((along + spec["ramp"]) / (2 * spec["ramp"]), 0, 1)
         target = t * t * (3 - 2 * t)
@@ -353,6 +366,17 @@ def bind_heat(body, rig, definitions, allowed, locked=None, relax=4, max_influen
         rows = np.flatnonzero(inside)
         for row in rows:
             d_sum, p_sum = weights[row, distal].sum(), weights[row, proximal].sum()
+            if (spec.get("helperBeyondProximal") and middle and allowed[row, distal].any() and allowed[row, middle].any()
+                    and not allowed[row, proximal].any()):
+                # Limb surface beyond the proximal part's reach: ramp from the helper to the distal joint only.
+                m_sum = weights[row, middle].sum()
+                d_share = weights[row, distal] / d_sum if d_sum > 1e-9 else np.where(allowed[row, distal], 1.0, 0) / allowed[row, distal].sum()
+                m_share = weights[row, middle] / m_sum if m_sum > 1e-9 else np.where(allowed[row, middle], 1.0, 0) / allowed[row, middle].sum()
+                mass = max(d_sum + m_sum, 1e-6)
+                d = max(0.0, 2 * target[row] - 1)
+                weights[row, distal] = d_share * d * mass
+                weights[row, middle] = m_share * (1 - d) * mass
+                continue
             if not allowed[row, distal].any() or not allowed[row, proximal].any():
                 continue
             d_share = weights[row, distal] / d_sum if d_sum > 1e-9 else np.where(allowed[row, distal], 1.0, 0) / allowed[row, distal].sum()

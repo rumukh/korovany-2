@@ -108,24 +108,29 @@ the generated images, not measured scans.
 
 ### Cooked 3D models
 
-The line soldier worn by every faction's soldiers and the Echo Well are cooked
-glTF models (`public/models`, about 2.9 MB together) instead of procedural
-meshes. Their concepts were generated locally with Qwen Image Edit Plus 2511
-from original Blender reference renders, reconstructed with TRELLIS-image-large,
-and cooked, rigged and animated in Blender 5.2.2 LTS. The soldier's back comes
-from an approved rear-view concept projected onto the mesh. Faction and
-allegiance colour the tabard and shield without extra shader variants. The game
-waits for both models before presenting a run and stops with an explicit asset
-error if either fails to load.
+The line soldier worn by every faction's soldiers, the Echo Well and the three
+faction heroes (the elf ranger, the palace officer and the mountain sovereign)
+are cooked glTF models (`public/models`, about 8.5 MB together) instead of
+procedural meshes. Their concepts were generated locally with Qwen Image Edit
+Plus 2511, from original Blender reference renders and, for the heroes, the
+game's own hero portraits as identity references. They were reconstructed with
+TRELLIS-image-large and cooked, rigged and animated in Blender 5.2.2 LTS. Every
+character's back comes from an approved rear-view concept projected onto the
+mesh. The heroes' dark TRELLIS textures are lifted by a tone curve calibrated in
+the game until each hero reads as bright as its approved concept from the
+default camera. Faction and allegiance colour the soldier's tabard and shield
+and the palace officer's shield without extra shader variants. The game waits
+for every model before presenting a run and stops with an explicit asset error
+if any fails to load.
 
 **Licensing limitation:** TRELLIS code and weights are MIT-licensed, but its
 textured export depends on components restricted to research and evaluation.
-No commercial clearance exists for these two models; the project owner
+No commercial clearance exists for these five models; the project owner
 acknowledged publishing them here. Concepts, recipes, provenance, approvals and
 the cooking scripts are in `scripts/models`. The rest of the world, including
-the heroes, residents and caravan, is still procedural, so the models currently
-read as more realistic than their surroundings. They are not AAA assets: see each
-`provenance.json` for measured limitations.
+archers, captains, bosses, residents and the caravan, is still procedural, so the
+models currently read as more realistic than their surroundings. They are not AAA
+assets: see each `provenance.json` for measured limitations.
 
 ## The campaign
 
@@ -456,7 +461,7 @@ deployment. Local builds do not require GitHub.
 Aegis packages declare MIT; Three.js is MIT. Runtime notices are included in
 [`public/THIRD_PARTY_NOTICES.txt`](public/THIRD_PARTY_NOTICES.txt) and copied into
 the production build. The engine remains pinned with its upstream provenance.
-The sequel uses newly authored procedural visuals, two locally generated and
+The sequel uses newly authored procedural visuals, five locally generated and
 cooked 3D models (research/evaluation-only TRELLIS export, see "Cooked 3D
 models" above) and original audio rather than copying the original game's
 implementation or asset library. No project-wide redistribution license is

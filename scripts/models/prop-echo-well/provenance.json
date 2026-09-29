@@ -197,11 +197,11 @@
     "albedoChoice": "1024: differs from 2048 in 14 pixels at 18 m and none at 26/40 m in the game renderer; saves 337 KB.",
     "scripts": {
       "cook_prop.py": "3b455cc39ec2c4cc79f70b3c5ddd7679b86bdd6a7e156a16450edcdd91feaf8d",
-      "k2cook.py": "5a45a6b874107b0cd165b45dfd4ffd7f49cd7dac282a08c0dbaa258f9112bd08",
+      "k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
       "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
-    "seconds": 26.1
+    "seconds": 31.8
   },
   "limitations": [
     "Single-view TRELLIS reconstruction; small props (bowls, bucket, rope) are simplified lumps at close range.",

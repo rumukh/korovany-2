@@ -15,7 +15,7 @@ import * as THREE from 'three';
 import { createCampaign } from '/src/game/index.ts';
 import { compileFrame, Presentation } from '/src/view/index.ts';
 import { ViewResources } from '/src/view/resources.ts';
-import { ModelLibrary, gltfModelSource } from '/src/view/models.ts';
+import { ModelLibrary, gltfModelSource, MODEL_IDS } from '/src/view/models.ts';
 import { FollowCamera } from '/src/view/camera.ts';
 import { positionSun, skyEnvironment } from '/src/view/atmosphere.ts';
 const canvas = document.querySelector('canvas');
@@ -33,7 +33,7 @@ const state = { ready: false, error: null };
 library.ready.then(() => { state.ready = true; }, error => { state.error = String(error.message ?? error); });
 const camera = new FollowCamera(canvas);
 camera.resize(innerWidth, innerHeight);
-let presentation, environment, snapshot, soldierTemplate;
+let presentation, environment, snapshot, soldierTemplate, campaign, kept;
 function texturesOf(root) {
   const found = new Map();
   root.traverse(object => {
@@ -45,13 +45,22 @@ function texturesOf(root) {
   });
   return [...found.values()];
 }
+// Textures are read back through WebGL, as the renderer samples them: a 2D canvas premultiplies alpha and loses the
+// colour under a zero dye mask, which is every undyed texel (all of a hero's body).
+const probe = document.createElement('canvas').getContext('webgl2');
 function decode({ key, texture, material }) {
   const image = texture.image;
-  const probe = document.createElement('canvas');
-  probe.width = image.width; probe.height = image.height;
-  const context = probe.getContext('2d');
-  context.drawImage(image, 0, 0);
-  const data = context.getImageData(0, 0, probe.width, probe.height).data;
+  const gl = probe;
+  const handle = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, handle);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, image);
+  const framebuffer = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, handle, 0);
+  const data = new Uint8Array(image.width * image.height * 4);
+  gl.readPixels(0, 0, image.width, image.height, gl.RGBA, gl.UNSIGNED_BYTE, data);
+  gl.deleteFramebuffer(framebuffer);
+  gl.deleteTexture(handle);
   let low = 255, high = 0, alphaLow = 255, alphaHigh = 0;
   for (let i = 0; i < data.length; i += 4) {
     low = Math.min(low, data[i + 1]); high = Math.max(high, data[i + 1]);
@@ -64,9 +73,17 @@ function render() {
   renderer.info.reset();
   presentation.update(snapshot, 1 / 60, camera.camera, false);
   renderer.render(presentation.scene, camera.camera);
+  settle();
   const gl = renderer.getContext();
   return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, programs: renderer.info.programs.length,
     geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, shaderErrors, contextLost: gl.isContextLost() };
+}
+// WebGL returns before the GPU draws; waiting here charges each frame to the DevTools evaluation that drew it, so no
+// later call inherits queued software-GL frames (each evaluation must answer within 30 s).
+const onePixel = new Uint8Array(4);
+function settle() {
+  const gl = renderer.getContext();
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, onePixel);
 }
 function pixels() {
   const gl = renderer.getContext();
@@ -78,7 +95,7 @@ function pixels() {
 window.modelHarness = {
   state,
   textures() {
-    return ['char-line-soldier', 'prop-echo-well'].flatMap(id => texturesOf(library.get(id).scene).map(entry => ({ id, ...decode(entry) })));
+    return MODEL_IDS.flatMap(id => texturesOf(library.get(id).scene).map(entry => ({ id, ...decode(entry) })));
   },
   open(place, warm = true) {
     const campaign = createCampaign({ seed: 'model-browser', faction: 'guard', runId: 'model-browser' });
@@ -114,15 +131,7 @@ window.modelHarness = {
       (program.cacheKey.startsWith('depth') ? program.cacheKey.replace(/\s+/g, ' ') : program.cacheKey.replace(/\s+/g, ' ').slice(0, 120)));
   },
   scene(soldiers) {
-    const template = soldierTemplate;
-    snapshot.actors = snapshot.actors.filter(actor => actor.kind !== 'soldier');
-    const layout = [['elf','hostile','windup'],['guard','friendly','idle'],['villain','hostile','attack'],['villain','friendly','chase'],['guard','neutral','dead']];
-    for (let index = 0; index < soldiers; index++) {
-      const [faction, allegiance, state] = layout[index % layout.length];
-      snapshot.actors.push({ ...structuredClone(template), id: 'browser-soldier-' + index, faction, allegiance, state,
-        stateTime: 0.2, hp: state === 'dead' ? 0 : template.maxHp * 0.7,
-        x: snapshot.player.x - 4 + index * 2, z: snapshot.player.z + 5 + (index % 2), heading: Math.PI });
-    }
+    this.place(soldiers);
     const first = performance.now();
     renderer.info.reset();
     presentation.update(snapshot, 1 / 60, camera.camera, false);
@@ -139,16 +148,95 @@ window.modelHarness = {
     stats.secondFrameMs = performance.now() - again;
     return stats;
   },
-  difference(soldiers) {
-    this.scene(0);
-    const empty = pixels();
-    this.scene(soldiers);
-    const full = pixels();
-    let changed = 0;
-    for (let i = 0; i < empty.length; i += 4) {
-      if (Math.abs(empty[i] - full[i]) + Math.abs(empty[i + 1] - full[i + 1]) + Math.abs(empty[i + 2] - full[i + 2]) > 24) changed++;
+  place(soldiers) {
+    const template = soldierTemplate;
+    snapshot.actors = snapshot.actors.filter(actor => actor.kind !== 'soldier');
+    const layout = [['elf','hostile','windup'],['guard','friendly','idle'],['villain','hostile','attack'],['villain','friendly','chase'],['guard','neutral','dead']];
+    for (let index = 0; index < soldiers; index++) {
+      const [faction, allegiance, state] = layout[index % layout.length];
+      snapshot.actors.push({ ...structuredClone(template), id: 'browser-soldier-' + index, faction, allegiance, state,
+        stateTime: 0.2, hp: state === 'dead' ? 0 : template.maxHp * 0.7,
+        x: snapshot.player.x - 4 + index * 2, z: snapshot.player.z + 5 + (index % 2), heading: Math.PI });
     }
-    return changed;
+  },
+  // Pixel comparisons take one frame per call: software GL (CI) draws a frame in seconds, and one DevTools
+  // evaluation must answer within 30 s.
+  /** Draws one frame with this many soldiers. */
+  stage(soldiers) {
+    this.place(soldiers);
+    render();
+    return true;
+  },
+  /** Keeps the current frame's pixels for changed(). */
+  keep() {
+    kept = pixels();
+    return true;
+  },
+  /** Pixels of the current frame that differ from the kept frame by more than 24 levels of RGB. */
+  changed() {
+    const now = pixels();
+    let count = 0;
+    for (let i = 0; i < now.length; i += 4) {
+      if (Math.abs(now[i] - kept[i]) + Math.abs(now[i + 1] - kept[i + 1]) + Math.abs(now[i + 2] - kept[i + 2]) > 24) count++;
+    }
+    return count;
+  },
+  /** A faction's run with its cooked hero at the gameplay camera distance, warmed as the game warms it. */
+  hero(faction) {
+    campaign = createCampaign({ seed: 'model-browser', faction, runId: 'model-browser-' + faction });
+    snapshot = campaign.snapshot();
+    presentation?.dispose();
+    presentation = new Presentation(snapshot.world, new ViewResources(new THREE.TextureLoader(), 8, library), environment?.texture);
+    environment ??= skyEnvironment(renderer, presentation.scenery.group);
+    presentation.scene.environment = environment.texture;
+    camera.reset();
+    camera.update(snapshot.player, 0);
+    positionSun(presentation.sun, snapshot.player.x, snapshot.player.z);
+    presentation.update(snapshot, 1 / 60, camera.camera, false);
+    const warmup = presentation.warmModels(renderer, snapshot.player.x, snapshot.player.z,
+      () => compileFrame(renderer, presentation.scene, camera.camera, null));
+    settle();
+    // The first full frame is heroStep's, after the world textures finish loading.
+    return { shaderErrors, warmup };
+  },
+  /** Steps the real campaign with one input and renders; dead forces the defeat pose. */
+  heroStep(input, ticks = 1, dead = false) {
+    for (let tick = 0; tick < ticks; tick++) {
+      campaign.step(input);
+      snapshot = campaign.snapshot();
+      if (dead) { snapshot.player.state = 'dead'; snapshot.player.hp = 0; }
+      presentation.update(snapshot, 1 / 60, camera.camera, false);
+    }
+    camera.update(snapshot.player, 0);
+    positionSun(presentation.sun, snapshot.player.x, snapshot.player.z);
+    renderer.info.reset();
+    renderer.render(presentation.scene, camera.camera);
+    settle();
+    const character = presentation.hero.character;
+    return { calls: renderer.info.render.calls, programs: renderer.info.programs.length, shaderErrors,
+      clip: character.activeClip, overlay: character.overlay?.clip ?? null };
+  },
+  /** Program cache keys held by the hero's own materials, including the shared model shadow-depth material. */
+  heroPrograms() {
+    const hash = text => { let h = 2166136261; for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619) >>> 0; return h.toString(16); };
+    const keys = new Set();
+    presentation.scene.getObjectByName('hero').traverse(object => {
+      if (!object.isMesh) return;
+      for (const material of [object.material, object.customDepthMaterial]) {
+        const programs = material && renderer.properties.get(material).programs;
+        if (programs) for (const key of programs.keys()) keys.add(material.name + ' #' + hash(key));
+      }
+    });
+    return [...keys].sort();
+  },
+  /** Draws one frame with the hero model (not its rings) shown or hidden, for keep() and changed(). */
+  heroFrame(faction, shown) {
+    const model = presentation.scene.getObjectByName('char-hero-' + faction);
+    model.visible = shown;
+    renderer.render(presentation.scene, camera.camera);
+    settle();
+    model.visible = true;
+    return true;
   },
   dispose() {
     const before = { geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures };
@@ -166,6 +254,8 @@ window.modelHarness = {
 describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the browser', () => {
   let server: ViteDevServer | undefined;
   let broken: ViteDevServer | undefined;
+  /** The model the missing-asset server answers with 404. */
+  let missing = '';
   let browser: LaunchedBrowser | undefined;
   let cdp: CdpSession | undefined;
   const captures = process.env.KOROVANY_CAPTURE_DIR;
@@ -215,6 +305,8 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the brows
       expect(texture.width, `${texture.id}:${texture.key}`).toBeGreaterThanOrEqual(256);
       expect(texture.range, `${texture.id}:${texture.key}`).toBeGreaterThan(8);
     }
+    // Every model's base colour, normal and occlusion/roughness/metal maps decoded, for all five models.
+    expect(new Set(textures.map(texture => texture.id)).size).toBe(5);
     expect(textures.find(texture => texture.id === 'char-line-soldier' && texture.key === 'map' && texture.material === 'body')?.alphaRange)
       .toBeGreaterThan(128);
     const base = await evaluate<{ programs: number; shaderErrors: number; warmup: { programsBefore: number; programsAfter: number; milliseconds: number } }>(
@@ -236,7 +328,10 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the brows
     expect(created, 'programs created on first appearance').toEqual([]);
     expect(first.programs).toBe(base.programs);
     expect(all.programs).toBe(base.programs);
-    expect(await evaluate<number>(cdp, 'window.modelHarness.difference(5)')).toBeGreaterThan(2000);
+    await evaluate(cdp, 'window.modelHarness.stage(0)');
+    await evaluate(cdp, 'window.modelHarness.keep()');
+    await evaluate(cdp, 'window.modelHarness.stage(5)');
+    expect(await evaluate<number>(cdp, 'window.modelHarness.changed()')).toBeGreaterThan(2000);
     if (captures) await screenshot(cdp, join(captures, 'model-soldiers.png'));
     const well = await evaluate<{ shaderErrors: number }>(cdp, "window.modelHarness.open('name-well')");
     await until(cdp, 'window.modelHarness.textureStatus.pending === 0', Boolean, 30_000);
@@ -247,7 +342,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the brows
     expect(disposal.after.geometries).toBe(0);
     expect(disposal.after.textures).toBe(0);
     expect(cdp.diagnostics).toEqual([]);
-  }, 120_000);
+  }, 180_000);
 
   test('a disabled-warming control creates the model programs on first appearance instead, within the program budget', async () => {
     if (!browser || !server) throw new Error('Browser was not initialized');
@@ -276,40 +371,96 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the brows
     }
   }, 120_000);
 
-  test('stops with a visible asset failure, and no procedural stand-in, when a model file is missing', async () => {
-    broken = await createServer({
-      configFile: false,
-      plugins: [{
-        name: 'missing-model',
-        configureServer(vite) {
-          vite.middlewares.use((request, response, next) => {
-            if (!request.url?.includes('/models/char-line-soldier/char-line-soldier.glb')) return next();
-            response.statusCode = 404;
-            response.end('missing for test');
-          });
-        },
-      }],
-      server: { host: '127.0.0.1', port: 0, hmr: false, watch: null },
-    });
-    await broken.listen();
-    const origin = broken.resolvedUrls?.local[0];
-    if (!origin || !browser) throw new Error('Missing-model server has no URL');
-    const page = await openPage(browser.port, 'about:blank', { width: 1024, height: 700 });
+  test('renders each faction\'s cooked hero through the game presenter, with no program growth across its states', async () => {
+    if (!browser || !server) throw new Error('Browser was not initialized');
+    const origin = server.resolvedUrls?.local[0];
+    const page = await openPage(browser.port, `${origin}__models`, { width: 1280, height: 800 });
     try {
-      await navigateTestPage(page, origin, "window.korovany && window.korovany.inspect().overlay === 'fatal'", 60_000);
-      const state = await evaluate<{ overlay: string; running: boolean; models: { error: string | null; loaded: number } }>(
-        page, 'window.korovany.inspect()');
-      expect(state.overlay).toBe('fatal');
-      expect(state.running).toBe(false);
-      expect(state.models.error).toMatch(/models\/char-line-soldier\/char-line-soldier\.glb/);
-      const heading = await evaluate<string>(page, "document.querySelector('.fatal-panel h2, .fatal-panel h1')?.textContent ?? ''");
-      expect(heading).toMatch(/3D models|трёхмерные модели/);
-      // The missing file was requested and the failure was handled: the browser logged the 404, nothing threw uncaught.
-      expect(page.diagnostics.some(entry => /status of 404/.test(entry)), JSON.stringify(page.diagnostics)).toBe(true);
-      expect(page.diagnostics.filter(entry => entry.startsWith('uncaught'))).toEqual([]);
-      if (captures) await screenshot(page, join(captures, 'model-missing.png'));
+      await until(page, 'Boolean(window.modelHarness && (window.modelHarness.state.ready || window.modelHarness.state.error))', Boolean, 60_000);
+      expect(await evaluate(page, 'window.modelHarness.state.error')).toBeNull();
+      for (const faction of ['elf', 'guard', 'villain']) {
+        const opened = await evaluate<{ shaderErrors: number; warmup: { programsBefore: number; programsAfter: number } }>(
+          page, `window.modelHarness.hero('${faction}')`);
+        await until(page, 'window.modelHarness.textureStatus.pending === 0', Boolean, 30_000);
+        expect(opened.shaderErrors, faction).toBe(0);
+        // Upload the world textures that finished loading; every hero state must then reuse the warmed programs.
+        const base = await evaluate<{ programs: number }>(page, 'window.modelHarness.heroStep({}, 1)');
+        const warmed = await evaluate<string[]>(page, 'window.modelHarness.heroPrograms()');
+        const states: { clip: string; overlay: string | null; programs: number; shaderErrors: number; calls: number }[] = [];
+        states.push(await evaluate(page, 'window.modelHarness.heroStep({ move: { x: 0, z: 1 } }, 20)'));
+        states.push(await evaluate(page, 'window.modelHarness.heroStep({ attack: true, move: { x: 0, z: 1 } }, 1)'));
+        states.push(await evaluate(page, 'window.modelHarness.heroStep({ move: { x: 1, z: 0 }, aim: { x: 0, z: 1 } }, 20)'));
+        states.push(await evaluate(page, 'window.modelHarness.heroStep({}, 30)'));
+        states.push(await evaluate(page, 'window.modelHarness.heroStep({ special: true }, 1)'));
+        states.push(await evaluate(page, 'window.modelHarness.heroStep({ dodge: true, move: { x: -1, z: 0 } }, 6)'));
+        states.push(await evaluate(page, 'window.modelHarness.heroStep({}, 60)'));
+        await evaluate(page, `window.modelHarness.heroFrame('${faction}', true)`);
+        await evaluate(page, 'window.modelHarness.keep()');
+        await evaluate(page, `window.modelHarness.heroFrame('${faction}', false)`);
+        const standing = await evaluate<number>(page, 'window.modelHarness.changed()');
+        if (captures) {
+          await evaluate(page, `window.modelHarness.heroFrame('${faction}', true)`);
+          await screenshot(page, join(captures, `model-hero-${faction}.png`));
+        }
+        states.push(await evaluate(page, 'window.modelHarness.heroStep({}, 70, true)'));
+        const after = await evaluate<string[]>(page, 'window.modelHarness.heroPrograms()');
+        console.info('Hero states', faction, JSON.stringify({ warmup: opened.warmup, base: base.programs, standing, warmed, states }));
+        expect(states.map(state => state.clip)).toEqual(['Run', 'Run', 'RunLeft', 'Idle', 'Idle', 'Dodge', 'Idle', 'Death']);
+        expect(states[1]!.overlay).toBe('Attack');
+        expect(states[4]!.overlay).toBe('Ability');
+        // The hero's materials compiled at warm-up (lit dyed body and items, shadow depth) and never again.
+        expect(warmed.length).toBeGreaterThanOrEqual(2);
+        expect(after, `${faction} hero programs after warm-up`).toEqual(warmed);
+        for (const state of states) expect(state.shaderErrors).toBe(0);
+        // The model fills a readable part of the frame at the gameplay camera distance.
+        expect(standing, faction).toBeGreaterThan(800);
+      }
+      const disposal = await evaluate<{ after: { geometries: number; textures: number } }>(page, 'window.modelHarness.dispose()');
+      expect(disposal.after.geometries).toBe(0);
+      expect(disposal.after.textures).toBe(0);
+      expect(page.diagnostics).toEqual([]);
     } finally {
       page.close();
     }
-  }, 90_000);
+    // Three faction runs on software GL in CI; every step is still bounded by the 30 s DevTools reply deadline.
+  }, 300_000);
+
+  test.each(['char-line-soldier', 'char-hero-villain'])(
+    'stops with a visible asset failure, and no procedural stand-in, when %s is missing', async id => {
+      missing = id;
+      broken ??= await createServer({
+        configFile: false,
+        plugins: [{
+          name: 'missing-model',
+          configureServer(vite) {
+            vite.middlewares.use((request, response, next) => {
+              if (!request.url?.includes(`/models/${missing}/${missing}.glb`)) return next();
+              response.statusCode = 404;
+              response.end('missing for test');
+            });
+          },
+        }],
+        server: { host: '127.0.0.1', port: 0, hmr: false, watch: null },
+      });
+      if (!broken.httpServer?.listening) await broken.listen();
+      const origin = broken.resolvedUrls?.local[0];
+      if (!origin || !browser) throw new Error('Missing-model server has no URL');
+      const page = await openPage(browser.port, 'about:blank', { width: 1024, height: 700 });
+      try {
+        await navigateTestPage(page, origin, "window.korovany && window.korovany.inspect().overlay === 'fatal'", 60_000);
+        const state = await evaluate<{ overlay: string; running: boolean; models: { error: string | null; loaded: number } }>(
+          page, 'window.korovany.inspect()');
+        expect(state.overlay).toBe('fatal');
+        expect(state.running).toBe(false);
+        expect(state.models.error).toContain(`models/${id}/${id}.glb`);
+        const heading = await evaluate<string>(page, "document.querySelector('.fatal-panel h2, .fatal-panel h1')?.textContent ?? ''");
+        expect(heading).toMatch(/3D models|трёхмерные модели/);
+        // The missing file was requested and the failure was handled: the browser logged the 404, nothing threw uncaught.
+        expect(page.diagnostics.some(entry => /status of 404/.test(entry)), JSON.stringify(page.diagnostics)).toBe(true);
+        expect(page.diagnostics.filter(entry => entry.startsWith('uncaught'))).toEqual([]);
+        if (captures) await screenshot(page, join(captures, `model-missing-${id}.png`));
+      } finally {
+        page.close();
+      }
+    }, 90_000);
 });

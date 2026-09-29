@@ -1,0 +1,46 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-hero-villain",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "C seed 8751, prompt v5d: closest identity (Recommended)",
+      "decidedAt": "2026-09-28T10:29:59.415070+02:00",
+      "question": "Gate 1, hero concepts: which mountain sovereign (Sovereign of the Old Fort, player-villain) concept should go to TRELLIS?",
+      "sha256": "ef775b595c17328f5f409a0c0f6c2b90844bad1363d4d5eabd0e89da046facb3",
+      "approvedFileSha256": "1c40edfc976261db21f1a29700f2f404b14608da7ec7437d0ba9a2862e76652d",
+      "pixelSha256": "73af25dc39b8d60c7576c983a7d705555ca4ffd78398f84837084bfe311db2e1"
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve hd-s505, then add a rear-view concept: 3 local Qwen candidates, about 55 GPU-min, projected in the cook (Recommended)",
+      "decidedAt": "2026-09-28T17:35:24.959192+02:00",
+      "question": "Gate 2: what should I do with the villain? (hair became a close-fitting dark cap with a pale band on all four seeds, fur collar a solid pale mass; recommended hd-s505: one component, fewest triangles 32k, clearest face and beard)",
+      "sha256": "9529bdb8b88852354f0cd44d06a51810b2111a611d20a2fb3a8ad90f091b4471",
+      "candidate": "hd-s505",
+      "conditions": [
+        "A rear-view concept is generated locally (Qwen Image Edit Plus 2511 in WanGP, Scene mode), painted over an orthographic back render of hd-s505 with the approved front concept as identity reference; three candidates; the user selects one.",
+        "The selected rear view is projected onto back-visible texels only, occlusion-tested and blended at the sides; the front keeps the TRELLIS texture from the approved concept.",
+        "Cook repairs: separate or curl the mitten hands, clean the face and skin, decimate to the 16k hero budget with baked normals and 1024 maps. The hair-cap geometry is kept as generated (not repainted into hair)."
+      ]
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated heroes and soldier cook-016",
+      "decidedAt": "2026-09-29T07:30:33+00:00",
+      "question": "Gate 3 final approval: ship the three heroes tone-calibrated (recommended) or as cooked, together with the line soldier cook-016 Run fix, as shown in the running game?",
+      "sha256": "3453e65843390de8d90aad0103b7e8e4ccf1cb20061e2e767fa96eda203d3079"
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Rear 7751 (Recommended)",
+      "decidedAt": "2026-09-28T23:16:39.698664+02:00",
+      "question": "Mountain sovereign: which rear view should the villain use? (7751 red mantle, fur collar, dark circlet band, best registration; 7852 brown leather band, registered mirrored; 7953 rejected as off-model and not offered)",
+      "sha256": "8411aceb57ba34dc199dc57a34394b917af32d8399f53f288fe45c9f96b6fa13",
+      "approvedFileSha256": "9093270e78f2a4c50d5b006953d52caef07ff6c5f73386f4e83adf7a033702eb",
+      "pixelSha256": "01123f12f0048aee6abbb9a8d369986b8b777ed9ae347e1e0dc5dcb9a7491db4"
+    }
+  ]
+}

@@ -5,6 +5,13 @@ export interface MotionContract {
   fps: number;
   clips: Record<string, {
     minSeconds: number; maxSeconds: number; loop: boolean; minMotion: number; speed?: number; planted?: boolean; ground?: boolean;
+    /**
+     * Entity-frame ground velocity [x, z] in m/s of a directional locomotion clip (+Z forward, +X the character's left).
+     * `speed` alone means straight ahead.
+     */
+    velocity?: readonly [number, number];
+    /** Allowed per-foot contact fraction of a locomotion clip; defaults to 0.2-0.75. Fast runs have long flight phases. */
+    contact?: readonly [number, number];
     /** Transitional frames may use a looser strain limit; a held final pose (a corpse) must meet the global one. */
     maxQuantileStretch?: number; minQuantileCompression?: number; holdsFinalPose?: boolean;
   }>;
@@ -77,6 +84,8 @@ export interface ClipReport {
   finalQuantileCompression: number;
   /** Dominant joints at both ends of the most stretched edge, for diagnosis. */
   worstEdge: { frame: number; ratio: number; joints: [string, string] } | null;
+  /** Dominant joints at both ends of the most compressed edge, for diagnosis. */
+  crushedEdge: { frame: number; ratio: number; joints: [string, string] } | null;
   contact: { fraction: number; maxSlide: number; meanSlide: number; lift: number }[];
 }
 
@@ -199,13 +208,17 @@ export function verifyMotion(scene: THREE.Object3D, clips: readonly THREE.Animat
     }
     const mixer = new THREE.AnimationMixer(scene);
     const action = mixer.clipAction(clip);
+    // Sample the clip's own timeline. A repeating action wraps t = duration to t = 0, which would make the last
+    // sample (loop closure, the held final pose) silently re-measure the first frame.
+    action.setLoop(THREE.LoopOnce, 1);
+    action.clampWhenFinished = true;
     action.play();
     const frames = Math.max(1, Math.round(clip.duration * contract.fps));
     const report: ClipReport = {
       name, seconds: clip.duration, frames, maxDisplacement: 0, loopError: null, rootDrift: 0,
       minY: Infinity, maxY: -Infinity, bodyRadius: 0, itemRadius: 0, maxEdgeRatio: 0, minEdgeRatio: Infinity,
       quantileStretch: 0, quantileCompression: Infinity, rigidError: 0, rigidJoint: null, jointScaleError: 0, scaledJoint: null,
-      finalQuantileStretch: 0, finalQuantileCompression: Infinity, worstEdge: null, contact: [],
+      finalQuantileStretch: 0, finalQuantileCompression: Infinity, worstEdge: null, crushedEdge: null, contact: [],
     };
     const dominant = (vertex: number): string => {
       let best = 0, bestWeight = -1;
@@ -246,7 +259,10 @@ export function verifyMotion(scene: THREE.Object3D, clips: readonly THREE.Animat
           report.maxEdgeRatio = ratio;
           report.worstEdge = { frame, ratio, joints: [dominant(p), dominant(q)] };
         }
-        if (ratio < report.minEdgeRatio) report.minEdgeRatio = ratio;
+        if (ratio < report.minEdgeRatio) {
+          report.minEdgeRatio = ratio;
+          report.crushedEdge = { frame, ratio, joints: [dominant(p), dominant(q)] };
+        }
         const rigid = edges.rigid[edge]!;
         if (rigid >= 0 && Math.abs(ratio - 1) > report.rigidError) {
           report.rigidError = Math.abs(ratio - 1);
@@ -293,7 +309,7 @@ export function verifyMotion(scene: THREE.Object3D, clips: readonly THREE.Animat
       report.loopError = error;
       if (error > contract.loopTolerance) failures.push(`${name} does not close its loop (${(error * 1000).toFixed(1)} mm)`);
     }
-    const speed = expected.speed ?? 0;
+    const [velocityX, velocityZ] = expected.velocity ?? [0, expected.speed ?? 0];
     for (const track of soleTracks) {
       let contacts = 0, slides = 0, maxSlide = 0, lift = 0;
       const ground = Math.min(...track.map(sample => sample.y));
@@ -302,8 +318,8 @@ export function verifyMotion(scene: THREE.Object3D, clips: readonly THREE.Animat
         lift = Math.max(lift, b.y - ground);
         if (a.y - ground > contract.plantedHeight || b.y - ground > contract.plantedHeight) continue;
         contacts++;
-        // A planted foot is fixed in the world, so in the entity frame it moves backwards at ground speed.
-        const slide = Math.hypot((b.x - a.x) * contract.fps, (b.z - a.z) * contract.fps + speed);
+        // A planted foot is fixed in the world, so in the entity frame it moves against the ground velocity.
+        const slide = Math.hypot((b.x - a.x) * contract.fps + velocityX, (b.z - a.z) * contract.fps + velocityZ);
         maxSlide = Math.max(maxSlide, slide);
         slides += slide;
       }
@@ -340,16 +356,18 @@ export function verifyMotion(scene: THREE.Object3D, clips: readonly THREE.Animat
       || report.finalQuantileCompression < contract.minQuantileCompression)) {
       failures.push(`${name} holds a final pose outside the strain limits (${report.finalQuantileCompression.toFixed(2)}-${report.finalQuantileStretch.toFixed(2)}x at the ${percent}th percentile)`);
     }
-    if (expected.planted || expected.speed) {
+    const locomotion = expected.speed !== undefined || expected.velocity !== undefined;
+    if (expected.planted || locomotion) {
       report.contact.forEach((contact, side) => {
         if (contact.maxSlide > contract.maxSlideSpeed || contact.meanSlide > contract.maxMeanSlideSpeed) {
           failures.push(`${name} slides ${contract.feet[side]} (max ${contact.maxSlide.toFixed(2)} m/s, mean ${contact.meanSlide.toFixed(2)} m/s)`);
         }
       });
     }
-    if (expected.speed) {
+    if (locomotion) {
+      const [minContact, maxContact] = expected.contact ?? [0.2, 0.75];
       report.contact.forEach((contact, side) => {
-        if (contact.fraction < 0.2 || contact.fraction > 0.75) failures.push(`${name} ${contract.feet[side]} contact fraction ${contact.fraction.toFixed(2)}`);
+        if (contact.fraction < minContact || contact.fraction > maxContact) failures.push(`${name} ${contract.feet[side]} contact fraction ${contact.fraction.toFixed(2)}`);
         if (contact.lift < contract.minSwingLift) failures.push(`${name} ${contract.feet[side]} lifts only ${(contact.lift * 1000).toFixed(0)} mm`);
       });
     }
@@ -363,7 +381,8 @@ export function verifyMotion(scene: THREE.Object3D, clips: readonly THREE.Animat
 }
 
 /** Deliberately broken copies of an asset; each must fail verification. */
-export function brokenVariants(clips: readonly THREE.AnimationClip[], rootBone: string, stretchBone: string, runClip = 'Run'):
+export function brokenVariants(clips: readonly THREE.AnimationClip[], rootBone: string, stretchBone: string, runClip = 'Run',
+  stretchClip = 'Windup'):
   Record<string, { clips: THREE.AnimationClip[]; mutateWeights?: boolean }> {
   const copy = () => clips.map(clip => clip.clone());
   const withClip = (name: string, change: (clip: THREE.AnimationClip) => THREE.AnimationClip) =>
@@ -386,7 +405,7 @@ export function brokenVariants(clips: readonly THREE.AnimationClip[], rootBone: 
       cut.duration = clip.duration * 0.55;
       return cut;
     }) },
-    stretched: { clips: withClip('Windup', clip => {
+    stretched: { clips: withClip(stretchClip, clip => {
       const track = new THREE.VectorKeyframeTrack(`${stretchBone}.scale`, [0, clip.duration], [1, 1, 1, 1, 1.9, 1]);
       return new THREE.AnimationClip(clip.name, clip.duration, [...clip.tracks.filter(t => t.name !== track.name), track]);
     }) },

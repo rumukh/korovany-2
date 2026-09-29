@@ -3,7 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { factionColors, palette, type ViewFaction } from './palette';
 import { beam, joint, part, shapeGeometry } from './primitives';
 import { ViewResources } from './resources';
-import { CharacterInstance, type LoadedModel } from './models';
+import { CharacterInstance, HEROES, HeroInstance, type HeroFaction, type LoadedModel } from './models';
 
 export type ActorLook = 'hero' | 'archer' | 'brute' | 'boss';
 export type ViewAllegiance = 'friendly' | 'hostile' | 'neutral';
@@ -69,6 +69,48 @@ export interface ActorPose {
   reducedMotion: boolean;
 }
 
+/** The player marker: a parchment ring with a brass inner ring. */
+function heroRings(resources: ViewResources, root: THREE.Object3D): void {
+  const ring = new THREE.Mesh(shapeGeometry(resources, 'ring'), resources.material(palette.parchment, { unlit: true }));
+  ring.name = 'hero-ring';
+  ring.scale.setScalar(1.65);
+  ring.position.y = 0.065;
+  root.add(ring);
+  const inner = new THREE.Mesh(shapeGeometry(resources, 'ring'), resources.material(palette.brass, { unlit: true }));
+  inner.scale.setScalar(1.46);
+  inner.position.y = 0.068;
+  root.add(inner);
+}
+
+export interface ModelHero {
+  root: THREE.Group;
+  character: HeroInstance;
+}
+
+/**
+ * The faction's cooked hero on the player's rings. Its materials are the shared dyed variants, so the hero uses the
+ * soldier's shader programs; only dye-masked item paint (the guard's shield face) takes the faction colour.
+ */
+export function createModelHero(resources: ViewResources, model: LoadedModel, faction: HeroFaction, startDead = false): ModelHero {
+  const root = new THREE.Group();
+  root.name = 'hero';
+  root.userData.allegiance = 'friendly';
+  const coat = coatColor('hero', faction, true);
+  let body: THREE.Material | undefined;
+  let items: THREE.Material | undefined;
+  model.scene.traverse(object => {
+    if (!(object instanceof THREE.Mesh) || Array.isArray(object.material)) return;
+    if (object instanceof THREE.SkinnedMesh) body ??= object.material;
+    else items ??= object.material;
+  });
+  if (!body || !items) throw new Error(`Model ${model.id} is missing its body or item material.`);
+  const character = new HeroInstance(model, HEROES[faction].runSpeed,
+    { body: resources.dyed(body, coat), items: resources.dyed(items, coat), depth: resources.modelDepthMaterial() }, startDead);
+  root.add(character.root);
+  heroRings(resources, root);
+  return { root, character };
+}
+
 export interface ActorModel {
   root: THREE.Group;
   height: number;
@@ -124,14 +166,7 @@ export function createActor(resources: ViewResources, look: ActorLook, faction: 
   const capeMesh = part(resources, cape, 'cloth', coat, [0, -0.52, -0.12], [0.77, 1.12, 1], [-0.16, 0, 0]);
   if (hero) {
     part(resources, cape, 'cloth', palette.brass, [0, -0.98, -0.2], [0.71, 0.11, 1], [-0.16, 0, 0]);
-    const ring = new THREE.Mesh(shapeGeometry(resources, 'ring'), resources.material(palette.parchment, { unlit: true }));
-    ring.scale.setScalar(1.65);
-    ring.position.y = 0.065;
-    root.add(ring);
-    const inner = new THREE.Mesh(shapeGeometry(resources, 'ring'), resources.material(palette.brass, { unlit: true }));
-    inner.scale.setScalar(1.46);
-    inner.position.y = 0.068;
-    root.add(inner);
+    heroRings(resources, root);
   } else if (allegiance !== 'hostile') {
     allegianceRing(resources, root, allegiance, scale);
   }

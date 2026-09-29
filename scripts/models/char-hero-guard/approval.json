@@ -1,0 +1,46 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-hero-guard",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "C seed 8441: dark navy, dark steel, weathered (Recommended)",
+      "decidedAt": "2026-09-28T10:26:10.234968+02:00",
+      "question": "Gate 1, hero concepts: which guard officer (Palace guard officer, player-guard) concept should go to TRELLIS?",
+      "sha256": "2348f80463ee977ee6f463a9aa893080ce810af45b8048d4270d268d6c748232",
+      "approvedFileSha256": "e5096f6d52cb74c92fa0f22a431df36c8ecd6fa4ab1d0d90e7b02f05f46f65d4",
+      "pixelSha256": "1f09fe989fb4f7ba70c426cdaead21728008ecc8180c2dac07979c121333ce16"
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve hd-s505, then add a rear-view concept: 3 local Qwen candidates, about 55 GPU-min, projected in the cook (Recommended)",
+      "decidedAt": "2026-09-28T17:33:20.179484+02:00",
+      "question": "Gate 2: what should I do with the guard? (recommended hd-s505: best inferred back with cross-belt, belt and pouch visible, still dark at 0.066 vs 0.151 front; coherent face; 3-4 stray specks per seed; fused mitten hands)",
+      "sha256": "8e873e06064cdea22c2cb430c74f7d9df4ff4c5130bfad5c1bee86deb5de7ec9",
+      "candidate": "hd-s505",
+      "conditions": [
+        "A rear-view concept is generated locally (Qwen Image Edit Plus 2511 in WanGP, Scene mode), painted over an orthographic back render of hd-s505 with the approved front concept as identity reference; three candidates; the user selects one.",
+        "The selected rear view is projected onto back-visible texels only, occlusion-tested and blended at the sides; the front keeps the TRELLIS texture from the approved concept.",
+        "Cook repairs: remove the stray components, separate or curl the mitten hands, clean the face and skin, decimate to the 16k hero budget with baked normals and 1024 maps."
+      ]
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated heroes and soldier cook-016",
+      "decidedAt": "2026-09-29T07:30:33+00:00",
+      "question": "Gate 3 final approval: ship the three heroes tone-calibrated (recommended) or as cooked, together with the line soldier cook-016 Run fix, as shown in the running game?",
+      "sha256": "10904499fbf8ae1efbc66af4690ad667c8254968fe162c0d9d669b7c56ca6e18"
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Rear 7441 (Recommended)",
+      "decidedAt": "2026-09-28T23:16:39.609989+02:00",
+      "question": "Guard officer: which rear view should the guard use? (7441 continues the baldric, collar lining and cuff piping; 7542 adds a gold nape ornament and boot trims; 7643 drops the baldric, royal blue, weakest registration)",
+      "sha256": "c953061ed2de354f9cb6099ea833770a33d55c95b018dccaab5de3a79a25c087",
+      "approvedFileSha256": "64db31eeba56a49774de90f087ea6cc6f0022e10908edaef91c885bf90338942",
+      "pixelSha256": "04b0fcb93cf378942c6022b5b0baf176abcaecd1ba98b748f39e3e07fec7a696"
+    }
+  ]
+}

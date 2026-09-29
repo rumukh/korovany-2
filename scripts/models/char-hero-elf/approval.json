@@ -1,0 +1,46 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-hero-elf",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "C seed 8121 as generated",
+      "decidedAt": "2026-09-28T10:16:32.060055+02:00",
+      "question": "Gate 1, hero concepts: which elf ranger (Forest resistance defender, player-elf) concept should go to TRELLIS?",
+      "sha256": "fb8eac1ff0ff7e6ec58e4a737229971c6fa91c3771c4fe6843b06023bab3b861",
+      "approvedFileSha256": "a594d17b4ade09e30859cb6703dc8df19a14f9b1768e690ace3ffc12c83578c6",
+      "pixelSha256": "32aec437bfaad8472eb30e0416e22134122bd9b8e3301e14711f56f1b8cd2729"
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve hd-s42, then add a rear-view concept: 3 local Qwen candidates, about 55 GPU-min, projected in the cook (Recommended)",
+      "decidedAt": "2026-09-28T17:19:48.757263+02:00",
+      "question": "Gate 2, the unrigged 3D meshes: what should I do with the elf? (board 127.0.0.1:47841; measured limitations stated: invented near-black back on every seed, soft faces with smeared eye sockets, mitten hands, pointed ears only in texture, HD indistinguishable from default at 18-40 m)",
+      "sha256": "8ecd80e64a1b311be94d94fab376a5aa22b0e151afca5cdaeb14bd55c253a0de",
+      "candidate": "hd-s42",
+      "conditions": [
+        "A rear-view concept is generated locally (Qwen Image Edit Plus 2511 in WanGP, Scene mode), painted over an orthographic back render of hd-s42 with the approved front concept as identity reference; three candidates; the user selects one.",
+        "The selected rear view is projected onto back-visible texels only, occlusion-tested and blended at the sides; the front keeps the TRELLIS texture from the approved concept.",
+        "Cook repairs: remove specks, separate or curl the mitten hands, clean the face and skin, decimate to the 16k hero budget with baked normals and 1024 maps; consider small pointed ear geometry."
+      ]
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated heroes and soldier cook-016",
+      "decidedAt": "2026-09-29T07:30:33+00:00",
+      "question": "Gate 3 final approval: ship the three heroes tone-calibrated (recommended) or as cooked, together with the line soldier cook-016 Run fix, as shown in the running game?",
+      "sha256": "c300775b79ecc19b09754560abe1096132fcb0b85a6e9aad1b23eeec59e195ca"
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Rear 7121 (Recommended)",
+      "decidedAt": "2026-09-28T23:16:39.517526+02:00",
+      "question": "Hero rear views, elf ranger: which rear view should the elf use? (7121 faithful continuation; 7222 best registration but invented gold-leaf embroidery and looped hip strap; 7323 satchel and ponytail, weakest registration)",
+      "sha256": "fe37b53559a9ffb03cc8e48e8d03c976a2a3a83e2118d27946b79a01635e006b",
+      "approvedFileSha256": "6a1801af770d324bf3ebdcfdae2634f4276ac86b953eaa45aebbffa4d761abb2",
+      "pixelSha256": "bc98453614cb89860f8032795ebdc0654df90da9d0b4ea24f34401634665b25c"
+    }
+  ]
+}
