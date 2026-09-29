@@ -33,7 +33,7 @@ const state = { ready: false, error: null };
 library.ready.then(() => { state.ready = true; }, error => { state.error = String(error.message ?? error); });
 const camera = new FollowCamera(canvas);
 camera.resize(innerWidth, innerHeight);
-let presentation, environment, snapshot, soldierTemplate, campaign;
+let presentation, environment, snapshot, soldierTemplate, campaign, kept;
 function texturesOf(root) {
   const found = new Map();
   root.traverse(object => {
@@ -73,9 +73,17 @@ function render() {
   renderer.info.reset();
   presentation.update(snapshot, 1 / 60, camera.camera, false);
   renderer.render(presentation.scene, camera.camera);
+  settle();
   const gl = renderer.getContext();
   return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, programs: renderer.info.programs.length,
     geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, shaderErrors, contextLost: gl.isContextLost() };
+}
+// WebGL returns before the GPU draws; waiting here charges each frame to the DevTools evaluation that drew it, so no
+// later call inherits queued software-GL frames (each evaluation must answer within 30 s).
+const onePixel = new Uint8Array(4);
+function settle() {
+  const gl = renderer.getContext();
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, onePixel);
 }
 function pixels() {
   const gl = renderer.getContext();
@@ -123,15 +131,7 @@ window.modelHarness = {
       (program.cacheKey.startsWith('depth') ? program.cacheKey.replace(/\s+/g, ' ') : program.cacheKey.replace(/\s+/g, ' ').slice(0, 120)));
   },
   scene(soldiers) {
-    const template = soldierTemplate;
-    snapshot.actors = snapshot.actors.filter(actor => actor.kind !== 'soldier');
-    const layout = [['elf','hostile','windup'],['guard','friendly','idle'],['villain','hostile','attack'],['villain','friendly','chase'],['guard','neutral','dead']];
-    for (let index = 0; index < soldiers; index++) {
-      const [faction, allegiance, state] = layout[index % layout.length];
-      snapshot.actors.push({ ...structuredClone(template), id: 'browser-soldier-' + index, faction, allegiance, state,
-        stateTime: 0.2, hp: state === 'dead' ? 0 : template.maxHp * 0.7,
-        x: snapshot.player.x - 4 + index * 2, z: snapshot.player.z + 5 + (index % 2), heading: Math.PI });
-    }
+    this.place(soldiers);
     const first = performance.now();
     renderer.info.reset();
     presentation.update(snapshot, 1 / 60, camera.camera, false);
@@ -148,16 +148,38 @@ window.modelHarness = {
     stats.secondFrameMs = performance.now() - again;
     return stats;
   },
-  difference(soldiers) {
-    this.scene(0);
-    const empty = pixels();
-    this.scene(soldiers);
-    const full = pixels();
-    let changed = 0;
-    for (let i = 0; i < empty.length; i += 4) {
-      if (Math.abs(empty[i] - full[i]) + Math.abs(empty[i + 1] - full[i + 1]) + Math.abs(empty[i + 2] - full[i + 2]) > 24) changed++;
+  place(soldiers) {
+    const template = soldierTemplate;
+    snapshot.actors = snapshot.actors.filter(actor => actor.kind !== 'soldier');
+    const layout = [['elf','hostile','windup'],['guard','friendly','idle'],['villain','hostile','attack'],['villain','friendly','chase'],['guard','neutral','dead']];
+    for (let index = 0; index < soldiers; index++) {
+      const [faction, allegiance, state] = layout[index % layout.length];
+      snapshot.actors.push({ ...structuredClone(template), id: 'browser-soldier-' + index, faction, allegiance, state,
+        stateTime: 0.2, hp: state === 'dead' ? 0 : template.maxHp * 0.7,
+        x: snapshot.player.x - 4 + index * 2, z: snapshot.player.z + 5 + (index % 2), heading: Math.PI });
     }
-    return changed;
+  },
+  // Pixel comparisons take one frame per call: software GL (CI) draws a frame in seconds, and one DevTools
+  // evaluation must answer within 30 s.
+  /** Draws one frame with this many soldiers. */
+  stage(soldiers) {
+    this.place(soldiers);
+    render();
+    return true;
+  },
+  /** Keeps the current frame's pixels for changed(). */
+  keep() {
+    kept = pixels();
+    return true;
+  },
+  /** Pixels of the current frame that differ from the kept frame by more than 24 levels of RGB. */
+  changed() {
+    const now = pixels();
+    let count = 0;
+    for (let i = 0; i < now.length; i += 4) {
+      if (Math.abs(now[i] - kept[i]) + Math.abs(now[i + 1] - kept[i + 1]) + Math.abs(now[i + 2] - kept[i + 2]) > 24) count++;
+    }
+    return count;
   },
   /** A faction's run with its cooked hero at the gameplay camera distance, warmed as the game warms it. */
   hero(faction) {
@@ -173,7 +195,9 @@ window.modelHarness = {
     presentation.update(snapshot, 1 / 60, camera.camera, false);
     const warmup = presentation.warmModels(renderer, snapshot.player.x, snapshot.player.z,
       () => compileFrame(renderer, presentation.scene, camera.camera, null));
-    return { ...render(), warmup };
+    settle();
+    // The first full frame is heroStep's, after the world textures finish loading.
+    return { shaderErrors, warmup };
   },
   /** Steps the real campaign with one input and renders; dead forces the defeat pose. */
   heroStep(input, ticks = 1, dead = false) {
@@ -187,6 +211,7 @@ window.modelHarness = {
     positionSun(presentation.sun, snapshot.player.x, snapshot.player.z);
     renderer.info.reset();
     renderer.render(presentation.scene, camera.camera);
+    settle();
     const character = presentation.hero.character;
     return { calls: renderer.info.render.calls, programs: renderer.info.programs.length, shaderErrors,
       clip: character.activeClip, overlay: character.overlay?.clip ?? null };
@@ -204,21 +229,14 @@ window.modelHarness = {
     });
     return [...keys].sort();
   },
-  /** Pixels that change when the hero model (not its rings) is hidden. */
-  heroPixels(faction) {
+  /** Draws one frame with the hero model (not its rings) shown or hidden, for keep() and changed(). */
+  heroFrame(faction, shown) {
     const model = presentation.scene.getObjectByName('char-hero-' + faction);
+    model.visible = shown;
     renderer.render(presentation.scene, camera.camera);
-    const shown = pixels();
-    model.visible = false;
-    renderer.render(presentation.scene, camera.camera);
-    const hidden = pixels();
+    settle();
     model.visible = true;
-    renderer.render(presentation.scene, camera.camera);
-    let changed = 0;
-    for (let i = 0; i < shown.length; i += 4) {
-      if (Math.abs(shown[i] - hidden[i]) + Math.abs(shown[i + 1] - hidden[i + 1]) + Math.abs(shown[i + 2] - hidden[i + 2]) > 24) changed++;
-    }
-    return changed;
+    return true;
   },
   dispose() {
     const before = { geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures };
@@ -310,7 +328,10 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the brows
     expect(created, 'programs created on first appearance').toEqual([]);
     expect(first.programs).toBe(base.programs);
     expect(all.programs).toBe(base.programs);
-    expect(await evaluate<number>(cdp, 'window.modelHarness.difference(5)')).toBeGreaterThan(2000);
+    await evaluate(cdp, 'window.modelHarness.stage(0)');
+    await evaluate(cdp, 'window.modelHarness.keep()');
+    await evaluate(cdp, 'window.modelHarness.stage(5)');
+    expect(await evaluate<number>(cdp, 'window.modelHarness.changed()')).toBeGreaterThan(2000);
     if (captures) await screenshot(cdp, join(captures, 'model-soldiers.png'));
     const well = await evaluate<{ shaderErrors: number }>(cdp, "window.modelHarness.open('name-well')");
     await until(cdp, 'window.modelHarness.textureStatus.pending === 0', Boolean, 30_000);
@@ -321,7 +342,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the brows
     expect(disposal.after.geometries).toBe(0);
     expect(disposal.after.textures).toBe(0);
     expect(cdp.diagnostics).toEqual([]);
-  }, 120_000);
+  }, 180_000);
 
   test('a disabled-warming control creates the model programs on first appearance instead, within the program budget', async () => {
     if (!browser || !server) throw new Error('Browser was not initialized');
@@ -373,8 +394,14 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the brows
         states.push(await evaluate(page, 'window.modelHarness.heroStep({ special: true }, 1)'));
         states.push(await evaluate(page, 'window.modelHarness.heroStep({ dodge: true, move: { x: -1, z: 0 } }, 6)'));
         states.push(await evaluate(page, 'window.modelHarness.heroStep({}, 60)'));
-        const standing = await evaluate<number>(page, `window.modelHarness.heroPixels('${faction}')`);
-        if (captures) await screenshot(page, join(captures, `model-hero-${faction}.png`));
+        await evaluate(page, `window.modelHarness.heroFrame('${faction}', true)`);
+        await evaluate(page, 'window.modelHarness.keep()');
+        await evaluate(page, `window.modelHarness.heroFrame('${faction}', false)`);
+        const standing = await evaluate<number>(page, 'window.modelHarness.changed()');
+        if (captures) {
+          await evaluate(page, `window.modelHarness.heroFrame('${faction}', true)`);
+          await screenshot(page, join(captures, `model-hero-${faction}.png`));
+        }
         states.push(await evaluate(page, 'window.modelHarness.heroStep({}, 70, true)'));
         const after = await evaluate<string[]>(page, 'window.modelHarness.heroPrograms()');
         console.info('Hero states', faction, JSON.stringify({ warmup: opened.warmup, base: base.programs, standing, warmed, states }));
@@ -395,7 +422,8 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the brows
     } finally {
       page.close();
     }
-  }, 180_000);
+    // Three faction runs on software GL in CI; every step is still bounded by the 30 s DevTools reply deadline.
+  }, 300_000);
 
   test.each(['char-line-soldier', 'char-hero-villain'])(
     'stops with a visible asset failure, and no procedural stand-in, when %s is missing', async id => {
