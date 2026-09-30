@@ -108,28 +108,33 @@ the generated images, not measured scans.
 
 ### Cooked 3D models
 
-The line soldier worn by every faction's soldiers, the Echo Well and the three
-faction heroes (the elf ranger, the palace officer and the mountain sovereign)
-are cooked glTF models (`public/models`, about 8.5 MB together) instead of
+The line soldier worn by every faction's soldiers, the road archer, the infantry
+captain, the two bosses (Commander Raut and the Palace Marshal), the Echo Well
+and the three faction heroes (the elf ranger, the palace officer and the
+mountain sovereign) are cooked glTF models (`public/models`) instead of
 procedural meshes. Their concepts were generated locally with Qwen Image Edit
-Plus 2511, from original Blender reference renders and, for the heroes, the
-game's own hero portraits as identity references. They were reconstructed with
-TRELLIS-image-large and cooked, rigged and animated in Blender 5.2.2 LTS. Every
-character's back comes from an approved rear-view concept projected onto the
-mesh. The heroes' dark TRELLIS textures are lifted by a tone curve calibrated in
-the game until each hero reads as bright as its approved concept from the
-default camera. Faction and allegiance colour the soldier's tabard and shield
-and the palace officer's shield without extra shader variants. The game waits
-for every model before presenting a run and stops with an explicit asset error
-if any fails to load.
+Plus 2511, from original Blender reference renders (for the archer, captain and
+bosses, the approved soldier concept with a blank mannequin head) and, for the
+heroes, the game's own hero portraits as identity references. They were
+reconstructed with TRELLIS-image-large and cooked, rigged and animated in
+Blender 5.2.2 LTS. Every character's back comes from an approved rear-view
+concept projected onto the mesh. Dark TRELLIS textures of the heroes, archer,
+captain and bosses are lifted by a tone curve calibrated in the game against
+each approved concept from the default camera. The heroes and bosses match their
+concepts' brightness; the archer and captain stop at the strongest lift measured
+and stay darker than their concepts; the line soldier keeps its TRELLIS colours
+without a lift. Faction and allegiance colour the soldier's tabard and shield, the
+archer's hood, cape and tabard, the captain's tabard and the palace officer's
+shield without extra shader variants. The game waits for every model before
+presenting a run and stops with an explicit asset error if any fails to load.
 
 **Licensing limitation:** TRELLIS code and weights are MIT-licensed, but its
 textured export depends on components restricted to research and evaluation.
-No commercial clearance exists for these five models; the project owner
+No commercial clearance exists for these nine models; the project owner
 acknowledged publishing them here. Concepts, recipes, provenance, approvals and
 the cooking scripts are in `scripts/models`. The rest of the world, including
-archers, captains, bosses, residents and the caravan, is still procedural, so the
-models currently read as more realistic than their surroundings. They are not AAA
+residents, the caravan wagons and most props, is still procedural, so the models
+currently read as more realistic than their surroundings. They are not AAA
 assets: see each `provenance.json` for measured limitations.
 
 ## The campaign

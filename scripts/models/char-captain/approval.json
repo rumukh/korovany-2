@@ -1,0 +1,46 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-captain",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Recommended set: archer 9101, captain 9502, Raut v2 9802, Marshal v2 9353",
+      "decidedAt": "2026-09-29T19:00:27.787258+02:00",
+      "question": "Batch B, gate 1: which concept should each combat-roster character use (archer, captain, Raut, the Palace Marshal)?",
+      "sha256": "27725c7237841511751fcbbeb4dd42a30999e4e64a4a30ccf5581d60d585c723",
+      "approvedFileSha256": "96137cdd500b72eb9d4ade39aabd66863c8d507226e61ab9e7f1c6412b5289e8",
+      "pixelSha256": "ae01201bd2bf67863680726070766b013285ed47ae60f96ae32b3b0f8d0600cf"
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve all four recommended meshes, with 3 rear-view concepts each and Raut's chin re-tinted (Recommended)",
+      "decidedAt": "2026-09-29T20:39:41.963393+02:00",
+      "question": "Gate 2 for batch B, the unrigged TRELLIS meshes (16 candidates, 25.9 GPU-minutes, whole-GPU peak 14.2-14.5 GiB). Recommended archer hd-s42, captain hd-s505, Raut hd-s42 (chin re-tint in the cook), Marshal hd-s101; the backs are invented and nearly black on all four, faces soft, hands mittens; proposed repair: 3 local-Qwen rear-view concepts per troop, projected onto the back (12 jobs, about 4 GPU-hours). How do you want to proceed?",
+      "sha256": "66c198cb338b144e7ea586d0d36db864701b8c15a1c2f682d1711f3ad9b786b8",
+      "candidate": "hd-s505",
+      "conditions": [
+        "A rear-view concept is generated locally (Qwen Image Edit Plus 2511 in WanGP, Scene mode), painted over an orthographic back render of the approved mesh with the approved front concept as identity reference; three candidates; the user selects one.",
+        "The selected rear view is projected onto back-visible texels only, occlusion-tested and blended at the sides; the front keeps the TRELLIS texture from the approved concept.",
+        "Cook repairs: separate or curl the mitten hands, clean the face and skin, repair the 3 non-manifold edges, decimate to the 12k troop budget with baked normals and 1024 maps; tone calibration and the dye mask must lift the greyer tabard (front 0.28). The hammer is a separate cooked item."
+      ]
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated troops, ship-002 (Recommended)",
+      "decidedAt": "2026-09-30T15:47:50.294743+02:00",
+      "question": "Gate 3 for batch B: the archer, captain, Commander Raut and the Palace Marshal are in the running game. The board is at 127.0.0.1:47846, and you can play the calibrated build at :47852 or the as-cooked build at :47853. Both candidates pass every per-frame clip check and reject all 24 deliberately broken copies, and the existing gameplay, save and campaign tests pass unchanged. Measured cost: the deployed site grows by 7.57 MB. At high quality, combat frames are as fast or faster and draw calls fall by about 55%, but triangles rise to 546k against the 400k budget. Calibrated lifts the bosses to their concepts' brightness. The archer and captain reach only 87% and 76% of theirs, and the lift makes the sleeves more orange and the steel lighter. This is not AAA: hands are mittens, faces are soft, the backs are projected paintings with smears, the clips are procedural and the weapons are low-poly. Which should I ship?",
+      "sha256": "8f657d72c0cb494a3047ff0990bd968538b7b43ccf90483472ead23f8b108c98"
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Use the four recommended rear views: archer 9212, captain 9613, Raut 9812, Marshal 9363 (Recommended)",
+      "decidedAt": "2026-09-30T10:45:20.048482+02:00",
+      "question": "Batch B rear views are ready on the board (127.0.0.1:47845). The 12 local Qwen jobs took 4.18 GPU-hours. My recommendations: archer 9212 (cleanest back and the most faction dye, but it drops the shoulder cape across the back), captain 9613 (cleanest back, matches the riveted helmet), Raut 9812 (the only seed with the concept's brown boots) and Marshal 9363 (closest to the concept and the best registration). Archer 9313 is rejected because Qwen left it grey. Limitations measured on every seed: each back is Qwen's invention, the painted cloth is stretched over the TRELLIS folds into vertical smears, and only what is visible from directly behind is repainted. The review also caught the painted pouch landing on the wrong hip for archer 9111 and 9212 and captain 9613. I re-registered those three with a reviewer-set orientation, so each painted pouch now sits on the modelled pouch. Which rear views should I cook?",
+      "sha256": "8040e4dc54d88aa238cd2a38e4dc0075e91267f5fec3f70d9b36f11983ee8f42",
+      "approvedFileSha256": "213ea56a1289441a4985ed4852021d939b319c48803ec00a87f3f0f028616b70",
+      "pixelSha256": "b20567636c7a725379e2372ae3715826147b22c7e1465a232a0db3e1233d3b2d"
+    }
+  ]
+}

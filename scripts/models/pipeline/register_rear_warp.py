@@ -1,6 +1,6 @@
 """Register a rear-view painting to the mesh's orthographic back silhouette with a silhouette-driven warp.
 
-python register_rear_warp.py <painting.png> <rear-mask.png> <outDir>
+python register_rear_warp.py <painting.png> <rear-mask.png> <outDir> [--orientation=painted|mirrored]
 
 Qwen keeps the pose of the grey sculpt it repaints but not always its proportions (a taller figure, longer legs).
 A global scale and shift (register_rear.py) then leaves painted boots on the trousers and a tunic hem on the
@@ -11,6 +11,8 @@ silhouette runs (torso, arms, legs). The warp is smoothed so it never tears.
 
 Writes painting-registered.png (mesh frame, painted colours extended past the painted silhouette),
 overlay.png, warp.png (displacement field) and registration.json. Both mirror orientations are scored.
+--orientation overrides the automatic choice after review (for example when the painted pouch would land on the
+hip without the pouch geometry); both scores are still recorded. Without it the output is unchanged.
 """
 import json
 import sys
@@ -21,6 +23,9 @@ from PIL import Image
 from scipy import ndimage
 
 painting_path, mask_path, out = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
+forced = next((arg.split("=", 1)[1] for arg in sys.argv[4:] if arg.startswith("--orientation=")), None)
+if forced not in (None, "painted", "mirrored"):
+    raise SystemExit(f"unknown orientation {forced}")
 out.mkdir(parents=True, exist_ok=True)
 paint = np.asarray(Image.open(painting_path).convert("RGB"), dtype=np.float32)
 target = np.asarray(Image.open(mask_path).convert("L")) > 127
@@ -288,6 +293,9 @@ if clay_edges is not None:
     mirror = candidates[True][2] > candidates[False][2] * 1.04
 else:
     mirror = candidates[True][1][0] > candidates[False][1][0] + 0.01
+automatic = mirror
+if forced:
+    mirror = forced == "mirrored"
 initial_iou, (global_iou, sx, sy, tx, ty), _ = candidates[mirror]
 source = paint[:, ::-1] if mirror else paint
 source_fg = fg[:, ::-1] if mirror else fg
@@ -331,5 +339,7 @@ report = {
     "backdropSrgb": backdrop.round(1).tolist(),
     "note": "Mesh pixels without paint receive the nearest painted colour (edge extension), not the backdrop.",
 }
+if forced:
+    report["orientation"] = {"forced": forced, "automatic": "mirrored" if automatic else "painted"}
 (out / "registration.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
 print("REGISTER", json.dumps(report))

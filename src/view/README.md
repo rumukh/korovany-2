@@ -118,28 +118,40 @@ heraldry distinguishes locked, unlocked and defeated states without a false gate
 
 ## Cooked 3D models
 
-Five cooked glTF models replace procedural presentation: the line soldier
-(`public/models/char-line-soldier/`), used by every faction's `soldier` actor,
-the Echo Well (`public/models/prop-echo-well/`), used by the Echo Well and
-the matching Cinderwell structure, and one hero per faction
-(`public/models/char-hero-elf/`, `char-hero-guard/` and `char-hero-villain/`),
-used for the player. `ModelLibrary` (`models.ts`) starts loading
-them through `GLTFLoader` as the page opens, behind the title menu. Until every
+Nine cooked glTF models replace procedural presentation: the troops (the line
+soldier, the road archer, the infantry captain and two bosses, Commander Raut and
+the Palace Marshal, in `public/models/char-line-soldier/`, `char-archer/`,
+`char-captain/`, `char-boss-raut/` and `char-boss-marshal/`), used by every
+faction's `soldier`, `archer`, `captain` and `boss` actors; the Echo Well
+(`public/models/prop-echo-well/`), used by the Echo Well and the matching
+Cinderwell structure; and one hero per faction (`public/models/char-hero-elf/`,
+`char-hero-guard/` and `char-hero-villain/`), used for the player.
+`troopModelFor()` picks the troop for an actor kind and faction: the Palace
+Marshal is the Crown's (guard) boss, Raut the mountain army's. `ModelLibrary`
+(`models.ts`) starts loading them through `GLTFLoader` as the page opens, behind
+the title menu. Until every
 model is ready the world is not drawn and the simulation does not step; a small
 status line says so, and a run started early still captures the mouse from its
 own click and begins on the first frame the player can see. A load failure stops
 on the fatal "assets" panel with the failing URL. There is no primitive fallback;
 only DOM-free geometry tests construct `ViewResources` without models.
 
-Soldier instances are `SkeletonUtils` clones driven by an `AnimationMixer` from
-snapshot state and render time: `Idle`, `AtEase` (while a story scene is open),
-`Run` (moving faster than 0.35 m/s), `Windup`, `Strike` and `Recovery` (scrubbed
-by snapshot progress), an additive `Hit` on health loss, and `Death`, which is held
-as the corpse. Reduced motion freezes the idle breathing and suppresses hit
-reactions. Clips carry no root motion; position, heading, collision and timing stay
-authoritative. Faction and allegiance colour the tabard and shield through one
-dyed material program (`korovany-dye-v1`, dye mask in the base-colour alpha), so
-colour variants add no shader variants. Because that alpha is a mask rather than
+Troop instances (`CharacterInstance`) are `SkeletonUtils` clones driven by an
+`AnimationMixer` from snapshot state and render time: `Idle`, `AtEase` (while a
+story scene is open), `Run` (moving faster than 0.35 m/s, played at the ratio of
+the measured ground speed to the troop's `runSpeed`), `Windup`, `Strike` and
+`Recovery` (scrubbed by snapshot progress, each lasting exactly as long as the
+actor kind's state), an additive `Hit` on health loss, and `Death`, which is held
+as the corpse. All troops are cooked at human size; `TROOPS` scales the captain
+by 1.2 and the bosses by 1.7 at runtime, the sizes of the procedural figures they
+replace, and their Run clips are authored at the world speed divided by that
+scale so planted feet stay planted. Reduced motion freezes the idle breathing and
+suppresses hit reactions. Clips carry no root motion; position, heading,
+collision and timing stay authoritative. Faction and allegiance colour the
+soldier's tabard and shield, the archer's hood, shoulder cape and tabard and the
+captain's tabard through one dyed material program (`korovany-dye-v1`, dye mask
+in the base-colour alpha); the bosses wear fixed colours and have no dye mask.
+Colour variants therefore add no shader variants. Because that alpha is a mask rather than
 coverage, dye-masked base colour is encoded with libwebp's `exact` option
 (`pipeline/webp_exact.py`): the default lossy mode discards the colour of every
 texel whose alpha is 0, which is every undyed surface. The well scales uniformly
@@ -164,7 +176,9 @@ shield face is dyed, so a hero adds no shader program.
 After a world mirror is built and after every quality change, `createGameView`
 calls `Presentation.warmModels()` in the same task as the next real frame: a
 temporary soldier visual (model, ring, health bar, tell) and well are drawn twice,
-alone, together with the current hero, with the scene's real lights, fog, shadow
+alone, together with the current hero and one of each other troop model the
+campaign shows (sharing the soldier's programs, so only their textures upload),
+with the scene's real lights, fog, shadow
 maps and output path, then removed, so no model shader compiles when a soldier
 first appears (aegis-engine
 #6). Every other renderable is hidden for those two draws, and they shade a single
@@ -192,4 +206,6 @@ foot contact and sliding, loop closure, clearance, joint scale, rigid parts and
 crease strain), including deliberately broken copies that must fail.
 `tests/hero-models.test.ts` does the same for every hero clip, drives each hero
 through the presenter with real campaign inputs, and checks foot planting in
-eight directions.
+eight directions. `tests/troop-models.test.ts` does it for the archer, captain
+and bosses, whose telegraphed clips must last exactly as long as the simulation's
+windup and recovery.
