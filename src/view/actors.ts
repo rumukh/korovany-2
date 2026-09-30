@@ -36,14 +36,19 @@ export interface ModelActor {
   character: CharacterInstance;
 }
 
-/** The cooked line soldier for every faction's `soldier` actor, dyed by faction without extra shaders. */
-export function createModelSoldier(
-  resources: ViewResources, model: LoadedModel, faction: ViewFaction, affiliation: boolean | ViewAllegiance, startDead = false,
+/**
+ * A cooked troop (line soldier, archer, captain or boss) for an actor, dyed by faction without extra shaders: every
+ * troop's body and items take the shared dye program, and only its dye-masked cloth takes the colour. The captain and
+ * boss keep the procedural figures' sizes (x1.2 and x1.7), so their allegiance rings scale with them.
+ */
+export function createModelTroop(
+  resources: ViewResources, model: LoadedModel, look: ActorLook | 'soldier', faction: ViewFaction, affiliation: boolean | ViewAllegiance,
+  startDead = false,
 ): ModelActor {
   const root = new THREE.Group();
   const allegiance = allegianceOf(affiliation);
   root.userData.allegiance = allegiance;
-  const coat = coatColor('soldier', faction, affiliation);
+  const coat = coatColor(look, faction, affiliation);
   let body: THREE.Material | undefined;
   let items: THREE.Material | undefined;
   model.scene.traverse(object => {
@@ -54,9 +59,17 @@ export function createModelSoldier(
   if (!body || !items) throw new Error(`Model ${model.id} is missing its body or item material.`);
   const character = new CharacterInstance(model,
     { body: resources.dyed(body, coat), items: resources.dyed(items, coat), depth: resources.modelDepthMaterial() }, startDead);
+  character.root.scale.setScalar(character.contract.scale);
   root.add(character.root);
-  allegianceRing(resources, root, allegiance, 1);
-  return { root, height: model.bounds.max.y + 0.22, character };
+  allegianceRing(resources, root, allegiance, character.contract.scale);
+  return { root, height: model.bounds.max.y * character.contract.scale + 0.22, character };
+}
+
+/** The cooked line soldier for every faction's `soldier` actor, dyed by faction without extra shaders. */
+export function createModelSoldier(
+  resources: ViewResources, model: LoadedModel, faction: ViewFaction, affiliation: boolean | ViewAllegiance, startDead = false,
+): ModelActor {
+  return createModelTroop(resources, model, 'soldier', faction, affiliation, startDead);
 }
 
 export interface ActorPose {

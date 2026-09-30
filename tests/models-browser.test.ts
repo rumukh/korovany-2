@@ -172,6 +172,23 @@ window.modelHarness = {
     kept = pixels();
     return true;
   },
+  /**
+   * The cooked roster in front of the camera: an archer, a captain and both bosses, in several factions, allegiances
+   * and telegraphed states; shown = false removes them again. Draws one frame.
+   */
+  roster(shown = true) {
+    snapshot.actors = snapshot.actors.filter(actor => !actor.id.startsWith('browser-roster-'));
+    if (shown) {
+      const layout = [['archer', 'elf', 'hostile', 'windup', -5, 6], ['captain', 'villain', 'friendly', 'attack', -1.5, 7],
+        ['boss', 'villain', 'hostile', 'windup', 3, 9], ['boss', 'guard', 'hostile', 'recovery', 8, 7], ['archer', 'guard', 'friendly', 'idle', -7.5, 8]];
+      for (const [kind, faction, allegiance, state, dx, dz] of layout) {
+        snapshot.actors.push({ ...structuredClone(soldierTemplate), id: 'browser-roster-' + kind + '-' + faction, kind, faction, allegiance, state,
+          stateTime: 0.2, radius: kind === 'boss' ? 1.3 : 0.7, attackRange: kind === 'archer' ? 14 : kind === 'boss' ? 4.3 : 2.4,
+          x: snapshot.player.x + dx, z: snapshot.player.z + dz, heading: Math.PI });
+      }
+    }
+    return render();
+  },
   /** Pixels of the current frame that differ from the kept frame by more than 24 levels of RGB. */
   changed() {
     const now = pixels();
@@ -305,8 +322,8 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the brows
       expect(texture.width, `${texture.id}:${texture.key}`).toBeGreaterThanOrEqual(256);
       expect(texture.range, `${texture.id}:${texture.key}`).toBeGreaterThan(8);
     }
-    // Every model's base colour, normal and occlusion/roughness/metal maps decoded, for all five models.
-    expect(new Set(textures.map(texture => texture.id)).size).toBe(5);
+    // Every model's base colour, normal and occlusion/roughness/metal maps decoded, for all nine models.
+    expect(new Set(textures.map(texture => texture.id)).size).toBe(9);
     expect(textures.find(texture => texture.id === 'char-line-soldier' && texture.key === 'map' && texture.material === 'body')?.alphaRange)
       .toBeGreaterThan(128);
     const base = await evaluate<{ programs: number; shaderErrors: number; warmup: { programsBefore: number; programsAfter: number; milliseconds: number } }>(
@@ -333,6 +350,16 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the brows
     await evaluate(cdp, 'window.modelHarness.stage(5)');
     expect(await evaluate<number>(cdp, 'window.modelHarness.changed()')).toBeGreaterThan(2000);
     if (captures) await screenshot(cdp, join(captures, 'model-soldiers.png'));
+    // The rest of the cooked roster (archers, a captain and both bosses) shares the warmed programs: the Palace Marshal
+    // is not in this guard run, so its first appearance uploads textures but compiles nothing.
+    const roster = await evaluate<{ programs: number; shaderErrors: number; calls: number; contextLost: boolean }>(cdp, 'window.modelHarness.roster(true)');
+    expect(roster.shaderErrors).toBe(0);
+    expect(roster.contextLost).toBe(false);
+    expect(roster.programs).toBe(base.programs);
+    if (captures) await screenshot(cdp, join(captures, 'model-roster.png'));
+    await evaluate(cdp, 'window.modelHarness.keep()');
+    await evaluate(cdp, 'window.modelHarness.roster(false)');
+    expect(await evaluate<number>(cdp, 'window.modelHarness.changed()')).toBeGreaterThan(4000);
     const well = await evaluate<{ shaderErrors: number }>(cdp, "window.modelHarness.open('name-well')");
     await until(cdp, 'window.modelHarness.textureStatus.pending === 0', Boolean, 30_000);
     expect(well.shaderErrors).toBe(0);
@@ -425,7 +452,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the brows
     // Three faction runs on software GL in CI; every step is still bounded by the 30 s DevTools reply deadline.
   }, 300_000);
 
-  test.each(['char-line-soldier', 'char-hero-villain'])(
+  test.each(['char-line-soldier', 'char-hero-villain', 'char-boss-marshal'])(
     'stops with a visible asset failure, and no procedural stand-in, when %s is missing', async id => {
       missing = id;
       broken ??= await createServer({

@@ -5,20 +5,53 @@ import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 /** Cooked, provenance-tracked GLB assets shipped under `public/models/<id>/<id>.glb`. */
 export type HeroFaction = 'elf' | 'guard' | 'villain';
 export type HeroModelId = `char-hero-${HeroFaction}`;
-export type ModelId = 'char-line-soldier' | 'prop-echo-well' | HeroModelId;
-export const MODEL_IDS: readonly ModelId[] = ['char-line-soldier', 'prop-echo-well', 'char-hero-elf', 'char-hero-guard', 'char-hero-villain'];
+export type TroopModelId = 'char-line-soldier' | 'char-archer' | 'char-captain' | 'char-boss-raut' | 'char-boss-marshal';
+export type ModelId = TroopModelId | 'prop-echo-well' | HeroModelId;
+export const MODEL_IDS: readonly ModelId[] = ['char-line-soldier', 'prop-echo-well', 'char-hero-elf', 'char-hero-guard', 'char-hero-villain',
+  'char-archer', 'char-captain', 'char-boss-raut', 'char-boss-marshal'];
 
 export type CharacterClip = 'Idle' | 'AtEase' | 'Run' | 'Windup' | 'Strike' | 'Recovery' | 'Hit' | 'Death';
 export const CHARACTER_CLIPS: readonly CharacterClip[] = ['Idle', 'AtEase', 'Run', 'Windup', 'Strike', 'Recovery', 'Hit', 'Death'];
+
+/** Presentation contract of a cooked troop. Gameplay timing and speed stay authoritative in the simulation. */
+export interface TroopContract {
+  id: TroopModelId;
+  /** World speed in metres per second at which one Run cycle plants its feet (the actor kind's simulation speed). */
+  runSpeed: number;
+  /** Uniform scale applied to the human-sized cooked model, as the procedural captain (x1.2) and boss (x1.7) had;
+   * the cooked Run is authored at runSpeed / scale. */
+  scale: number;
+  loops: readonly CharacterClip[];
+  items: readonly string[];
+}
 
 /** Presentation contract of the line soldier. Gameplay timing and speed stay authoritative in the simulation. */
 export const LINE_SOLDIER = {
   id: 'char-line-soldier',
   /** Planted-foot speed authored into one Run cycle, in metres per second. */
   runSpeed: 3.5,
+  scale: 1,
   loops: ['Idle', 'AtEase', 'Run'] as readonly CharacterClip[],
   items: ['item-sword', 'item-shield'] as const,
-} as const;
+} as const satisfies TroopContract;
+
+/**
+ * Every cooked troop shares the soldier's clip set and its snapshot-driven state machine. The boss model is chosen by
+ * the boss's faction: the Palace Marshal defends the Crown (guard) and Commander Raut leads the mountain army.
+ */
+export const TROOPS: Record<TroopModelId, TroopContract> = {
+  'char-line-soldier': LINE_SOLDIER,
+  'char-archer': { id: 'char-archer', runSpeed: 3, scale: 1, loops: LINE_SOLDIER.loops, items: ['item-bow', 'item-quiver'] },
+  'char-captain': { id: 'char-captain', runSpeed: 3.5, scale: 1.2, loops: LINE_SOLDIER.loops, items: ['item-hammer'] },
+  'char-boss-raut': { id: 'char-boss-raut', runSpeed: 3.6, scale: 1.7, loops: LINE_SOLDIER.loops, items: ['item-hammer'] },
+  'char-boss-marshal': { id: 'char-boss-marshal', runSpeed: 3.6, scale: 1.7, loops: LINE_SOLDIER.loops, items: ['item-mace'] },
+};
+
+/** The cooked troop for an actor kind and faction; the shipment wagon has none. */
+export function troopModelFor(kind: 'soldier' | 'archer' | 'captain' | 'boss', faction: string): TroopModelId {
+  return kind === 'soldier' ? 'char-line-soldier' : kind === 'archer' ? 'char-archer' : kind === 'captain' ? 'char-captain'
+    : faction === 'guard' ? 'char-boss-marshal' : 'char-boss-raut';
+}
 
 export type HeroClip = 'Idle' | 'AtEase' | 'Run' | 'RunBack' | 'RunLeft' | 'RunRight' | 'Sprint' | 'Dodge' | 'Attack' | 'AttackB'
   | 'Ability' | 'Interact' | 'Hit' | 'Death';
@@ -96,13 +129,14 @@ function horizontalReach(root: THREE.Object3D): number {
 function validate(id: ModelId, scene: THREE.Object3D, clips: ReadonlyMap<string, THREE.AnimationClip>): void {
   const parts = meshes(scene);
   const hero = heroOf(id);
-  if (id === 'char-line-soldier' || hero) {
+  const troop = id in TROOPS ? TROOPS[id as TroopModelId] : undefined;
+  if (troop || hero) {
     const bodies = parts.filter(mesh => mesh instanceof THREE.SkinnedMesh);
     if (bodies.length !== 1) throw new Error(`expected one skinned body, found ${bodies.length}`);
     for (const clip of hero ? HERO_CLIPS : CHARACTER_CLIPS) {
       if (!clips.has(clip)) throw new Error(`missing animation clip ${clip}`);
     }
-    for (const item of hero ? hero.items : LINE_SOLDIER.items) {
+    for (const item of hero ? hero.items : troop!.items) {
       if (!parts.some(mesh => mesh.name === item && !(mesh instanceof THREE.SkinnedMesh))) {
         throw new Error(`missing attached item ${item}`);
       }
@@ -287,10 +321,12 @@ export interface CharacterFrame {
 const FADE_SECONDS = 0.16;
 const SCRUBBED = new Set<CharacterClip>(['Windup', 'Strike', 'Recovery']);
 
-/** One cloned, skinned soldier with its own mixer. Cosmetic only: it never reads or writes game rules. */
+/** One cloned, skinned troop (soldier, archer, captain or boss) with its own mixer. Cosmetic only: it never reads or
+ * writes game rules. */
 export class CharacterInstance {
   readonly root: THREE.Object3D;
   readonly skinned: THREE.SkinnedMesh[] = [];
+  readonly contract: TroopContract;
   private readonly mixer: THREE.AnimationMixer;
   private readonly actions = new Map<CharacterClip, THREE.AnimationAction>();
   private readonly weights = new Map<CharacterClip, number>();
@@ -298,6 +334,8 @@ export class CharacterInstance {
   private dead = false;
 
   constructor(model: LoadedModel, materials: { body: THREE.Material; items: THREE.Material; depth: THREE.Material }, startDead = false) {
+    if (!(model.id in TROOPS)) throw new Error(`${model.id} is not a troop model`);
+    this.contract = TROOPS[model.id as TroopModelId];
     this.root = cloneSkinned(model.scene);
     this.root.name = model.id;
     this.root.traverse(object => {
@@ -313,7 +351,7 @@ export class CharacterInstance {
       const clip = model.clips.get(name)!;
       if (name === 'Hit') continue;
       const action = this.mixer.clipAction(clip);
-      if (!LINE_SOLDIER.loops.includes(name)) {
+      if (!this.contract.loops.includes(name)) {
         action.setLoop(THREE.LoopOnce, 1);
         action.clampWhenFinished = true;
       }
@@ -377,7 +415,7 @@ export class CharacterInstance {
         if (name === target) action.time = THREE.MathUtils.clamp(frame.progress, 0, 1) * action.getClip().duration;
       } else if (name === 'Run') {
         action.paused = false;
-        action.timeScale = THREE.MathUtils.clamp(frame.speed / LINE_SOLDIER.runSpeed, 0.5, 1.9);
+        action.timeScale = THREE.MathUtils.clamp(frame.speed / this.contract.runSpeed, 0.5, 1.9);
       } else if (name === 'Idle' || name === 'AtEase') {
         // Reduced motion keeps a still stance instead of breathing and weight shifts.
         action.paused = frame.reducedMotion;

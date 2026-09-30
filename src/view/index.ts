@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { ActorSnapshot, GameSnapshot, OutpostSnapshot, WorldBlueprint } from '../game/types';
-import { createActor, createModelHero, createModelSoldier, createWagon, type ActorLook, type ActorModel, type ViewAllegiance, type WagonModel } from './actors';
+import { createActor, createModelHero, createModelTroop, createWagon, type ActorModel, type ViewAllegiance, type WagonModel } from './actors';
 import { FollowCamera, type GroundPoint, type MovementBasis } from './camera';
 import { WorldEffects } from './effects';
 import { factionColors, palette } from './palette';
@@ -10,7 +10,7 @@ import { WorldResidents } from './residents';
 import { createWorldScenery, type WorldScenery } from './world';
 import { lightWorld, positionSun, skyEnvironment } from './atmosphere';
 import { WorldPostprocessing } from './postprocessing';
-import { gltfModelSource, HEROES, ModelLibrary, propInstance, type CharacterInstance, type HeroInstance, type ModelStatus } from './models';
+import { gltfModelSource, HEROES, ModelLibrary, propInstance, troopModelFor, type CharacterInstance, type HeroInstance, type ModelStatus, type TroopModelId } from './models';
 
 export type { GroundPoint, MovementBasis } from './camera';
 export type { ModelStatus } from './models';
@@ -233,6 +233,18 @@ export class Presentation {
     const well = propInstance(wellModel, this.resources.modelDepthMaterial(), 2.8);
     well.position.set(x - 2.5, 0.08, z + 2.5);
     group.add(well);
+    // Every other troop model this campaign shows shares the soldier's programs; drawing one of each here uploads its
+    // textures too, so no troop's first appearance stalls on a texture upload.
+    const troops = new Set<TroopModelId>();
+    for (const existing of this.actorVisuals.values()) if (existing.character) troops.add(existing.character.contract.id);
+    troops.delete('char-line-soldier');
+    const extras = [...troops].map((id, index) => {
+      const troop = createModelTroop(this.resources, this.resources.model(id)!, 'soldier', 'guard', 'friendly');
+      troop.root.position.set(x - 1.5 - index * 1.4, 0.08, z + 1.5);
+      troop.character.update({ state: 'idle', progress: 0, speed: 0, hit: false, relaxed: false, reducedMotion: true }, 0);
+      group.add(troop.root);
+      return troop;
+    });
     this.scene.add(group);
     const warming = new Set<THREE.Object3D>();
     // The hero, when already built, shares the soldier's programs; drawing it here also uploads its own textures.
@@ -251,6 +263,7 @@ export class Presentation {
     } finally {
       for (const object of hidden) object.visible = true;
       group.removeFromParent();
+      for (const extra of extras) extra.character.dispose();
       this.removeActor(actor.id, visual);
     }
     return { programsBefore, programsAfter: renderer.info.programs?.length ?? 0, milliseconds: performance.now() - started };
@@ -262,25 +275,24 @@ export class Presentation {
     let character: CharacterInstance | undefined;
     let root: THREE.Group | undefined;
     let height = 2.95;
-    if (snapshot.kind === 'soldier') {
-      const model = this.resources.model('char-line-soldier');
+    if (snapshot.kind !== 'caravan') {
+      const look = ({ soldier: 'soldier', archer: 'archer', captain: 'brute', boss: 'boss' } as const)[snapshot.kind];
+      const model = this.resources.model(troopModelFor(snapshot.kind, snapshot.faction));
       if (model) {
-        const soldier = createModelSoldier(this.resources, model, snapshot.faction, affiliation, dead);
-        character = soldier.character;
-        root = soldier.root;
-        height = soldier.height;
-      } else {
+        const troop = createModelTroop(this.resources, model, look, snapshot.faction, affiliation, dead);
+        character = troop.character;
+        root = troop.root;
+        height = troop.height;
+      } else if (snapshot.kind === 'soldier') {
         // DOM-free geometry tests construct resources without models; browser views always have them.
         root = new THREE.Group();
         root.userData.allegiance = typeof affiliation === 'boolean' ? affiliation ? 'friendly' : 'hostile' : affiliation;
         height = 2.47;
+      } else {
+        actor = createActor(this.resources, look as Exclude<typeof look, 'soldier'>, snapshot.faction, affiliation);
+        root = actor.root;
+        height = actor.height;
       }
-    } else if (snapshot.kind !== 'caravan') {
-      actor = createActor(this.resources,
-        ({ archer: 'archer', captain: 'brute', boss: 'boss' } satisfies Record<Exclude<ActorSnapshot['kind'], 'caravan' | 'soldier'>, ActorLook>)[snapshot.kind],
-        snapshot.faction, affiliation);
-      root = actor.root;
-      height = actor.height;
     }
     const wagon = snapshot.kind === 'caravan' ? createWagon(this.resources, affiliation) : undefined;
     root ??= wagon?.root;
