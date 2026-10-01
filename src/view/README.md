@@ -144,6 +144,18 @@ own click and begins on the first frame the player can see. A load failure stops
 on the fatal "assets" panel with the failing URL. There is no primitive fallback;
 only DOM-free geometry tests construct `ViewResources` without models.
 
+**Model encoding.** Every skinned body except the mountain sovereign stores its
+vertex data and rotation keys quantized (`KHR_mesh_quantization`, which
+`GLTFLoader` reads without a decoder). Positions are 16-bit, with their scale and
+offset folded into the inverse bind matrices. Normals, tangents and skin weights
+are 8-bit, and UVs and rotations 16-bit. The cook decodes every value again and
+records the worst errors in each `provenance.json`. Quantized files are about a
+third smaller and look the same in the game. The mountain sovereign stays float:
+quantization pushed two of its clips over the 2.0x strain limit. Weapons and other
+items, the wagons, the cargo and the Echo Well are static meshes and stay float.
+Code that needs a skinned model's size must measure it through the skin (`Box3`
+does this), not from the raw `position` attribute.
+
 Troop instances (`CharacterInstance`) are `SkeletonUtils` clones driven by an
 `AnimationMixer` from snapshot state and render time: `Idle`, `AtEase` (while a
 story scene is open), `Run` (moving faster than 0.35 m/s, played at the ratio of
@@ -193,13 +205,8 @@ presenter's, exactly as for the procedural figures. A resident takes the troops'
 skinned dyed program with an empty mask and the model shadow-depth material, so
 residents add no shader variants. The clips are keyed at 30 Hz (the slow standing
 motion interpolates within the per-frame limits) and the occlusion/roughness/metal
-map is 512 px. Vertex data and rotation keys are quantized (`KHR_mesh_quantization`,
-which `GLTFLoader` reads without a decoder): 16-bit positions, whose scale and
-offset are folded into the inverse bind matrices, 8-bit normals, tangents and skin
-weights, and 16-bit UVs and rotations. That keeps each resident near 0.8 MB, a
-third less than float data, with no visible difference in the game.
-Code that needs a resident's size must measure it through the skin (`Box3` does),
-not from the raw `position` attribute.
+map is 512 px. Like the other skinned bodies (see "Model encoding" below), its
+vertex data and rotation keys are quantized, which keeps each resident near 0.8 MB.
 
 A wagon (`createModelWagon` in `actors.ts`) is a clone of its cooked scene: a
 static TRELLIS body, one Blender-authored node per axle (both wheels and the axle

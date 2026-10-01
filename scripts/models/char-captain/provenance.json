@@ -4,8 +4,8 @@
   "role": "infantry captain (captain actors of every faction, dyed by faction, shown x1.2)",
   "output": {
     "file": "public/models/char-captain/char-captain.glb",
-    "sha256": "8f657d72c0cb494a3047ff0990bd968538b7b43ccf90483472ead23f8b108c98",
-    "bytes": 1638764
+    "sha256": "72cfb27335ecc3a84bee2ed1bbc878ff0c80c4b4145d2c3c43d4ce8fbba241f3",
+    "bytes": 1123820
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from the approved line-soldier concept with its head replaced by the blank head of an original Blender mannequin; no cloud generation, third-party image, franchise design or real-person likeness was used as input.",
   "acknowledgment": {
@@ -385,6 +385,52 @@
         }
       ]
     },
+    "quantization": {
+      "script": "quantize_glb.py",
+      "scriptSha256": "46911d96d3deaba53622cbe20ba3ca1d20dea63bdf08af95658332dcdd2f4303",
+      "extension": "KHR_mesh_quantization",
+      "settings": {
+        "POSITION": "SHORT normalized; uniform scale and offset folded into the inverse bind matrices",
+        "NORMAL": "BYTE normalized",
+        "TANGENT": "BYTE normalized",
+        "TEXCOORD_0": "UNSIGNED_SHORT normalized",
+        "WEIGHTS_0": "UNSIGNED_BYTE normalized, largest-remainder rounding to 255",
+        "rotation": "SHORT normalized"
+      },
+      "dequantization": {
+        "scaleMeters": 1.109877,
+        "offsetMeters": [
+          0.002352,
+          1.109434,
+          -0.008222
+        ]
+      },
+      "maxErrors": {
+        "positionMm": 0.01693,
+        "normalDegrees": 0.36,
+        "tangentDegrees": 0.35829,
+        "uvTexels2048": 0.01562,
+        "weight": 0.00285,
+        "rotationDegrees": 0.00321
+      },
+      "bounds": {
+        "positionMm": 0.1,
+        "normalDegrees": 0.8,
+        "tangentDegrees": 0.8,
+        "uvTexels2048": 0.05,
+        "weight": 0.004,
+        "rotationDegrees": 0.01
+      },
+      "inputSha256": "8f657d72c0cb494a3047ff0990bd968538b7b43ccf90483472ead23f8b108c98",
+      "bytesBefore": 1638764,
+      "bytesAfter": 1123820
+    },
+    "derivedFrom": {
+      "cook": "ship-002",
+      "sha256": "8f657d72c0cb494a3047ff0990bd968538b7b43ccf90483472ead23f8b108c98",
+      "bytes": 1638764,
+      "note": "The exact ship-002 output, quantized by quantize_glb.py; the Blender cook was not re-run."
+    },
     "weights": {
       "method": "bone-heat",
       "joints": 31,
@@ -599,7 +645,8 @@
       "k2rig.py": "acacf7ff3039f58271b996b289ecca657d30bc99e195d7b7013e577003a0fc3c",
       "k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
       "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
-      "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b"
+      "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
+      "quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
     "seconds": 38.5,

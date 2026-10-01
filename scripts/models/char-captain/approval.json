@@ -26,10 +26,15 @@
     },
     {
       "gate": "in-game",
-      "decision": "Ship the calibrated troops, ship-002 (Recommended)",
-      "decidedAt": "2026-09-30T15:47:50.294743+02:00",
-      "question": "Gate 3 for batch B: the archer, captain, Commander Raut and the Palace Marshal are in the running game. The board is at 127.0.0.1:47846, and you can play the calibrated build at :47852 or the as-cooked build at :47853. Both candidates pass every per-frame clip check and reject all 24 deliberately broken copies, and the existing gameplay, save and campaign tests pass unchanged. Measured cost: the deployed site grows by 7.57 MB. At high quality, combat frames are as fast or faster and draw calls fall by about 55%, but triangles rise to 546k against the 400k budget. Calibrated lifts the bosses to their concepts' brightness. The archer and captain reach only 87% and 76% of theirs, and the lift makes the sleeves more orange and the steel lighter. This is not AAA: hands are mittens, faces are soft, the backs are projected paintings with smears, the clips are procedural and the weapons are low-poly. Which should I ship?",
-      "sha256": "8f657d72c0cb494a3047ff0990bd968538b7b43ccf90483472ead23f8b108c98"
+      "decision": "Ship the eight quantized models (Recommended)",
+      "decidedAt": "2026-10-02T01:07:27.343437+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: the line soldier, archer, captain, both bosses, the elf and guard heroes and the draft ox, re-encoded with KHR_mesh_quantization, are in the running game (board 127.0.0.1:47877, _reviews/gate3-quantized-others). They are 32% smaller (13,867,500 to 9,433,556 bytes); in the game at most 0.008% of a frame's pixels change by more than 8/255, and every clip frame passes the unchanged verifiers. The mountain sovereign stays float because quantization pushed two of its clips over the 2.0x strain limit. Should I ship the quantized models?",
+      "sha256": "72cfb27335ecc3a84bee2ed1bbc878ff0c80c4b4145d2c3c43d4ce8fbba241f3",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
     }
   ],
   "supplementary": [
@@ -41,6 +46,14 @@
       "sha256": "8040e4dc54d88aa238cd2a38e4dc0075e91267f5fec3f70d9b36f11983ee8f42",
       "approvedFileSha256": "213ea56a1289441a4985ed4852021d939b319c48803ec00a87f3f0f028616b70",
       "pixelSha256": "b20567636c7a725379e2372ae3715826147b22c7e1465a232a0db3e1233d3b2d"
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "Ship the calibrated troops, ship-002 (Recommended)",
+      "decidedAt": "2026-09-30T15:47:50.294743+02:00",
+      "question": "Gate 3 for batch B: the archer, captain, Commander Raut and the Palace Marshal are in the running game. The board is at 127.0.0.1:47846, and you can play the calibrated build at :47852 or the as-cooked build at :47853. Both candidates pass every per-frame clip check and reject all 24 deliberately broken copies, and the existing gameplay, save and campaign tests pass unchanged. Measured cost: the deployed site grows by 7.57 MB. At high quality, combat frames are as fast or faster and draw calls fall by about 55%, but triangles rise to 546k against the 400k budget. Calibrated lifts the bosses to their concepts' brightness. The archer and captain reach only 87% and 76% of theirs, and the lift makes the sleeves more orange and the steel lighter. This is not AAA: hands are mittens, faces are soft, the backs are projected paintings with smears, the clips are procedural and the weapons are low-poly. Which should I ship?",
+      "sha256": "8f657d72c0cb494a3047ff0990bd968538b7b43ccf90483472ead23f8b108c98",
+      "superseded": "Re-shipped quantized: the exact same cook with KHR_mesh_quantization vertex data and rotation keys, about a third fewer bytes and visually identical in the game (_reviews/gate3-quantized-others)."
     }
   ]
 }
