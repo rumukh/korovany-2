@@ -15,7 +15,8 @@ export interface MotionContract {
     /** Transitional frames may use a looser strain limit; a held final pose (a corpse) must meet the global one. */
     maxQuantileStretch?: number; minQuantileCompression?: number; holdsFinalPose?: boolean;
   }>;
-  feet: readonly [string, string];
+  /** Contact joints: two feet for a biped, four hooves for a quadruped. */
+  feet: readonly string[];
   /** Largest horizontal distance of body vertices from the entity origin (standing clips). */
   bodyRadius: number;
   /** Largest horizontal reach of attached items (weapon tips during a strike). */
@@ -50,7 +51,7 @@ export interface MotionReport {
   vertices: number;
   edges: number;
   joints: number;
-  soles: [number, number];
+  soles: number[];
   weightError: number;
   maxInfluences: number;
   clips: ClipReport[];
@@ -180,7 +181,7 @@ export function verifyMotion(scene: THREE.Object3D, clips: readonly THREE.Animat
   let restMinY = Infinity;
   for (let index = 0; index < count; index++) restMinY = Math.min(restMinY, rest[index * 3 + 1]!);
   const bones = body.skeleton.bones;
-  const soles: number[][] = [[], []];
+  const soles: number[][] = contract.feet.map(() => []);
   contract.feet.forEach((name, side) => {
     const jointIndex = bones.findIndex(bone => bone.name === name);
     if (jointIndex < 0) failures.push(`missing foot joint ${name}`);
@@ -231,7 +232,7 @@ export function verifyMotion(scene: THREE.Object3D, clips: readonly THREE.Animat
       return bones[best]?.name ?? String(best);
     };
     const rootStart = new THREE.Vector3();
-    const soleTracks: { x: number; y: number; z: number }[][] = [[], []];
+    const soleTracks: { x: number; y: number; z: number }[][] = soles.map(() => []);
     for (let frame = 0; frame <= frames; frame++) {
       mixer.setTime(Math.min(clip.duration, frame / contract.fps));
       scene.updateMatrixWorld(true);
@@ -376,7 +377,7 @@ export function verifyMotion(scene: THREE.Object3D, clips: readonly THREE.Animat
     reports.push(report);
   }
   scene.updateMatrixWorld(true);
-  return { vertices: count, edges: edges.a.length, joints: bones.length, soles: [soles[0]!.length, soles[1]!.length],
+  return { vertices: count, edges: edges.a.length, joints: bones.length, soles: soles.map(vertices => vertices.length),
     weightError, maxInfluences, clips: reports, failures };
 }
 

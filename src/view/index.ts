@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { ActorSnapshot, GameSnapshot, OutpostSnapshot, WorldBlueprint } from '../game/types';
-import { createActor, createModelHero, createModelTroop, createWagon, type ActorModel, type ViewAllegiance, type WagonModel } from './actors';
+import { allegiancePennant, createActor, createModelHero, createModelTroop, createModelWagon, proceduralWagon, type ActorModel, type ViewAllegiance, type WagonVisual } from './actors';
 import { FollowCamera, type GroundPoint, type MovementBasis } from './camera';
 import { WorldEffects } from './effects';
 import { factionColors, palette } from './palette';
@@ -10,7 +10,7 @@ import { WorldResidents } from './residents';
 import { createWorldScenery, type WorldScenery } from './world';
 import { lightWorld, positionSun, skyEnvironment } from './atmosphere';
 import { WorldPostprocessing } from './postprocessing';
-import { gltfModelSource, HEROES, ModelLibrary, propInstance, troopModelFor, type CharacterInstance, type HeroInstance, type ModelStatus, type TroopModelId } from './models';
+import { DRAFT_OX, gltfModelSource, HEROES, ModelLibrary, propInstance, troopModelFor, WAGONS, type CharacterInstance, type HeroInstance, type ModelStatus, type TroopModelId, type WagonModelId } from './models';
 
 export type { GroundPoint, MovementBasis } from './camera';
 export type { ModelStatus } from './models';
@@ -77,7 +77,7 @@ interface ActorVisual {
   root: THREE.Group;
   actor?: ActorModel;
   character?: CharacterInstance;
-  wagon?: WagonModel;
+  wagon?: WagonVisual;
   bar: HealthBar;
   tell: THREE.Group;
   tellRing: THREE.Mesh;
@@ -144,9 +144,9 @@ export class Presentation {
   private readonly postVisuals = new Map<string, PostVisual>();
   /** The cooked hero; the procedural one only without a model library (DOM-free and cutaway tests). */
   private hero: { root: THREE.Group; actor?: ActorModel; character?: HeroInstance } | undefined;
-  private convoy: WagonModel | undefined;
+  private convoy: WagonVisual | undefined;
   private convoyBar: HealthBar | undefined;
-  private convoyCargo: THREE.Group | undefined;
+  private lastConvoyHp = 0;
   private fortressFlag: THREE.Mesh | undefined;
   private fortressRing: THREE.Mesh | undefined;
   private lastTick = -1;
@@ -245,6 +245,15 @@ export class Presentation {
       group.add(troop.root);
       return troop;
     });
+    // Both wagons with their oxen and the convoy's cargo reuse the prop, item and skinned programs; drawing one of each
+    // uploads their textures before either first appears.
+    const wagons = (['prop-wagon-convoy', 'prop-wagon-shipment'] as const).map((id, index) => {
+      const wagon = this.makeWagon(id, true, palette.teal);
+      wagon.root.position.set(x + 4 + index * 3.5, 0.08, z - 3);
+      wagon.update({ distance: 0, speed: 0, tilt: 0, cargo: true, hit: false, reducedMotion: true, time: 0 }, 0);
+      group.add(wagon.root);
+      return wagon;
+    });
     this.scene.add(group);
     const warming = new Set<THREE.Object3D>();
     // The hero, when already built, shares the soldier's programs; drawing it here also uploads its own textures.
@@ -264,6 +273,7 @@ export class Presentation {
       for (const object of hidden) object.visible = true;
       group.removeFromParent();
       for (const extra of extras) extra.character.dispose();
+      for (const wagon of wagons) wagon.dispose();
       this.removeActor(actor.id, visual);
     }
     return { programsBefore, programsAfter: renderer.info.programs?.length ?? 0, milliseconds: performance.now() - started };
@@ -294,7 +304,7 @@ export class Presentation {
         height = actor.height;
       }
     }
-    const wagon = snapshot.kind === 'caravan' ? createWagon(this.resources, affiliation) : undefined;
+    const wagon = snapshot.kind === 'caravan' ? this.makeWagon('prop-wagon-shipment', affiliation, allegiancePennant(affiliation)) : undefined;
     root ??= wagon?.root;
     if (!root) throw new Error(`Unsupported actor kind: ${snapshot.kind}`);
     root.name = `actor:${snapshot.id}`;
@@ -309,8 +319,19 @@ export class Presentation {
     };
   }
 
+  /** A cooked wagon and ox; the procedural wagon only without a model library (DOM-free geometry tests). */
+  private makeWagon(id: WagonModelId, affiliation: boolean | ViewAllegiance, pennant: string): WagonVisual {
+    const wagon = this.resources.model(id);
+    const ox = this.resources.model(DRAFT_OX.id);
+    if (wagon && ox) {
+      return createModelWagon(this.resources, wagon, ox, WAGONS[id].cargo ? this.resources.model('prop-cargo-load') : undefined, pennant, affiliation);
+    }
+    return proceduralWagon(this.resources, affiliation, WAGONS[id].cargo);
+  }
+
   private removeActor(id: string, visual: ActorVisual): void {
     visual.character?.dispose();
+    visual.wagon?.dispose();
     visual.root.removeFromParent();
     visual.tell.removeFromParent();
     this.actorVisuals.delete(id);
@@ -361,14 +382,10 @@ export class Presentation {
       this.lastPlayerHp = snapshot.player.hp;
       // A rebuilt mirror never replays attacks that happened before it existed.
       this.lastHeroEvent = snapshot.events.reduce((latest, event) => Math.max(latest, event.id), 0);
-      this.convoy = createWagon(this.resources, true);
+      this.convoy = this.makeWagon('prop-wagon-convoy', true, factionColors[snapshot.faction]);
       this.scene.add(this.convoy.root);
       this.convoyBar = healthBar(this.resources, this.convoy.root, 2.92, true);
-      this.convoyCargo = new THREE.Group();
-      this.convoy.root.add(this.convoyCargo);
-      for (const x of [-0.43, 0.37]) {
-        part(this.resources, this.convoyCargo, 'box', palette.teal, [x, 1.39, -0.88], [0.5, 0.36, 0.4]);
-      }
+      this.lastConvoyHp = snapshot.convoy.hp;
       this.lastPlayerX = snapshot.player.x;
       this.lastPlayerZ = snapshot.player.z;
       this.lastConvoyX = snapshot.convoy.x;
@@ -471,12 +488,22 @@ export class Presentation {
     // A player-centred shadow frustum preserves detail without a map-sized shadow texture.
     positionSun(this.sun, snapshot.player.x, snapshot.player.z);
 
-    if (this.convoy && this.convoyBar && this.convoyCargo) {
+    if (this.convoy && this.convoyBar) {
       this.convoy.root.position.set(snapshot.convoy.x, 0.08, snapshot.convoy.z);
       this.convoy.root.rotation.y = snapshot.convoy.heading;
-      this.convoy.animate(tickChanged ? this.convoyDistance : 0, snapshot.elapsed, reducedMotion, this.convoySpeed / 2);
-      this.convoyCargo.visible = snapshot.convoy.cargo > 0;
-      this.convoy.root.rotation.z = snapshot.convoy.disabled ? 0.085 : 0;
+      // Travel moves the convoy with the hero: a jump is not driving.
+      const driving = this.convoySpeed < 30;
+      const hit = tickChanged && snapshot.convoy.hp < this.lastConvoyHp;
+      if (tickChanged) this.lastConvoyHp = snapshot.convoy.hp;
+      this.convoy.update({
+        distance: tickChanged && driving ? this.convoyDistance : 0,
+        speed: !paused && driving ? this.convoySpeed : 0,
+        tilt: snapshot.convoy.disabled ? 0.085 : 0,
+        cargo: snapshot.convoy.cargo > 0,
+        hit,
+        reducedMotion,
+        time: snapshot.elapsed,
+      }, dt);
       this.convoyBar.root.visible = snapshot.convoy.hp < snapshot.convoy.maxHp || snapshot.convoy.disabled;
       updateHealth(this.convoyBar, snapshot.convoy.hp, snapshot.convoy.maxHp, camera, this.convoy.root);
     }
@@ -532,7 +559,16 @@ export class Presentation {
         dead,
         reducedMotion,
       });
-      visual.wagon?.animate(moved, snapshot.elapsed, reducedMotion, visual.speed / 2);
+      const driving = visual.speed < 30;
+      visual.wagon?.update({
+        distance: driving ? moved : 0,
+        speed: !paused && driving ? visual.speed : 0,
+        tilt: disabledShipment ? 0.085 : dead ? 0.27 : 0,
+        cargo: false,
+        hit,
+        reducedMotion,
+        time: snapshot.elapsed,
+      }, dt);
       visual.bar.root.visible = !dead && (actor.hp < actor.maxHp || actor.state === 'windup' || actor.kind === 'boss');
       updateHealth(visual.bar, actor.hp, actor.maxHp, camera, visual.root);
       visual.tell.visible = actor.state === 'windup' && !dead &&
@@ -544,7 +580,6 @@ export class Presentation {
       visual.tellLine.visible = actor.kind === 'archer';
       visual.tellLine.position.set(0, 0.07, actor.attackRange / 2);
       visual.tellLine.scale.set(0.12 + progress * 0.1, 0.015, actor.attackRange);
-      if (visual.wagon) visual.root.rotation.z = disabledShipment ? 0.085 : dead ? 0.27 : 0;
     }
     for (const [id, visual] of this.actorVisuals) {
       if (activeIds.has(id)) continue;
@@ -573,7 +608,11 @@ export class Presentation {
   }
 
   dispose(): void {
-    for (const visual of this.actorVisuals.values()) visual.character?.dispose();
+    for (const visual of this.actorVisuals.values()) {
+      visual.character?.dispose();
+      visual.wagon?.dispose();
+    }
+    this.convoy?.dispose();
     this.hero?.character?.dispose();
     this.effects.dispose();
     this.residents.dispose();
