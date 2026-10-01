@@ -193,7 +193,13 @@ presenter's, exactly as for the procedural figures. A resident takes the troops'
 skinned dyed program with an empty mask and the model shadow-depth material, so
 residents add no shader variants. The clips are keyed at 30 Hz (the slow standing
 motion interpolates within the per-frame limits) and the occlusion/roughness/metal
-map is 512 px, which keeps each resident near 1 MB.
+map is 512 px. Vertex data and rotation keys are quantized (`KHR_mesh_quantization`,
+which `GLTFLoader` reads without a decoder): 16-bit positions, whose scale and
+offset are folded into the inverse bind matrices, 8-bit normals, tangents and skin
+weights, and 16-bit UVs and rotations. That keeps each resident near 0.8 MB, a
+third less than float data, with no visible difference in the game.
+Code that needs a resident's size must measure it through the skin (`Box3` does),
+not from the raw `position` attribute.
 
 A wagon (`createModelWagon` in `actors.ts`) is a clone of its cooked scene: a
 static TRELLIS body, one Blender-authored node per axle (both wheels and the axle

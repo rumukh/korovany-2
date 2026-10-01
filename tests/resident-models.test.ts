@@ -76,6 +76,12 @@ describe('cooked residents', () => {
     expect(images.every(image => image.format === 'webp')).toBe(true);
     for (const name of ['body-base', 'body-normal']) expect(images.find(image => image.name === name)?.width).toBeGreaterThanOrEqual(1024);
     expect(images.find(image => image.name === 'body-orm')?.width).toBe(512);
+    // Vertex data and rotation keys are quantized (KHR_mesh_quantization, read by three.js without a decoder); the
+    // positions' dequantization lives in the inverse bind matrices, so the bounds below are measured through the skin.
+    expect(gltf.extensionsRequired).toContain('KHR_mesh_quantization');
+    const attributes = gltf.meshes![0]!.primitives[0]!.attributes;
+    expect(gltf.accessors![attributes['POSITION']!]).toMatchObject({ componentType: 5122, normalized: true });
+    expect(gltf.accessors![attributes['WEIGHTS_0']!]).toMatchObject({ componentType: 5121, normalized: true });
     const { scene } = await parseGlbWithoutTextures(bytes);
     scene.updateMatrixWorld(true);
     const bounds = new THREE.Box3().setFromObject(scene);
