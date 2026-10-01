@@ -36,10 +36,10 @@
     },
     {
       "gate": "in-game",
-      "decision": "Ship the calibrated residents, ship-002 (Recommended)",
-      "decidedAt": "2026-10-01T22:44:06.274839+02:00",
-      "question": "Gate 3 for batch D1, delegated under the standing instruction of 2026-10-01: Toman, Lida, Auditor Vesk, Ren and Mara are in the running game. The board is at 127.0.0.1:47875 (_reviews/gate3-residents-d1). Rig, weights and clips are identical in both candidates, and both pass the per-frame verifier on every 60 Hz frame of Idle and Talk; the existing gameplay, save, input and campaign tests pass unchanged (378 passed; only the five provenance tests for these assets wait for this decision). Measured cost: the deployed site grows by 5.74 MB. On the RTX 4070 Ti SUPER, p50 frame time is equal or lower in 23 of 24 scene and quality pairs and draw calls fall by 26 to 108 per scene, while triangles rise by 7.6k to 30.1k (elf road high reaches 398,512 against the 400k budget). Calibrated lifts Lida, Vesk and Ren to their concepts' brightness; Toman and Mara stop at the 0.6 floor, at 98.9% and 96.8% of theirs. As cooked, they stay at 44% to 63% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
-      "sha256": "dfb53648c8ff8bdd3e5ec4bc24ecbd170b219871842cb45d1ac4d90f45d31510",
+      "decision": "Ship the quantized residents, ship-003 (Recommended)",
+      "decidedAt": "2026-10-02T00:18:40.906721+02:00",
+      "question": "Gate 3 re-ship for batch D1, delegated under the standing instruction of 2026-10-01: the five residents re-encoded with KHR_mesh_quantization are in the running game (board 127.0.0.1:47876, _reviews/gate3-residents-d1-quantized). They are 34% smaller (5,735,832 to 3,784,064 bytes), which keeps the 30 MB per-campaign preload budget for batch D2. In the game the residents' pixels differ by 0.07/255 on average, every clip frame passes the same verifier, and Mara stays the closest to the strain limits (stretch 1.94 against 2.0). Should I ship the quantized residents?",
+      "sha256": "333651bb793a952ecde9c0e22e0983e2f968c9e05fcdf493b99fc5bd40696d28",
       "decidedBy": {
         "mode": "delegated",
         "record": "_reviews/delegation-2026-10-01.json",
@@ -61,6 +61,19 @@
         "record": "_reviews/delegation-2026-10-01.json",
         "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
       }
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "Ship the calibrated residents, ship-002 (Recommended)",
+      "decidedAt": "2026-10-01T22:44:06.274839+02:00",
+      "question": "Gate 3 for batch D1, delegated under the standing instruction of 2026-10-01: Toman, Lida, Auditor Vesk, Ren and Mara are in the running game. The board is at 127.0.0.1:47875 (_reviews/gate3-residents-d1). Rig, weights and clips are identical in both candidates, and both pass the per-frame verifier on every 60 Hz frame of Idle and Talk; the existing gameplay, save, input and campaign tests pass unchanged (378 passed; only the five provenance tests for these assets wait for this decision). Measured cost: the deployed site grows by 5.74 MB. On the RTX 4070 Ti SUPER, p50 frame time is equal or lower in 23 of 24 scene and quality pairs and draw calls fall by 26 to 108 per scene, while triangles rise by 7.6k to 30.1k (elf road high reaches 398,512 against the 400k budget). Calibrated lifts Lida, Vesk and Ren to their concepts' brightness; Toman and Mara stop at the 0.6 floor, at 98.9% and 96.8% of theirs. As cooked, they stay at 44% to 63% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "dfb53648c8ff8bdd3e5ec4bc24ecbd170b219871842cb45d1ac4d90f45d31510",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      },
+      "superseded": "Re-shipped quantized (ship-003): the exact ship-002 cook with KHR_mesh_quantization vertex data and rotation keys, about a third fewer bytes and visually identical in the game (_reviews/gate3-residents-d1-quantized)."
     }
   ]
 }
