@@ -1,0 +1,34 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "prop-cargo-load",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Approve all four recommended picks: convoy 10133, shipment 10211, ox v2-10333, cargo b-10433 (Recommended)",
+      "decidedAt": "2026-09-30T22:29:39.063526+02:00",
+      "question": "Batch C gate 1 (concepts), review board http://127.0.0.1:47847/: recommended picks convoy 10133, shipment 10211, ox round-2 10333, cargo 10433 (prompt b), with their stated limitations; wheels, shafts, duga bell and pennant are Blender-authored regardless. Which concepts go to TRELLIS?",
+      "sha256": "0eb77d1a6e81add4bb81e155b1b8359816af5402b2c6c4ae76aff9681b0793b9",
+      "approvedFileSha256": "fd6aed5b85d3ac26e32da5b39b868b0e424ff3323d2b3cb01c1d4266aaaded12",
+      "pixelSha256": "fdbc8fb47067563a37de4a22d56164c35606e8a58e1d030502640cf07caabc3a"
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve all four recommended meshes: convoy HD s101, shipment HD s101, ox HD s101, cargo HD s505 (Recommended)",
+      "decidedAt": "2026-09-30T23:32:19.192696+02:00",
+      "question": "Batch C gate 2 (raw TRELLIS meshes), review board http://127.0.0.1:47848/: 16 jobs, 30.4 GPU-minutes; recommended HD s101 for the convoy, shipment and ox and HD s505 for the cargo, with stated limitations (invented far sides, broken spokes replaced in Blender, the shipment's invented drawbar post cut and its panes painted not glass, the ox's cap hooves, fused tail and painted eyes, the cargo's 229k-to-4k reduction, cargo jobs spilling past 16 GiB VRAM). Which meshes go to cooking?",
+      "sha256": "a1be920e60db25085fd563f5293e5f393dcc73cc18239ef45cb725e7f21be80b",
+      "candidate": "hd-s505",
+      "conditions": [
+        "No ground-sheet removal: the flat double-layer base lies inside the footprint and is hidden on the bed.",
+        "Box-fit to the convoy's open bed; at most 4,000 triangles."
+      ]
+    },
+    {
+      "gate": "in-game",
+      "decision": "Approve all four for delivery: convoy real-004, shipment real-005, ox real-008, cargo real-002 (Recommended)",
+      "decidedAt": "2026-10-01T09:21:53.151717+02:00",
+      "question": "Gate 3 for batch C: the convoy wagon, Crown shipment, draft ox and cargo load are in the running game. The review board is open (127.0.0.1:47870), and you can play this branch's build at 127.0.0.1:47871. After the first captures, I fixed one defect. The pennant was edge-on from straight behind, so a hostile shipment's red nearly vanished. It's now enlarged and rippled, and it reads from behind. All wagon tests pass: 20/20, including every frame of every ox clip. All six deliberately broken copies are rejected, and the 9 browser tests pass. Measured cost: the site grows by 4.46 MB. On this GPU every scene is as fast or faster, and draw calls fall 30-65%. Triangles rise, so elf combat at high quality reaches 594k against the 400k budget. Under SwiftShader, frame time is within -2% to +5% of main. This is not AAA: the far sides and backs are invented; each body has a single painted albedo; the ox has cap hooves, painted eyes and a fused tail, and its gaits are procedural (canters at wagon speed); the shipment's glass is painted; and the pennant and canvas don't move. Do you approve delivery?",
+      "sha256": "809496bec456a82db6c6593ca8f1554aadf5dc5b9119efb6611f29efcd5e4b7d"
+    }
+  ]
+}

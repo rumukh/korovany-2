@@ -118,14 +118,17 @@ heraldry distinguishes locked, unlocked and defeated states without a false gate
 
 ## Cooked 3D models
 
-Nine cooked glTF models replace procedural presentation: the troops (the line
+Thirteen cooked glTF models replace procedural presentation: the troops (the line
 soldier, the road archer, the infantry captain and two bosses, Commander Raut and
 the Palace Marshal, in `public/models/char-line-soldier/`, `char-archer/`,
 `char-captain/`, `char-boss-raut/` and `char-boss-marshal/`), used by every
 faction's `soldier`, `archer`, `captain` and `boss` actors; the Echo Well
 (`public/models/prop-echo-well/`), used by the Echo Well and the matching
-Cinderwell structure; and one hero per faction (`public/models/char-hero-elf/`,
-`char-hero-guard/` and `char-hero-villain/`), used for the player.
+Cinderwell structure; one hero per faction (`public/models/char-hero-elf/`,
+`char-hero-guard/` and `char-hero-villain/`), used for the player; and the wagons:
+the logistics convoy (`public/models/prop-wagon-convoy/`) with its cargo load
+(`prop-cargo-load/`), the Crown shipment and every other `caravan` actor
+(`prop-wagon-shipment/`), and the draft ox that pulls both (`char-draft-ox/`).
 `troopModelFor()` picks the troop for an actor kind and faction: the Palace
 Marshal is the Crown's (guard) boss, Raut the mountain army's. `ModelLibrary`
 (`models.ts`) starts loading them through `GLTFLoader` as the page opens, behind
@@ -173,11 +176,37 @@ upper body while it moves. Reduced motion holds a still stance and suppresses th
 flinch. The heroes share the soldier's dyed program; only the palace officer's
 shield face is dyed, so a hero adds no shader program.
 
+A wagon (`createModelWagon` in `actors.ts`) is a clone of its cooked scene: a
+static TRELLIS body, one Blender-authored node per axle (both wheels and the axle
+tree) and the harness (shafts, the duga arch with a small bell, and a rippled
+pennant whose colour shows from any side).
+The wheels spin about their axle by the distance travelled on each simulation
+tick over their own radius, so they roll without slipping; a jump by fast travel
+does not spin them. The body and wheels lean 0.085 rad while the wagon is disabled
+(0.27 for a destroyed legacy caravan) and sway slightly while moving, except under
+reduced motion. The convoy's cargo load sits on its `socket-cargo` and is hidden
+while the convoy carries no cargo. The draft ox (`OxInstance`) stands at
+`socket-ox`: a `SkeletonUtils` clone whose mixer blends `Idle`, `Walk`, `Trot` and
+`Canter` by the wagon's measured ground speed (with hysteresis) and plays each gait
+at that speed over its authored one (1.15, 4 and 5.8 m/s), so its hooves stay
+planted at the simulation's wagon speeds (1.15 for legacy caravans, 4 for the
+shipment, 4.7-6.95 for the convoy); a speed-matched canter is not how a real ox
+moves, but the wagons' road speeds are fixed by the simulation. An additive `Hit`
+plays when the wagon loses health. Reduced motion stills the idle and skips the
+flinch. Each frame the harness pitches about its hinge to follow the midpoint of
+the ox's hame-hook joints, so the shafts ride with the ox's gait. Collision,
+speed, heading and health stay the simulation's; the models never change them.
+The body keeps the Echo Well's plain prop program; the wheels and harness share
+one dyed material whose only masked region is the pennant (the convoy flies its
+faction's colour, the shipment its allegiance); the ox takes the troops' skinned
+dyed program with an empty mask. The wagons therefore add no shader variants.
+
 After a world mirror is built and after every quality change, `createGameView`
 calls `Presentation.warmModels()` in the same task as the next real frame: a
 temporary soldier visual (model, ring, health bar, tell) and well are drawn twice,
-alone, together with the current hero and one of each other troop model the
-campaign shows (sharing the soldier's programs, so only their textures upload),
+alone, together with the current hero, one of each other troop model the
+campaign shows and both wagons with their oxen and the convoy's cargo (sharing
+the soldier's and the well's programs, so only their textures upload),
 with the scene's real lights, fog, shadow
 maps and output path, then removed, so no model shader compiles when a soldier
 first appears (aegis-engine
@@ -208,4 +237,12 @@ crease strain), including deliberately broken copies that must fail.
 through the presenter with real campaign inputs, and checks foot planting in
 eight directions. `tests/troop-models.test.ts` does it for the archer, captain
 and bosses, whose telegraphed clips must last exactly as long as the simulation's
-windup and recovery.
+windup and recovery. `tests/wagon-models.test.ts` checks the wagons' structure
+(a static body, one wheel node per axle touching the ground, a harness whose
+shafts meet the ox's hame hooks, budgets and WebP maps) and the cargo's fit in the
+convoy's bed, verifies every frame of every ox gait at its authored speed with
+broken copies that must fail, and drives both wagons through the presenter:
+wheels roll by distance over radius, the gait follows speed, lean and cargo follow
+the convoy, and a takeover rebuilds the shipment with a friendly pennant.
+`tests/wagons-browser.test.ts` decodes their textures, renders both wagons on the
+warmed programs and stops with an asset error when a wagon model is missing.

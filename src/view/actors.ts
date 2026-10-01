@@ -3,7 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { factionColors, palette, type ViewFaction } from './palette';
 import { beam, joint, part, shapeGeometry } from './primitives';
 import { ViewResources } from './resources';
-import { CharacterInstance, HEROES, HeroInstance, type HeroFaction, type LoadedModel } from './models';
+import { CharacterInstance, HEROES, HeroInstance, OxInstance, WAGON_NODES, WAGONS, type HeroFaction, type LoadedModel, type WagonModelId } from './models';
 
 export type ActorLook = 'hero' | 'archer' | 'brute' | 'boss';
 export type ViewAllegiance = 'friendly' | 'hostile' | 'neutral';
@@ -429,4 +429,164 @@ export function createWagon(resources: ViewResources, affiliation: boolean | Vie
       cart.rotation.z = reducedMotion ? 0 : Math.sin(time * 6) * 0.013 * walking;
     },
   };
+}
+
+export interface WagonFrame {
+  /** Metres travelled since the previous simulation tick; zero when no tick passed or the wagon was moved by travel. */
+  distance: number;
+  /** Ground speed in metres per second, zero while the simulation is paused. */
+  speed: number;
+  /** Lean about the forward axis in radians: 0.085 while disabled, 0.27 for a destroyed legacy caravan. */
+  tilt: number;
+  /** The convoy carries cargo (shown in its bed). */
+  cargo: boolean;
+  /** The wagon lost health on the latest simulation tick. */
+  hit: boolean;
+  reducedMotion: boolean;
+  /** Snapshot time, for the procedural stand-in's cycles. */
+  time: number;
+}
+
+/** A presented wagon and its draft animal, driven by snapshot state and render time. */
+export interface WagonVisual {
+  root: THREE.Group;
+  /** The cooked draft ox; absent on the procedural stand-in. */
+  readonly animal?: OxInstance;
+  update(frame: WagonFrame, dt: number): void;
+  dispose(): void;
+}
+
+/** The procedural covered wagon for DOM-free geometry tests, which construct resources without models. */
+export function proceduralWagon(resources: ViewResources, affiliation: boolean | ViewAllegiance, cargo: boolean): WagonVisual {
+  const wagon = createWagon(resources, affiliation);
+  const crates = cargo ? new THREE.Group() : undefined;
+  if (crates) {
+    wagon.root.add(crates);
+    for (const x of [-0.43, 0.37]) part(resources, crates, 'box', palette.teal, [x, 1.39, -0.88], [0.5, 0.36, 0.4]);
+  }
+  return {
+    root: wagon.root,
+    update(frame): void {
+      wagon.animate(frame.distance, frame.time, frame.reducedMotion, frame.speed / 2);
+      if (crates) crates.visible = frame.cargo;
+      wagon.root.rotation.z = frame.tilt;
+    },
+    dispose(): void {
+      wagon.root.removeFromParent();
+    },
+  };
+}
+
+/** Pennant colour of the Crown shipment: its current allegiance, as the procedural wagon's flag showed. */
+export function allegiancePennant(affiliation: boolean | ViewAllegiance): string {
+  const allegiance = allegianceOf(affiliation);
+  return allegiance === 'friendly' ? palette.teal : allegiance === 'neutral' ? palette.stone : palette.hostile;
+}
+
+const WAGON_SWAY = 0.008;
+
+/**
+ * A cooked wagon with its draft ox. Materials are the library's: the static body keeps the plain prop material (the
+ * Echo Well's program), wheels and harness share the dyed parts material whose only masked region is the pennant, and
+ * the ox takes the troops' skinned dye program with an empty mask, so wagons add no shader variants. The body and
+ * wheels lean together when disabled; the harness and ox stay upright and the harness pitches about its hinge to follow
+ * the ox's hame hooks. Wheels spin by distance travelled over their own radius; the ox plays the gait for its speed.
+ */
+export function createModelWagon(
+  resources: ViewResources, wagon: LoadedModel, ox: LoadedModel, cargo: LoadedModel | undefined, pennant: string,
+  affiliation: boolean | ViewAllegiance,
+): WagonVisual {
+  const contract = WAGONS[wagon.id as WagonModelId];
+  if (!contract) throw new Error(`${wagon.id} is not a wagon model`);
+  const root = new THREE.Group();
+  root.userData.allegiance = allegianceOf(affiliation);
+  const lean = new THREE.Group();
+  lean.name = 'wagon-lean';
+  root.add(lean);
+  const depth = resources.modelDepthMaterial();
+  const scene = wagon.scene.clone(true);
+  const named = <T extends THREE.Object3D>(name: string): T => {
+    const found = scene.getObjectByName(name);
+    if (!found) throw new Error(`${wagon.id} is missing ${name}`);
+    return found as T;
+  };
+  const harness = named<THREE.Mesh>(WAGON_NODES.harness);
+  const parts = resources.dyed(harness.material as THREE.Material, pennant);
+  const wheels = WAGON_NODES.wheels.map(name => {
+    const mesh = named<THREE.Mesh>(name);
+    mesh.material = parts;
+    return { mesh, radius: mesh.position.y, angle: 0 };
+  });
+  harness.material = parts;
+  scene.traverse(object => {
+    if (!(object instanceof THREE.Mesh)) return;
+    object.castShadow = true;
+    object.receiveShadow = true;
+    object.customDepthMaterial = depth;
+  });
+  lean.add(scene);
+  root.attach(harness);
+  let oxBody: THREE.Material | undefined;
+  ox.scene.traverse(object => {
+    if (object instanceof THREE.SkinnedMesh && !Array.isArray(object.material)) oxBody ??= object.material;
+  });
+  if (!oxBody) throw new Error(`${ox.id} is missing its body material`);
+  const animal = new OxInstance(ox, { body: resources.dyed(oxBody, palette.ink), depth });
+  animal.root.position.copy(named(WAGON_NODES.ox).position);
+  root.add(animal.root);
+  let load: THREE.Object3D | undefined;
+  if (contract.cargo) {
+    if (!cargo) throw new Error(`${wagon.id} needs its cargo model`);
+    load = staticInstance(cargo, depth);
+    named(WAGON_NODES.cargo).add(load);
+  }
+  const hinge = harness.position.clone();
+  const hook = new THREE.Vector3();
+  const scratch = new THREE.Vector3();
+  const inverse = new THREE.Matrix4();
+  // The hame hooks' midpoint in the wagon's frame (the ox never rotates relative to it).
+  const hookMidpoint = (): THREE.Vector3 => {
+    animal.root.updateMatrixWorld(true);
+    inverse.copy(animal.root.matrixWorld).invert();
+    hook.set(0, 0, 0);
+    for (const bone of animal.hooks) hook.add(scratch.setFromMatrixPosition(bone.matrixWorld).applyMatrix4(inverse));
+    return hook.multiplyScalar(1 / animal.hooks.length).add(animal.root.position);
+  };
+  const restHook = hookMidpoint().clone();
+  const rest = Math.atan2(restHook.y - hinge.y, restHook.z - hinge.z);
+  let swayPhase = 0;
+  return {
+    root,
+    animal,
+    update(frame, dt): void {
+      for (const wheel of wheels) {
+        wheel.angle += frame.distance / wheel.radius;
+        wheel.mesh.rotation.x = wheel.angle;
+      }
+      animal.update({ speed: frame.speed, hit: frame.hit, reducedMotion: frame.reducedMotion }, dt);
+      const now = hookMidpoint();
+      harness.rotation.x = -(Math.atan2(now.y - hinge.y, now.z - hinge.z) - rest);
+      swayPhase += dt * 8.2;
+      const moving = Math.min(1, frame.speed / 2);
+      lean.rotation.z = frame.tilt + (frame.reducedMotion ? 0 : Math.sin(swayPhase) * WAGON_SWAY * moving);
+      if (load) load.visible = frame.cargo;
+    },
+    dispose(): void {
+      animal.dispose();
+      root.removeFromParent();
+    },
+  };
+}
+
+/** A static cooked model sharing the library geometry and material (the convoy's cargo load). */
+function staticInstance(model: LoadedModel, depth: THREE.Material): THREE.Object3D {
+  const holder = model.scene.clone(true);
+  holder.name = model.id;
+  holder.traverse(object => {
+    if (!(object instanceof THREE.Mesh)) return;
+    object.castShadow = true;
+    object.receiveShadow = true;
+    object.customDepthMaterial = depth;
+  });
+  return holder;
 }

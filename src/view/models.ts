@@ -6,9 +6,11 @@ import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 export type HeroFaction = 'elf' | 'guard' | 'villain';
 export type HeroModelId = `char-hero-${HeroFaction}`;
 export type TroopModelId = 'char-line-soldier' | 'char-archer' | 'char-captain' | 'char-boss-raut' | 'char-boss-marshal';
-export type ModelId = TroopModelId | 'prop-echo-well' | HeroModelId;
+export type WagonModelId = 'prop-wagon-convoy' | 'prop-wagon-shipment';
+export type ModelId = TroopModelId | 'prop-echo-well' | HeroModelId | WagonModelId | 'char-draft-ox' | 'prop-cargo-load';
 export const MODEL_IDS: readonly ModelId[] = ['char-line-soldier', 'prop-echo-well', 'char-hero-elf', 'char-hero-guard', 'char-hero-villain',
-  'char-archer', 'char-captain', 'char-boss-raut', 'char-boss-marshal'];
+  'char-archer', 'char-captain', 'char-boss-raut', 'char-boss-marshal', 'prop-wagon-convoy', 'prop-wagon-shipment', 'char-draft-ox',
+  'prop-cargo-load'];
 
 export type CharacterClip = 'Idle' | 'AtEase' | 'Run' | 'Windup' | 'Strike' | 'Recovery' | 'Hit' | 'Death';
 export const CHARACTER_CLIPS: readonly CharacterClip[] = ['Idle', 'AtEase', 'Run', 'Windup', 'Strike', 'Recovery', 'Hit', 'Death'];
@@ -70,6 +72,39 @@ export const HEROES: Record<HeroFaction, { id: HeroModelId; runSpeed: number; he
 };
 export const SPRINT_FACTOR = 1.55;
 
+export type OxClip = 'Idle' | 'Walk' | 'Trot' | 'Canter' | 'Hit';
+export const OX_CLIPS: readonly OxClip[] = ['Idle', 'Walk', 'Trot', 'Canter', 'Hit'];
+export type OxGait = 'Walk' | 'Trot' | 'Canter';
+
+/**
+ * Presentation contract of the draft ox that pulls both wagons. `gaits` are the ground speeds in metres per second at
+ * which each cycle plants its hooves (the legacy caravan patrols at 1.15, the shipment rolls at 4 and the convoy at
+ * 4.7-6.95): playback is scaled by speed / authored speed. `hooks` are the hame-hook joints the shafts attach to.
+ * Gameplay speed, timing and heading stay authoritative in the simulation.
+ */
+export const DRAFT_OX = {
+  id: 'char-draft-ox',
+  gaits: { Walk: 1.15, Trot: 4, Canter: 5.8 } as Readonly<Record<OxGait, number>>,
+  hooks: ['socket_hook_l', 'socket_hook_r'] as const,
+} as const;
+
+/**
+ * Cooked wagons: a static TRELLIS body, one Blender-authored wheel node per axle (spun about its local x axis by
+ * distance / radius, the radius being the node's height above the ground), the harness (shafts, duga arch, warding
+ * bell and dyed pennant) pitched about its hinge to follow the ox, the ox's place and, on the convoy, the cargo's.
+ */
+export const WAGON_NODES = {
+  body: 'wagon-body',
+  wheels: ['wagon-wheels-front', 'wagon-wheels-rear'],
+  harness: 'wagon-harness',
+  ox: 'socket-ox',
+  cargo: 'socket-cargo',
+} as const;
+export const WAGONS: Record<WagonModelId, { id: WagonModelId; cargo: boolean }> = {
+  'prop-wagon-convoy': { id: 'prop-wagon-convoy', cargo: true },
+  'prop-wagon-shipment': { id: 'prop-wagon-shipment', cargo: false },
+};
+
 function heroOf(id: ModelId): (typeof HEROES)[HeroFaction] | undefined {
   return Object.values(HEROES).find(hero => hero.id === id);
 }
@@ -130,7 +165,23 @@ function validate(id: ModelId, scene: THREE.Object3D, clips: ReadonlyMap<string,
   const parts = meshes(scene);
   const hero = heroOf(id);
   const troop = id in TROOPS ? TROOPS[id as TroopModelId] : undefined;
-  if (troop || hero) {
+  if (id in WAGONS) {
+    const names = [WAGON_NODES.body, ...WAGON_NODES.wheels, WAGON_NODES.harness];
+    for (const name of names) {
+      const part = parts.find(mesh => mesh.name === name);
+      if (!part || part instanceof THREE.SkinnedMesh || Array.isArray(part.material)) throw new Error(`missing static part ${name}`);
+    }
+    if (parts.length !== names.length) throw new Error(`expected ${names.length} wagon parts, found ${parts.length}`);
+    for (const socket of WAGONS[id as WagonModelId].cargo ? [WAGON_NODES.ox, WAGON_NODES.cargo] : [WAGON_NODES.ox]) {
+      if (!scene.getObjectByName(socket)) throw new Error(`missing ${socket}`);
+    }
+  } else if (id === DRAFT_OX.id) {
+    const bodies = parts.filter(mesh => mesh instanceof THREE.SkinnedMesh);
+    if (bodies.length !== 1 || parts.length !== 1) throw new Error(`expected one skinned body, found ${bodies.length} of ${parts.length}`);
+    for (const clip of OX_CLIPS) if (!clips.has(clip)) throw new Error(`missing animation clip ${clip}`);
+    const names = new Set(bodies[0]!.skeleton.bones.map(bone => bone.name));
+    for (const joint of DRAFT_OX.hooks) if (!names.has(joint)) throw new Error(`missing ${joint} joint`);
+  } else if (troop || hero) {
     const bodies = parts.filter(mesh => mesh instanceof THREE.SkinnedMesh);
     if (bodies.length !== 1) throw new Error(`expected one skinned body, found ${bodies.length}`);
     for (const clip of hero ? HERO_CLIPS : CHARACTER_CLIPS) {
@@ -431,6 +482,116 @@ export class CharacterInstance {
       action.setEffectiveWeight(next);
     }
     if (frame.hit && !this.dead && !frame.reducedMotion) {
+      this.hit.reset();
+      this.hit.setEffectiveWeight(1);
+      this.hit.play();
+    }
+    this.mixer.update(Math.max(0, dt));
+  }
+
+  dispose(): void {
+    this.mixer.stopAllAction();
+    this.mixer.uncacheRoot(this.root);
+    for (const mesh of this.skinned) mesh.skeleton.dispose();
+    this.root.removeFromParent();
+  }
+}
+
+export interface OxFrame {
+  /** Ground speed in metres per second, zero while the simulation is paused. */
+  speed: number;
+  /** The wagon lost health on the latest simulation tick. */
+  hit: boolean;
+  reducedMotion: boolean;
+}
+
+type OxBase = 'Idle' | OxGait;
+const OX_BASE: readonly OxBase[] = ['Idle', 'Walk', 'Trot', 'Canter'];
+/** Gait bands in m/s with hysteresis: [enter above, leave below]. The simulation's wagon speeds (1.15, 4 and 4.7-6.95)
+ * all sit well inside one band, so the chosen cycle always plays within its planted rate range. */
+const OX_BANDS: Readonly<Record<OxGait, readonly [number, number]>> = { Walk: [0.35, 0.25], Trot: [2.6, 2.3], Canter: [4.4, 4.2] };
+const OX_FADE = 0.22;
+
+/**
+ * One cloned, skinned draft ox with its own mixer. The gait is chosen from ground speed and plays at speed / authored
+ * speed, so its stance hooves stay planted; Idle breathes and flicks its tail except under reduced motion, which also
+ * skips the additive hit flinch. Cosmetic only: it never reads or writes game rules.
+ */
+export class OxInstance {
+  readonly root: THREE.Object3D;
+  readonly skinned: THREE.SkinnedMesh[] = [];
+  /** Hame-hook joints, left then right, that the wagon's harness follows. */
+  readonly hooks: THREE.Bone[];
+  private readonly mixer: THREE.AnimationMixer;
+  private readonly actions = new Map<OxBase, THREE.AnimationAction>();
+  private readonly weights = new Map<OxBase, number>();
+  private readonly hit: THREE.AnimationAction;
+  private gait: OxBase = 'Idle';
+
+  constructor(model: LoadedModel, materials: { body: THREE.Material; depth: THREE.Material }) {
+    if (model.id !== DRAFT_OX.id) throw new Error(`${model.id} is not the draft ox`);
+    this.root = cloneSkinned(model.scene);
+    this.root.name = model.id;
+    this.root.traverse(object => {
+      if (!(object instanceof THREE.Mesh)) return;
+      object.material = materials.body;
+      object.castShadow = true;
+      object.receiveShadow = true;
+      object.customDepthMaterial = materials.depth;
+      if (object instanceof THREE.SkinnedMesh) this.skinned.push(object);
+    });
+    this.hooks = DRAFT_OX.hooks.map(name => {
+      const bone = this.root.getObjectByName(name);
+      if (!(bone instanceof THREE.Bone)) throw new Error(`${model.id} is missing ${name}`);
+      return bone;
+    });
+    this.mixer = new THREE.AnimationMixer(this.root);
+    for (const name of OX_BASE) {
+      const action = this.mixer.clipAction(model.clips.get(name)!);
+      action.play();
+      action.setEffectiveWeight(name === 'Idle' ? 1 : 0);
+      this.actions.set(name, action);
+      this.weights.set(name, name === 'Idle' ? 1 : 0);
+    }
+    const additive = THREE.AnimationUtils.makeClipAdditive(model.clips.get('Hit')!.clone());
+    this.hit = this.mixer.clipAction(additive);
+    this.hit.blendMode = THREE.AdditiveAnimationBlendMode;
+    this.hit.setLoop(THREE.LoopOnce, 1);
+    this.mixer.update(0);
+  }
+
+  get activeClip(): OxBase {
+    return this.gait;
+  }
+
+  private choose(speed: number): OxBase {
+    const order: OxBase[] = ['Idle', 'Walk', 'Trot', 'Canter'];
+    let index = order.indexOf(this.gait);
+    while (index < 3 && speed > OX_BANDS[order[index + 1] as OxGait][0]) index++;
+    while (index > 0 && speed < OX_BANDS[order[index] as OxGait][1]) index--;
+    return order[index]!;
+  }
+
+  update(frame: OxFrame, dt: number): void {
+    this.gait = this.choose(frame.speed);
+    for (const [name, action] of this.actions) {
+      if (name === 'Idle') {
+        // Reduced motion keeps a still stance instead of breathing, head and tail motion.
+        action.paused = frame.reducedMotion;
+        if (frame.reducedMotion) action.time = 0;
+      } else {
+        action.timeScale = THREE.MathUtils.clamp(frame.speed / DRAFT_OX.gaits[name], 0.5, 2);
+      }
+    }
+    const rate = dt <= 0 ? 1 : dt / OX_FADE;
+    for (const [name, action] of this.actions) {
+      const current = this.weights.get(name)!;
+      const goal = name === this.gait ? 1 : 0;
+      const next = goal > current ? Math.min(goal, current + rate) : Math.max(goal, current - rate);
+      this.weights.set(name, next);
+      action.setEffectiveWeight(next);
+    }
+    if (frame.hit && !frame.reducedMotion) {
       this.hit.reset();
       this.hit.setEffectiveWeight(1);
       this.hit.play();

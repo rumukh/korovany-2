@@ -1,0 +1,213 @@
+{
+  "schema": "korovany2-wagon-recipe/1",
+  "id": "prop-wagon-shipment",
+  "note": "Crown ward-glass shipment cooked from the gate-2-approved TRELLIS candidate hd-s101 (reviews/gate2-decision.json). Front (bench, sacks and lock plate, as in the concept) is raw +X, yawed -90 degrees to face -Y. Scaled so the rear wheel is 0.54 m, like the procedural wagon's 0.53 m; centre shifted so the kept body (without the invented rear drawbar and ground post, which are cut) is centred. No ground sheet on this seed.",
+  "source": {
+    "candidate": "hd-s101",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 101,
+    "textureSize": 2048,
+    "simplify": 0.85,
+    "glbSha256": "77cc39137bbbba8323e07aa7953df75aa6cce71424615828e077b81a587eb5ee",
+    "conceptSha256": "ff6b298bf48c49734c0921f2bc3b9dd2775cc5f4f9f7390efa7f1674d0874f79"
+  },
+  "normalize": {
+    "yawDegrees": -90,
+    "lengthMeters": 3.705,
+    "centreShiftY": -0.216
+  },
+  "wheels": {
+    "common": {
+      "width": 0.08,
+      "spokes": 12,
+      "woodColor": [
+        0.045,
+        0.031,
+        0.022
+      ],
+      "ironColor": [
+        0.12,
+        0.12,
+        0.12
+      ],
+      "segments": 28,
+      "dish": 0.02
+    },
+    "front": {
+      "y": -1.114,
+      "radius": 0.45,
+      "track": 0.7
+    },
+    "rear": {
+      "y": 0.645,
+      "radius": 0.54,
+      "track": 0.74
+    }
+  },
+  "cut": {
+    "radialMargin": 0.04,
+    "lateralMargin": 0.16,
+    "innerWheelMargin": 0.01,
+    "boxes": [
+      {
+        "note": "invented rear drawbar and ground post",
+        "min": [
+          -0.36,
+          1.46,
+          0.0
+        ],
+        "max": [
+          0.36,
+          2.1,
+          0.55
+        ]
+      },
+      {
+        "note": "drawbar under the rear shelf",
+        "min": [
+          -0.36,
+          1.15,
+          0.0
+        ],
+        "max": [
+          0.36,
+          1.46,
+          0.33
+        ]
+      },
+      {
+        "note": "drooping end of the invented drawbar under the rear shelf (the level reach above it is kept)",
+        "min": [
+          -0.2,
+          0.95,
+          0.0
+        ],
+        "max": [
+          0.2,
+          1.46,
+          0.585
+        ]
+      }
+    ]
+  },
+  "triangleBudget": 15000,
+  "partBudgets": {
+    "wagon-wheels-front": 2200,
+    "wagon-wheels-rear": 2200,
+    "wagon-harness": 3000
+  },
+  "harness": {
+    "hinge": [
+      0.4,
+      -1.6,
+      0.6
+    ],
+    "hook": [
+      0.25,
+      -3.95,
+      1.12
+    ],
+    "bow": 0.2,
+    "shaftRadius": 0.035,
+    "shaftPastHook": -0.1,
+    "crossbarT": 0.1,
+    "duga": {
+      "rise": 0.55,
+      "depth": 0.07,
+      "thickness": 0.045,
+      "behindHook": 0.05,
+      "shape": 0.8,
+      "spread": 1.1
+    },
+    "bell": {
+      "drop": 0.08,
+      "radius": 0.06,
+      "height": 0.1
+    },
+    "pennant": {
+      "staff": 0.36,
+      "length": 0.44,
+      "height": 0.27,
+      "wave": {
+        "amplitude": 0.07,
+        "cycles": 1.25,
+        "segments": 10
+      },
+      "note": "Enlarged and rippled after the gate-3 captures: a flat pennant streaming back was edge-on, so its allegiance colour vanished, from straight behind."
+    }
+  },
+  "colours": {
+    "wood": [
+      0.045,
+      0.031,
+      0.022
+    ],
+    "iron": [
+      0.1,
+      0.1,
+      0.1
+    ],
+    "duga": [
+      0.07,
+      0.04,
+      0.025
+    ],
+    "leather": [
+      0.2,
+      0.12,
+      0.07
+    ],
+    "bronze": [
+      0.45,
+      0.33,
+      0.16
+    ],
+    "pennant": [
+      0.8,
+      0.78,
+      0.72
+    ],
+    "note": "Linear RGB. Wheel, shaft and staff wood: dark wheel wood sampled from the approved concept (median sRGB 0.22, 0.18, 0.15); the duga slightly warmer."
+  },
+  "parts": {
+    "textureSize": 512
+  },
+  "sockets": {
+    "socket-ox": [
+      0,
+      -3.0,
+      0
+    ]
+  },
+  "measureBedHalfWidth": 0.66,
+  "body": {
+    "bakeSize": 2048,
+    "textureSize": 1024,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.05,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.4,
+    "reliefStrength": 4.0,
+    "roughnessFromDetail": 0.5,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0,
+    "toneGamma": 0.85,
+    "defaultRoughness": 0.72,
+    "regions": [
+      {
+        "name": "ward-glass",
+        "zMin": 0.9,
+        "zMax": 1.9,
+        "colour": {
+          "maxValue": 0.1
+        },
+        "roughness": 0.22
+      }
+    ],
+    "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved TRELLIS source mesh onto fresh smart-projected UVs (the source atlas does not survive the cut and decimation) after the reconstructed wheels and the invented rear drawbar and ground post were cut away; no rear-view projection (the back, far side and underside are as TRELLIS invented them). Tangent normals baked from the source geometry and whiteout-blended with colour relief; AO baked from the decimated geometry; roughness derived from colour inside declared regions (the painted-black ward-glass panes are glossy; they are not transparent glass). Base colour lifted by luma power toneGamma (chroma ratios kept), set by eye, not calibrated against the concept. Base alpha opaque (never dyed). Artistic derivation, not measured PBR.",
+    "uvAngleDegrees": 60.0,
+    "uvIslandMargin": 0.004
+  },
+  "baseQuality": 90
+}

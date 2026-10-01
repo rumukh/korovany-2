@@ -1,0 +1,260 @@
+{
+  "schema": "korovany2-model-provenance/1",
+  "id": "prop-cargo-load",
+  "role": "the convoy's cargo load (crates, sacks and a barrel in the convoy's open bed, shown while the convoy carries cargo)",
+  "output": {
+    "file": "public/models/prop-cargo-load/prop-cargo-load.glb",
+    "sha256": "809496bec456a82db6c6593ca8f1554aadf5dc5b9119efb6611f29efcd5e4b7d",
+    "bytes": 491192
+  },
+  "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from the agent's original grey Blender blockout renders (pipeline/make_wagon_references.py); no cloud generation, third-party image, franchise design or real-person likeness was used as input.",
+  "acknowledgment": {
+    "decidedAt": "2026-09-26T23:06:17.4391138+02:00",
+    "decision": "I acknowledge this for korovany-2: commit TRELLIS-derived assets with the restriction recorded",
+    "project": "rumukh/korovany-2"
+  },
+  "tools": [
+    {
+      "name": "Qwen Image Edit Plus 2511",
+      "runtime": "WanGP (local, CLI)",
+      "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+      "textEncoder": "Qwen2.5-VL-7B-Instruct_quanto_bf16_int8",
+      "steps": 50,
+      "guidanceScale": 4.0,
+      "role": "concept art"
+    },
+    {
+      "name": "Blender 5.2.2 LTS",
+      "build": "d13f752e3b9c",
+      "role": "reference renders, cooking, baking, rig, clips (CPU Cycles)"
+    },
+    {
+      "name": "TRELLIS-image-large",
+      "model": "microsoft/TRELLIS-image-large",
+      "modelRevision": "25e0d31ffbebe4b5a97464dd851910efc3002d96",
+      "sourceRevision": "442aa1e1afb9014e80681d3bf604e8d728a86ee7",
+      "runnerSha256": "aef0d6a863b77b65869d9f2ce6a127abf7231863e2aae428ad1322df281eea69",
+      "seed": 505,
+      "settings": {
+        "sparseStructureSampler": {
+          "name": "FlowEulerGuidanceIntervalSampler",
+          "args": {
+            "sigma_min": 1e-05
+          },
+          "params": {
+            "steps": 25,
+            "cfg_strength": 5.0,
+            "cfg_interval": [
+              0.5,
+              1.0
+            ],
+            "rescale_t": 3.0
+          }
+        },
+        "slatSampler": {
+          "name": "FlowEulerGuidanceIntervalSampler",
+          "args": {
+            "sigma_min": 1e-05
+          },
+          "params": {
+            "steps": 25,
+            "cfg_strength": 5.0,
+            "cfg_interval": [
+              0.5,
+              1.0
+            ],
+            "rescale_t": 3.0
+          }
+        },
+        "formats": [
+          "gaussian",
+          "mesh"
+        ],
+        "unusedRadianceFieldDecoderLoaded": false,
+        "attention": "xformers",
+        "spconvAlgorithm": "native",
+        "modelPrecision": "unchanged upstream checkpoint config",
+        "localLoader": "LocalPipeline replaces only DINOv2 code/weight discovery; strict same state dict and normalization",
+        "export": {
+          "simplify": 0.85,
+          "fillHoles": true,
+          "fillHolesMaxSize": 0.04,
+          "textureSize": 2048,
+          "bakingMode": "opt",
+          "bakingSteps": 2500,
+          "bakingViews": 100,
+          "bakingViewResolution": 1024,
+          "holeFillViews": 1000,
+          "holeFillResolution": 1024
+        }
+      },
+      "offline": true,
+      "networkCheck": "[Errno 101] Network is unreachable",
+      "inferenceSeconds": 164.5,
+      "peakTorchReservedBytes": 19830669312,
+      "output": {
+        "sha256": "a1be920e60db25085fd563f5293e5f393dcc73cc18239ef45cb725e7f21be80b",
+        "bytes": 9399172
+      },
+      "licensing": {
+        "wholeToolchainMit": false,
+        "commercialClearanceEstablished": false
+      }
+    }
+  ],
+  "source": {
+    "references": [
+      {
+        "role": "Picture 1: the agent's original grey Blender blockout (make_wagon_references.py, rendered with Cycles on the CPU): camera, three-quarter view, proportions, the arrangement of crates, sacks and barrel, light and backdrop. The prompt supplies materials and detail.",
+        "sha256": "deaf9aa9ff5d91cff82040b92d944596404c97606aa7b426decb72bc753a11c5"
+      }
+    ],
+    "referencesNote": "Picture 1 is the agent's original grey blockout, rendered by pipeline/make_wagon_references.py with Blender Cycles on the CPU; no third-party input.",
+    "concept": {
+      "file": "concept.png",
+      "sha256": "0eb77d1a6e81add4bb81e155b1b8359816af5402b2c6c4ae76aff9681b0793b9",
+      "pixelSha256": "fdbc8fb47067563a37de4a22d56164c35606e8a58e1d030502640cf07caabc3a",
+      "approvedFileSha256": "fd6aed5b85d3ac26e32da5b39b868b0e424ff3323d2b3cb01c1d4266aaaded12",
+      "seed": 10433,
+      "referenceMode": "Subjects",
+      "prompt": "concept-prompt.txt",
+      "negativePrompt": "concept-negative.txt",
+      "generationSeconds": 860.0,
+      "note": "Generator metadata was stripped; pixels are identical to the approved file."
+    },
+    "rights": "Original concept generated locally for Korovany II from an original prompt and the agent's original Blender blockout; no third-party images, franchise designs or real-person likeness."
+  },
+  "cook": {
+    "script": "pipeline/cook_cargo.py",
+    "recipe": "recipe.json",
+    "status": "verified",
+    "normalization": {
+      "uniformScale": 0.9401407408710588,
+      "yawDegrees": 0.0,
+      "fit": [
+        1.16,
+        0.86,
+        0.85
+      ],
+      "size": [
+        0.9394,
+        0.86,
+        0.6441
+      ],
+      "limitingAxis": "Y",
+      "axes": "glTF +Y up/+Z forward -> Blender import -> glTF export_yup; no extra axis rotation"
+    },
+    "rawTopology": {
+      "vertices": 114585,
+      "faces": 229428,
+      "triangles": 229428,
+      "boundaryEdges": 4,
+      "nonManifoldEdges": 3,
+      "components": 6,
+      "componentVertexCounts": [
+        114077,
+        394,
+        85,
+        17,
+        9,
+        3
+      ],
+      "degenerateFaces": 0,
+      "inconsistentWindingEdges": 0
+    },
+    "topology": {
+      "vertices": 1832,
+      "faces": 3939,
+      "triangles": 3939,
+      "boundaryEdges": 1,
+      "nonManifoldEdges": 3,
+      "components": 2,
+      "componentVertexCounts": [
+        1820,
+        12
+      ],
+      "degenerateFaces": 0,
+      "inconsistentWindingEdges": 0
+    },
+    "decimation": {
+      "applied": true,
+      "before": 229217,
+      "triangles": 3939,
+      "ratio": 0.017188951953825412,
+      "regroundMeters": 0.00685
+    },
+    "specks": {
+      "componentsKept": [
+        114077,
+        394
+      ],
+      "componentsRemoved": 4,
+      "verticesRemoved": [
+        85,
+        17,
+        9,
+        3
+      ],
+      "minFraction": 0.002
+    },
+    "holes": {
+      "boundaryEdgesBefore": 1,
+      "facesAdded": 0,
+      "boundaryEdgesAfter": 1,
+      "maxSides": 24
+    },
+    "uv": {
+      "method": "smart_project",
+      "angleLimitDegrees": 60.0,
+      "islandMargin": 0.006,
+      "sourceAtlasAfterDecimation": {
+        "triangles": 3939,
+        "flipped": 1934,
+        "zeroArea": 0
+      },
+      "after": {
+        "triangles": 3939,
+        "flipped": 0,
+        "zeroArea": 0
+      }
+    },
+    "materials": {
+      "bakeSize": 1024,
+      "textureSize": 512,
+      "atlasCoverage": 0.3530158996582031,
+      "dyeFractionOfSurface": 0.0,
+      "metalFractionOfSurface": 0.1578543564474125,
+      "regionFractions": {
+        "iron": 0.26016576436390354,
+        "hide": 0.06978528436044563
+      },
+      "roughnessMean": 0.7572537064552307,
+      "aoMean": 0.563873291015625,
+      "albedoGain": 1.0,
+      "reliefStrength": 4.0,
+      "aoSamples": 64,
+      "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved TRELLIS source mesh onto fresh smart-projected UVs (the 229k-triangle source atlas does not survive a 98% decimation); no ground-sheet removal and no rear-view projection, so the second row of crates, the back and the underside are as TRELLIS invented them. Tangent normals baked from the source geometry and whiteout-blended with colour relief (rope and sack folds survive mainly there); AO baked from the decimated geometry; roughness and metalness derived from colour inside declared regions (dark, unsaturated iron corner brackets; the saturated ochre hide on top); no tone lift. Base alpha opaque (never dyed). Artistic derivation, not measured PBR.",
+      "dye": "none: base alpha set opaque"
+    },
+    "scripts": {
+      "cook_cargo.py": "ff165652c9340d2b927a34355ac1dd8690280dd5a7955dbc8db4a98f5d5b9814",
+      "k2rig.py": "acacf7ff3039f58271b996b289ecca657d30bc99e195d7b7013e577003a0fc3c",
+      "k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
+      "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
+      "k2sheet.py": "0141e81990f6318c974fa018c895e02aa71b9c8ba5e23dbdd741e4881e6f177c",
+      "k2uv.py": "da10d5ef3d511a478f07b9b688b7d43fd11ec8f86bada8505ebaf418b6acc3d2"
+    },
+    "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
+    "seconds": 11.3,
+    "verification": "tests/wagon-models.test.ts checks the budget and that the load fits inside the convoy's open bed; tests/wagons-browser.test.ts renders it in the convoy."
+  },
+  "limitations": [
+    "Single-view TRELLIS reconstruction from one approved concept: the far side, back and underside are TRELLIS's invention, with no rear-view painting projected onto them.",
+    "Roughness, metalness and ambient occlusion are derived from colour inside declared regions and Cycles bakes, not measured PBR or hand-painted masks.",
+    "One body mesh with its detail painted into a single 512 px base colour; there are no LODs, trim sheets or separate material layers.",
+    "Re-cooking is not guaranteed to be byte-reproducible: MikkTSpace tangents can round differently on a few vertices, and Blender's smart UV project can lay out an atlas differently between runs.",
+    "Decimated from 229k to 3,939 triangles: lashings, straps and sack folds survive mainly as baked normal relief, and the iron corner brackets are roughness and metalness regions, not geometry.",
+    "The concept shows one face of the load; the second row of crates, the back and the underside are TRELLIS's invention.",
+    "Fitted to the convoy's open bed (0.94 x 0.86 x 0.64 m, limited by the bed's length); it is hidden while the convoy carries no cargo, as the procedural crates were."
+  ]
+}

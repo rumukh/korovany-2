@@ -1,0 +1,68 @@
+{
+  "schema": "korovany2-cargo-recipe/1",
+  "id": "prop-cargo-load",
+  "note": "Convoy cargo load cooked from the gate-2-approved TRELLIS candidate hd-s505 (reviews/gate2-decision.json). Box-fitted into the convoy's open rear bed (interior x +-0.60, y 0.50-1.40, floor 0.88 m, walls to 1.28 m); the convoy places it at socket-cargo. No ground-sheet removal: the flat double-layer base lies inside the crate footprint and is hidden on the bed floor.",
+  "source": {
+    "candidate": "hd-s505",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 505,
+    "textureSize": 2048,
+    "simplify": 0.85,
+    "glbSha256": "a1be920e60db25085fd563f5293e5f393dcc73cc18239ef45cb725e7f21be80b",
+    "conceptSha256": "fd6aed5b85d3ac26e32da5b39b868b0e424ff3323d2b3cb01c1d4266aaaded12"
+  },
+  "normalize": {
+    "yawDegrees": 0.0,
+    "fit": [
+      1.16,
+      0.86,
+      0.85
+    ],
+    "note": "Uniform scale to fit the bed interior with about 2 cm clearance; the pile's long side (crates plus the barrel) runs across the wagon (X). Measured: 0.94 x 0.86 x 0.64 m, limited by Y."
+  },
+  "minComponentFraction": 0.002,
+  "fillHoleSides": 24,
+  "smoothAngle": 35,
+  "triangleBudget": 4000,
+  "ormQuality": 85,
+  "body": {
+    "bakeSize": 1024,
+    "textureSize": 512,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.05,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.4,
+    "reliefStrength": 4.0,
+    "roughnessFromDetail": 0.5,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0,
+    "toneGamma": 1.0,
+    "defaultRoughness": 0.86,
+    "uvAngleDegrees": 60.0,
+    "uvIslandMargin": 0.006,
+    "regions": [
+      {
+        "name": "iron",
+        "colour": {
+          "maxValue": 0.18,
+          "maxSaturation": 0.35
+        },
+        "roughness": 0.5,
+        "metal": 0.6,
+        "zMin": 0.015,
+        "note": "Above the hidden underside, which TRELLIS invented dark."
+      },
+      {
+        "name": "hide",
+        "zMin": 0.3,
+        "colour": {
+          "minValue": 0.3,
+          "minSaturation": 0.6
+        },
+        "roughness": 0.66
+      }
+    ],
+    "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved TRELLIS source mesh onto fresh smart-projected UVs (the 229k-triangle source atlas does not survive a 98% decimation); no ground-sheet removal and no rear-view projection, so the second row of crates, the back and the underside are as TRELLIS invented them. Tangent normals baked from the source geometry and whiteout-blended with colour relief (rope and sack folds survive mainly there); AO baked from the decimated geometry; roughness and metalness derived from colour inside declared regions (dark, unsaturated iron corner brackets; the saturated ochre hide on top); no tone lift. Base alpha opaque (never dyed). Artistic derivation, not measured PBR."
+  }
+}
