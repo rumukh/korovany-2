@@ -26,10 +26,15 @@
     },
     {
       "gate": "in-game",
-      "decision": "Ship the calibrated heroes and soldier cook-016",
-      "decidedAt": "2026-09-29T07:30:33+00:00",
-      "question": "Gate 3 final approval: ship the three heroes tone-calibrated (recommended) or as cooked, together with the line soldier cook-016 Run fix, as shown in the running game?",
-      "sha256": "10904499fbf8ae1efbc66af4690ad667c8254968fe162c0d9d669b7c56ca6e18"
+      "decision": "Ship the eight quantized models (Recommended)",
+      "decidedAt": "2026-10-02T01:07:27.343437+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: the line soldier, archer, captain, both bosses, the elf and guard heroes and the draft ox, re-encoded with KHR_mesh_quantization, are in the running game (board 127.0.0.1:47877, _reviews/gate3-quantized-others). They are 32% smaller (13,867,500 to 9,433,556 bytes); in the game at most 0.008% of a frame's pixels change by more than 8/255, and every clip frame passes the unchanged verifiers. The mountain sovereign stays float because quantization pushed two of its clips over the 2.0x strain limit. Should I ship the quantized models?",
+      "sha256": "6120fcce7c6975c5efe766293c3cbed453164cf0f1dccc21987c7ab434994cdb",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
     }
   ],
   "supplementary": [
@@ -41,6 +46,14 @@
       "sha256": "c953061ed2de354f9cb6099ea833770a33d55c95b018dccaab5de3a79a25c087",
       "approvedFileSha256": "64db31eeba56a49774de90f087ea6cc6f0022e10908edaef91c885bf90338942",
       "pixelSha256": "04b0fcb93cf378942c6022b5b0baf176abcaecd1ba98b748f39e3e07fec7a696"
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "Ship the calibrated heroes and soldier cook-016",
+      "decidedAt": "2026-09-29T07:30:33+00:00",
+      "question": "Gate 3 final approval: ship the three heroes tone-calibrated (recommended) or as cooked, together with the line soldier cook-016 Run fix, as shown in the running game?",
+      "sha256": "10904499fbf8ae1efbc66af4690ad667c8254968fe162c0d9d669b7c56ca6e18",
+      "superseded": "Re-shipped quantized: the exact same cook with KHR_mesh_quantization vertex data and rotation keys, about a third fewer bytes and visually identical in the game (_reviews/gate3-quantized-others)."
     }
   ]
 }

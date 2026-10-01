@@ -59,7 +59,8 @@ describe('cooked troop models', () => {
     const { json: gltf } = document;
     expect(gltf.skins).toHaveLength(1);
     expect(gltf.cameras ?? []).toHaveLength(0);
-    expect(gltf.extensionsRequired ?? []).toEqual(['EXT_texture_webp']);
+    // Vertex data and rotation keys are quantized (KHR_mesh_quantization; three.js needs no decoder).
+    expect(gltf.extensionsRequired ?? []).toEqual(['EXT_texture_webp', 'KHR_mesh_quantization']);
     const joints = gltf.skins![0]!.joints.map(index => gltf.nodes![index]!.name);
     expect(joints.length).toBeLessThanOrEqual(40);
     for (const name of ['root', 'pelvis', 'spine', 'chest', 'head', 'hand_l', 'hand_r', 'foot_l', 'foot_r']) expect(joints).toContain(name);
