@@ -1,0 +1,477 @@
+{
+ "id": "char-resident-vesk",
+ "note": "Auditor Vesk, Garrison stores auditor. DEVELOPMENT: the palace officer hero's measured humanoid recipe scaled x0.9776 to 2.18 m; landmarks refitted to the approved mesh before cooking. Cooked metres, Blender axes (+Z up, front -Y, character left +X).",
+ "heightMeters": 2.18,
+ "triangleBudget": 9500,
+ "fillHoleSides": 12,
+ "baseQuality": 90,
+ "ormQuality": 85,
+ "ormSize": 512,
+ "animationKeyStep": 2,
+ "landmarks": {
+  "pelvis": [
+   0.0,
+   0.0196,
+   1.0656
+  ],
+  "spine": [
+   0.0,
+   0.0196,
+   1.2611
+  ],
+  "chest": [
+   0.0,
+   0.0196,
+   1.4713
+  ],
+  "neck": [
+   0.0,
+   0.0293,
+   1.7499
+  ],
+  "head": [
+   0.0,
+   0.0196,
+   1.8281
+  ],
+  "crown": [
+   0.0,
+   0.0,
+   2.18
+  ],
+  "clavicle": [
+   0.0587,
+   0.0,
+   1.7059
+  ],
+  "shoulder": [
+   0.2835,
+   0.0489,
+   1.6521
+  ],
+  "elbow": [
+   0.4839,
+   0.0244,
+   1.3784
+  ],
+  "wrist": [
+   0.6159,
+   -0.0635,
+   1.1682
+  ],
+  "knuckle": [
+   0.6569,
+   -0.088,
+   1.0802
+  ],
+  "fingertip": [
+   0.6843,
+   -0.1026,
+   1.0265
+  ],
+  "hip": [
+   0.1163,
+   0.0196,
+   1.0265
+  ],
+  "knee": [
+   0.1779,
+   0.0391,
+   0.5621
+  ],
+  "ankle": [
+   0.2072,
+   0.0684,
+   0.1075
+  ],
+  "ball": [
+   0.2102,
+   -0.088,
+   0.0391
+  ],
+  "toe": [
+   0.2102,
+   -0.1857,
+   0.0293
+  ],
+  "skirtFront": [
+   0.0,
+   -0.1662,
+   1.0949
+  ],
+  "skirtFrontTip": [
+   0.0,
+   -0.2151,
+   0.6452
+  ],
+  "skirtBack": [
+   0.0,
+   0.2053,
+   1.0949
+  ],
+  "skirtBackTip": [
+   0.0,
+   0.2542,
+   0.6452
+  ]
+ },
+ "regions": {
+  "torsoHalfWidth": 0.3226,
+  "lateralMargin": 0.05,
+  "armpitHeight": 1.4664,
+  "handMinHeight": 0.958,
+  "crotchHeight": 0.9287,
+  "neckHeight": 1.7596,
+  "soleHeight": 0.0244,
+  "skirtTop": 1.1731,
+  "skirtHemHeight": 0.66,
+  "skirtHalfWidth": 0.3519,
+  "headMinHeight": 1.8574,
+  "headHalfWidth": 0.1955,
+  "helmetMinHeight": 1.9552
+ },
+ "weights": {
+  "relax": 16,
+  "partRadius": {
+   "pelvis": 0.3,
+   "spine": 0.3,
+   "chest": 0.3,
+   "clavicle": 0.12,
+   "neck": 0.12,
+   "head": 0.2,
+   "upperarm": 0.14,
+   "forearm": 0.11,
+   "hand": 0.08,
+   "fingers": 0.06,
+   "thigh": 0.15,
+   "shin": 0.11,
+   "foot": 0.1,
+   "toe": 0.08,
+   "skirt_front": 0.1,
+   "skirt_back": 0.1,
+   "shoulderhelper": 0.14,
+   "kneehelper": 0.12
+  },
+  "bands": {
+   "shoulder": 0.24,
+   "hip": 0.12,
+   "neck": 0.06,
+   "armpit": 0.3,
+   "armpitOffset": [
+    0.08,
+    0.05,
+    -0.26
+   ]
+  },
+  "shoulderBlend": {
+   "band": 0.2,
+   "ramp": 0.1
+  },
+  "skirtBlend": {
+   "zTop": 1.0,
+   "zHem": 0.62,
+   "sideRamp": 0.12,
+   "maxShare": 0.3
+  },
+  "elbowBlend": {
+   "band": 0.12,
+   "ramp": 0.06
+  },
+  "kneeBlend": {
+   "band": 0.18,
+   "ramp": 0.09,
+   "shift": 0.03
+  },
+  "helpers": true,
+  "finalRelax": 2,
+  "ambiguity": 1.25,
+  "seamSoften": [
+   {
+    "iterations": 20,
+    "rings": 8
+   },
+   {
+    "iterations": 24,
+    "rings": 5,
+    "threshold": 0.3,
+    "zRange": [
+     1.1,
+     1.85
+    ]
+   },
+   {
+    "iterations": 30,
+    "rings": 6,
+    "threshold": 0.15,
+    "zRange": [
+     1.0,
+     1.6
+    ]
+   }
+  ]
+ },
+ "body": {
+  "bakeSize": 2048,
+  "textureSize": 1024,
+  "cageExtrusionMeters": 0.02,
+  "maxRayMeters": 0.05,
+  "aoSamples": 64,
+  "aoPower": 1.0,
+  "aoFloor": 0.4,
+  "reliefStrength": 4.0,
+  "roughnessFromDetail": 0.5,
+  "normalMapStrength": 1.0,
+  "albedoGain": 1.0,
+  "toneGamma": 0.627,
+  "defaultRoughness": 0.86,
+  "regions": [
+   {
+    "name": "coat-tone",
+    "zMin": 0.62,
+    "zMax": 1.86,
+    "colour": {
+     "maxValue": 0.5,
+     "maxSaturation": 0.55
+    }
+   },
+   {
+    "name": "trousers-tone",
+    "zMin": 0.3,
+    "zMax": 0.66,
+    "colour": {
+     "minValue": 0.1,
+     "maxValue": 0.6,
+     "maxSaturation": 0.3
+    }
+   },
+   {
+    "name": "boots",
+    "zMax": 0.2933,
+    "roughness": 0.6
+   },
+   {
+    "name": "face",
+    "zMin": 1.7987,
+    "zMax": 1.9747,
+    "xMax": 0.12,
+    "yMax": -0.04,
+    "colour": {
+     "minSaturation": 0.2
+    },
+    "roughness": 0.6,
+    "metal": 0.0
+   }
+  ],
+  "toneMatch": [
+   {
+    "regions": [
+     "coat-tone"
+    ],
+    "strength": 0.85,
+    "weightFrom": "position",
+    "backStart": 0.02,
+    "backFull": 0.1
+   },
+   {
+    "regions": [
+     "trousers-tone"
+    ],
+    "strength": 0.7,
+    "weightFrom": "position",
+    "backStart": 0.02,
+    "backFull": 0.1
+   }
+  ],
+  "retint": [
+   {
+    "name": "coat",
+    "zMin": 0.64,
+    "zMax": 1.86,
+    "edgeMeters": 0.04,
+    "feather": 2,
+    "colour": {
+     "maxValue": 0.35,
+     "maxSaturation": 0.35
+    },
+    "target": [
+     0.149,
+     0.196,
+     0.227
+    ],
+    "keepLuma": true,
+    "strength": 0.85
+   }
+  ],
+  "toneCalibration": "Luma power fitted in the game so the resident's mean luma from the default follow camera (world yaw pi, pitch 0.48, 18 and 26 m, 8 facings, high and low quality, resident-only pixels) equals the approved TRELLIS input's foreground mean luma (45.3/255); 19.9/255 as cooked without it."
+ },
+ "clips": {
+  "stanceHalfWidth": 0.1955,
+  "sink": 0.02,
+  "poleBias": 0.45,
+  "skirtFollow": [
+   0.8,
+   0.8
+  ],
+  "poses": {
+   "rest": {
+    "l": {
+     "wrist": [
+      0.4301,
+      -0.0782,
+      1.046
+     ],
+     "pole": [
+      1.0,
+      0.5,
+      0.0
+     ],
+     "curl": 30
+    },
+    "r": {
+     "wrist": [
+      -0.4301,
+      -0.0782,
+      1.046
+     ],
+     "pole": [
+      -1.0,
+      0.5,
+      0.0
+     ],
+     "curl": 30
+    }
+   },
+   "talk": {
+    "chest": [
+     2,
+     0,
+     0
+    ],
+    "l": {
+     "wrist": [
+      0.3813,
+      -0.088,
+      1.0558
+     ],
+     "pole": [
+      1.0,
+      0.5,
+      0.0
+     ],
+     "curl": 30
+    },
+    "r": {
+     "wrist": [
+      -0.3519,
+      -0.1369,
+      1.0949
+     ],
+     "pole": [
+      -1.0,
+      0.4,
+      -0.2
+     ],
+     "curl": 25
+    }
+   }
+  },
+  "idle": {
+   "pose": "rest",
+   "seconds": 4.8,
+   "breaths": 2,
+   "shift": 0.012,
+   "pelvisTilt": 1.2,
+   "pelvisTurn": 2.0,
+   "spineBreath": 0.6,
+   "chestBreath": 1.2,
+   "glance": 4.0,
+   "breathSink": 0.006,
+   "armBreath": 0.008
+  },
+  "talk": {
+   "pose": "talk",
+   "seconds": 6.0,
+   "breaths": 2,
+   "sway": 0.6,
+   "armBreath": 0.006,
+   "gestures": [
+    {
+     "start": 0.4,
+     "end": 2.2,
+     "r": {
+      "wrist": [
+       0.0978,
+       -0.2151,
+       0.1564
+      ],
+      "curl": -15
+     },
+     "chest": [
+      3,
+      0,
+      -4
+     ],
+     "head": [
+      0,
+      0,
+      -3
+     ],
+     "nod": 6
+    },
+    {
+     "start": 2.4,
+     "end": 4.0,
+     "l": {
+      "wrist": [
+       -0.0587,
+       -0.1564,
+       0.0978
+      ],
+      "curl": -10,
+      "pole": [
+       0.6,
+       0.7,
+       -0.4
+      ]
+     },
+     "r": {
+      "wrist": [
+       0.0391,
+       -0.1173,
+       0.0587
+      ],
+      "pole": [
+       -0.6,
+       0.7,
+       -0.4
+      ]
+     },
+     "chest": [
+      2,
+      0,
+      3
+     ],
+     "nod": 4
+    },
+    {
+     "start": 4.2,
+     "end": 5.7,
+     "r": {
+      "wrist": [
+       0.0587,
+       -0.176,
+       0.1955
+      ],
+      "curl": -15
+     },
+     "head": [
+      0,
+      0,
+      4
+     ],
+     "nod": 5
+    }
+   ]
+  }
+ }
+}

@@ -118,7 +118,7 @@ heraldry distinguishes locked, unlocked and defeated states without a false gate
 
 ## Cooked 3D models
 
-Thirteen cooked glTF models replace procedural presentation: the troops (the line
+Eighteen cooked glTF models replace procedural presentation: the troops (the line
 soldier, the road archer, the infantry captain and two bosses, Commander Raut and
 the Palace Marshal, in `public/models/char-line-soldier/`, `char-archer/`,
 `char-captain/`, `char-boss-raut/` and `char-boss-marshal/`), used by every
@@ -128,7 +128,12 @@ Cinderwell structure; one hero per faction (`public/models/char-hero-elf/`,
 `char-hero-guard/` and `char-hero-villain/`), used for the player; and the wagons:
 the logistics convoy (`public/models/prop-wagon-convoy/`) with its cargo load
 (`prop-cargo-load/`), the Crown shipment and every other `caravan` actor
-(`prop-wagon-shipment/`), and the draft ox that pulls both (`char-draft-ox/`).
+(`prop-wagon-shipment/`), and the draft ox that pulls both (`char-draft-ox/`); and
+the first five named residents, the home residents of each campaign
+(`public/models/char-resident-toman/`, `char-resident-lida/`,
+`char-resident-vesk/`, `char-resident-ren/` and `char-resident-mara/`).
+`residentModelFor()` maps a narrative NPC id to its model; the other fifteen
+residents keep their procedural figures until their batch ships.
 `troopModelFor()` picks the troop for an actor kind and faction: the Palace
 Marshal is the Crown's (guard) boss, Raut the mountain army's. `ModelLibrary`
 (`models.ts`) starts loading them through `GLTFLoader` as the page opens, behind
@@ -176,6 +181,20 @@ upper body while it moves. Reduced motion holds a still stance and suppresses th
 flinch. The heroes share the soldier's dyed program; only the palace officer's
 shield face is dyed, so a hero adds no shader program.
 
+A cooked resident (`ResidentInstance`, built by `WorldResidents` in `residents.ts`) is a
+`SkeletonUtils` clone with two planted loops: `Idle` (two breaths, a slow weight
+shift and a glance) and `Talk`, which plays while `narrative.dialogue.npcId` names
+that resident. The mixer runs on render time, so the speaker keeps gesturing while
+the conversation pauses the simulation; the clips cross-fade over 0.4 s, and
+neighbouring residents start Idle at their own phase. Reduced motion holds Idle's
+first frame still and shows no conversation gestures. Placement, the 8 m facing
+rule, the 120 m draw range, the teal ring and the quest marker stay the
+presenter's, exactly as for the procedural figures. A resident takes the troops'
+skinned dyed program with an empty mask and the model shadow-depth material, so
+residents add no shader variants. The clips are keyed at 30 Hz (the slow standing
+motion interpolates within the per-frame limits) and the occlusion/roughness/metal
+map is 512 px, which keeps each resident near 1 MB.
+
 A wagon (`createModelWagon` in `actors.ts`) is a clone of its cooked scene: a
 static TRELLIS body, one Blender-authored node per axle (both wheels and the axle
 tree) and the harness (shafts, the duga arch with a small bell, and a rippled
@@ -205,8 +224,9 @@ After a world mirror is built and after every quality change, `createGameView`
 calls `Presentation.warmModels()` in the same task as the next real frame: a
 temporary soldier visual (model, ring, health bar, tell) and well are drawn twice,
 alone, together with the current hero, one of each other troop model the
-campaign shows and both wagons with their oxen and the convoy's cargo (sharing
-the soldier's and the well's programs, so only their textures upload),
+campaign shows, both wagons with their oxen and the convoy's cargo, and one of
+each cooked resident the world currently lists (sharing the soldier's and the
+well's programs, so only their textures upload),
 with the scene's real lights, fog, shadow
 maps and output path, then removed, so no model shader compiles when a soldier
 first appears (aegis-engine
@@ -246,3 +266,13 @@ wheels roll by distance over radius, the gait follows speed, lean and cargo foll
 the convoy, and a takeover rebuilds the shipment with a friendly pennant.
 `tests/wagons-browser.test.ts` decodes their textures, renders both wagons on the
 warmed programs and stops with an asset error when a wagon model is missing.
+`tests/resident-models.test.ts` checks each resident's structure (one skinned body
+within 10,000 triangles, WebP maps, its height and +Z facing), verifies every 60 Hz
+frame of Idle and Talk as planted loops with six broken copies that must fail, and
+drives the residents through `WorldResidents` with real campaign snapshots: home
+and Roadward residents are cooked on the shared program, the others stay
+procedural, Talk follows the open conversation on render time, reduced motion holds
+still, removal and disposal release their clones, and a missing model fails instead
+of falling back. `tests/residents-browser.test.ts` decodes their textures, renders
+Greenhollow's residents talking and still on the warmed programs, and stops with an
+asset error when a resident model is missing.

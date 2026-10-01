@@ -7,10 +7,12 @@ export type HeroFaction = 'elf' | 'guard' | 'villain';
 export type HeroModelId = `char-hero-${HeroFaction}`;
 export type TroopModelId = 'char-line-soldier' | 'char-archer' | 'char-captain' | 'char-boss-raut' | 'char-boss-marshal';
 export type WagonModelId = 'prop-wagon-convoy' | 'prop-wagon-shipment';
-export type ModelId = TroopModelId | 'prop-echo-well' | HeroModelId | WagonModelId | 'char-draft-ox' | 'prop-cargo-load';
+export type ResidentNpc = 'toman' | 'lida' | 'vesk' | 'ren' | 'mara';
+export type ResidentModelId = `char-resident-${ResidentNpc}`;
+export type ModelId = TroopModelId | 'prop-echo-well' | HeroModelId | WagonModelId | 'char-draft-ox' | 'prop-cargo-load' | ResidentModelId;
 export const MODEL_IDS: readonly ModelId[] = ['char-line-soldier', 'prop-echo-well', 'char-hero-elf', 'char-hero-guard', 'char-hero-villain',
   'char-archer', 'char-captain', 'char-boss-raut', 'char-boss-marshal', 'prop-wagon-convoy', 'prop-wagon-shipment', 'char-draft-ox',
-  'prop-cargo-load'];
+  'prop-cargo-load', 'char-resident-toman', 'char-resident-lida', 'char-resident-vesk', 'char-resident-ren', 'char-resident-mara'];
 
 export type CharacterClip = 'Idle' | 'AtEase' | 'Run' | 'Windup' | 'Strike' | 'Recovery' | 'Hit' | 'Death';
 export const CHARACTER_CLIPS: readonly CharacterClip[] = ['Idle', 'AtEase', 'Run', 'Windup', 'Strike', 'Recovery', 'Hit', 'Death'];
@@ -105,6 +107,31 @@ export const WAGONS: Record<WagonModelId, { id: WagonModelId; cargo: boolean }> 
   'prop-wagon-shipment': { id: 'prop-wagon-shipment', cargo: false },
 };
 
+export type ResidentClip = 'Idle' | 'Talk';
+export const RESIDENT_CLIPS: readonly ResidentClip[] = ['Idle', 'Talk'];
+
+/**
+ * Named residents with a cooked model, keyed by their stable NPC id; the others keep their procedural figure until
+ * their batch ships. `height` is the cooked standing height in metres at the game's heroic scale. Placement, facing,
+ * visibility, markers and conversation stay the narrative snapshot's and the presenter's.
+ */
+export const RESIDENTS: Readonly<Record<ResidentNpc, { id: ResidentModelId; height: number }>> = {
+  toman: { id: 'char-resident-toman', height: 2.2 },
+  lida: { id: 'char-resident-lida', height: 2.04 },
+  vesk: { id: 'char-resident-vesk', height: 2.18 },
+  ren: { id: 'char-resident-ren', height: 2.1 },
+  mara: { id: 'char-resident-mara', height: 2.08 },
+};
+
+/** The cooked model for a narrative NPC id, or undefined while that resident is still procedural. */
+export function residentModelFor(npcId: string): ResidentModelId | undefined {
+  return Object.hasOwn(RESIDENTS, npcId) ? RESIDENTS[npcId as ResidentNpc].id : undefined;
+}
+
+function isResidentModel(id: ModelId): id is ResidentModelId {
+  return Object.values(RESIDENTS).some(resident => resident.id === id);
+}
+
 function heroOf(id: ModelId): (typeof HEROES)[HeroFaction] | undefined {
   return Object.values(HEROES).find(hero => hero.id === id);
 }
@@ -181,6 +208,12 @@ function validate(id: ModelId, scene: THREE.Object3D, clips: ReadonlyMap<string,
     for (const clip of OX_CLIPS) if (!clips.has(clip)) throw new Error(`missing animation clip ${clip}`);
     const names = new Set(bodies[0]!.skeleton.bones.map(bone => bone.name));
     for (const joint of DRAFT_OX.hooks) if (!names.has(joint)) throw new Error(`missing ${joint} joint`);
+  } else if (isResidentModel(id)) {
+    const bodies = parts.filter(mesh => mesh instanceof THREE.SkinnedMesh);
+    if (bodies.length !== 1 || parts.length !== 1) throw new Error(`expected one skinned body, found ${bodies.length} of ${parts.length}`);
+    for (const clip of RESIDENT_CLIPS) if (!clips.has(clip)) throw new Error(`missing animation clip ${clip}`);
+    const names = new Set(bodies[0]!.skeleton.bones.map(bone => bone.name));
+    for (const joint of ['pelvis', 'spine', 'chest', 'head', 'foot_l', 'foot_r']) if (!names.has(joint)) throw new Error(`missing ${joint} joint`);
   } else if (troop || hero) {
     const bodies = parts.filter(mesh => mesh instanceof THREE.SkinnedMesh);
     if (bodies.length !== 1) throw new Error(`expected one skinned body, found ${bodies.length}`);
@@ -596,6 +629,79 @@ export class OxInstance {
       this.hit.setEffectiveWeight(1);
       this.hit.play();
     }
+    this.mixer.update(Math.max(0, dt));
+  }
+
+  dispose(): void {
+    this.mixer.stopAllAction();
+    this.mixer.uncacheRoot(this.root);
+    for (const mesh of this.skinned) mesh.skeleton.dispose();
+    this.root.removeFromParent();
+  }
+}
+
+export interface ResidentFrame {
+  /** This resident is the one in the open conversation (narrative.dialogue.npcId). */
+  talking: boolean;
+  reducedMotion: boolean;
+}
+
+const RESIDENT_FADE = 0.4;
+
+/**
+ * One cloned, skinned resident with its own mixer: Idle while standing, Talk while it is in the open conversation,
+ * cross-faded on render time (conversations pause the simulation, not the presentation). Neighbouring residents start
+ * Idle at their own phase so they do not breathe in step. Reduced motion holds Idle's first frame still and skips the
+ * conversation gestures. Cosmetic only: it never reads or writes game rules.
+ */
+export class ResidentInstance {
+  readonly root: THREE.Object3D;
+  readonly skinned: THREE.SkinnedMesh[] = [];
+  private readonly mixer: THREE.AnimationMixer;
+  private readonly idle: THREE.AnimationAction;
+  private readonly talk: THREE.AnimationAction;
+  private talkWeight = 0;
+
+  constructor(model: LoadedModel, materials: { body: THREE.Material; depth: THREE.Material }, phase = 0) {
+    if (!isResidentModel(model.id)) throw new Error(`${model.id} is not a resident model`);
+    this.root = cloneSkinned(model.scene);
+    this.root.name = model.id;
+    this.root.traverse(object => {
+      if (!(object instanceof THREE.Mesh)) return;
+      object.material = materials.body;
+      object.castShadow = true;
+      object.receiveShadow = true;
+      object.customDepthMaterial = materials.depth;
+      if (object instanceof THREE.SkinnedMesh) this.skinned.push(object);
+    });
+    this.mixer = new THREE.AnimationMixer(this.root);
+    this.idle = this.mixer.clipAction(model.clips.get('Idle')!);
+    this.talk = this.mixer.clipAction(model.clips.get('Talk')!);
+    this.idle.play();
+    this.talk.play();
+    this.talk.setEffectiveWeight(0);
+    this.idle.time = THREE.MathUtils.euclideanModulo(phase, 1) * this.idle.getClip().duration;
+    this.mixer.update(0);
+  }
+
+  get activeClip(): ResidentClip {
+    return this.talkWeight >= 0.5 ? 'Talk' : 'Idle';
+  }
+
+  update(frame: ResidentFrame, dt: number): void {
+    const talking = frame.talking && !frame.reducedMotion;
+    // Reduced motion keeps a still stance instead of breathing, weight shifts and gestures.
+    this.idle.paused = frame.reducedMotion;
+    if (frame.reducedMotion) {
+      this.idle.time = 0;
+      this.talkWeight = 0;
+    } else if (talking && this.talkWeight === 0) {
+      this.talk.time = 0;
+    }
+    const rate = dt <= 0 ? 1 : dt / RESIDENT_FADE;
+    this.talkWeight = talking ? Math.min(1, this.talkWeight + rate) : Math.max(0, this.talkWeight - rate);
+    this.talk.setEffectiveWeight(this.talkWeight);
+    this.idle.setEffectiveWeight(1 - this.talkWeight);
     this.mixer.update(Math.max(0, dt));
   }
 

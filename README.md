@@ -112,22 +112,26 @@ The line soldier worn by every faction's soldiers, the road archer, the infantry
 captain, the two bosses (Commander Raut and the Palace Marshal), the Echo Well,
 the three faction heroes (the elf ranger, the palace officer and the
 mountain sovereign), both wagons (the logistics convoy and the Crown ward-glass
-shipment), the draft ox that pulls them and the convoy's cargo load are cooked
-glTF models (`public/models`) instead of procedural meshes. Their concepts were
-generated locally with Qwen Image Edit Plus 2511, from original Blender reference
-renders (for the archer, captain and bosses, the approved soldier concept with a
-blank mannequin head; for the wagons, ox and cargo, grey blockouts) and, for the
-heroes, the game's own hero portraits as identity references. They were
-reconstructed with TRELLIS-image-large and cooked, rigged and animated in
-Blender 5.2.2 LTS. Every human character's back comes from an approved rear-view
-concept projected onto the mesh; the ox, wagons and cargo keep the far sides
-TRELLIS invented. TRELLIS cannot resolve spokes, so the wagons' wheels, axles and
+shipment), the draft ox that pulls them, the convoy's cargo load and the first
+five named residents (Toman, Lida, Vesk, Ren and Mara) are cooked glTF models
+(`public/models`) instead of procedural meshes. Their concepts were generated
+locally with Qwen Image Edit Plus 2511, from original Blender reference renders
+(for the archer, captain and bosses, the approved soldier concept with a blank
+mannequin head; for the residents, plain civilian body templates derived from it;
+for the wagons, ox and cargo, grey blockouts) and, for the heroes and residents,
+the game's own portraits as identity references. They were reconstructed with
+TRELLIS-image-large and cooked, rigged and animated in Blender 5.2.2 LTS. Every
+human character's back comes from an approved rear-view concept projected onto
+the mesh; the ox, wagons and cargo keep the far sides TRELLIS invented. Residents
+stand and talk: they have Idle and Talk loops only. TRELLIS cannot resolve
+spokes, so the wagons' wheels, axles and
 harness (shafts, duga arch, bell and pennant) are built in Blender and the
 reconstructed wheels are cut away. Dark TRELLIS textures of the heroes, archer,
-captain and bosses are lifted by a tone curve calibrated in the game against
-each approved concept from the default camera. The heroes and bosses match their
-concepts' brightness; the archer and captain stop at the strongest lift measured
-and stay darker than their concepts; the line soldier keeps its TRELLIS colours
+captain, bosses and residents are lifted by a tone curve calibrated in the game
+against each approved concept from the default camera. The heroes, bosses, Lida,
+Vesk and Ren match their concepts' brightness; the archer and captain, and
+slightly Toman and Mara, stop at the strongest lift measured and stay darker
+than their concepts; the line soldier keeps its TRELLIS colours
 without a lift; the ox and wagons are lifted by eye, not calibrated. Faction and
 allegiance colour the soldier's tabard and shield, the archer's hood, cape and
 tabard, the captain's tabard, the palace officer's shield and the wagons'
@@ -137,12 +141,12 @@ presenting a run and stops with an explicit asset error if any fails to load.
 
 **Licensing limitation:** TRELLIS code and weights are MIT-licensed, but its
 textured export depends on components restricted to research and evaluation.
-No commercial clearance exists for these thirteen models; the project owner
+No commercial clearance exists for these eighteen models; the project owner
 acknowledged publishing them here. Concepts, recipes, provenance, approvals and
-the cooking scripts are in `scripts/models`. The rest of the world, including
-residents and most props, is still procedural, so the models currently read as
-more realistic than their surroundings. They are not AAA assets: see each
-`provenance.json` for measured limitations.
+the cooking scripts are in `scripts/models`. The rest of the world, including the
+other fifteen residents and most props, is still procedural, so the models
+currently read as more realistic than their surroundings. They are not AAA
+assets: see each `provenance.json` for measured limitations.
 
 ## The campaign
 
@@ -473,7 +477,7 @@ deployment. Local builds do not require GitHub.
 Aegis packages declare MIT; Three.js is MIT. Runtime notices are included in
 [`public/THIRD_PARTY_NOTICES.txt`](public/THIRD_PARTY_NOTICES.txt) and copied into
 the production build. The engine remains pinned with its upstream provenance.
-The sequel uses newly authored procedural visuals, thirteen locally generated and
+The sequel uses newly authored procedural visuals, eighteen locally generated and
 cooked 3D models (research/evaluation-only TRELLIS export, see "Cooked 3D
 models" above) and original audio rather than copying the original game's
 implementation or asset library. No project-wide redistribution license is
