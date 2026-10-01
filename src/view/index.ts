@@ -6,7 +6,7 @@ import { WorldEffects } from './effects';
 import { factionColors, palette } from './palette';
 import { part, shapeGeometry } from './primitives';
 import { ViewResources } from './resources';
-import { WorldResidents } from './residents';
+import { residentModel, WorldResidents } from './residents';
 import { createWorldScenery, type WorldScenery } from './world';
 import { lightWorld, positionSun, skyEnvironment } from './atmosphere';
 import { WorldPostprocessing } from './postprocessing';
@@ -254,6 +254,15 @@ export class Presentation {
       group.add(wagon.root);
       return wagon;
     });
+    // Every cooked resident of this world shares the skinned dyed program; one of each uploads its textures here, so
+    // walking into a village never stalls on them.
+    const residents = [...this.residents.modelIds].map((id, index) => {
+      const person = residentModel(this.resources, id, id)!;
+      person.root.position.set(x - 3 + index * 1.2, 0.08, z - 4.5);
+      person.update({ talking: false, reducedMotion: true }, 0);
+      group.add(person.root);
+      return person;
+    });
     this.scene.add(group);
     const warming = new Set<THREE.Object3D>();
     // The hero, when already built, shares the soldier's programs; drawing it here also uploads its own textures.
@@ -274,6 +283,7 @@ export class Presentation {
       group.removeFromParent();
       for (const extra of extras) extra.character.dispose();
       for (const wagon of wagons) wagon.dispose();
+      for (const person of residents) person.dispose();
       this.removeActor(actor.id, visual);
     }
     return { programsBefore, programsAfter: renderer.info.programs?.length ?? 0, milliseconds: performance.now() - started };
@@ -603,7 +613,7 @@ export class Presentation {
       visual.supply.quaternion.copy(camera.quaternion);
     }
     this.effects.update(snapshot, dt, this.cosmeticTime, reducedMotion);
-    this.residents.update(snapshot, camera, reducedMotion);
+    this.residents.update(snapshot, camera, reducedMotion, dt);
     this.lastTick = snapshot.tick;
   }
 

@@ -1,0 +1,67 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-resident-mara",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Mara v2 seed 11501 (Recommended)",
+      "decidedAt": "2026-10-01T17:30:38.004465+02:00",
+      "question": "Gate 1, batch D1, delegated under the standing instruction of 2026-10-01: which concept should Mara Venn use? Board 127.0.0.1:47872 (_reviews/gate1-residents-d1): v2 11501 (recommended: closest likeness, the brass key on its cord, mid-calf skirt and boots), v2 11502 (older face, stains), v3 11503 (the v3 prompt did not lift the shawl off the arms; wider fringe, long skirt). All three drape the shawl over the upper arms, as the portrait does.",
+      "sha256": "86d7405c127d676c839b8c171746c39764bc5812b997a23f0e52d470bdc89e10",
+      "approvedFileSha256": "40ede5c0b25630e6f2f54e4cdde715b5533cb705c936e813b584ba294aeb3949",
+      "pixelSha256": "a91ba5f184920366507529dcede59fa6d0e3c810d42195b22333ef15035754f4",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+        "delegatedAt": "2026-10-01T10:52:52.040+02:00"
+      }
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve HD s42 and add a projected rear-view concept (Recommended)",
+      "decidedAt": "2026-10-01T17:50:36.470430+02:00",
+      "question": "Gate 2, batch D1, delegated under the standing instruction of 2026-10-01: which raw TRELLIS mesh should Mara Venn be cooked from? Board 127.0.0.1:47873 (_reviews/gate2-residents-d1).",
+      "sha256": "07f018467833c1cec467f9da77964fde85b2fc103e744bcb775fb11f04ecac3d",
+      "candidate": "hd-s42",
+      "conditions": [
+        "Add a rear-view concept (two local Qwen candidates) and project it in the cook.",
+        "Spread the shawl's skin weights between the arms and the chest (it is reconstructed over the upper arms).",
+        "Long skirt: hem panels from the hips to mid-calf."
+      ],
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated residents, ship-002 (Recommended)",
+      "decidedAt": "2026-10-01T22:44:06.274839+02:00",
+      "question": "Gate 3 for batch D1, delegated under the standing instruction of 2026-10-01: Toman, Lida, Auditor Vesk, Ren and Mara are in the running game. The board is at 127.0.0.1:47875 (_reviews/gate3-residents-d1). Rig, weights and clips are identical in both candidates, and both pass the per-frame verifier on every 60 Hz frame of Idle and Talk; the existing gameplay, save, input and campaign tests pass unchanged (378 passed; only the five provenance tests for these assets wait for this decision). Measured cost: the deployed site grows by 5.74 MB. On the RTX 4070 Ti SUPER, p50 frame time is equal or lower in 23 of 24 scene and quality pairs and draw calls fall by 26 to 108 per scene, while triangles rise by 7.6k to 30.1k (elf road high reaches 398,512 against the 400k budget). Calibrated lifts Lida, Vesk and Ren to their concepts' brightness; Toman and Mara stop at the 0.6 floor, at 98.9% and 96.8% of theirs. As cooked, they stay at 44% to 63% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "7d908b15d443a6a2ea7389b7d4f162034c63974a0f7885ff181555c4e3e94a43",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Use the five recommended rear views: Toman 12103, Lida 12202, Vesk 12301, Ren 12401, Mara 12501 (Recommended)",
+      "decidedAt": "2026-10-01T22:24:06.917694+02:00",
+      "question": "Batch D1 rear views are on the board (127.0.0.1:47874). The 11 local Qwen jobs took 3.74 GPU-hours. My recommendations: Toman 12103 (the only colour painting: v1 seed 12101 came out as a monochrome pencil sketch and v3 seed 12102 as the grey sculpt), Lida 12202 (realistic and true to the concept; 12201 is a loose oil sketch), Vesk 12301 (strap and case where the mesh has them; 12302 has no strap and the case on the wrong hip), Ren 12401 (12402 was mirrored, which moves the mallet to the wrong hip) and Mara 12501 (12502 invents a hood). Limitations measured on every seed: each back is Qwen's invention of the unseen side, painted soft light becomes albedo, only texels visible from directly behind are repainted, and the geometry (back silhouette, mitten hands, soft heads) is unchanged. Which rear views should I cook?",
+      "sha256": "851aa4c1d22b5599b38fe5cde6ed65c7b54b94ec15e0bc927ebce3ec50fe22ed",
+      "approvedFileSha256": "792aac17ec4aa74e2892584ac0541ed752690c0ad5aef8628de8b5469e7da6a5",
+      "pixelSha256": "6860bacdf063c615099d6201978f06154340273eaa5451df4c83c6f80ebd5243",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ]
+}
