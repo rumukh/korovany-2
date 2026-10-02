@@ -3,8 +3,8 @@
   "id": "prop-echo-well",
   "output": {
     "file": "public/models/prop-echo-well/prop-echo-well.glb",
-    "sha256": "a43ea4821e0b27df9363a829250a960057a29557670cd420161a7e9e709a36e9",
-    "bytes": 1138236
+    "sha256": "8f77450e8560e9803236b70aabd83b068c333aa0824a4bc6c16696b3ff10b69b",
+    "bytes": 826020
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from original Blender reference renders; no third-party or real-person likeness was used as input.",
   "acknowledgment": {
@@ -176,8 +176,8 @@
     },
     "shippedOutput": {
       "file": "prop-echo-well-albedo1024.glb",
-      "bytes": 1138236,
-      "sha256": "a43ea4821e0b27df9363a829250a960057a29557670cd420161a7e9e709a36e9",
+      "bytes": 826020,
+      "sha256": "8f77450e8560e9803236b70aabd83b068c333aa0824a4bc6c16696b3ff10b69b",
       "images": [
         [
           "prop-normal",
@@ -194,6 +194,40 @@
       ]
     },
     "albedoChoice": "1024: differs from 2048 in 14 pixels at 18 m and none at 26/40 m in the game renderer; saves 337 KB.",
+    "staticQuantization": {
+      "script": "quantize_static_glb.py",
+      "scriptSha256": "1b0871ac3893952369d6af381030b42cc6515ad316d7d9fb638741406bc23b90",
+      "extension": "KHR_mesh_quantization",
+      "settings": {
+        "POSITION": "SHORT normalized; one uniform scale per mesh folded into its node's scale (no offset), the inverse into its children",
+        "NORMAL": "BYTE normalized",
+        "TANGENT": "BYTE normalized",
+        "TEXCOORD": "UNSIGNED_SHORT normalized where the UVs lie in [0, 1]"
+      },
+      "nodes": [
+        {
+          "node": "prop-echo-well",
+          "scale": 5.059362,
+          "children": []
+        }
+      ],
+      "floatUvs": [],
+      "maxErrors": {
+        "positionMm": 0.0772,
+        "normalDegrees": 0.36569,
+        "tangentDegrees": 0.37656,
+        "uvTexels2048": 0.01562
+      },
+      "bounds": {
+        "positionMm": 0.1,
+        "normalDegrees": 0.8,
+        "tangentDegrees": 0.8,
+        "uvTexels2048": 0.05
+      },
+      "inputSha256": "888827c4da0083eb0398762c63e5d2cfb5812b654dd94da22cb96468bb02b1ba",
+      "bytesBefore": 1377252,
+      "bytesAfter": 987676
+    },
     "geometryCompression": {
       "extension": "EXT_meshopt_compression",
       "encoder": "meshoptimizer 0.22.0 (npm)",
@@ -212,8 +246,8 @@
       "views": {
         "attributes": {
           "views": 4,
-          "raw": 668064,
-          "packed": 500835
+          "raw": 278360,
+          "packed": 188496
         },
         "triangles": {
           "views": 1,
@@ -228,20 +262,27 @@
         },
         "stored": 618462
       },
-      "inputSha256": "888827c4da0083eb0398762c63e5d2cfb5812b654dd94da22cb96468bb02b1ba",
-      "bytesBefore": 1377252,
-      "bytesAfter": 1138236
+      "inputSha256": "649a2313b71b02eba7fc1c99a081d6302618e662b19eb7e14c1479c6431cf15c",
+      "bytesBefore": 987676,
+      "bytesAfter": 826020
     },
     "derivedFrom": {
-      "cook": "cook-004",
-      "sha256": "888827c4da0083eb0398762c63e5d2cfb5812b654dd94da22cb96468bb02b1ba",
-      "bytes": 1377252,
-      "note": "The exact cook-004 output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run."
+      "cook": "cook-004-q",
+      "sha256": "649a2313b71b02eba7fc1c99a081d6302618e662b19eb7e14c1479c6431cf15c",
+      "bytes": 987676,
+      "note": "The exact cook-004-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "derivedFrom": {
+        "cook": "cook-004",
+        "sha256": "888827c4da0083eb0398762c63e5d2cfb5812b654dd94da22cb96468bb02b1ba",
+        "bytes": 1377252,
+        "note": "The exact cook-004 output, quantized by quantize_static_glb.py; the Blender cook was not re-run."
+      }
     },
     "scripts": {
       "cook_prop.py": "3b455cc39ec2c4cc79f70b3c5ddd7679b86bdd6a7e156a16450edcdd91feaf8d",
       "k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
       "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
+      "quantize_static_glb.py": "9a42f5dc947e841f43cf6b4b096dedb9d063911c3f56236b9cb1dc13d3607327",
       "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",

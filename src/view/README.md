@@ -153,10 +153,14 @@ offset folded into the inverse bind matrices. Normals, tangents and skin weights
 are 8-bit, and UVs and rotations 16-bit. The cook decodes every value again and
 records the worst errors in each `provenance.json`. Quantized files are about a
 third smaller and look the same in the game. The mountain sovereign stays float:
-quantization pushed two of its clips over the 2.0x strain limit. Weapons and other
-items, the wagons, the cargo and the Echo Well are static meshes and stay float.
-Code that needs a skinned model's size must measure it through the skin (`Box3`
-does this), not from the raw `position` attribute.
+quantization pushed two of its clips over the 2.0x strain limit. The static props
+(the wagons, the cargo and the Echo Well) are quantized too, by
+`quantize_static_glb.py`: 16-bit positions with one uniform scale per mesh held
+in its node, with no offset, so the wagon wheels still spin about their axles;
+8-bit normals and tangents; and 16-bit UVs. Weapons and other character items stay
+float. Code that needs a skinned model's size must measure it through the skin
+(`Box3` does this), not from the raw `position` attribute. Static meshes are
+measured through their node transforms.
 
 Every model's geometry, skin and animation data are then compressed with
 `EXT_meshopt_compression` (`meshopt_glb.mjs`). First each mesh's vertices and
@@ -164,8 +168,9 @@ triangles are reordered for locality, which the codecs need. The mesh itself is
 unchanged: the same vertices with the same attribute values, and the same
 triangles with the same winding. No lossy filter is used, so decoding restores
 exactly that reordered data. Files are about a fifth smaller. GitHub Pages
-already gzips GLBs, so the download falls by only about 7%; the static props
-gain almost nothing. Textures stay WebP and are not compressed again.
+already gzips GLBs, so on its own this step cuts the download by only about 7%.
+Quantization is what makes the static props smaller to download.
+Textures stay WebP and are not compressed again.
 `gltfModelSource()` gives `GLTFLoader` three.js's bundled WebAssembly
 `MeshoptDecoder`. The files require the extension and their fallback buffer holds
 no data, so a loader without the decoder fails instead of drawing anything.
