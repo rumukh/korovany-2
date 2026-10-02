@@ -131,11 +131,15 @@ the logistics convoy (`public/models/prop-wagon-convoy/`) with its cargo load
 (`prop-wagon-shipment/`), and the draft ox that pulls both (`char-draft-ox/`); and
 ten named residents: the home residents of each campaign and the Roadward pair
 (`public/models/char-resident-toman/`, `char-resident-lida/`,
-`char-resident-vesk/`, `char-resident-ren/` and `char-resident-mara/`), and the
+`char-resident-vesk/`, `char-resident-ren/` and `char-resident-mara/`), the
 residents of Cinderwell, Hollow Village and the Last Archive (`char-resident-beran/`,
 `char-resident-tessa/`, `char-resident-ada/`, `char-resident-mila/` and
-`char-resident-elin/`). `residentModelFor()` maps a narrative NPC id to its model;
-the other ten residents keep their procedural figures until their batch ships.
+`char-resident-elin/`), and Lev at the Star Monastery, Yara at Thornwatch, Nika
+at the High Pass, Radek at the Bell Foundry and Oss at the Lantern Ferry
+(`char-resident-lev/`, `char-resident-yara/`, `char-resident-nika/`,
+`char-resident-radek/` and `char-resident-oss/`). `residentModelFor()` maps a
+narrative NPC id to its model; the other five residents keep their procedural
+figures until their batch ships.
 `troopModelFor()` picks the troop for an actor kind and faction: the Palace
 Marshal is the Crown's (guard) boss, Raut the mountain army's. `ModelLibrary`
 (`models.ts`) starts loading them through `GLTFLoader` as the page opens, behind

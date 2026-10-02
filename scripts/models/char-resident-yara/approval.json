@@ -1,0 +1,67 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-resident-yara",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Yara v1 seed 14201 (Recommended)",
+      "decidedAt": "2026-10-02T12:31:48.000102+02:00",
+      "question": "Gate 1, batch D3, delegated under the standing instruction of 2026-10-01: which concept should Yara, hunt warden of Thornwatch, use? Board 127.0.0.1:47891 (_reviews/gate1-residents-d3): 14201 (recommended: hood up as in the portrait, quilted leather, antler fastening, short capelet), 14202 (hood down, scale-like leather, stacked belts), 14203 (hood down, busiest scale pattern).",
+      "sha256": "fc3080b3ba5558d326cbe7763be929bf4eab74723afa53ece395f04b16afe486",
+      "approvedFileSha256": "5e3d8a61f5b85e512bdee5d51ec9a8d534946d744c64d158404a121d5bcae894",
+      "pixelSha256": "bc6686f3158154752dab8106895bcc03b43330810ca3fe3c3ecb693ac2f8c86d",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+        "delegatedAt": "2026-10-01T10:52:52.040+02:00"
+      }
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve HD s42 and add a projected rear-view concept (Recommended)",
+      "decidedAt": "2026-10-02T13:18:30.380426+02:00",
+      "question": "Gate 2, batch D3, delegated under the standing instruction of 2026-10-01: which raw TRELLIS mesh should Yara be cooked from? Board 127.0.0.1:47893 (_reviews/gate2-residents-d3).",
+      "sha256": "f38f3591b92055381902c1c500cb787cb8dfa4de24ca4b6dcec0546078cf9c6b",
+      "candidate": "hd-s42",
+      "conditions": [
+        "Add a rear-view concept (two local Qwen candidates) and project it in the cook; the raw back is near black.",
+        "Hood up and a short capelet that ends at the shoulder blades: capelet weights stay on the chest, clavicles and upper arms; the braid fused to the jacket front moves with the chest.",
+        "Decimate to at most 9,500 triangles; rig with the shared humanoid skeleton and author Idle and Talk."
+      ],
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated residents, ship-001-q-m (Recommended)",
+      "decidedAt": "2026-10-02T17:27:57.123230+02:00",
+      "question": "Gate 3 for batch D3, delegated under the standing instruction of 2026-10-01: Lev, Yara, Nika, Radek and Oss are in the running game at the Star Monastery, Thornwatch, the High Pass, the Bell Foundry and the Lantern Ferry (board 127.0.0.1:47895, _reviews/gate3-residents-d3). Rig, weights and clips are identical in both candidates, both are quantized and meshopt-compressed, and both pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the five GLBs add 2.66 MB (2.43 MB as served) and all 28 preloaded models total 20.1 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in all 20 scene and quality pairs and draw calls fall by 26 to 52 per scene; in SwiftShader p50 is up to 2.8% higher. Calibrated lifts all five to their concepts' brightness; the lift reddens Oss's painted back and brightens Radek's teal hem speckles. As cooked, they stay at 55% to 65% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "b06a8d6854dcc351b13aeab706885eb68e479563e2ef426df9e71b97f3c29763",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Use rear 17202 (Recommended)",
+      "decidedAt": "2026-10-02T16:34:42.748504+02:00",
+      "question": "Gate 1 (rear view), batch D3, delegated under the standing instruction of 2026-10-01: which rear-view concept should Yara's cook project onto the back? Board 127.0.0.1:47894 (_reviews/gate1-rear-residents-d3): 17202 (recommended: hood and capelet, quilted back, no braid on the back), 17201 (braid painted down the back, which the concept wears in front).",
+      "sha256": "01b1051798b4074269ade0bbf9afa4eba7273ebbdd0e9394b36e7d8c96579254",
+      "approvedFileSha256": "485b957e49c759a1aed2e0a3aab7dec3581f8e2d1651b03af708940ade24fa66",
+      "pixelSha256": "7ca5279eac829c5609e176e055d78e4daa955d09f307cb463b94b8638db2e35b",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ]
+}
