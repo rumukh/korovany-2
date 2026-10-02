@@ -26,10 +26,10 @@
     },
     {
       "gate": "in-game",
-      "decision": "Ship the 23 compressed models (Recommended)",
-      "decidedAt": "2026-10-02T11:34:02.263711+02:00",
-      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: all 23 shipped models, with their vertices and triangles reordered for locality and their geometry, skin and animation data compressed with EXT_meshopt_compression (no lossy filters), are in the running game (board 127.0.0.1:47896, _reviews/gate3-meshopt). Files fall 19.7% (23,330,396 to 18,733,460 bytes) and the gzip download GitHub Pages serves 6.9% (17,957,653 to 16,725,201 bytes), for 6,117 gzip bytes of decoder. Every model decodes to the same mesh, skin, clips and images; every frame-verifier metric is unchanged; of 213 game frames 200 are bit-identical and 13 differ in one pixel each; shader programs, draw calls (except +1-2 off-screen submissions in three shots), frame times and preload time show no measurable change. Should I ship the compressed models?",
-      "sha256": "fb3a95711ce0a214060b0cd34fa9f537ac4bb30e6a28202b8b1e23df67adbec1",
+      "decision": "Ship the four quantized props (Recommended)",
+      "decidedAt": "2026-10-02T14:11:03.184756+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: the Echo Well, both wagons and the cargo, with vertex data quantized by quantize_static_glb.py before the meshopt step, are in the running game (board 127.0.0.1:47897, _reviews/gate3-static-quantized). Files fall 32.4% (3,835,088 to 2,590,916 bytes) and the gzip download 32.2% (3,647,712 to 2,474,649). In 51 game frames the worst whole-frame mean difference is 0.0077/255 and at most 0.0054% of a frame's pixels change by more than 8/255; programs and draw calls are identical. Should I ship the quantized props?",
+      "sha256": "cc51c3a75232a675d2001be26b3eb76c9c5bcb9dbd3196f7fbcdc61f1bb19324",
       "decidedBy": {
         "mode": "delegated",
         "record": "_reviews/delegation-2026-10-01.json",
@@ -45,6 +45,19 @@
       "question": "Gate 3 for batch C: the convoy wagon, Crown shipment, draft ox and cargo load are in the running game. The review board is open (127.0.0.1:47870), and you can play this branch's build at 127.0.0.1:47871. After the first captures, I fixed one defect. The pennant was edge-on from straight behind, so a hostile shipment's red nearly vanished. It's now enlarged and rippled, and it reads from behind. All wagon tests pass: 20/20, including every frame of every ox clip. All six deliberately broken copies are rejected, and the 9 browser tests pass. Measured cost: the site grows by 4.46 MB. On this GPU every scene is as fast or faster, and draw calls fall 30-65%. Triangles rise, so elf combat at high quality reaches 594k against the 400k budget. Under SwiftShader, frame time is within -2% to +5% of main. This is not AAA: the far sides and backs are invented; each body has a single painted albedo; the ox has cap hooves, painted eyes and a fused tail, and its gaits are procedural (canters at wagon speed); the shipment's glass is painted; and the pennant and canvas don't move. Do you approve delivery?",
       "sha256": "a69963a562345b11977cf955050bc89626e34f0311e21802e494df83c248862f",
       "superseded": "Re-shipped meshopt-compressed: the same cook with its vertices and triangles reordered for locality (the same vertex data and triangles, with the same winding) and EXT_meshopt_compression without lossy filters; about a fifth fewer bytes and unchanged in the game (_reviews/gate3-meshopt)."
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "Ship the 23 compressed models (Recommended)",
+      "decidedAt": "2026-10-02T11:34:02.263711+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: all 23 shipped models, with their vertices and triangles reordered for locality and their geometry, skin and animation data compressed with EXT_meshopt_compression (no lossy filters), are in the running game (board 127.0.0.1:47896, _reviews/gate3-meshopt). Files fall 19.7% (23,330,396 to 18,733,460 bytes) and the gzip download GitHub Pages serves 6.9% (17,957,653 to 16,725,201 bytes), for 6,117 gzip bytes of decoder. Every model decodes to the same mesh, skin, clips and images; every frame-verifier metric is unchanged; of 213 game frames 200 are bit-identical and 13 differ in one pixel each; shader programs, draw calls (except +1-2 off-screen submissions in three shots), frame times and preload time show no measurable change. Should I ship the compressed models?",
+      "sha256": "fb3a95711ce0a214060b0cd34fa9f537ac4bb30e6a28202b8b1e23df67adbec1",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      },
+      "superseded": "Re-shipped with quantized vertex data (quantize_static_glb.py: 16-bit positions with one uniform scale per mesh in its node, 8-bit normals and tangents, 16-bit UVs) before the meshopt step; about a third fewer bytes and visually unchanged in the game (_reviews/gate3-static-quantized)."
     }
   ]
 }
