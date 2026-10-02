@@ -1,0 +1,67 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-resident-ada",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Ada v1 seed 13302 (Recommended)",
+      "decidedAt": "2026-10-02T03:12:27.560475+02:00",
+      "question": "Gate 1, batch D2, delegated under the standing instruction of 2026-10-01: which concept should Ada Wren use? Board 127.0.0.1:47881 (_reviews/gate1-residents-d2): 13302 (recommended: shawl closed above the elbows in the portrait's plum), 13301 (rounder face but the shawl drapes over the arms), 13303 (indigo shawl over the arms).",
+      "sha256": "c2ec1ffa269ed441e2240950f7d1343e3a3b40792fbfe2358929e6c05d653832",
+      "approvedFileSha256": "322764266a5bff84c619d3c7e9a1e513ad5184bc0f3b58661cfd3c84dc133ef7",
+      "pixelSha256": "40b305f8c510bdb17f5ced72f06714ba97cff7b98822e7d98764a3a7cc72a8ce",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+        "delegatedAt": "2026-10-01T10:52:52.040+02:00"
+      }
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve HD s42 and add a projected rear-view concept (Recommended)",
+      "decidedAt": "2026-10-02T04:01:59.690656+02:00",
+      "question": "Gate 2, batch D2, delegated under the standing instruction of 2026-10-01: which raw TRELLIS mesh should Ada Wren be cooked from? Board 127.0.0.1:47883 (_reviews/gate2-residents-d2).",
+      "sha256": "d5f6e020158e7fbc36c3515bdb61557dce4ce59504b4aa7ccff7525c545e79a8",
+      "candidate": "hd-s42",
+      "conditions": [
+        "Add a rear-view concept (two local Qwen candidates) and project it in the cook; the raw back is near black.",
+        "Long dress: hem panels from the hips to the ankles; the shawl ends above the elbows, so its weights stay on the chest and clavicles.",
+        "Decimate to at most 9,500 triangles; rig with the shared humanoid skeleton and author Idle and Talk."
+      ],
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated residents, ship-001-q (Recommended)",
+      "decidedAt": "2026-10-02T08:16:47.634893+02:00",
+      "question": "Gate 3 for batch D2, delegated under the standing instruction of 2026-10-01: Beran, Tessa, Ada, Mila and Elin are in the running game at Cinderwell, Hollow Village and the Last Archive (board 127.0.0.1:47885, _reviews/gate3-residents-d2). Rig, weights and clips are identical in both candidates, both are quantized, and both pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the deployed site grows by 3.47 MB and all 23 preloaded models total 23.3 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in 11 of 12 scene and quality pairs (the Last Archive at low quality went 0.8 to 1.1 ms) and draw calls fall by 26 to 108 per scene. Calibrated lifts Beran, Ada, Mila and Elin to their concepts' brightness; Tessa stops at the 0.6 floor at 78% of hers, and the lift turns Ada's plum shawl magenta-pink. As cooked, they stay at 51% to 77% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "3c25a447950ee181060189d67fd39b08eb227360915ba4b0998c19860b8b11fa",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Use the five recommended rear views: Beran 16101, Tessa 16201, Ada 16301, Mila 16401, Elin 16501 (Recommended)",
+      "decidedAt": "2026-10-02T07:15:47.833325+02:00",
+      "question": "Batch D2 rear views are on the board (127.0.0.1:47884). The 10 local Qwen jobs took 2.96 GPU-hours. My recommendations: Beran 16101 (the only colour painting; 16102 came out as the grey sculpt), Tessa 16201 (true to the concept; 16202 repaints the dress teal), Ada 16301 (the shawl's point and frayed edge as in the concept), Mila 16401 (the best registration, IoU 0.986) and Elin 16501 (hair as in the front; 16502 adds a pouch the mesh lacks). Limitations measured on every seed: each back is Qwen's invention of the unseen side, painted soft light becomes albedo, only texels visible from directly behind are repainted, and the geometry is unchanged. Which rear views should I cook?",
+      "sha256": "a02e54fb61c19af5c32e88bc60ed1c262f1141e8e6ab445d02f6feaeb4215104",
+      "approvedFileSha256": "2e2377de7d1ada03b33bcbeb032a588d819abc124c0282eccc4542af170e9f4b",
+      "pixelSha256": "05ebe33e69682cc7a5e848bd83febfc7d5656c2aee654a638c9e7885a570add7",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ]
+}

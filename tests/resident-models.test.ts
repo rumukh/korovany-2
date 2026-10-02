@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 import * as THREE from 'three';
 import { createCampaign, type GameSnapshot } from '../src/game';
 import {
@@ -11,6 +11,11 @@ import { verifyMotion } from './character-motion';
 import { imageBytes, imageSize, parseGlbWithoutTextures, readGlb } from './glb';
 import { CampaignDriver } from './driver';
 import { residentBrokenVariants, residentMotion } from './resident-motion';
+import { yieldRunner } from './faction-driver';
+
+// GLB parsing and per-frame verification settle on microtasks only, so without a macrotask between tests the whole
+// file is one event-loop turn: the worker cannot read vitest's RPC replies and trips its 60 s onTaskUpdate timeout.
+afterEach(yieldRunner);
 
 const NPCS = Object.keys(RESIDENTS) as ResidentNpc[];
 const IDS = NPCS.map(npc => RESIDENTS[npc].id);
@@ -170,6 +175,30 @@ describe('residents without a DOM', () => {
       residents.update(roadward(), new THREE.PerspectiveCamera(), false, 1 / 60);
       expect(residents.model('mara')).toBeDefined();
       expect(residents.model('ren')).toBeDefined();
+    } finally {
+      residents.dispose();
+      resources.dispose();
+      models.dispose();
+    }
+  }, 60_000);
+
+  // Batch D2: the Cinderwell pair, the Hollow Village pair and Elin at the Last Archive, each reached by a real walk.
+  test.each([
+    ['cinderwell', 'elf', ['beran', 'tessa']],
+    ['hollow-village', 'guard', ['ada', 'mila']],
+    ['last-archive', 'guard', ['elin']],
+  ] as const)('%s shows its residents cooked', async (location, faction, npcs) => {
+    const models = await library();
+    const resources = new ViewResources(undefined, 1, models);
+    const scene = new THREE.Scene();
+    const residents = new WorldResidents(resources, scene);
+    try {
+      const game = createCampaign({ seed: `resident-${location}`, faction, runId: `resident-${location}` });
+      new CampaignDriver(game).toNode(location);
+      const snapshot = structuredClone(game.snapshot());
+      for (const npc of npcs) expect(snapshot.narrative!.npcs.some(person => person.id === npc), npc).toBe(true);
+      residents.update(snapshot, new THREE.PerspectiveCamera(), false, 1 / 60);
+      for (const npc of npcs) expect(residents.model(npc), npc).toBeDefined();
     } finally {
       residents.dispose();
       resources.dispose();
