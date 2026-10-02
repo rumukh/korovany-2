@@ -54,7 +54,7 @@ describe('cooked wagons, draft ox and cargo', () => {
     const { json: gltf } = document;
     expect(gltf.skins ?? []).toHaveLength(0);
     expect(gltf.animations ?? []).toHaveLength(0);
-    expect(gltf.extensionsRequired ?? []).toEqual(['EXT_texture_webp']);
+    expect(gltf.extensionsRequired ?? []).toEqual(['EXT_meshopt_compression', 'EXT_texture_webp']);
     const meshNodes = gltf.nodes!.filter(node => node.mesh !== undefined).map(node => node.name).sort();
     expect(meshNodes).toEqual([WAGON_NODES.body, WAGON_NODES.harness, ...WAGON_NODES.wheels].sort());
     expect(triangles(document, WAGON_NODES.body)).toBeLessThanOrEqual(15_000);

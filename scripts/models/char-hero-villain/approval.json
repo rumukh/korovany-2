@@ -26,10 +26,15 @@
     },
     {
       "gate": "in-game",
-      "decision": "Ship the calibrated heroes and soldier cook-016",
-      "decidedAt": "2026-09-29T07:30:33+00:00",
-      "question": "Gate 3 final approval: ship the three heroes tone-calibrated (recommended) or as cooked, together with the line soldier cook-016 Run fix, as shown in the running game?",
-      "sha256": "3453e65843390de8d90aad0103b7e8e4ccf1cb20061e2e767fa96eda203d3079"
+      "decision": "Ship the 23 compressed models (Recommended)",
+      "decidedAt": "2026-10-02T11:34:02.263711+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: all 23 shipped models, with their vertices and triangles reordered for locality and their geometry, skin and animation data compressed with EXT_meshopt_compression (no lossy filters), are in the running game (board 127.0.0.1:47896, _reviews/gate3-meshopt). Files fall 19.7% (23,330,396 to 18,733,460 bytes) and the gzip download GitHub Pages serves 6.9% (17,957,653 to 16,725,201 bytes), for 6,117 gzip bytes of decoder. Every model decodes to the same mesh, skin, clips and images; every frame-verifier metric is unchanged; of 213 game frames 200 are bit-identical and 13 differ in one pixel each; shader programs, draw calls (except +1-2 off-screen submissions in three shots), frame times and preload time show no measurable change. Should I ship the compressed models?",
+      "sha256": "429b2043884fe26acf47470f71a6bbb258232a777932a02ef36ea9ad9f797e15",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
     }
   ],
   "supplementary": [
@@ -41,6 +46,14 @@
       "sha256": "8411aceb57ba34dc199dc57a34394b917af32d8399f53f288fe45c9f96b6fa13",
       "approvedFileSha256": "9093270e78f2a4c50d5b006953d52caef07ff6c5f73386f4e83adf7a033702eb",
       "pixelSha256": "01123f12f0048aee6abbb9a8d369986b8b777ed9ae347e1e0dc5dcb9a7491db4"
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "Ship the calibrated heroes and soldier cook-016",
+      "decidedAt": "2026-09-29T07:30:33+00:00",
+      "question": "Gate 3 final approval: ship the three heroes tone-calibrated (recommended) or as cooked, together with the line soldier cook-016 Run fix, as shown in the running game?",
+      "sha256": "3453e65843390de8d90aad0103b7e8e4ccf1cb20061e2e767fa96eda203d3079",
+      "superseded": "Re-shipped meshopt-compressed: the same cook with its vertices and triangles reordered for locality (the same vertex data and triangles, with the same winding) and EXT_meshopt_compression without lossy filters; about a fifth fewer bytes and unchanged in the game (_reviews/gate3-meshopt)."
     }
   ]
 }

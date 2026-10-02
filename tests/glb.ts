@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export interface GlbDocument {
@@ -17,8 +18,8 @@ export interface GltfJson {
   textures?: { source?: number; extensions?: Record<string, { source: number }> }[];
   images?: { bufferView?: number; mimeType?: string; uri?: string; name?: string }[];
   accessors?: { bufferView?: number; byteOffset?: number; componentType: number; count: number; type: string; min?: number[]; max?: number[]; normalized?: boolean }[];
-  bufferViews?: { buffer: number; byteOffset?: number; byteLength: number; byteStride?: number }[];
-  buffers?: { byteLength: number; uri?: string }[];
+  bufferViews?: { buffer: number; byteOffset?: number; byteLength: number; byteStride?: number; extensions?: Record<string, unknown> }[];
+  buffers?: { byteLength: number; uri?: string; extensions?: Record<string, unknown> }[];
   animations?: { name?: string; channels: { sampler: number; target: { node?: number; path: string } }[]; samplers: { input: number; output: number; interpolation?: string }[] }[];
   cameras?: unknown[];
   extensionsUsed?: string[];
@@ -98,8 +99,9 @@ export function imageBytes(document: GlbDocument, image: number): Uint8Array {
   return document.bin.subarray(view.byteOffset ?? 0, (view.byteOffset ?? 0) + view.byteLength);
 }
 
-/** Node cannot decode images; parse geometry, skin and clips with texture references removed. */
-export async function parseGlbWithoutTextures(bytes: Uint8Array): Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }> {
+/** Node cannot decode images; parse geometry, skin and clips with texture references removed. Geometry and animation
+ * data go through the same three.js meshopt decoder as the game's loader (`gltfModelSource`). */
+export async function parseGlbWithoutTextures(bytes: Uint8Array, decoder: typeof MeshoptDecoder | null = MeshoptDecoder): Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }> {
   const document = readGlb(bytes);
   const json: GltfJson = structuredClone(document.json);
   for (const material of json.materials ?? []) {
@@ -113,7 +115,9 @@ export async function parseGlbWithoutTextures(bytes: Uint8Array): Promise<{ scen
   json.extensionsRequired = (json.extensionsRequired ?? []).filter(name => name !== 'EXT_texture_webp');
   const stripped = writeGlb(json, document.bin);
   const buffer = stripped.buffer.slice(stripped.byteOffset, stripped.byteOffset + stripped.byteLength) as ArrayBuffer;
-  return new Promise((resolve, reject) => new GLTFLoader().parse(buffer, '', gltf => resolve(gltf), reject));
+  const loader = new GLTFLoader();
+  if (decoder) loader.setMeshoptDecoder(decoder);
+  return new Promise((resolve, reject) => loader.parse(buffer, '', gltf => resolve(gltf), reject));
 }
 
 export function loadGlbFile(url: URL): Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }> {

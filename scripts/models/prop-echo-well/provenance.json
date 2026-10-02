@@ -3,8 +3,8 @@
   "id": "prop-echo-well",
   "output": {
     "file": "public/models/prop-echo-well/prop-echo-well.glb",
-    "sha256": "888827c4da0083eb0398762c63e5d2cfb5812b654dd94da22cb96468bb02b1ba",
-    "bytes": 1377252
+    "sha256": "a43ea4821e0b27df9363a829250a960057a29557670cd420161a7e9e709a36e9",
+    "bytes": 1138236
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from original Blender reference renders; no third-party or real-person likeness was used as input.",
   "acknowledgment": {
@@ -159,7 +159,7 @@
         1024,
         2048
       ],
-      "albedoGain": 1.0,
+      "albedoGain": 1,
       "cageExtrusionMeters": 0.03,
       "maxRayMeters": 0.08,
       "atlasCoverage": 0.6188154220581055,
@@ -176,9 +176,8 @@
     },
     "shippedOutput": {
       "file": "prop-echo-well-albedo1024.glb",
-      "albedoSize": 1024,
-      "bytes": 1377252,
-      "sha256": "888827c4da0083eb0398762c63e5d2cfb5812b654dd94da22cb96468bb02b1ba",
+      "bytes": 1138236,
+      "sha256": "a43ea4821e0b27df9363a829250a960057a29557670cd420161a7e9e709a36e9",
       "images": [
         [
           "prop-normal",
@@ -195,10 +194,55 @@
       ]
     },
     "albedoChoice": "1024: differs from 2048 in 14 pixels at 18 m and none at 26/40 m in the game renderer; saves 337 KB.",
+    "geometryCompression": {
+      "extension": "EXT_meshopt_compression",
+      "encoder": "meshoptimizer 0.22.0 (npm)",
+      "script": "meshopt_glb.mjs",
+      "scriptSha256": "9f5914236e6aac82b541e0685ab34f839a1287d50c41b8322724ddf420597ec8",
+      "filters": "none",
+      "reorder": {
+        "method": "meshoptimizer reorderMesh: vertex-cache triangle order, then vertex-fetch vertex order",
+        "primitives": 1,
+        "kept": 0,
+        "vertices": 13918,
+        "triangles": 14774,
+        "check": "a permutation: every vertex keeps its exact attribute bytes, and the triangles are the same, with the same winding, in another order"
+      },
+      "check": "every view decoded again: attribute views byte-identical to the reordered data; triangle index views hold the same triangles in the same order and winding (only the first vertex may rotate)",
+      "views": {
+        "attributes": {
+          "views": 4,
+          "raw": 668064,
+          "packed": 500835
+        },
+        "triangles": {
+          "views": 1,
+          "raw": 88644,
+          "packed": 16009,
+          "rotatedTriangles": 9325
+        },
+        "indices": {
+          "views": 0,
+          "raw": 0,
+          "packed": 0
+        },
+        "stored": 618462
+      },
+      "inputSha256": "888827c4da0083eb0398762c63e5d2cfb5812b654dd94da22cb96468bb02b1ba",
+      "bytesBefore": 1377252,
+      "bytesAfter": 1138236
+    },
+    "derivedFrom": {
+      "cook": "cook-004",
+      "sha256": "888827c4da0083eb0398762c63e5d2cfb5812b654dd94da22cb96468bb02b1ba",
+      "bytes": 1377252,
+      "note": "The exact cook-004 output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run."
+    },
     "scripts": {
       "cook_prop.py": "3b455cc39ec2c4cc79f70b3c5ddd7679b86bdd6a7e156a16450edcdd91feaf8d",
       "k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
-      "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5"
+      "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
     "seconds": 31.8

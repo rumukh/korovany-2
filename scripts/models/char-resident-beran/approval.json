@@ -36,10 +36,10 @@
     },
     {
       "gate": "in-game",
-      "decision": "Ship the calibrated residents, ship-001-q (Recommended)",
-      "decidedAt": "2026-10-02T08:16:47.634893+02:00",
-      "question": "Gate 3 for batch D2, delegated under the standing instruction of 2026-10-01: Beran, Tessa, Ada, Mila and Elin are in the running game at Cinderwell, Hollow Village and the Last Archive (board 127.0.0.1:47885, _reviews/gate3-residents-d2). Rig, weights and clips are identical in both candidates, both are quantized, and both pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the deployed site grows by 3.47 MB and all 23 preloaded models total 23.3 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in 11 of 12 scene and quality pairs (the Last Archive at low quality went 0.8 to 1.1 ms) and draw calls fall by 26 to 108 per scene. Calibrated lifts Beran, Ada, Mila and Elin to their concepts' brightness; Tessa stops at the 0.6 floor at 78% of hers, and the lift turns Ada's plum shawl magenta-pink. As cooked, they stay at 51% to 77% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
-      "sha256": "65fd4295d6c41d78f71225c8546253e6c698da687fce2a3ef23cdb612591ca5d",
+      "decision": "Ship the 23 compressed models (Recommended)",
+      "decidedAt": "2026-10-02T11:34:02.263711+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: all 23 shipped models, with their vertices and triangles reordered for locality and their geometry, skin and animation data compressed with EXT_meshopt_compression (no lossy filters), are in the running game (board 127.0.0.1:47896, _reviews/gate3-meshopt). Files fall 19.7% (23,330,396 to 18,733,460 bytes) and the gzip download GitHub Pages serves 6.9% (17,957,653 to 16,725,201 bytes), for 6,117 gzip bytes of decoder. Every model decodes to the same mesh, skin, clips and images; every frame-verifier metric is unchanged; of 213 game frames 200 are bit-identical and 13 differ in one pixel each; shader programs, draw calls (except +1-2 off-screen submissions in three shots), frame times and preload time show no measurable change. Should I ship the compressed models?",
+      "sha256": "ae9b0bfba3ef0394e9c5b1740af9e5b84a0998f13a437849f111b9d75cc26adf",
       "decidedBy": {
         "mode": "delegated",
         "record": "_reviews/delegation-2026-10-01.json",
@@ -61,6 +61,19 @@
         "record": "_reviews/delegation-2026-10-01.json",
         "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
       }
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "Ship the calibrated residents, ship-001-q (Recommended)",
+      "decidedAt": "2026-10-02T08:16:47.634893+02:00",
+      "question": "Gate 3 for batch D2, delegated under the standing instruction of 2026-10-01: Beran, Tessa, Ada, Mila and Elin are in the running game at Cinderwell, Hollow Village and the Last Archive (board 127.0.0.1:47885, _reviews/gate3-residents-d2). Rig, weights and clips are identical in both candidates, both are quantized, and both pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the deployed site grows by 3.47 MB and all 23 preloaded models total 23.3 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in 11 of 12 scene and quality pairs (the Last Archive at low quality went 0.8 to 1.1 ms) and draw calls fall by 26 to 108 per scene. Calibrated lifts Beran, Ada, Mila and Elin to their concepts' brightness; Tessa stops at the 0.6 floor at 78% of hers, and the lift turns Ada's plum shawl magenta-pink. As cooked, they stay at 51% to 77% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "65fd4295d6c41d78f71225c8546253e6c698da687fce2a3ef23cdb612591ca5d",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      },
+      "superseded": "Re-shipped meshopt-compressed (ship-001-q-m): the same cook with its vertices and triangles reordered for locality (the same vertex data and triangles, with the same winding) and EXT_meshopt_compression without lossy filters; about a fifth fewer bytes and unchanged in the game (_reviews/gate3-meshopt)."
     }
   ]
 }

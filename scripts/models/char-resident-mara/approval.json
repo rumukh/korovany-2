@@ -37,10 +37,10 @@
     },
     {
       "gate": "in-game",
-      "decision": "Ship the quantized residents, ship-003 (Recommended)",
-      "decidedAt": "2026-10-02T00:18:40.906721+02:00",
-      "question": "Gate 3 re-ship for batch D1, delegated under the standing instruction of 2026-10-01: the five residents re-encoded with KHR_mesh_quantization are in the running game (board 127.0.0.1:47876, _reviews/gate3-residents-d1-quantized). They are 34% smaller (5,735,832 to 3,784,064 bytes), which keeps the 30 MB per-campaign preload budget for batch D2. In the game the residents' pixels differ by 0.07/255 on average, every clip frame passes the same verifier, and Mara stays the closest to the strain limits (stretch 1.94 against 2.0). Should I ship the quantized residents?",
-      "sha256": "5f69767ff82cb17a647b0bf656adb1cefb528a030eb292117ebc3487f1b7315b",
+      "decision": "Ship the 23 compressed models (Recommended)",
+      "decidedAt": "2026-10-02T11:34:02.263711+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: all 23 shipped models, with their vertices and triangles reordered for locality and their geometry, skin and animation data compressed with EXT_meshopt_compression (no lossy filters), are in the running game (board 127.0.0.1:47896, _reviews/gate3-meshopt). Files fall 19.7% (23,330,396 to 18,733,460 bytes) and the gzip download GitHub Pages serves 6.9% (17,957,653 to 16,725,201 bytes), for 6,117 gzip bytes of decoder. Every model decodes to the same mesh, skin, clips and images; every frame-verifier metric is unchanged; of 213 game frames 200 are bit-identical and 13 differ in one pixel each; shader programs, draw calls (except +1-2 off-screen submissions in three shots), frame times and preload time show no measurable change. Should I ship the compressed models?",
+      "sha256": "df0275d3b1dcb547f2090795aecfe4148a514ff8c6045822ef4b49bd6864251c",
       "decidedBy": {
         "mode": "delegated",
         "record": "_reviews/delegation-2026-10-01.json",
@@ -75,6 +75,19 @@
         "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
       },
       "superseded": "Re-shipped quantized (ship-003): the exact ship-002 cook with KHR_mesh_quantization vertex data and rotation keys, about a third fewer bytes and visually identical in the game (_reviews/gate3-residents-d1-quantized)."
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "Ship the quantized residents, ship-003 (Recommended)",
+      "decidedAt": "2026-10-02T00:18:40.906721+02:00",
+      "question": "Gate 3 re-ship for batch D1, delegated under the standing instruction of 2026-10-01: the five residents re-encoded with KHR_mesh_quantization are in the running game (board 127.0.0.1:47876, _reviews/gate3-residents-d1-quantized). They are 34% smaller (5,735,832 to 3,784,064 bytes), which keeps the 30 MB per-campaign preload budget for batch D2. In the game the residents' pixels differ by 0.07/255 on average, every clip frame passes the same verifier, and Mara stays the closest to the strain limits (stretch 1.94 against 2.0). Should I ship the quantized residents?",
+      "sha256": "5f69767ff82cb17a647b0bf656adb1cefb528a030eb292117ebc3487f1b7315b",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      },
+      "superseded": "Re-shipped meshopt-compressed (ship-003-m): the same cook with its vertices and triangles reordered for locality (the same vertex data and triangles, with the same winding) and EXT_meshopt_compression without lossy filters; about a fifth fewer bytes and unchanged in the game (_reviews/gate3-meshopt)."
     }
   ]
 }

@@ -78,7 +78,9 @@ describe('cooked hero models', () => {
     expect(gltf.cameras ?? []).toHaveLength(0);
     // Vertex data and rotation keys are quantized (KHR_mesh_quantization; three.js needs no decoder), except the mountain
     // sovereign's: its float skin already sits at the 2.0x strain limit, and rounded weights pushed two clips over it.
-    expect(gltf.extensionsRequired ?? []).toEqual(faction === 'villain' ? ['EXT_texture_webp'] : ['EXT_texture_webp', 'KHR_mesh_quantization']);
+    // Geometry and animation data are then meshopt-compressed without lossy filters (see models.test.ts).
+    expect(gltf.extensionsRequired ?? []).toEqual(faction === 'villain' ? ['EXT_meshopt_compression', 'EXT_texture_webp']
+      : ['EXT_meshopt_compression', 'EXT_texture_webp', 'KHR_mesh_quantization']);
     const joints = gltf.skins![0]!.joints.map(index => gltf.nodes![index]!.name);
     expect(joints.length).toBeLessThanOrEqual(40);
     for (const name of ['root', 'pelvis', 'spine', 'chest', 'head', 'hand_l', 'hand_r', 'foot_l', 'foot_r']) expect(joints).toContain(name);

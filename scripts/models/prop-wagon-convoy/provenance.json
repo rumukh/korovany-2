@@ -4,8 +4,8 @@
   "role": "the player's logistics convoy wagon (the convoy actor of every faction): an open-bed covered wagon drawn by char-draft-ox, carrying prop-cargo-load, its pennant dyed with the faction colour",
   "output": {
     "file": "public/models/prop-wagon-convoy/prop-wagon-convoy.glb",
-    "sha256": "5ceed35badda85e3177408adc7df1535a1091a48f01052d56335e0d547153bf6",
-    "bytes": 1510712
+    "sha256": "b3e5117a142540ba00dbd2d177935dc2a7db0db3b260c248d0ec150b98b7db90",
+    "bytes": 1169768
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from the agent's original grey Blender blockout renders (pipeline/make_wagon_references.py); no cloud generation, third-party image, franchise design or real-person likeness was used as input.",
   "acknowledgment": {
@@ -209,7 +209,7 @@
     },
     "uv": {
       "method": "smart_project",
-      "angleLimitDegrees": 60.0,
+      "angleLimitDegrees": 60,
       "islandMargin": 0.004,
       "sourceAtlasAfterDecimation": {
         "triangles": 14773,
@@ -276,16 +276,16 @@
       "bakeSize": 2048,
       "textureSize": 1024,
       "atlasCoverage": 0.45659637451171875,
-      "dyeFractionOfSurface": 0.0,
-      "metalFractionOfSurface": 0.0,
+      "dyeFractionOfSurface": 0,
+      "metalFractionOfSurface": 0,
       "regionFractions": {
         "canvas": 0.11727404882450249,
         "iron": 0.11056109746520293
       },
       "roughnessMean": 0.8025384545326233,
       "aoMean": 0.619030237197876,
-      "albedoGain": 1.0,
-      "reliefStrength": 4.0,
+      "albedoGain": 1,
+      "reliefStrength": 4,
       "aoSamples": 64,
       "toneGamma": 0.85,
       "toneCalibration": null,
@@ -325,6 +325,50 @@
         }
       ]
     },
+    "geometryCompression": {
+      "extension": "EXT_meshopt_compression",
+      "encoder": "meshoptimizer 0.22.0 (npm)",
+      "script": "meshopt_glb.mjs",
+      "scriptSha256": "9f5914236e6aac82b541e0685ab34f839a1287d50c41b8322724ddf420597ec8",
+      "filters": "none",
+      "reorder": {
+        "method": "meshoptimizer reorderMesh: vertex-cache triangle order, then vertex-fetch vertex order",
+        "primitives": 4,
+        "kept": 0,
+        "vertices": 21048,
+        "triangles": 19757,
+        "check": "a permutation: every vertex keeps its exact attribute bytes, and the triangles are the same, with the same winding, in another order"
+      },
+      "check": "every view decoded again: attribute views byte-identical to the reordered data; triangle index views hold the same triangles in the same order and winding (only the first vertex may rotate)",
+      "views": {
+        "attributes": {
+          "views": 13,
+          "raw": 919664,
+          "packed": 673811
+        },
+        "triangles": {
+          "views": 4,
+          "raw": 118542,
+          "packed": 20894,
+          "rotatedTriangles": 11114
+        },
+        "indices": {
+          "views": 0,
+          "raw": 0,
+          "packed": 0
+        },
+        "stored": 467142
+      },
+      "inputSha256": "5ceed35badda85e3177408adc7df1535a1091a48f01052d56335e0d547153bf6",
+      "bytesBefore": 1510712,
+      "bytesAfter": 1169768
+    },
+    "derivedFrom": {
+      "cook": "real-004",
+      "sha256": "5ceed35badda85e3177408adc7df1535a1091a48f01052d56335e0d547153bf6",
+      "bytes": 1510712,
+      "note": "The exact real-004 output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run."
+    },
     "scripts": {
       "cook_wagon.py": "cf7949927ba57045ccc51cc46dc20c0f5e70e4c9f8654aae476e5f3155b70d2d",
       "k2rig.py": "acacf7ff3039f58271b996b289ecca657d30bc99e195d7b7013e577003a0fc3c",
@@ -332,7 +376,8 @@
       "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
       "k2sheet.py": "0141e81990f6318c974fa018c895e02aa71b9c8ba5e23dbdd741e4881e6f177c",
       "k2uv.py": "da10d5ef3d511a478f07b9b688b7d43fd11ec8f86bada8505ebaf418b6acc3d2",
-      "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b"
+      "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
     "seconds": 24.9,

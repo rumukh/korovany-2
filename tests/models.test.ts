@@ -64,6 +64,7 @@ interface Provenance {
   source: { concept: { sha256: string } };
   cook: {
     scripts: Record<string, string>;
+    geometryCompression?: { extension: string; bytesAfter: number };
     baseEncoding?: {
       settings: { exact: boolean };
       images: { image: string; sha256: string; meanAbsRgbError: { dyed: number; undyed: number } }[];
@@ -101,6 +102,33 @@ describe('cooked 3D models', () => {
     }
   });
 
+  test.each(MODEL_IDS)('%s: geometry, skin and animation data are losslessly meshopt-compressed and need the decoder', async id => {
+    const bytes = glb(id);
+    const { json: gltf } = readGlb(bytes);
+    expect(gltf.extensionsRequired).toContain('EXT_meshopt_compression');
+    // The GLB's binary chunk, and a fallback buffer with no data that only sizes the decoded views.
+    expect(gltf.buffers).toEqual([{ byteLength: expect.any(Number) }, { byteLength: expect.any(Number), extensions: { EXT_meshopt_compression: { fallback: true } } }]);
+    const images = new Set(gltf.images!.map(image => image.bufferView));
+    for (const [index, view] of gltf.bufferViews!.entries()) {
+      const meshopt = view.extensions?.['EXT_meshopt_compression'] as { buffer: number; mode: string; filter?: string } | undefined;
+      if (images.has(index)) {
+        expect(view.buffer, `image view ${index}`).toBe(0);
+        expect(meshopt, `image view ${index}`).toBeUndefined();
+        continue;
+      }
+      // No lossy filter (octahedral, quaternion, exponential): decoding returns the cooked vertices and triangles exactly,
+      // in the order meshopt_glb.mjs gave them for locality.
+      expect(view.buffer, `view ${index}`).toBe(1);
+      expect(meshopt, `view ${index}`).toMatchObject({ buffer: 0, mode: expect.stringMatching(/^(ATTRIBUTES|TRIANGLES|INDICES)$/) });
+      expect(meshopt!.filter ?? 'NONE', `view ${index}`).toBe('NONE');
+    }
+    const { cook } = json<Provenance>(new URL(`${id}/provenance.json`, sources));
+    expect(cook.geometryCompression).toMatchObject({ extension: 'EXT_meshopt_compression', bytesAfter: bytes.byteLength });
+    expect(Object.keys(cook.scripts)).toContain('meshopt_glb.mjs');
+    // Without the decoder the loader refuses the file rather than reading the empty fallback buffer.
+    await expect(parseGlbWithoutTextures(bytes, null)).rejects.toThrow(/setMeshoptDecoder/);
+  });
+
   test('dye-masked base colour keeps its hidden colour: libwebp exact encoding, pinned to the shipped bytes', () => {
     // The base-colour alpha is the faction-dye mask, not coverage. libwebp's default lossy mode discards RGB under
     // alpha 0, which once flattened every undyed surface of the soldier; the cook records the round-trip error.
@@ -123,8 +151,9 @@ describe('cooked 3D models', () => {
     const { json: gltf } = document;
     expect(gltf.skins).toHaveLength(1);
     expect(gltf.cameras ?? []).toHaveLength(0);
-    // Vertex data and rotation keys are quantized (KHR_mesh_quantization; three.js needs no decoder).
-    expect(gltf.extensionsRequired ?? []).toEqual(['EXT_texture_webp', 'KHR_mesh_quantization']);
+    // Vertex data and rotation keys are quantized (KHR_mesh_quantization; three.js needs no decoder), then
+    // meshopt-compressed without lossy filters (EXT_meshopt_compression, decoded by three.js's bundled decoder).
+    expect(gltf.extensionsRequired ?? []).toEqual(['EXT_meshopt_compression', 'EXT_texture_webp', 'KHR_mesh_quantization']);
     const joints = gltf.skins![0]!.joints.map(index => gltf.nodes![index]!.name);
     expect(joints.length).toBeLessThanOrEqual(40);
     for (const name of ['root', 'pelvis', 'head', 'hand_r', 'foot_l', 'foot_r', 'socket_hand_r', 'socket_forearm_l']) expect(joints).toContain(name);

@@ -4,8 +4,8 @@
   "role": "Mila, displaced seamstress (the narrative resident 'mila', presentation only)",
   "output": {
     "file": "public/models/char-resident-mila/char-resident-mila.glb",
-    "sha256": "695b729e5635596d7905f0949fd8883081ff33f0bc51b1b30ea46e17e6fdb3b0",
-    "bytes": 718220
+    "sha256": "b73c48348a23894934004400a30f7a8388b4abe9bf5963dd4bb64de9ffcd539a",
+    "bytes": 571892
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from a plain civilian body template (itself made locally from the approved line-soldier concept with the blank head of an original Blender mannequin) and the resident's own in-game portrait as the identity reference. The portraits are original Korovany II artwork generated earlier for the project with Azure OpenAI gpt-image-2 (public/portraits/manifest.json); they were used here only as local references, with no new cloud generation. No third-party image, franchise design or real-person likeness was used as input.",
   "acknowledgment": {
@@ -206,7 +206,7 @@
     "normalization": {
       "uniformScale": 2.078883932377164,
       "targetHeightMeters": 2.08,
-      "yawDegrees": 0.0
+      "yawDegrees": 0
     },
     "rawTopology": {
       "vertices": 18762,
@@ -244,8 +244,8 @@
       "bakeSize": 2048,
       "textureSize": 1024,
       "atlasCoverage": 0.5078029632568359,
-      "dyeFractionOfSurface": 0.0,
-      "metalFractionOfSurface": 0.0,
+      "dyeFractionOfSurface": 0,
+      "metalFractionOfSurface": 0,
       "toneMatch": [
         {
           "regions": [
@@ -276,8 +276,8 @@
       ],
       "roughnessMean": 0.8460922837257385,
       "aoMean": 0.681128978729248,
-      "albedoGain": 1.0,
-      "reliefStrength": 4.0,
+      "albedoGain": 1,
+      "reliefStrength": 4,
       "aoSamples": 64,
       "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved source mesh, whose back carries the approved rear-view concept projection; tangent normals baked from the source geometry and whiteout-blended with colour relief; AO baked from the decimated geometry; roughness, metalness and dye mask derived from colour inside declared regions. Base colour then lifted by luma power toneGamma after the repairs (chroma ratios kept), calibrated in the game against the approved concept. Artistic derivation, not measured PBR.",
       "toneGamma": 0.649,
@@ -325,7 +325,7 @@
             "dyed": null,
             "undyed": 51.346
           },
-          "undyedFraction": 1.0
+          "undyedFraction": 1
         }
       ]
     },
@@ -370,11 +370,55 @@
       "bytesBefore": 1092536,
       "bytesAfter": 718220
     },
+    "geometryCompression": {
+      "extension": "EXT_meshopt_compression",
+      "encoder": "meshoptimizer 0.22.0 (npm)",
+      "script": "meshopt_glb.mjs",
+      "scriptSha256": "9f5914236e6aac82b541e0685ab34f839a1287d50c41b8322724ddf420597ec8",
+      "filters": "none",
+      "reorder": {
+        "method": "meshoptimizer reorderMesh: vertex-cache triangle order, then vertex-fetch vertex order",
+        "primitives": 1,
+        "kept": 0,
+        "vertices": 8009,
+        "triangles": 9356,
+        "check": "a permutation: every vertex keeps its exact attribute bytes, and the triangles are the same, with the same winding, in another order"
+      },
+      "check": "every view decoded again: attribute views byte-identical to the reordered data; triangle index views hold the same triangles in the same order and winding (only the first vertex may rotate)",
+      "views": {
+        "attributes": {
+          "views": 53,
+          "raw": 286156,
+          "packed": 178256
+        },
+        "triangles": {
+          "views": 1,
+          "raw": 56136,
+          "packed": 10065,
+          "rotatedTriangles": 5969
+        },
+        "indices": {
+          "views": 0,
+          "raw": 0,
+          "packed": 0
+        },
+        "stored": 355842
+      },
+      "inputSha256": "695b729e5635596d7905f0949fd8883081ff33f0bc51b1b30ea46e17e6fdb3b0",
+      "bytesBefore": 718220,
+      "bytesAfter": 571892
+    },
     "derivedFrom": {
-      "cook": "ship-001",
-      "sha256": "63cb9228d7d8f31a11d4f9d7e76406dbb52d760109ff01aa27e13ec87f5d92a7",
-      "bytes": 1092536,
-      "note": "The exact ship-001 output, quantized by quantize_glb.py; the Blender cook was not re-run."
+      "cook": "ship-001-q",
+      "sha256": "695b729e5635596d7905f0949fd8883081ff33f0bc51b1b30ea46e17e6fdb3b0",
+      "bytes": 718220,
+      "note": "The exact ship-001-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "derivedFrom": {
+        "cook": "ship-001",
+        "sha256": "63cb9228d7d8f31a11d4f9d7e76406dbb52d760109ff01aa27e13ec87f5d92a7",
+        "bytes": 1092536,
+        "note": "The exact ship-001 output, quantized by quantize_glb.py; the Blender cook was not re-run."
+      }
     },
     "weights": {
       "method": "bone-heat",
@@ -430,28 +474,28 @@
           "r": 35.1
         },
         "maxReachShortfallMeters": {
-          "l": 0.0,
-          "r": 0.0
+          "l": 0,
+          "r": 0
         }
       },
       {
         "name": "Talk",
         "frames": 360,
-        "seconds": 6.0,
+        "seconds": 6,
         "loop": true,
         "maxWristBendDegrees": {
           "l": 35.1,
           "r": 35.1
         },
         "maxReachShortfallMeters": {
-          "l": 0.0,
-          "r": 0.0
+          "l": 0,
+          "r": 0
         }
       }
     ],
     "animationThinning": {
       "step": 2,
-      "keyRateHz": 30.0,
+      "keyRateHz": 30,
       "outputBytesBefore": 780000,
       "outputBytesAfter": 391200
     },
@@ -472,7 +516,8 @@
       "k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
       "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
       "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
-      "quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f"
+      "quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f",
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
     "seconds": 35.9,

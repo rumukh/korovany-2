@@ -26,10 +26,10 @@
     },
     {
       "gate": "in-game",
-      "decision": "Ship the eight quantized models (Recommended)",
-      "decidedAt": "2026-10-02T01:07:27.343437+02:00",
-      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: the line soldier, archer, captain, both bosses, the elf and guard heroes and the draft ox, re-encoded with KHR_mesh_quantization, are in the running game (board 127.0.0.1:47877, _reviews/gate3-quantized-others). They are 32% smaller (13,867,500 to 9,433,556 bytes); in the game at most 0.008% of a frame's pixels change by more than 8/255, and every clip frame passes the unchanged verifiers. The mountain sovereign stays float because quantization pushed two of its clips over the 2.0x strain limit. Should I ship the quantized models?",
-      "sha256": "72cfb27335ecc3a84bee2ed1bbc878ff0c80c4b4145d2c3c43d4ce8fbba241f3",
+      "decision": "Ship the 23 compressed models (Recommended)",
+      "decidedAt": "2026-10-02T11:34:02.263711+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: all 23 shipped models, with their vertices and triangles reordered for locality and their geometry, skin and animation data compressed with EXT_meshopt_compression (no lossy filters), are in the running game (board 127.0.0.1:47896, _reviews/gate3-meshopt). Files fall 19.7% (23,330,396 to 18,733,460 bytes) and the gzip download GitHub Pages serves 6.9% (17,957,653 to 16,725,201 bytes), for 6,117 gzip bytes of decoder. Every model decodes to the same mesh, skin, clips and images; every frame-verifier metric is unchanged; of 213 game frames 200 are bit-identical and 13 differ in one pixel each; shader programs, draw calls (except +1-2 off-screen submissions in three shots), frame times and preload time show no measurable change. Should I ship the compressed models?",
+      "sha256": "3b7dba7f6eaf9330a2012ddd8a8b3a8d239b8105c65139c2b90bc85818caf1be",
       "decidedBy": {
         "mode": "delegated",
         "record": "_reviews/delegation-2026-10-01.json",
@@ -54,6 +54,19 @@
       "question": "Gate 3 for batch B: the archer, captain, Commander Raut and the Palace Marshal are in the running game. The board is at 127.0.0.1:47846, and you can play the calibrated build at :47852 or the as-cooked build at :47853. Both candidates pass every per-frame clip check and reject all 24 deliberately broken copies, and the existing gameplay, save and campaign tests pass unchanged. Measured cost: the deployed site grows by 7.57 MB. At high quality, combat frames are as fast or faster and draw calls fall by about 55%, but triangles rise to 546k against the 400k budget. Calibrated lifts the bosses to their concepts' brightness. The archer and captain reach only 87% and 76% of theirs, and the lift makes the sleeves more orange and the steel lighter. This is not AAA: hands are mittens, faces are soft, the backs are projected paintings with smears, the clips are procedural and the weapons are low-poly. Which should I ship?",
       "sha256": "8f657d72c0cb494a3047ff0990bd968538b7b43ccf90483472ead23f8b108c98",
       "superseded": "Re-shipped quantized: the exact same cook with KHR_mesh_quantization vertex data and rotation keys, about a third fewer bytes and visually identical in the game (_reviews/gate3-quantized-others)."
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "Ship the eight quantized models (Recommended)",
+      "decidedAt": "2026-10-02T01:07:27.343437+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: the line soldier, archer, captain, both bosses, the elf and guard heroes and the draft ox, re-encoded with KHR_mesh_quantization, are in the running game (board 127.0.0.1:47877, _reviews/gate3-quantized-others). They are 32% smaller (13,867,500 to 9,433,556 bytes); in the game at most 0.008% of a frame's pixels change by more than 8/255, and every clip frame passes the unchanged verifiers. The mountain sovereign stays float because quantization pushed two of its clips over the 2.0x strain limit. Should I ship the quantized models?",
+      "sha256": "72cfb27335ecc3a84bee2ed1bbc878ff0c80c4b4145d2c3c43d4ce8fbba241f3",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      },
+      "superseded": "Re-shipped meshopt-compressed: the same cook with its vertices and triangles reordered for locality (the same vertex data and triangles, with the same winding) and EXT_meshopt_compression without lossy filters; about a fifth fewer bytes and unchanged in the game (_reviews/gate3-meshopt)."
     }
   ]
 }
