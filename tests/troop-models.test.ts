@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import * as THREE from 'three';
 import { createCampaign, type FactionId, type GameSnapshot } from '../src/game';
 import { Presentation } from '../src/view';
@@ -9,6 +9,11 @@ import {
 import { ViewResources } from '../src/view/resources';
 import { brokenVariants, verifyMotion, type MotionContract } from './character-motion';
 import { imageBytes, imageSize, parseGlbWithoutTextures, readGlb } from './glb';
+import { yieldRunner } from './faction-driver';
+
+// GLB parsing and per-frame verification settle on microtasks only; yield a macrotask between tests so the worker
+// reads vitest's RPC replies (a file that never yields trips the 60 s onTaskUpdate timeout).
+afterEach(yieldRunner);
 
 const glb = (id: ModelId) => new Uint8Array(readFileSync(new URL(`../public/models/${id}/${id}.glb`, import.meta.url)));
 const nodeSource = { load: (id: ModelId) => parseGlbWithoutTextures(glb(id)) };

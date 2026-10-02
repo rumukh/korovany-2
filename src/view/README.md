@@ -118,7 +118,7 @@ heraldry distinguishes locked, unlocked and defeated states without a false gate
 
 ## Cooked 3D models
 
-Eighteen cooked glTF models replace procedural presentation: the troops (the line
+Twenty-three cooked glTF models replace procedural presentation: the troops (the line
 soldier, the road archer, the infantry captain and two bosses, Commander Raut and
 the Palace Marshal, in `public/models/char-line-soldier/`, `char-archer/`,
 `char-captain/`, `char-boss-raut/` and `char-boss-marshal/`), used by every
@@ -129,11 +129,13 @@ Cinderwell structure; one hero per faction (`public/models/char-hero-elf/`,
 the logistics convoy (`public/models/prop-wagon-convoy/`) with its cargo load
 (`prop-cargo-load/`), the Crown shipment and every other `caravan` actor
 (`prop-wagon-shipment/`), and the draft ox that pulls both (`char-draft-ox/`); and
-the first five named residents, the home residents of each campaign
+ten named residents: the home residents of each campaign and the Roadward pair
 (`public/models/char-resident-toman/`, `char-resident-lida/`,
-`char-resident-vesk/`, `char-resident-ren/` and `char-resident-mara/`).
-`residentModelFor()` maps a narrative NPC id to its model; the other fifteen
-residents keep their procedural figures until their batch ships.
+`char-resident-vesk/`, `char-resident-ren/` and `char-resident-mara/`), and the
+residents of Cinderwell, Hollow Village and the Last Archive (`char-resident-beran/`,
+`char-resident-tessa/`, `char-resident-ada/`, `char-resident-mila/` and
+`char-resident-elin/`). `residentModelFor()` maps a narrative NPC id to its model;
+the other ten residents keep their procedural figures until their batch ships.
 `troopModelFor()` picks the troop for an actor kind and faction: the Palace
 Marshal is the Crown's (guard) boss, Raut the mountain army's. `ModelLibrary`
 (`models.ts`) starts loading them through `GLTFLoader` as the page opens, behind
@@ -282,8 +284,9 @@ warmed programs and stops with an asset error when a wagon model is missing.
 `tests/resident-models.test.ts` checks each resident's structure (one skinned body
 within 10,000 triangles, WebP maps, its height and +Z facing), verifies every 60 Hz
 frame of Idle and Talk as planted loops with six broken copies that must fail, and
-drives the residents through `WorldResidents` with real campaign snapshots: home
-and Roadward residents are cooked on the shared program, the others stay
+drives the residents through `WorldResidents` with real campaign snapshots: home,
+Roadward, Cinderwell, Hollow Village and Last Archive residents (each location
+reached by a real walk) are cooked on the shared program, the others stay
 procedural, Talk follows the open conversation on render time, reduced motion holds
 still, removal and disposal release their clones, and a missing model fails instead
 of falling back. `tests/residents-browser.test.ts` decodes their textures, renders
