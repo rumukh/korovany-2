@@ -1,0 +1,67 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-resident-oss",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Oss v1 seed 14502 (Recommended)",
+      "decidedAt": "2026-10-02T12:31:48.398039+02:00",
+      "question": "Gate 1, batch D3, delegated under the standing instruction of 2026-10-01: which concept should Oss, ferryman of the Lantern Ferry, use? Board 127.0.0.1:47891 (_reviews/gate1-residents-d3): 14502 (recommended: the portrait's broad heavy face and knotted rope collar tie; coil at the side seam, clear of the hand), 14501 (clean costume but a narrower face and no collar tie), 14503 (rope wound as a belt, coil beside the hand).",
+      "sha256": "027f7bf6f95e990500669494c3d003cfc84162c4841f733796f84c479e41c1cc",
+      "approvedFileSha256": "eaa1c6ab854fbd12574bdc3ac7675dfb59f9455a64a14c326d1625f58ebdb5cd",
+      "pixelSha256": "5ab8bfdf03d96787b185ab69b48eeb6fc4e5486c02807e7bcfa7db9e0647890e",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+        "delegatedAt": "2026-10-01T10:52:52.040+02:00"
+      }
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve HD s101 and add a projected rear-view concept (Recommended)",
+      "decidedAt": "2026-10-02T13:18:30.909261+02:00",
+      "question": "Gate 2, batch D3, delegated under the standing instruction of 2026-10-01: which raw TRELLIS mesh should Oss be cooked from? Board 127.0.0.1:47893 (_reviews/gate2-residents-d3).",
+      "sha256": "9ade78772ab66e2dde3743890077a30378a7e84d0c4581cd5ccf83f2383be95a",
+      "candidate": "hd-s101",
+      "conditions": [
+        "Add a rear-view concept (two local Qwen candidates) and project it in the cook; the raw back is near black.",
+        "Mid-thigh coat: coat-skirt hem panels; the rope coil at the side seam is weighted to the hip and thigh and checked for stretch on every frame.",
+        "Decimate to at most 9,500 triangles; rig with the shared humanoid skeleton and author Idle and Talk."
+      ],
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated residents, ship-001-q-m (Recommended)",
+      "decidedAt": "2026-10-02T17:27:57.123230+02:00",
+      "question": "Gate 3 for batch D3, delegated under the standing instruction of 2026-10-01: Lev, Yara, Nika, Radek and Oss are in the running game at the Star Monastery, Thornwatch, the High Pass, the Bell Foundry and the Lantern Ferry (board 127.0.0.1:47895, _reviews/gate3-residents-d3). Rig, weights and clips are identical in both candidates, both are quantized and meshopt-compressed, and both pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the five GLBs add 2.66 MB (2.43 MB as served) and all 28 preloaded models total 20.1 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in all 20 scene and quality pairs and draw calls fall by 26 to 52 per scene; in SwiftShader p50 is up to 2.8% higher. Calibrated lifts all five to their concepts' brightness; the lift reddens Oss's painted back and brightens Radek's teal hem speckles. As cooked, they stay at 55% to 65% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "446d611b1e3f3bba889ae1e11c6bea99f92dea6b63f26ae265db2f2d2af0573a",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Use rear 17502 (Recommended)",
+      "decidedAt": "2026-10-02T16:34:42.992789+02:00",
+      "question": "Gate 1 (rear view), batch D3, delegated under the standing instruction of 2026-10-01: which rear-view concept should Oss's cook project onto the back? Board 127.0.0.1:47894 (_reviews/gate1-rear-residents-d3): 17502 (recommended: one continuous tarred yoke, pleated coat, knit cap), 17501 (two separate pads with pale highlights that read as white patches at 18 m).",
+      "sha256": "c70cfc1d6a3f9c1d1d3179d8f07c33e7e42b834949735d8fb25610249094f016",
+      "approvedFileSha256": "2b2733f3b157640211b75ef3604e55774afded67aed5e94bdc1dc8a4b2633a36",
+      "pixelSha256": "633f4dda88e8a16b45e4492d40e7085499c74d28d2883d504ed34bd0e99710dc",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-resident-lev",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Lev v1 seed 14101 (Recommended)",
+      "decidedAt": "2026-10-02T12:31:47.868489+02:00",
+      "question": "Gate 1, batch D3, delegated under the standing instruction of 2026-10-01: which concept should Lev, steward of the Star Monastery, use? Board 127.0.0.1:47891 (_reviews/gate1-residents-d3): 14101 (recommended: closest to the portrait, plain belt, narrow ankle-length robe), 14102 (orange pendant not in the portrait, muddied hem), 14103 (widest flaring hem).",
+      "sha256": "2900eb245b2271135967f5c4e1cd7bb3c1129852b12957745ed3e1d7dec1c625",
+      "approvedFileSha256": "2c952478d7a1b86c7bdc6452d1fb73950668298a43ff8d16a0babc1a91278bc4",
+      "pixelSha256": "ce738d8d8241042616880b8df6c1e8c6cea87fc84d7895cfe4dc9ac383db60cd",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+        "delegatedAt": "2026-10-01T10:52:52.040+02:00"
+      }
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve HD s42 and add a projected rear-view concept (Recommended)",
+      "decidedAt": "2026-10-02T13:18:30.238100+02:00",
+      "question": "Gate 2, batch D3, delegated under the standing instruction of 2026-10-01: which raw TRELLIS mesh should Lev be cooked from? Board 127.0.0.1:47893 (_reviews/gate2-residents-d3).",
+      "sha256": "0ac143d4c83531c6c311687fe1275a78d11ee272cf223c57a0d293435a8fd2ca",
+      "candidate": "hd-s42",
+      "conditions": [
+        "Add a rear-view concept (two local Qwen candidates) and project it in the cook; the raw back is near black.",
+        "Ankle-length robe: hem panels from the hips to the ankles, as for Ada's dress; the shawl hood stays on the chest, clavicles and neck.",
+        "Decimate to at most 9,500 triangles; rig with the shared humanoid skeleton and author Idle and Talk."
+      ],
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated residents, ship-001-q-m (Recommended)",
+      "decidedAt": "2026-10-02T17:27:57.123230+02:00",
+      "question": "Gate 3 for batch D3, delegated under the standing instruction of 2026-10-01: Lev, Yara, Nika, Radek and Oss are in the running game at the Star Monastery, Thornwatch, the High Pass, the Bell Foundry and the Lantern Ferry (board 127.0.0.1:47895, _reviews/gate3-residents-d3). Rig, weights and clips are identical in both candidates, both are quantized and meshopt-compressed, and both pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the five GLBs add 2.66 MB (2.43 MB as served) and all 28 preloaded models total 20.1 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in all 20 scene and quality pairs and draw calls fall by 26 to 52 per scene; in SwiftShader p50 is up to 2.8% higher. Calibrated lifts all five to their concepts' brightness; the lift reddens Oss's painted back and brightens Radek's teal hem speckles. As cooked, they stay at 55% to 65% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "43fee589255fa8a493f20d54221c4cf14e03b4a27beee98480b5a0c8c34edb4b",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Use rear 17102 (Recommended)",
+      "decidedAt": "2026-10-02T16:34:42.650118+02:00",
+      "question": "Gate 1 (rear view), batch D3, delegated under the standing instruction of 2026-10-01: which rear-view concept should Lev's cook project onto the back? Board 127.0.0.1:47894 (_reviews/gate1-rear-residents-d3): 17102 (recommended: cream hood and plain robe, clean nape), 17101 (skin-coloured smear across the hood at the nape).",
+      "sha256": "ad3cc76b1a2d764217b5d415f667cfbeb827abf39f12133eb14a92ff1ba80dc5",
+      "approvedFileSha256": "eabb09260e646ee83a761101aa5fb34c13033dbb38e25ef2cc9fc5d43355e1fc",
+      "pixelSha256": "13b1ce38f2c160dae0550660777ac559a2c5162dd58ce05e72f4d83364346ab3",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-resident-nika",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Nika v1 seed 14301 (Recommended)",
+      "decidedAt": "2026-10-02T12:31:48.122881+02:00",
+      "question": "Gate 1, batch D3, delegated under the standing instruction of 2026-10-01: which concept should Nika, guide of the High Pass, use? Board 127.0.0.1:47891 (_reviews/gate1-residents-d3): 14301 (recommended: portrait hood, collar and coat; rope coil flat on the coat front), 14302 (coil hanging free beside the right hand), 14303 (same free coil on a separate strap).",
+      "sha256": "69dc225476d17dbbf93ccf7196aafbab57b5c5700a4c85eb2007171e4663a847",
+      "approvedFileSha256": "ba1eff0b2b4c26e1d8207a0f1b82c0ef48c84eb3414960e809be3b6b35a8944d",
+      "pixelSha256": "b265dc0b1c39a7eb8787d697963fe8409d472194ae952722b707cdebdf04a318",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+        "delegatedAt": "2026-10-01T10:52:52.040+02:00"
+      }
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve HD s42 and add a projected rear-view concept (Recommended)",
+      "decidedAt": "2026-10-02T13:18:30.528430+02:00",
+      "question": "Gate 2, batch D3, delegated under the standing instruction of 2026-10-01: which raw TRELLIS mesh should Nika be cooked from? Board 127.0.0.1:47893 (_reviews/gate2-residents-d3).",
+      "sha256": "90c1f6251fd9f6c9bc100aa54c4f892770626a6ce466622c50a5f2ef5c1db8c0",
+      "candidate": "hd-s42",
+      "conditions": [
+        "Add a rear-view concept (two local Qwen candidates) and project it in the cook; the raw back is near black.",
+        "Knee-length coat: coat-skirt hem panels; the separate 1,220-vertex piece is weighted by proximity, as Elin's lower legs were.",
+        "Decimate to at most 9,500 triangles; rig with the shared humanoid skeleton and author Idle and Talk."
+      ],
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated residents, ship-001-q-m (Recommended)",
+      "decidedAt": "2026-10-02T17:27:57.123230+02:00",
+      "question": "Gate 3 for batch D3, delegated under the standing instruction of 2026-10-01: Lev, Yara, Nika, Radek and Oss are in the running game at the Star Monastery, Thornwatch, the High Pass, the Bell Foundry and the Lantern Ferry (board 127.0.0.1:47895, _reviews/gate3-residents-d3). Rig, weights and clips are identical in both candidates, both are quantized and meshopt-compressed, and both pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the five GLBs add 2.66 MB (2.43 MB as served) and all 28 preloaded models total 20.1 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in all 20 scene and quality pairs and draw calls fall by 26 to 52 per scene; in SwiftShader p50 is up to 2.8% higher. Calibrated lifts all five to their concepts' brightness; the lift reddens Oss's painted back and brightens Radek's teal hem speckles. As cooked, they stay at 55% to 65% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "7aba4521c2e55a08248805cfc7d3d8ebf6b03a7149a7c6d809386c5361d59239",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Use rear 17301 (Recommended)",
+      "decidedAt": "2026-10-02T16:34:42.824980+02:00",
+      "question": "Gate 1 (rear view), batch D3, delegated under the standing instruction of 2026-10-01: which rear-view concept should Nika's cook project onto the back? Board 127.0.0.1:47894 (_reviews/gate1-rear-residents-d3): 17301 (recommended: hood, sheepskin collar, rope crossing the back as approved), 17302 (loose rope coil at the hip, hood painted as a knitted cap).",
+      "sha256": "67a90436a21134555115ccc57590e41c974398430a6b1d6f770641a4e9c06158",
+      "approvedFileSha256": "9a033b38eb96f56a54fd24f615326d7cf2b0c48dcda31941f358d5bb9c0ee7f5",
+      "pixelSha256": "231f0e964e2f8adebd638311fa9138c863f659c92b6d20611f4607da784dccb0",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ]
+}

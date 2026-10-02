@@ -182,11 +182,17 @@ describe('residents without a DOM', () => {
     }
   }, 60_000);
 
-  // Batch D2: the Cinderwell pair, the Hollow Village pair and Elin at the Last Archive, each reached by a real walk.
+  // Batch D2: the Cinderwell pair, the Hollow Village pair and Elin at the Last Archive; batch D3: Lev, Yara, Nika, Radek
+  // and Oss at their own locations. Each is reached by a real walk.
   test.each([
     ['cinderwell', 'elf', ['beran', 'tessa']],
     ['hollow-village', 'guard', ['ada', 'mila']],
     ['last-archive', 'guard', ['elin']],
+    ['star-monastery', 'villain', ['lev']],
+    ['thornwatch', 'elf', ['yara']],
+    ['high-pass', 'villain', ['nika']],
+    ['bell-foundry', 'guard', ['radek']],
+    ['lantern-ferry', 'guard', ['oss']],
   ] as const)('%s shows its residents cooked', async (location, faction, npcs) => {
     const models = await library();
     const resources = new ViewResources(undefined, 1, models);

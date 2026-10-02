@@ -8,13 +8,15 @@ export type HeroFaction = 'elf' | 'guard' | 'villain';
 export type HeroModelId = `char-hero-${HeroFaction}`;
 export type TroopModelId = 'char-line-soldier' | 'char-archer' | 'char-captain' | 'char-boss-raut' | 'char-boss-marshal';
 export type WagonModelId = 'prop-wagon-convoy' | 'prop-wagon-shipment';
-export type ResidentNpc = 'toman' | 'lida' | 'vesk' | 'ren' | 'mara' | 'beran' | 'tessa' | 'ada' | 'mila' | 'elin';
+export type ResidentNpc = 'toman' | 'lida' | 'vesk' | 'ren' | 'mara' | 'beran' | 'tessa' | 'ada' | 'mila' | 'elin'
+  | 'lev' | 'yara' | 'nika' | 'radek' | 'oss';
 export type ResidentModelId = `char-resident-${ResidentNpc}`;
 export type ModelId = TroopModelId | 'prop-echo-well' | HeroModelId | WagonModelId | 'char-draft-ox' | 'prop-cargo-load' | ResidentModelId;
 export const MODEL_IDS: readonly ModelId[] = ['char-line-soldier', 'prop-echo-well', 'char-hero-elf', 'char-hero-guard', 'char-hero-villain',
   'char-archer', 'char-captain', 'char-boss-raut', 'char-boss-marshal', 'prop-wagon-convoy', 'prop-wagon-shipment', 'char-draft-ox',
   'prop-cargo-load', 'char-resident-toman', 'char-resident-lida', 'char-resident-vesk', 'char-resident-ren', 'char-resident-mara',
-  'char-resident-beran', 'char-resident-tessa', 'char-resident-ada', 'char-resident-mila', 'char-resident-elin'];
+  'char-resident-beran', 'char-resident-tessa', 'char-resident-ada', 'char-resident-mila', 'char-resident-elin',
+  'char-resident-lev', 'char-resident-yara', 'char-resident-nika', 'char-resident-radek', 'char-resident-oss'];
 
 export type CharacterClip = 'Idle' | 'AtEase' | 'Run' | 'Windup' | 'Strike' | 'Recovery' | 'Hit' | 'Death';
 export const CHARACTER_CLIPS: readonly CharacterClip[] = ['Idle', 'AtEase', 'Run', 'Windup', 'Strike', 'Recovery', 'Hit', 'Death'];
@@ -128,6 +130,11 @@ export const RESIDENTS: Readonly<Record<ResidentNpc, { id: ResidentModelId; heig
   ada: { id: 'char-resident-ada', height: 2 },
   mila: { id: 'char-resident-mila', height: 2.08 },
   elin: { id: 'char-resident-elin', height: 2.2 },
+  lev: { id: 'char-resident-lev', height: 2.12 },
+  yara: { id: 'char-resident-yara', height: 2.1 },
+  nika: { id: 'char-resident-nika', height: 2.06 },
+  radek: { id: 'char-resident-radek', height: 2.16 },
+  oss: { id: 'char-resident-oss', height: 2.14 },
 };
 
 /** The cooked model for a narrative NPC id, or undefined while that resident is still procedural. */

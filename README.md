@@ -112,10 +112,11 @@ The line soldier worn by every faction's soldiers, the road archer, the infantry
 captain, the two bosses (Commander Raut and the Palace Marshal), the Echo Well,
 the three faction heroes (the elf ranger, the palace officer and the
 mountain sovereign), both wagons (the logistics convoy and the Crown ward-glass
-shipment), the draft ox that pulls them, the convoy's cargo load and ten of the
+shipment), the draft ox that pulls them, the convoy's cargo load and fifteen of the
 twenty named residents (Toman, Lida, Vesk, Ren and Mara at home and on the road;
 Beran and Tessa at Cinderwell; Ada and Mila at Hollow Village; Elin at the Last
-Archive) are cooked glTF models (`public/models`) instead of procedural meshes. Their concepts were generated
+Archive; Lev at the Star Monastery, Yara at Thornwatch, Nika at the High Pass,
+Radek at the Bell Foundry and Oss at the Lantern Ferry) are cooked glTF models (`public/models`) instead of procedural meshes. Their concepts were generated
 locally with Qwen Image Edit Plus 2511, from original Blender reference renders
 (for the archer, captain and bosses, the approved soldier concept with a blank
 mannequin head; for the residents, plain civilian body templates derived from it;
@@ -142,10 +143,10 @@ presenting a run and stops with an explicit asset error if any fails to load.
 
 **Licensing limitation:** TRELLIS code and weights are MIT-licensed, but its
 textured export depends on components restricted to research and evaluation.
-No commercial clearance exists for these twenty-three models; the project owner
+No commercial clearance exists for these twenty-eight models; the project owner
 acknowledged publishing them here. Concepts, recipes, provenance, approvals and
 the cooking scripts are in `scripts/models`. The rest of the world, including the
-other ten residents and most props, is still procedural, so the models
+other five residents and most props, is still procedural, so the models
 currently read as more realistic than their surroundings. They are not AAA
 assets: see each `provenance.json` for measured limitations.
 
@@ -478,7 +479,7 @@ deployment. Local builds do not require GitHub.
 Aegis packages declare MIT; Three.js is MIT. Runtime notices are included in
 [`public/THIRD_PARTY_NOTICES.txt`](public/THIRD_PARTY_NOTICES.txt) and copied into
 the production build. The engine remains pinned with its upstream provenance.
-The sequel uses newly authored procedural visuals, twenty-three locally generated and
+The sequel uses newly authored procedural visuals, twenty-eight locally generated and
 cooked 3D models (research/evaluation-only TRELLIS export, see "Cooked 3D
 models" above) and original audio rather than copying the original game's
 implementation or asset library. No project-wide redistribution license is
