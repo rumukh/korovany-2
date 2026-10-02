@@ -25,10 +25,25 @@
     },
     {
       "gate": "in-game",
+      "decision": "Ship the 23 compressed models (Recommended)",
+      "decidedAt": "2026-10-02T11:34:02.263711+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: all 23 shipped models, with their vertices and triangles reordered for locality and their geometry, skin and animation data compressed with EXT_meshopt_compression (no lossy filters), are in the running game (board 127.0.0.1:47896, _reviews/gate3-meshopt). Files fall 19.7% (23,330,396 to 18,733,460 bytes) and the gzip download GitHub Pages serves 6.9% (17,957,653 to 16,725,201 bytes), for 6,117 gzip bytes of decoder. Every model decodes to the same mesh, skin, clips and images; every frame-verifier metric is unchanged; of 213 game frames 200 are bit-identical and 13 differ in one pixel each; shader programs, draw calls (except +1-2 off-screen submissions in three shots), frame times and preload time show no measurable change. Should I ship the compressed models?",
+      "sha256": "e9c1fef8676fa45ec72bacd17ee68d677fa6592ae032fff722404bb85a8baafe",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "in-game:superseded",
       "decision": "Approve all four for delivery: convoy real-004, shipment real-005, ox real-008, cargo real-002 (Recommended)",
       "decidedAt": "2026-10-01T09:21:53.151717+02:00",
       "question": "Gate 3 for batch C: the convoy wagon, Crown shipment, draft ox and cargo load are in the running game. The review board is open (127.0.0.1:47870), and you can play this branch's build at 127.0.0.1:47871. After the first captures, I fixed one defect. The pennant was edge-on from straight behind, so a hostile shipment's red nearly vanished. It's now enlarged and rippled, and it reads from behind. All wagon tests pass: 20/20, including every frame of every ox clip. All six deliberately broken copies are rejected, and the 9 browser tests pass. Measured cost: the site grows by 4.46 MB. On this GPU every scene is as fast or faster, and draw calls fall 30-65%. Triangles rise, so elf combat at high quality reaches 594k against the 400k budget. Under SwiftShader, frame time is within -2% to +5% of main. This is not AAA: the far sides and backs are invented; each body has a single painted albedo; the ox has cap hooves, painted eyes and a fused tail, and its gaits are procedural (canters at wagon speed); the shipment's glass is painted; and the pennant and canvas don't move. Do you approve delivery?",
-      "sha256": "809496bec456a82db6c6593ca8f1554aadf5dc5b9119efb6611f29efcd5e4b7d"
+      "sha256": "809496bec456a82db6c6593ca8f1554aadf5dc5b9119efb6611f29efcd5e4b7d",
+      "superseded": "Re-shipped meshopt-compressed: the same cook with its vertices and triangles reordered for locality (the same vertex data and triangles, with the same winding) and EXT_meshopt_compression without lossy filters; about a fifth fewer bytes and unchanged in the game (_reviews/gate3-meshopt)."
     }
   ]
 }

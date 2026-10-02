@@ -4,8 +4,8 @@
   "role": "forest elf resistance defender (player, elf faction)",
   "output": {
     "file": "public/models/char-hero-elf/char-hero-elf.glb",
-    "sha256": "d7d9481b9300ae059f2499479f4169b92f233a52f3756ef48cc300f6008d2faf",
-    "bytes": 1294604
+    "sha256": "3aef54d767e1725de81922ca35dd230f59aaba440bc9d793c333bbb4e4bb0172",
+    "bytes": 1046544
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from the approved line-soldier concept (with its head replaced by the blank head of an original Blender mannequin) and the game's own portrait of the hero, an original Korovany II artwork generated earlier with Azure OpenAI gpt-image-2 and used here only as a local identity reference; no new cloud generation, third-party image, franchise design or real-person likeness was used.",
   "acknowledgment": {
@@ -184,7 +184,7 @@
     "normalization": {
       "uniformScale": 2.340415081088172,
       "targetHeightMeters": 2.34,
-      "yawDegrees": 0.0
+      "yawDegrees": 0
     },
     "rawTopology": {
       "vertices": 22983,
@@ -222,7 +222,7 @@
       "bakeSize": 2048,
       "textureSize": 1024,
       "atlasCoverage": 0.5653743743896484,
-      "dyeFractionOfSurface": 0.0,
+      "dyeFractionOfSurface": 0,
       "metalFractionOfSurface": 0.0036502383450453583,
       "toneMatch": [
         {
@@ -280,8 +280,8 @@
       ],
       "roughnessMean": 0.7839543223381042,
       "aoMean": 0.6488690972328186,
-      "albedoGain": 1.0,
-      "reliefStrength": 4.0,
+      "albedoGain": 1,
+      "reliefStrength": 4,
       "aoSamples": 64,
       "toneGamma": 0.69,
       "toneCalibration": "Luma power fitted in the game so the hero's mean luma from the default follow camera (world yaw pi, pitch 0.48, 18 and 26 m, 8 facings, high and low quality, hero-only pixels) equals the approved TRELLIS input's foreground mean luma (42.7/255); 23.0/255 as cooked without it.",
@@ -323,7 +323,7 @@
             "dyed": null,
             "undyed": 37.434
           },
-          "undyedFraction": 1.0
+          "undyedFraction": 1
         },
         {
           "image": "items-base",
@@ -342,7 +342,7 @@
             "dyed": null,
             "undyed": 47.724
           },
-          "undyedFraction": 1.0
+          "undyedFraction": 1
         }
       ]
     },
@@ -386,11 +386,55 @@
       "bytesBefore": 1982008,
       "bytesAfter": 1294604
     },
+    "geometryCompression": {
+      "extension": "EXT_meshopt_compression",
+      "encoder": "meshoptimizer 0.22.0 (npm)",
+      "script": "meshopt_glb.mjs",
+      "scriptSha256": "9f5914236e6aac82b541e0685ab34f839a1287d50c41b8322724ddf420597ec8",
+      "filters": "none",
+      "reorder": {
+        "method": "meshoptimizer reorderMesh: vertex-cache triangle order, then vertex-fetch vertex order",
+        "primitives": 3,
+        "kept": 0,
+        "vertices": 14136,
+        "triangles": 15739,
+        "check": "a permutation: every vertex keeps its exact attribute bytes, and the triangles are the same, with the same winding, in another order"
+      },
+      "check": "every view decoded again: attribute views byte-identical to the reordered data; triangle index views hold the same triangles in the same order and winding (only the first vertex may rotate)",
+      "views": {
+        "attributes": {
+          "views": 411,
+          "raw": 592324,
+          "packed": 364258
+        },
+        "triangles": {
+          "views": 3,
+          "raw": 94434,
+          "packed": 16780,
+          "rotatedTriangles": 9649
+        },
+        "indices": {
+          "views": 0,
+          "raw": 0,
+          "packed": 0
+        },
+        "stored": 499880
+      },
+      "inputSha256": "d7d9481b9300ae059f2499479f4169b92f233a52f3756ef48cc300f6008d2faf",
+      "bytesBefore": 1294604,
+      "bytesAfter": 1046544
+    },
     "derivedFrom": {
-      "cook": "full-004",
-      "sha256": "c300775b79ecc19b09754560abe1096132fcb0b85a6e9aad1b23eeec59e195ca",
-      "bytes": 1982008,
-      "note": "The exact full-004 output, quantized by quantize_glb.py; the Blender cook was not re-run."
+      "cook": "full-004-q",
+      "sha256": "d7d9481b9300ae059f2499479f4169b92f233a52f3756ef48cc300f6008d2faf",
+      "bytes": 1294604,
+      "note": "The exact full-004-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "derivedFrom": {
+        "cook": "full-004",
+        "sha256": "c300775b79ecc19b09754560abe1096132fcb0b85a6e9aad1b23eeec59e195ca",
+        "bytes": 1982008,
+        "note": "The exact full-004 output, quantized by quantize_glb.py; the Blender cook was not re-run."
+      }
     },
     "weights": {
       "method": "bone-heat",
@@ -448,13 +492,13 @@
         "seconds": 2.4,
         "loop": true,
         "maxWristBendDegrees": {
-          "l": 20.0,
-          "r": 5.0,
-          "lAt": 0.0,
-          "rAt": 0.0
+          "l": 20,
+          "r": 5,
+          "lAt": 0,
+          "rAt": 0
         },
         "maxReachShortfallMeters": {
-          "l": 0.0,
+          "l": 0,
           "r": 0.094
         }
       },
@@ -465,7 +509,7 @@
         "loop": true,
         "maxWristBendDegrees": {
           "l": 51.2,
-          "r": 5.0,
+          "r": 5,
           "lAt": 2.4,
           "rAt": 2.4
         },
@@ -481,21 +525,21 @@
         "loop": true,
         "speed": 7.6,
         "direction": [
-          0.0,
-          -1.0
+          0,
+          -1
         ],
         "stride": 3.9266666666666667,
         "duty": 0.2,
-        "hipYaw": 0.0,
+        "hipYaw": 0,
         "maxWristBendDegrees": {
           "l": 34.7,
-          "r": 5.0,
+          "r": 5,
           "lAt": 3.2,
           "rAt": 3.2
         },
         "maxReachShortfallMeters": {
-          "l": 0.0,
-          "r": 0.0
+          "l": 0,
+          "r": 0
         }
       },
       {
@@ -505,21 +549,21 @@
         "loop": true,
         "speed": 7.6,
         "direction": [
-          0.0,
-          1.0
+          0,
+          1
         ],
         "stride": 3.9266666666666667,
         "duty": 0.2,
-        "hipYaw": -0.0,
+        "hipYaw": 0,
         "maxWristBendDegrees": {
           "l": 34.7,
-          "r": 5.0,
+          "r": 5,
           "lAt": 0.5,
           "rAt": 0.5
         },
         "maxReachShortfallMeters": {
-          "l": 0.0,
-          "r": 0.0
+          "l": 0,
+          "r": 0
         }
       },
       {
@@ -529,21 +573,21 @@
         "loop": true,
         "speed": 7.6,
         "direction": [
-          1.0,
-          0.0
+          1,
+          0
         ],
         "stride": 3.9266666666666667,
         "duty": 0.2,
-        "hipYaw": 45.0,
+        "hipYaw": 45,
         "maxWristBendDegrees": {
           "l": 34.7,
-          "r": 5.0,
+          "r": 5,
           "lAt": 0.5,
           "rAt": 0.5
         },
         "maxReachShortfallMeters": {
-          "l": 0.0,
-          "r": 0.0
+          "l": 0,
+          "r": 0
         }
       },
       {
@@ -553,21 +597,21 @@
         "loop": true,
         "speed": 7.6,
         "direction": [
-          -1.0,
-          0.0
+          -1,
+          0
         ],
         "stride": 3.9266666666666667,
         "duty": 0.2,
-        "hipYaw": -45.0,
+        "hipYaw": -45,
         "maxWristBendDegrees": {
           "l": 34.7,
-          "r": 5.0,
+          "r": 5,
           "lAt": 0.5,
           "rAt": 0.5
         },
         "maxReachShortfallMeters": {
-          "l": 0.0,
-          "r": 0.0
+          "l": 0,
+          "r": 0
         }
       },
       {
@@ -577,21 +621,21 @@
         "loop": true,
         "speed": 11.78,
         "direction": [
-          0.0,
-          -1.0
+          0,
+          -1
         ],
         "stride": 5.497333333333333,
         "duty": 0.15,
-        "hipYaw": 0.0,
+        "hipYaw": 0,
         "maxWristBendDegrees": {
           "l": 29.8,
-          "r": 5.0,
+          "r": 5,
           "lAt": 0.5,
           "rAt": 0.5
         },
         "maxReachShortfallMeters": {
-          "l": 0.0,
-          "r": 0.0
+          "l": 0,
+          "r": 0
         }
       },
       {
@@ -600,12 +644,12 @@
         "seconds": 0.5,
         "maxWristBendDegrees": {
           "l": 27.8,
-          "r": 5.0,
+          "r": 5,
           "lAt": 0.3,
           "rAt": 0.2
         },
         "maxReachShortfallMeters": {
-          "l": 0.0,
+          "l": 0,
           "r": 0.0861
         }
       },
@@ -615,7 +659,7 @@
         "seconds": 0.45,
         "maxWristBendDegrees": {
           "l": 12.1,
-          "r": 5.0,
+          "r": 5,
           "lAt": 0.2,
           "rAt": 0.4
         },
@@ -630,7 +674,7 @@
         "seconds": 0.45,
         "maxWristBendDegrees": {
           "l": 12.1,
-          "r": 5.0,
+          "r": 5,
           "lAt": 0.2,
           "rAt": 0.5
         },
@@ -644,10 +688,10 @@
         "frames": 45,
         "seconds": 0.75,
         "maxWristBendDegrees": {
-          "l": 22.0,
-          "r": 5.0,
+          "l": 22,
+          "r": 5,
           "lAt": 0.2,
-          "rAt": 0.0
+          "rAt": 0
         },
         "maxReachShortfallMeters": {
           "l": 0.1532,
@@ -657,16 +701,16 @@
       {
         "name": "Interact",
         "frames": 120,
-        "seconds": 2.0,
+        "seconds": 2,
         "loop": true,
         "maxWristBendDegrees": {
           "l": 52.2,
-          "r": 5.0,
+          "r": 5,
           "lAt": 0.8,
           "rAt": 0.8
         },
         "maxReachShortfallMeters": {
-          "l": 0.0,
+          "l": 0,
           "r": 0.1625
         }
       },
@@ -676,19 +720,19 @@
         "seconds": 0.35,
         "maxWristBendDegrees": {
           "l": 18.7,
-          "r": 5.0,
-          "lAt": 0.0,
+          "r": 5,
+          "lAt": 0,
           "rAt": 0.2
         },
         "maxReachShortfallMeters": {
-          "l": 0.0,
+          "l": 0,
           "r": 0.0861
         }
       },
       {
         "name": "Death",
         "frames": 60,
-        "seconds": 1.0,
+        "seconds": 1,
         "groundClamp": {
           "lowestBefore": -0.14559728545354028,
           "iterations": 1,
@@ -698,7 +742,7 @@
         },
         "maxWristBendDegrees": {
           "l": 76.6,
-          "r": 5.0,
+          "r": 5,
           "lAt": 0.3,
           "rAt": 0.3
         },
@@ -743,7 +787,8 @@
       "k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
       "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
       "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
-      "quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f"
+      "quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f",
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
     "seconds": 34.9,

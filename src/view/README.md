@@ -158,6 +158,18 @@ items, the wagons, the cargo and the Echo Well are static meshes and stay float.
 Code that needs a skinned model's size must measure it through the skin (`Box3`
 does this), not from the raw `position` attribute.
 
+Every model's geometry, skin and animation data are then compressed with
+`EXT_meshopt_compression` (`meshopt_glb.mjs`). First each mesh's vertices and
+triangles are reordered for locality, which the codecs need. The mesh itself is
+unchanged: the same vertices with the same attribute values, and the same
+triangles with the same winding. No lossy filter is used, so decoding restores
+exactly that reordered data. Files are about a fifth smaller. GitHub Pages
+already gzips GLBs, so the download falls by only about 7%; the static props
+gain almost nothing. Textures stay WebP and are not compressed again.
+`gltfModelSource()` gives `GLTFLoader` three.js's bundled WebAssembly
+`MeshoptDecoder`. The files require the extension and their fallback buffer holds
+no data, so a loader without the decoder fails instead of drawing anything.
+
 Troop instances (`CharacterInstance`) are `SkeletonUtils` clones driven by an
 `AnimationMixer` from snapshot state and render time: `Idle`, `AtEase` (while a
 story scene is open), `Run` (moving faster than 0.35 m/s, played at the ratio of
@@ -207,8 +219,9 @@ presenter's, exactly as for the procedural figures. A resident takes the troops'
 skinned dyed program with an empty mask and the model shadow-depth material, so
 residents add no shader variants. The clips are keyed at 30 Hz (the slow standing
 motion interpolates within the per-frame limits) and the occlusion/roughness/metal
-map is 512 px. Like the other skinned bodies (see "Model encoding" below), its
-vertex data and rotation keys are quantized, which keeps each resident near 0.8 MB.
+map is 512 px. Like the other skinned bodies (see "Model encoding" above), its
+vertex data and rotation keys are quantized and then meshopt-compressed, which keeps
+each resident between 0.45 and 0.65 MB.
 
 A wagon (`createModelWagon` in `actors.ts`) is a clone of its cooked scene: a
 static TRELLIS body, one Blender-authored node per axle (both wheels and the axle

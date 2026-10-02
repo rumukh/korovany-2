@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
@@ -146,9 +147,10 @@ export function modelUrl(id: ModelId): string {
   return `${import.meta.env.BASE_URL}models/${id}/${id}.glb`;
 }
 
-/** Browser source: the same three.js GLTFLoader version the game renders with. */
+/** Browser source: the same three.js GLTFLoader version the game renders with. Geometry and animation data are
+ * EXT_meshopt_compression-encoded, decoded by three.js's bundled WebAssembly decoder. */
 export function gltfModelSource(): ModelSource {
-  const loader = new GLTFLoader();
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   return { load: id => loader.loadAsync(modelUrl(id)) };
 }
 

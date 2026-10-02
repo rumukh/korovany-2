@@ -4,8 +4,8 @@
   "role": "the convoy's cargo load (crates, sacks and a barrel in the convoy's open bed, shown while the convoy carries cargo)",
   "output": {
     "file": "public/models/prop-cargo-load/prop-cargo-load.glb",
-    "sha256": "809496bec456a82db6c6593ca8f1554aadf5dc5b9119efb6611f29efcd5e4b7d",
-    "bytes": 491192
+    "sha256": "e9c1fef8676fa45ec72bacd17ee68d677fa6592ae032fff722404bb85a8baafe",
+    "bytes": 406104
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from the agent's original grey Blender blockout renders (pipeline/make_wagon_references.py); no cloud generation, third-party image, franchise design or real-person likeness was used as input.",
   "acknowledgment": {
@@ -130,7 +130,7 @@
     "status": "verified",
     "normalization": {
       "uniformScale": 0.9401407408710588,
-      "yawDegrees": 0.0,
+      "yawDegrees": 0,
       "fit": [
         1.16,
         0.86,
@@ -205,7 +205,7 @@
     },
     "uv": {
       "method": "smart_project",
-      "angleLimitDegrees": 60.0,
+      "angleLimitDegrees": 60,
       "islandMargin": 0.006,
       "sourceAtlasAfterDecimation": {
         "triangles": 3939,
@@ -222,7 +222,7 @@
       "bakeSize": 1024,
       "textureSize": 512,
       "atlasCoverage": 0.3530158996582031,
-      "dyeFractionOfSurface": 0.0,
+      "dyeFractionOfSurface": 0,
       "metalFractionOfSurface": 0.1578543564474125,
       "regionFractions": {
         "iron": 0.26016576436390354,
@@ -230,11 +230,55 @@
       },
       "roughnessMean": 0.7572537064552307,
       "aoMean": 0.563873291015625,
-      "albedoGain": 1.0,
-      "reliefStrength": 4.0,
+      "albedoGain": 1,
+      "reliefStrength": 4,
       "aoSamples": 64,
       "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved TRELLIS source mesh onto fresh smart-projected UVs (the 229k-triangle source atlas does not survive a 98% decimation); no ground-sheet removal and no rear-view projection, so the second row of crates, the back and the underside are as TRELLIS invented them. Tangent normals baked from the source geometry and whiteout-blended with colour relief (rope and sack folds survive mainly there); AO baked from the decimated geometry; roughness and metalness derived from colour inside declared regions (dark, unsaturated iron corner brackets; the saturated ochre hide on top); no tone lift. Base alpha opaque (never dyed). Artistic derivation, not measured PBR.",
       "dye": "none: base alpha set opaque"
+    },
+    "geometryCompression": {
+      "extension": "EXT_meshopt_compression",
+      "encoder": "meshoptimizer 0.22.0 (npm)",
+      "script": "meshopt_glb.mjs",
+      "scriptSha256": "9f5914236e6aac82b541e0685ab34f839a1287d50c41b8322724ddf420597ec8",
+      "filters": "none",
+      "reorder": {
+        "method": "meshoptimizer reorderMesh: vertex-cache triangle order, then vertex-fetch vertex order",
+        "primitives": 1,
+        "kept": 0,
+        "vertices": 5746,
+        "triangles": 3939,
+        "check": "a permutation: every vertex keeps its exact attribute bytes, and the triangles are the same, with the same winding, in another order"
+      },
+      "check": "every view decoded again: attribute views byte-identical to the reordered data; triangle index views hold the same triangles in the same order and winding (only the first vertex may rotate)",
+      "views": {
+        "attributes": {
+          "views": 4,
+          "raw": 275808,
+          "packed": 209407
+        },
+        "triangles": {
+          "views": 1,
+          "raw": 23634,
+          "packed": 4108,
+          "rotatedTriangles": 1928
+        },
+        "indices": {
+          "views": 0,
+          "raw": 0,
+          "packed": 0
+        },
+        "stored": 189710
+      },
+      "inputSha256": "809496bec456a82db6c6593ca8f1554aadf5dc5b9119efb6611f29efcd5e4b7d",
+      "bytesBefore": 491192,
+      "bytesAfter": 406104
+    },
+    "derivedFrom": {
+      "cook": "real-002",
+      "sha256": "809496bec456a82db6c6593ca8f1554aadf5dc5b9119efb6611f29efcd5e4b7d",
+      "bytes": 491192,
+      "note": "The exact real-002 output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run."
     },
     "scripts": {
       "cook_cargo.py": "ff165652c9340d2b927a34355ac1dd8690280dd5a7955dbc8db4a98f5d5b9814",
@@ -242,7 +286,8 @@
       "k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
       "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
       "k2sheet.py": "0141e81990f6318c974fa018c895e02aa71b9c8ba5e23dbdd741e4881e6f177c",
-      "k2uv.py": "da10d5ef3d511a478f07b9b688b7d43fd11ec8f86bada8505ebaf418b6acc3d2"
+      "k2uv.py": "da10d5ef3d511a478f07b9b688b7d43fd11ec8f86bada8505ebaf418b6acc3d2",
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
     "seconds": 11.3,
