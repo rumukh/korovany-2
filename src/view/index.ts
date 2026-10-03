@@ -4,13 +4,13 @@ import { allegiancePennant, createActor, createModelHero, createModelTroop, crea
 import { FollowCamera, type GroundPoint, type MovementBasis } from './camera';
 import { WorldEffects } from './effects';
 import { factionColors, palette } from './palette';
-import { part, shapeGeometry } from './primitives';
+import { part, shapeGeometry, StaticBatch } from './primitives';
 import { ViewResources } from './resources';
 import { residentModel, WorldResidents } from './residents';
 import { createWorldScenery, type WorldScenery } from './world';
 import { lightWorld, positionSun, skyEnvironment } from './atmosphere';
 import { WorldPostprocessing } from './postprocessing';
-import { DRAFT_OX, gltfModelSource, HEROES, ModelLibrary, propInstance, troopModelFor, WAGONS, type CharacterInstance, type HeroInstance, type ModelStatus, type TroopModelId, type WagonModelId } from './models';
+import { DRAFT_OX, gltfModelSource, HEROES, LANDMARK_IDS, ModelLibrary, PICKUP_IDS, propInstance, troopModelFor, WAGONS, type CharacterInstance, type HeroInstance, type ModelStatus, type TroopModelId, type WagonModelId } from './models';
 
 export type { GroundPoint, MovementBasis } from './camera';
 export type { ModelStatus } from './models';
@@ -204,7 +204,8 @@ export class Presentation {
 
   /**
    * Compiles every cooked-model shader program before gameplay (aegis-engine #6): the skinned, dyed soldier body,
-   * its items, the Echo Well and their shadow-depth variants, with this scene's real lights, fog, environment and
+   * its items, the Echo Well, the signature landmarks and pickups (instanced, as the world draws them) and their
+   * shadow-depth variants, with this scene's real lights, fog, environment and
    * quality. Temporary instances are placed at (x, z) and drawn alone: every other renderable is hidden for the
    * warm-up, so the main and shadow passes cost almost nothing while the lights, fog, environment and output path
    * that decide program keys stay those of a real frame. `draw` renders with the real frame's state (it may shade
@@ -263,6 +264,20 @@ export class Presentation {
       group.add(person.root);
       return person;
     });
+    // The world draws the Echo Well and every signature landmark through instanced static batches, and the pickups
+    // through instanced pools, all with the scenery's shadow-depth material. One batched copy of each landmark and
+    // pickup compiles those instanced programs and uploads its textures, so none stalls on first appearance; culling
+    // is off so each copy draws wherever it lands.
+    const propBatch = new StaticBatch(this.resources);
+    [...LANDMARK_IDS, ...PICKUP_IDS].forEach((id, index) => {
+      const model = this.resources.model(id);
+      if (!model) return;
+      const copy = propInstance(model, this.resources.modelDepthMaterial(), 0.5);
+      copy.position.set(x + 2.5 + index * 1.1, 0.08, z + 4);
+      propBatch.append(copy);
+    });
+    const props = propBatch.finish(group);
+    for (const mesh of props) mesh.frustumCulled = false;
     this.scene.add(group);
     const warming = new Set<THREE.Object3D>();
     // The hero, when already built, shares the soldier's programs; drawing it here also uploads its own textures.
@@ -284,6 +299,7 @@ export class Presentation {
       for (const extra of extras) extra.character.dispose();
       for (const wagon of wagons) wagon.dispose();
       for (const person of residents) person.dispose();
+      for (const mesh of props) mesh.dispose();
       this.removeActor(actor.id, visual);
     }
     return { programsBefore, programsAfter: renderer.info.programs?.length ?? 0, milliseconds: performance.now() - started };

@@ -1,0 +1,51 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "prop-stag-gate",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "The Stag Shrine Gate v2 seed 28201 (Recommended)",
+      "decidedAt": "2026-10-03T07:17:32.922928+02:00",
+      "question": "Gate 1, batch E, delegated under the standing instruction of 2026-10-01: which concept should the Stag Shrine Gate use? Board 127.0.0.1:47906 (_reviews/gate1-landmarks): 28201 (recommended: thick, well-separated antler tines bound to the keystone with dark iron bands, a mossy voussoir arch on coursed piers, a stacked-stone altar with two wooden bowls and a flagstone platform...); 28202 (The altar is a plain smooth block, losing the masonry detail; the backdrop is a warmer gra...), 28203 (Nearly identical, but the upper tines are slimmer and more forked, where TRELLIS is likeli...)",
+      "sha256": "3fdea00bc832f90edb7fb5ecda9c352ab0250c79cc35d341ed37f8a2a56be870",
+      "approvedFileSha256": "9c9b55d00d78e2845690a58ba6e03e92c12f6fb1d41a5fc6a48a8a9bbee9d35f",
+      "pixelSha256": "a52915f8d19d412cefe5185a6d3d63f5ef5dfd4800d7227ef64ee8a527459b1b",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+        "delegatedAt": "2026-10-01T10:52:52.040+02:00"
+      }
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve hd-s505 for cooking with the declared antler retint and side balance (Recommended)",
+      "decidedAt": "2026-10-03T08:26:41.504272+02:00",
+      "question": "Gate 2, batch E: which raw TRELLIS mesh should the Stag Gate cook from? Board 127.0.0.1:47907 (_reviews/gate2-landmarks-e), delegated under the standing instruction of 2026-10-01.",
+      "sha256": "55b1a352c094af65682ca89f6a5c79778d67d784b05e53c4a989b5d02f3a199a",
+      "candidate": "hd-s505",
+      "conditions": [
+        "Declared retint of both antlers (z 5.72 to 8.8 m) toward the concept-measured bone colour sRGB (190, 173, 157), keepDetail 0.8, feathered 0.1 m.",
+        "Declared facing balance on the stone below 5.72 m (8 sectors, gain at most 5) for the side shading TRELLIS baked into the albedo.",
+        "Iron-strap metal class on the keystone binding."
+      ],
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the six landmarks and three pickups as cooked and encoded (Recommended)",
+      "decidedAt": "2026-10-03T13:34:50.609284+02:00",
+      "question": "Gate 3 for batches E and F, delegated under the standing instruction of 2026-10-01 (board 127.0.0.1:47910, _reviews/gate3-props-ef). Phase 2, batches E and F: the six signature landmarks (the Ward-Bell Frame at the Bell Foundry and the Reed Chapel, the Stag Shrine Gate, the Frozen Beacon, the Tide Observatory Armillary at the Tide Observatory and the Star Monastery's first building, the Ward-Glass Outcrop at the Glass Quarry and the Ash Cairn) and the three pickups (a coin purse, a healer's satchel and a supply bundle), cooked from the approved concepts and TRELLIS meshes, replace the procedural landmark structures and pickups. Decided under your standing delegation (_reviews/delegation-2026-10-01.json): I ship the recommended candidate and record it without asking; this board stays available for review. Each landmark is scaled uniformly inside its building's authoritative 2.8 m blocker and faces the location centre; each pickup keeps the procedural pickup's size, lift, bob, spin and reduced-motion stillness. Footprints, collision, AI, timing, saves and narrative are unchanged. Every model is quantized (a centred 16-bit position range, worst error 0.14 mm on the 18 m tower) and meshopt-compressed, and all nine pass the tangent check. Measured cost: the nine GLBs add 5.70 MB (5.58 MB gzip-9), so the 42 preloaded models total 28.5 MB, inside the plan's 30 MB; the satchel (286 KB) and the crate (262 KB) exceed the batch F plan's 250 KB per pickup. On the RTX 4070 Ti SUPER, p50 frame time is equal or lower in 24 of 32 location, scene and quality pairs and at most 0.2 ms higher in the rest (all p95 at most 3.5 ms); draw calls fall by 6 to 33 per scene, while triangles rise by 37k to 162k, peaking at 354k against the 400k budget. In SwiftShader, the CI software path, p50 changes by -2.7% to +12.5% (median +5.2%) because software rasterization pays for the extra triangles. This is not AAA: each model is a single-view reconstruction whose back, sides and underside are invented; thin parts (bell rod, antler tines, armillary rings, basket bars, rope, handles) are soft or fused; detail is painted into one texture rather than modelled with trims; colour defects TRELLIS repeated on every seed were repainted by declared, measured repairs rather than authored; roughness and metalness are colour-derived; the concept's studio light is partly baked into the stone; nothing animates except the pickups' bob and spin; and there are no LODs. At the gameplay camera (18 to 40 m) these read as solid, specific landmarks and pickups, not as AAA hero props close up. Which should I ship?",
+      "sha256": "0b3f7e9379dbcadc97bc138d91248cc750fdb7e26dd0d799f729fa3ad1cbbe24",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ]
+}

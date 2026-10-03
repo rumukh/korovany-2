@@ -118,16 +118,22 @@ Beran and Tessa at Cinderwell; Ada and Mila at Hollow Village; Elin at the Last
 Archive; Lev at the Star Monastery, Yara at Thornwatch, Nika at the High Pass,
 Radek at the Bell Foundry and Oss at the Lantern Ferry; Ivet at the Reed Chapel,
 Sella at Mirecross, Orsa at Saltmarket, Hana at the Tide Observatory and Dren at
-Wreckers' Rest) are cooked glTF models (`public/models`) instead of procedural meshes. Their concepts were generated
+Wreckers' Rest), six signature landmarks (the Ward-Bell Frame at the Bell Foundry
+and the Reed Chapel, the Stag Shrine Gate, the Frozen Beacon, the Tide Observatory
+Armillary at the Tide Observatory and the Star Monastery, the Ward-Glass Outcrop
+at the Glass Quarry and the Ash Cairn) and the three pickups (a coin purse, a
+healer's satchel and a supply crate) are cooked glTF models (`public/models`) instead of procedural meshes. Their concepts were generated
 locally with Qwen Image Edit Plus 2511, from original Blender reference renders
 (for the archer, captain and bosses, the approved soldier concept with a blank
 mannequin head; for the residents, plain civilian body templates derived from it;
-for the wagons, ox and cargo, grey blockouts) and, for the heroes and residents,
+for the wagons, ox, cargo, landmarks and pickups, grey blockouts) and, for the heroes and residents,
 the game's own portraits as identity references. They were reconstructed with
 TRELLIS-image-large and cooked, rigged and animated in Blender 5.2.2 LTS. Every
 human character's back comes from an approved rear-view concept projected onto
-the mesh; the ox, wagons and cargo keep the far sides TRELLIS invented. Residents
-stand and talk: they have Idle and Talk loops only. TRELLIS cannot resolve
+the mesh; the ox, wagons, cargo, landmarks and pickups keep the far sides TRELLIS invented. Residents
+stand and talk: they have Idle and Talk loops only. Landmarks keep their
+buildings' authoritative footprints; pickups keep the procedural pickups' size,
+height, bob and spin. TRELLIS cannot resolve
 spokes, so the wagons' wheels, axles and
 harness (shafts, duga arch, bell and pennant) are built in Blender and the
 reconstructed wheels are cut away. Dark TRELLIS textures of the heroes, archer,
@@ -145,10 +151,10 @@ presenting a run and stops with an explicit asset error if any fails to load.
 
 **Licensing limitation:** TRELLIS code and weights are MIT-licensed, but its
 textured export depends on components restricted to research and evaluation.
-No commercial clearance exists for these thirty-three models; the project owner
+No commercial clearance exists for these forty-two models; the project owner
 acknowledged publishing them here. Concepts, recipes, provenance, approvals and
-the cooking scripts are in `scripts/models`. The rest of the world, including
-most props, is still procedural, so the models
+the cooking scripts are in `scripts/models`. The rest of the world (houses,
+walls, trees, rocks, roads and the remaining props) is still procedural, so the models
 currently read as more realistic than their surroundings. They are not AAA
 assets: see each `provenance.json` for measured limitations.
 
@@ -481,7 +487,7 @@ deployment. Local builds do not require GitHub.
 Aegis packages declare MIT; Three.js is MIT. Runtime notices are included in
 [`public/THIRD_PARTY_NOTICES.txt`](public/THIRD_PARTY_NOTICES.txt) and copied into
 the production build. The engine remains pinned with its upstream provenance.
-The sequel uses newly authored procedural visuals, thirty-three locally generated and
+The sequel uses newly authored procedural visuals, forty-two locally generated and
 cooked 3D models (research/evaluation-only TRELLIS export, see "Cooked 3D
 models" above) and original audio rather than copying the original game's
 implementation or asset library. No project-wide redistribution license is

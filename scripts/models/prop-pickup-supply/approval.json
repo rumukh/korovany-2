@@ -1,0 +1,50 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "prop-pickup-supply",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "The Supply Bundle seed 19302 (Recommended)",
+      "decidedAt": "2026-10-03T11:40:03.357869+02:00",
+      "question": "Gate 1, batch F, delegated under the standing instruction of 2026-10-01: which concept should the supply pickup use? Board 127.0.0.1:47908 (_reviews/gate1-pickups): 19302 (recommended: chunky pale pine slats with a diagonal brace, iron nails, a dark iron band and a roped burlap sack); 19301 (close second: a thin rope trailing down the side and red-painted rivets).",
+      "sha256": "b21ce7da82ac9c3f046f9d06a3ba2fc35ddc9f1b020a0fc399f12c47d73d8377",
+      "approvedFileSha256": "517b542249e7cc3e3e01065b13149ad04e5aec22a4c8e636df624734ad0b5613",
+      "pixelSha256": "9041541f6c3d5cd473c703da74ebce76686ec53f2b0a7e5b3e87315838bfe734",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+        "delegatedAt": "2026-10-01T10:52:52.040+02:00"
+      }
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve hd-s42 for cooking (Recommended)",
+      "decidedAt": "2026-10-03T12:31:38.492739+02:00",
+      "question": "Gate 2, batch F: which raw TRELLIS mesh should the Supply Bundle cook from? Board 127.0.0.1:47909 (_reviews/gate2-pickups-f), delegated under the standing instruction of 2026-10-01.",
+      "sha256": "d1fec2ce9003d3f90248b1a9d5a4d80e98898c0ff70e8608508f16dbd34f504c",
+      "candidate": "hd-s42",
+      "conditions": [
+        "No colour repair (facing luma 115 to 134 sRGB on every side).",
+        "Rope and burlap classes limited to the sack's height, then iron (metalness 0.6), scorch and pine; 3,000 triangles and 512 px maps."
+      ],
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the six landmarks and three pickups as cooked and encoded (Recommended)",
+      "decidedAt": "2026-10-03T13:34:50.609284+02:00",
+      "question": "Gate 3 for batches E and F, delegated under the standing instruction of 2026-10-01 (board 127.0.0.1:47910, _reviews/gate3-props-ef). Phase 2, batches E and F: the six signature landmarks (the Ward-Bell Frame at the Bell Foundry and the Reed Chapel, the Stag Shrine Gate, the Frozen Beacon, the Tide Observatory Armillary at the Tide Observatory and the Star Monastery's first building, the Ward-Glass Outcrop at the Glass Quarry and the Ash Cairn) and the three pickups (a coin purse, a healer's satchel and a supply bundle), cooked from the approved concepts and TRELLIS meshes, replace the procedural landmark structures and pickups. Decided under your standing delegation (_reviews/delegation-2026-10-01.json): I ship the recommended candidate and record it without asking; this board stays available for review. Each landmark is scaled uniformly inside its building's authoritative 2.8 m blocker and faces the location centre; each pickup keeps the procedural pickup's size, lift, bob, spin and reduced-motion stillness. Footprints, collision, AI, timing, saves and narrative are unchanged. Every model is quantized (a centred 16-bit position range, worst error 0.14 mm on the 18 m tower) and meshopt-compressed, and all nine pass the tangent check. Measured cost: the nine GLBs add 5.70 MB (5.58 MB gzip-9), so the 42 preloaded models total 28.5 MB, inside the plan's 30 MB; the satchel (286 KB) and the crate (262 KB) exceed the batch F plan's 250 KB per pickup. On the RTX 4070 Ti SUPER, p50 frame time is equal or lower in 24 of 32 location, scene and quality pairs and at most 0.2 ms higher in the rest (all p95 at most 3.5 ms); draw calls fall by 6 to 33 per scene, while triangles rise by 37k to 162k, peaking at 354k against the 400k budget. In SwiftShader, the CI software path, p50 changes by -2.7% to +12.5% (median +5.2%) because software rasterization pays for the extra triangles. This is not AAA: each model is a single-view reconstruction whose back, sides and underside are invented; thin parts (bell rod, antler tines, armillary rings, basket bars, rope, handles) are soft or fused; detail is painted into one texture rather than modelled with trims; colour defects TRELLIS repeated on every seed were repainted by declared, measured repairs rather than authored; roughness and metalness are colour-derived; the concept's studio light is partly baked into the stone; nothing animates except the pickups' bob and spin; and there are no LODs. At the gameplay camera (18 to 40 m) these read as solid, specific landmarks and pickups, not as AAA hero props close up. Which should I ship?",
+      "sha256": "272b8d4aadf607c11362159a3be87007efb803bd72aaad470a72bec0cf7a789b",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ]
+}

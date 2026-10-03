@@ -118,7 +118,7 @@ heraldry distinguishes locked, unlocked and defeated states without a false gate
 
 ## Cooked 3D models
 
-Thirty-three cooked glTF models replace procedural presentation: the troops (the line
+Forty-two cooked glTF models replace procedural presentation: the troops (the line
 soldier, the road archer, the infantry captain and two bosses, Commander Raut and
 the Palace Marshal, in `public/models/char-line-soldier/`, `char-archer/`,
 `char-captain/`, `char-boss-raut/` and `char-boss-marshal/`), used by every
@@ -140,7 +140,8 @@ at the High Pass, Radek at the Bell Foundry and Oss at the Lantern Ferry
 `char-resident-radek/` and `char-resident-oss/`), and Ivet at the Reed Chapel,
 Sella at Mirecross, Orsa at Saltmarket, Hana at the Tide Observatory and Dren at
 Wreckers' Rest (`char-resident-ivet/`, `char-resident-sella/`,
-`char-resident-orsa/`, `char-resident-hana/` and `char-resident-dren/`).
+`char-resident-orsa/`, `char-resident-hana/` and `char-resident-dren/`); and the
+six signature landmarks and three pickups described below.
 `residentModelFor()` maps a narrative NPC id to its model; the procedural figure
 remains only for DOM-free tests that construct `ViewResources` without models.
 `troopModelFor()` picks the troop for an actor kind and faction: the Palace
@@ -164,7 +165,10 @@ quantization pushed two of its clips over the 2.0x strain limit. The static prop
 (the wagons, the cargo and the Echo Well) are quantized too, by
 `quantize_static_glb.py`: 16-bit positions with one uniform scale per mesh held
 in its node, with no offset, so the wagon wheels still spin about their axles;
-8-bit normals and tangents; and 16-bit UVs. Weapons and other character items stay
+8-bit normals and tangents; and 16-bit UVs. The landmarks and pickups use
+`quantize_prop_glb.py`, which centres the 16-bit position range on each mesh's
+bounding box (the node holds the scale and the centre), so an 18 m tower keeps
+its worst position error near 0.14 mm. Weapons and other character items stay
 float. Code that needs a skinned model's size must measure it through the skin
 (`Box3` does this), not from the raw `position` attribute. Static meshes are
 measured through their node transforms.
@@ -270,13 +274,41 @@ one dyed material whose only masked region is the pennant (the convoy flies its
 faction's colour, the shipment its allegiance); the ox takes the troops' skinned
 dyed program with an empty mask. The wagons therefore add no shader variants.
 
+The six signature landmarks replace the procedural structures of their
+locations' buildings, as the Echo Well does (`LANDMARK_PLACES`,
+`landmarkModelFor()`, `locationStructure()`). The Ward-Bell Frame stands at the
+Bell Foundry and the Reed Chapel, the Stag Shrine Gate at the Stag Shrine, the
+Frozen Beacon at the Frozen Beacon, and the Tide Observatory Armillary at the
+Tide Observatory and the Star Monastery's first building. The Ward-Glass
+Outcrop stands at the Glass Quarry and the Ash Cairn at the Ash Cairn
+(`public/models/prop-ward-bell/` and the matching folders). Each copy is scaled
+uniformly so every vertex stays inside its building's authoritative circular
+blocker, faces the location centre and is drawn through the world's instanced
+static batches with the scenery's shadow-depth material. Footprints, collision
+and narrative stay the world's. The three pickups (`PICKUPS`:
+`prop-pickup-coin`, a coin purse; `prop-pickup-health`, a healer's satchel with
+no red cross; `prop-pickup-supply`, a pine crate with a roped sack) replace the
+procedural coin, healer's parcel and crate in `WorldEffects`. Each kind is one instanced draw of its
+cooked geometry and material, with no per-instance colour and so no extra shader
+variant. It is scaled to the procedural pickup's size and height, bobs on the
+same cosmetic curve, and only the coin purse spins. Reduced motion holds every
+pickup still, as before. Collection radius, amounts and timing stay the
+simulation's. Without a model library (DOM-free tests) the procedural
+structures and pickups remain; with one, a landmark or pickup that failed to
+load stops the game on the asset error. A landmark has at most 15,000 triangles
+and 1024 px maps (0.71 to 0.91 MB per file) and a pickup at most 3,000 triangles
+and 512 px maps (0.25 to 0.29 MB); together the nine add 5.70 MB, so the
+forty-two preloaded models total 28.5 MB.
+
 After a world mirror is built and after every quality change, `createGameView`
 calls `Presentation.warmModels()` in the same task as the next real frame: a
 temporary soldier visual (model, ring, health bar, tell) and well are drawn twice,
 alone, together with the current hero, one of each other troop model the
-campaign shows, both wagons with their oxen and the convoy's cargo, and one of
+campaign shows, both wagons with their oxen and the convoy's cargo, one of
 each cooked resident the world currently lists (sharing the soldier's and the
-well's programs, so only their textures upload),
+well's programs, so only their textures upload), and one instanced copy of
+every landmark and pickup (compiling the instanced static programs and
+uploading their textures),
 with the scene's real lights, fog, shadow
 maps and output path, then removed, so no model shader compiles when a soldier
 first appears (aegis-engine

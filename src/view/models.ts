@@ -11,13 +11,57 @@ export type WagonModelId = 'prop-wagon-convoy' | 'prop-wagon-shipment';
 export type ResidentNpc = 'toman' | 'lida' | 'vesk' | 'ren' | 'mara' | 'beran' | 'tessa' | 'ada' | 'mila' | 'elin'
   | 'lev' | 'yara' | 'nika' | 'radek' | 'oss' | 'ivet' | 'sella' | 'orsa' | 'hana' | 'dren';
 export type ResidentModelId = `char-resident-${ResidentNpc}`;
-export type ModelId = TroopModelId | 'prop-echo-well' | HeroModelId | WagonModelId | 'char-draft-ox' | 'prop-cargo-load' | ResidentModelId;
+export type LandmarkModelId = 'prop-ward-bell' | 'prop-stag-gate' | 'prop-frozen-beacon' | 'prop-tide-armillary' | 'prop-ward-glass'
+  | 'prop-ash-cairn';
+export type PickupKind = 'coin' | 'health' | 'supply';
+export type PickupModelId = `prop-pickup-${PickupKind}`;
+export type ModelId = TroopModelId | 'prop-echo-well' | HeroModelId | WagonModelId | 'char-draft-ox' | 'prop-cargo-load' | ResidentModelId
+  | LandmarkModelId | PickupModelId;
+export const LANDMARK_IDS: readonly LandmarkModelId[] = ['prop-ward-bell', 'prop-stag-gate', 'prop-frozen-beacon', 'prop-tide-armillary',
+  'prop-ward-glass', 'prop-ash-cairn'];
+export const PICKUP_IDS: readonly PickupModelId[] = ['prop-pickup-coin', 'prop-pickup-health', 'prop-pickup-supply'];
 export const MODEL_IDS: readonly ModelId[] = ['char-line-soldier', 'prop-echo-well', 'char-hero-elf', 'char-hero-guard', 'char-hero-villain',
   'char-archer', 'char-captain', 'char-boss-raut', 'char-boss-marshal', 'prop-wagon-convoy', 'prop-wagon-shipment', 'char-draft-ox',
   'prop-cargo-load', 'char-resident-toman', 'char-resident-lida', 'char-resident-vesk', 'char-resident-ren', 'char-resident-mara',
   'char-resident-beran', 'char-resident-tessa', 'char-resident-ada', 'char-resident-mila', 'char-resident-elin',
   'char-resident-lev', 'char-resident-yara', 'char-resident-nika', 'char-resident-radek', 'char-resident-oss',
-  'char-resident-ivet', 'char-resident-sella', 'char-resident-orsa', 'char-resident-hana', 'char-resident-dren'];
+  'char-resident-ivet', 'char-resident-sella', 'char-resident-orsa', 'char-resident-hana', 'char-resident-dren', ...LANDMARK_IDS,
+  ...PICKUP_IDS];
+
+/**
+ * Pickup presentation: each kind's cooked model is scaled uniformly so its largest dimension is `size` metres, centred
+ * horizontally on the pickup with its lowest point `lift` metres above the ground (plus the bob), the size and height
+ * of the procedural pickup it replaces; `yaw` is its fixed heading, and the coin purse spins as the coin did.
+ * Collection radius, amounts and timing stay the simulation's.
+ */
+export const PICKUPS: Readonly<Record<PickupKind, { id: PickupModelId; size: number; lift: number; yaw: number; spins: boolean }>> = {
+  coin: { id: 'prop-pickup-coin', size: 0.42, lift: 0.2, yaw: 0, spins: true },
+  health: { id: 'prop-pickup-health', size: 0.45, lift: 0.04, yaw: 0, spins: false },
+  supply: { id: 'prop-pickup-supply', size: 0.5, lift: 0.04, yaw: 0.25, spins: false },
+};
+
+/**
+ * Signature landmarks: the cooked static model that replaces a location's procedural building structure, keyed by
+ * location id (`buildings` limits it to those building variants). Each copy is scaled uniformly inside its building's
+ * authoritative circular blocker and faces the location centre, as the Echo Well does; collision, footprint and
+ * narrative stay the world's.
+ */
+export const LANDMARK_PLACES: Readonly<Record<string, { id: LandmarkModelId; buildings?: readonly number[] }>> = {
+  'bell-foundry': { id: 'prop-ward-bell' },
+  'reed-chapel': { id: 'prop-ward-bell' },
+  'stag-shrine': { id: 'prop-stag-gate' },
+  'frozen-beacon': { id: 'prop-frozen-beacon' },
+  'tide-observatory': { id: 'prop-tide-armillary' },
+  'star-monastery': { id: 'prop-tide-armillary', buildings: [0] },
+  'glass-quarry': { id: 'prop-ward-glass' },
+  'ash-cairn': { id: 'prop-ash-cairn' },
+};
+
+/** The cooked landmark for a location's building variant, or undefined where the procedural structure stays. */
+export function landmarkModelFor(placeId: string, variant: number): LandmarkModelId | undefined {
+  const entry = Object.hasOwn(LANDMARK_PLACES, placeId) ? LANDMARK_PLACES[placeId]! : undefined;
+  return entry && (!entry.buildings || entry.buildings.includes(variant)) ? entry.id : undefined;
+}
 
 export type CharacterClip = 'Idle' | 'AtEase' | 'Run' | 'Windup' | 'Strike' | 'Recovery' | 'Hit' | 'Death';
 export const CHARACTER_CLIPS: readonly CharacterClip[] = ['Idle', 'AtEase', 'Run', 'Windup', 'Strike', 'Recovery', 'Hit', 'Death'];

@@ -1,0 +1,149 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-stag-gate",
+  "source": {
+    "candidate": "hd-s505",
+    "tool": "TRELLIS-image-large 25e0d31 (source 442aa1e), offline",
+    "seed": 505,
+    "textureSize": 2048,
+    "simplify": 0.85,
+    "glbSha256": "55b1a352c094af65682ca89f6a5c79778d67d784b05e53c4a989b5d02f3a199a",
+    "conceptSha256": "9c9b55d00d78e2845690a58ba6e03e92c12f6fb1d41a5fc6a48a8a9bbee9d35f"
+  },
+  "reachMeters": 2.8,
+  "yawDegrees": 0,
+  "minComponentVertices": 40,
+  "triangleBudget": 15000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    1024
+  ],
+  "material": {
+    "bakeSize": 2048,
+    "mapsSize": 1024,
+    "cageExtrusionMeters": 0.03,
+    "maxRayMeters": 0.08,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.86,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "metalness": 0.6,
+        "name": "iron-straps",
+        "value": [
+          0,
+          0.2
+        ],
+        "regions": [
+          {
+            "max": [
+              0.7,
+              1.6,
+              6.0
+            ],
+            "min": [
+              -0.7,
+              -1.6,
+              4.9
+            ]
+          }
+        ],
+        "roughness": 0.5
+      },
+      {
+        "name": "moss",
+        "hue": [
+          60,
+          150
+        ],
+        "saturation": [
+          0.3,
+          1
+        ],
+        "roughness": 0.95
+      },
+      {
+        "name": "bowl",
+        "hue": [
+          10,
+          40
+        ],
+        "saturation": [
+          0.45,
+          1
+        ],
+        "value": [
+          0.25,
+          1
+        ],
+        "roughness": 0.6
+      },
+      {
+        "name": "stone",
+        "saturation": [
+          0,
+          0.3
+        ],
+        "roughness": 0.88
+      }
+    ],
+    "roughnessFromDetail": 0.6,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 8,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0,
+    "facingBalance": [
+      {
+        "name": "stone-sides",
+        "strength": 1.0,
+        "regions": [
+          {
+            "max": [
+              3,
+              3,
+              5.72
+            ],
+            "min": [
+              -3,
+              -3,
+              -0.1
+            ]
+          }
+        ],
+        "maxGain": 5.0,
+        "sectors": 8
+      }
+    ],
+    "retint": [
+      {
+        "edgeMeters": 0.1,
+        "keepDetail": 0.8,
+        "strength": 1.0,
+        "name": "antlers-bone",
+        "target": [
+          0.745,
+          0.678,
+          0.616
+        ],
+        "regions": [
+          {
+            "max": [
+              2.8,
+              1.6,
+              8.8
+            ],
+            "min": [
+              -2.8,
+              -1.6,
+              5.72
+            ]
+          }
+        ],
+        "source": "Concept stag-gate-v2-seed28201.png: median of the antler pixels (sRGB 190, 173, 157) above the arch, luma >= 150 (the iron bands excluded)."
+      }
+    ]
+  }
+}

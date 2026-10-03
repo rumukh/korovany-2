@@ -1,0 +1,354 @@
+{
+  "schema": "korovany2-model-provenance/1",
+  "id": "prop-pickup-supply",
+  "role": "the supply pickup (a roped crate and sack)",
+  "output": {
+    "file": "public/models/prop-pickup-supply/prop-pickup-supply.glb",
+    "sha256": "272b8d4aadf607c11362159a3be87007efb803bd72aaad470a72bec0cf7a789b",
+    "bytes": 261568
+  },
+  "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from the agent's original grey Blender blockout renders (pipeline/make_pickup_references.py); no cloud generation, third-party image, franchise design or real-person likeness was used as input.",
+  "acknowledgment": {
+    "decidedAt": "2026-09-26T23:06:17.4391138+02:00",
+    "decision": "I acknowledge this for korovany-2: commit TRELLIS-derived assets with the restriction recorded",
+    "project": "rumukh/korovany-2"
+  },
+  "tools": [
+    {
+      "name": "Qwen Image Edit Plus 2511",
+      "runtime": "WanGP (local, CLI)",
+      "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+      "textEncoder": "Qwen2.5-VL-7B-Instruct_quanto_bf16_int8",
+      "steps": 50,
+      "guidanceScale": 4.0,
+      "role": "concept art"
+    },
+    {
+      "name": "Blender 5.2.2 LTS",
+      "build": "d13f752e3b9c",
+      "role": "reference renders, cooking, baking, rig, clips (CPU Cycles)"
+    },
+    {
+      "name": "TRELLIS-image-large",
+      "model": "microsoft/TRELLIS-image-large",
+      "modelRevision": "25e0d31ffbebe4b5a97464dd851910efc3002d96",
+      "sourceRevision": "442aa1e1afb9014e80681d3bf604e8d728a86ee7",
+      "runnerSha256": "aef0d6a863b77b65869d9f2ce6a127abf7231863e2aae428ad1322df281eea69",
+      "seed": 42,
+      "settings": {
+        "sparseStructureSampler": {
+          "name": "FlowEulerGuidanceIntervalSampler",
+          "args": {
+            "sigma_min": 1e-05
+          },
+          "params": {
+            "steps": 25,
+            "cfg_strength": 5.0,
+            "cfg_interval": [
+              0.5,
+              1.0
+            ],
+            "rescale_t": 3.0
+          }
+        },
+        "slatSampler": {
+          "name": "FlowEulerGuidanceIntervalSampler",
+          "args": {
+            "sigma_min": 1e-05
+          },
+          "params": {
+            "steps": 25,
+            "cfg_strength": 5.0,
+            "cfg_interval": [
+              0.5,
+              1.0
+            ],
+            "rescale_t": 3.0
+          }
+        },
+        "formats": [
+          "gaussian",
+          "mesh"
+        ],
+        "unusedRadianceFieldDecoderLoaded": false,
+        "attention": "xformers",
+        "spconvAlgorithm": "native",
+        "modelPrecision": "unchanged upstream checkpoint config",
+        "localLoader": "LocalPipeline replaces only DINOv2 code/weight discovery; strict same state dict and normalization",
+        "export": {
+          "simplify": 0.85,
+          "fillHoles": true,
+          "fillHolesMaxSize": 0.04,
+          "textureSize": 2048,
+          "bakingMode": "opt",
+          "bakingSteps": 2500,
+          "bakingViews": 100,
+          "bakingViewResolution": 1024,
+          "holeFillViews": 1000,
+          "holeFillResolution": 1024
+        }
+      },
+      "offline": true,
+      "networkCheck": "[Errno 101] Network is unreachable",
+      "inferenceSeconds": 127.4,
+      "peakTorchReservedBytes": 18335399936,
+      "output": {
+        "sha256": "d1fec2ce9003d3f90248b1a9d5a4d80e98898c0ff70e8608508f16dbd34f504c",
+        "bytes": 7220224
+      },
+      "licensing": {
+        "wholeToolchainMit": false,
+        "commercialClearanceEstablished": false
+      }
+    }
+  ],
+  "source": {
+    "references": [
+      {
+        "role": "Picture 1: the agent's original grey Blender blockout (pipeline/make_pickup_references.py, rendered with Cycles on the CPU) that keeps the procedural pickup's layout: camera, three-quarter view, proportions, light and backdrop only. The prompt supplies materials and detail.",
+        "sha256": "540bf0a2b119097887e0a2885e14d348a29e9f63ed5a0f3f048d0927f7081b4a"
+      }
+    ],
+    "referencesNote": "Picture 1 is the agent's original grey blockout, rendered by pipeline/make_pickup_references.py with Blender Cycles on the CPU; no third-party input.",
+    "concept": {
+      "file": "concept.png",
+      "sha256": "b21ce7da82ac9c3f046f9d06a3ba2fc35ddc9f1b020a0fc399f12c47d73d8377",
+      "pixelSha256": "9041541f6c3d5cd473c703da74ebce76686ec53f2b0a7e5b3e87315838bfe734",
+      "approvedFileSha256": "517b542249e7cc3e3e01065b13149ad04e5aec22a4c8e636df624734ad0b5613",
+      "seed": 19302,
+      "referenceMode": "Subjects",
+      "prompt": "concept-prompt.txt",
+      "negativePrompt": "concept-negative.txt",
+      "generationSeconds": 823.8,
+      "note": "Generator metadata was stripped; pixels are identical to the approved file."
+    },
+    "rights": "Original concept generated locally for Korovany II from an original prompt and the agent's original Blender blockout; no third-party images, franchise designs or real-person likeness."
+  },
+  "cook": {
+    "script": "pipeline/cook_landmark.py",
+    "recipe": "recipe.json",
+    "status": "verified",
+    "groundSheet": {
+      "applied": false
+    },
+    "floaters": {
+      "minComponentVertices": 40,
+      "removedComponents": 0,
+      "removedVertices": 0
+    },
+    "normalization": {
+      "uniformScale": 0.5284989421980373,
+      "sourceReach": 0.6054884398994516,
+      "reachMeters": 0.32,
+      "yawDegrees": 0,
+      "heightMeters": 0.5265348553657532,
+      "baseCentre": [
+        -0.0003305673599243164,
+        0.017841456457972527,
+        -0.4971691370010376
+      ],
+      "footprintMeters": [
+        0.5140329003334045,
+        0.4517769515514374
+      ],
+      "axes": "glTF +Y up/+Z forward -> Blender import -> glTF export_yup; no extra axis rotation"
+    },
+    "rawTopology": {
+      "vertices": 46429,
+      "faces": 92866,
+      "triangles": 92866,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "components": 1,
+      "componentVertexCounts": [
+        46429
+      ],
+      "degenerateFaces": 0,
+      "inconsistentWindingEdges": 0
+    },
+    "topology": {
+      "vertices": 1473,
+      "faces": 2954,
+      "triangles": 2954,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "components": 1,
+      "componentVertexCounts": [
+        1473
+      ],
+      "degenerateFaces": 0,
+      "inconsistentWindingEdges": 0
+    },
+    "decimation": {
+      "applied": true,
+      "before": 92866,
+      "triangles": 2954,
+      "ratio": 0.03182004178063015
+    },
+    "materials": {
+      "bakeSize": 1024,
+      "mapsSize": 512,
+      "albedoSizes": [
+        512
+      ],
+      "albedoGain": 1,
+      "cageExtrusionMeters": 0.004,
+      "maxRayMeters": 0.012,
+      "atlasCoverage": 0.5672798156738281,
+      "metalFractionOfSurface": 0.06148249265343725,
+      "classFractions": {
+        "rope": 0.03231815155774029,
+        "burlap": 0.10490286398267758,
+        "iron": 0.07495847594967352,
+        "scorch": 0.11815693737433511,
+        "pine": 0.6696635711355735
+      },
+      "unclassifiedFraction": 0,
+      "roughnessMean": 0.7916886210441589,
+      "metalnessMean": 0.04538743570446968,
+      "aoMean": 0.7540820837020874,
+      "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active, supersampled) from the approved TRELLIS source mesh, then any declared colour repairs the recipe lists (matchBoxes, retint, facingBalance); tangent normals baked from the approved source mesh and whiteout-blended with relief derived from colour; AO baked from the decimated geometry; roughness and metalness from recipe colour classes. Artistic derivation, not measured PBR."
+    },
+    "tangentRepair": {
+      "script": "repair_tangents.py",
+      "scriptSha256": "80b1b0f84dfc08f2a5d50e3651065d987627fdba731468981d273f7920c8e17d",
+      "why": "three.js normalizes vertex tangents in the vertex shader; a zero-length tangent becomes NaN and the bloom spreads it.",
+      "normalsChecked": 4064,
+      "tangentsChecked": 4064,
+      "repaired": [],
+      "inputSha256": "6fdaafe2cb6083a33971991a58a81d85cd9fe13ff72daec16d0ca46b4cbc7673",
+      "bytesChanged": 0
+    },
+    "staticQuantization": {
+      "script": "quantize_prop_glb.py",
+      "scriptSha256": "4fceea5247a9da87d455879dd049eeba1426a67202a5e502e321731f8813378f",
+      "extension": "KHR_mesh_quantization",
+      "settings": {
+        "POSITION": "SHORT normalized about the bounding-box centre with one uniform scale; the scale and centre folded into the root node",
+        "NORMAL": "BYTE normalized",
+        "TANGENT": "BYTE normalized",
+        "TEXCOORD": "UNSIGNED_SHORT normalized where the UVs lie in [0, 1]"
+      },
+      "nodes": [
+        {
+          "node": "prop-pickup-supply",
+          "scale": 0.263176,
+          "translation": [
+            -7.5e-05,
+            0.263389,
+            0.000438
+          ]
+        }
+      ],
+      "positions": [
+        {
+          "mesh": "geometry_0",
+          "centre": [
+            -7.5e-05,
+            0.263389,
+            0.000438
+          ],
+          "scale": 0.263176,
+          "stepMm": 0.00803,
+          "boundMm": 0.1,
+          "maxErrorMm": 0.00401,
+          "extentMeters": 0.5264,
+          "maxErrorOfExtent": 7.63e-06
+        }
+      ],
+      "floatUvs": [],
+      "maxErrors": {
+        "positionMm": 0.00401,
+        "normalDegrees": 0.37072,
+        "tangentDegrees": 0.35285,
+        "uvTexels2048": 0.01562
+      },
+      "bounds": {
+        "positionMm": 0.1,
+        "positionHalfSteps": 0.51,
+        "normalDegrees": 0.8,
+        "tangentDegrees": 0.8,
+        "uvTexels2048": 0.05
+      },
+      "inputSha256": "6fdaafe2cb6083a33971991a58a81d85cd9fe13ff72daec16d0ca46b4cbc7673",
+      "bytesBefore": 410956,
+      "bytesAfter": 297380
+    },
+    "geometryCompression": {
+      "extension": "EXT_meshopt_compression",
+      "encoder": "meshoptimizer 0.22.0 (npm)",
+      "script": "meshopt_glb.mjs",
+      "scriptSha256": "9f5914236e6aac82b541e0685ab34f839a1287d50c41b8322724ddf420597ec8",
+      "filters": "none",
+      "reorder": {
+        "method": "meshoptimizer reorderMesh: vertex-cache triangle order, then vertex-fetch vertex order",
+        "primitives": 1,
+        "kept": 0,
+        "vertices": 4064,
+        "triangles": 2954,
+        "check": "a permutation: every vertex keeps its exact attribute bytes, and the triangles are the same, with the same winding, in another order"
+      },
+      "check": "every view decoded again: attribute views byte-identical to the reordered data; triangle index views hold the same triangles in the same order and winding (only the first vertex may rotate)",
+      "views": {
+        "attributes": {
+          "views": 4,
+          "raw": 81280,
+          "packed": 59297
+        },
+        "triangles": {
+          "views": 1,
+          "raw": 17724,
+          "packed": 3065,
+          "rotatedTriangles": 1498
+        },
+        "indices": {
+          "views": 0,
+          "raw": 0,
+          "packed": 0
+        },
+        "stored": 196080
+      },
+      "inputSha256": "44ce8f37cd77099747cd25ceef1eebf8ff73c8677fb0678784bf93686d740f8c",
+      "bytesBefore": 297380,
+      "bytesAfter": 261568
+    },
+    "derivedFrom": {
+      "cook": "ship-001-t-q",
+      "sha256": "44ce8f37cd77099747cd25ceef1eebf8ff73c8677fb0678784bf93686d740f8c",
+      "bytes": 297380,
+      "note": "The exact ship-001-t-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "derivedFrom": {
+        "cook": "ship-001-t",
+        "sha256": "6fdaafe2cb6083a33971991a58a81d85cd9fe13ff72daec16d0ca46b4cbc7673",
+        "bytes": 410956,
+        "note": "The exact ship-001-t output, quantized by quantize_prop_glb.py; the Blender cook was not re-run.",
+        "derivedFrom": {
+          "cook": "ship-001",
+          "sha256": "6fdaafe2cb6083a33971991a58a81d85cd9fe13ff72daec16d0ca46b4cbc7673",
+          "bytes": 410956,
+          "note": "The exact ship-001 output, tangents checked and degenerate ones repaired by repair_tangents.py; the Blender cook was not re-run."
+        }
+      }
+    },
+    "scripts": {
+      "cook_landmark.py": "6a73d5aefd446b6ca69eff7d9ffce5b69e4b8c156bd3ce7239a0b48a16b6feb7",
+      "k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
+      "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
+      "k2sheet.py": "0141e81990f6318c974fa018c895e02aa71b9c8ba5e23dbdd741e4881e6f177c",
+      "repair_tangents.py": "be1ff6e6aa829a639644a8f7b6960b424c5bcaba0b137fe4ffc5f3da338cb952",
+      "quantize_prop_glb.py": "4fceea5247a9da87d455879dd049eeba1426a67202a5e502e321731f8813378f",
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+    },
+    "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
+    "seconds": 7.1,
+    "verification": "tests/pickup-models.test.ts checks one static mesh and material within the triangle budget, normals, tangents and WebP maps, and drives the pickup pools without a DOM (one instanced draw per kind with no instance colour, the procedural pickup's size and height, its bob and the coin's spin, no motion under reduced motion); tests/models-browser.test.ts decodes its maps and tests/props-browser.test.ts renders the pickups on the shader programs warmed at load."
+  },
+  "limitations": [
+    "Single-view TRELLIS reconstruction from one approved concept: the far side, back and underside are TRELLIS's invention, with no rear-view painting projected onto them.",
+    "Roughness, metalness and ambient occlusion are derived from colour classes and Cycles bakes, not measured PBR or hand-painted masks.",
+    "Re-cooking is not guaranteed to be byte-reproducible: MikkTSpace tangents can round differently on a few vertices.",
+    "TRELLIS continued the iron band down both sides and under the crate and scorched the slat edges darker than the concept; the rope over the sack is soft and its twist is painted.",
+    "The concept's plain pine is pale and the burlap sack is close to it in colour; the sack reads by shape.",
+    "At 261,568 bytes it exceeds the batch F plan's 250 KB per pickup by 12 KB (the three 512 px WebP maps are 196 KB of it)."
+  ]
+}
