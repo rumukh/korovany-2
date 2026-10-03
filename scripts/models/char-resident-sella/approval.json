@@ -1,0 +1,68 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-resident-sella",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Sella v1 seed 15202 (Recommended)",
+      "decidedAt": "2026-10-02T21:55:18.581459+02:00",
+      "question": "Gate 1, batch D4, delegated under the standing instruction of 2026-10-01: which concept should Sella, river salvage diver of Mirecross, use? Board 127.0.0.1:47901 (_reviews/gate1-residents-d4): 15201 (the best face, but a rope coil standing out from the hip with a dangling tail), 15202 (recommended: the rope tight across the chest into a compact hank at the hip), 15203 (a rope end hanging down the thigh).",
+      "sha256": "d6550d57d62781518f83505833b5389a69ab6cf668b27ab64e0438d82640c652",
+      "approvedFileSha256": "4f84813a62ead7f0fe40cd7d25c127994be597dcac8b9778e7ceb19fbabe1641",
+      "pixelSha256": "290bc9ccb2b5393dc2d1e19d03f40e7710410c3f1e3b996a557df2bf9659b526",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+        "delegatedAt": "2026-10-01T10:52:52.040+02:00"
+      }
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve HD s101 and add a projected rear-view concept (Recommended)",
+      "decidedAt": "2026-10-02T23:18:55.472394+02:00",
+      "question": "Gate 2, batch D4, delegated under the standing instruction of 2026-10-01: which raw TRELLIS mesh should Sella be cooked from? Board 127.0.0.1:47903 (_reviews/gate2-residents-d4).",
+      "sha256": "86865ac8b91565edbf5ad7632abcde43517bd64067c1b72b146a6b6a3ced80e5",
+      "candidate": "hd-s101",
+      "conditions": [
+        "Add a rear-view concept (two local Qwen candidates) and project it in the cook; the raw back is dark.",
+        "Trousers: the shared humanoid weights without skirt handling; keep the rope hank on the hip, weighted to the pelvis.",
+        "Calibrate the warm forehead blotch away with the tone match on the skin region if it shows at gameplay distance.",
+        "Decimate to at most 9,500 triangles; rig with the shared humanoid skeleton and author Idle and Talk."
+      ],
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated residents, ship-001-t-q-m (Recommended)",
+      "decidedAt": "2026-10-03T03:45:57.869511+02:00",
+      "question": "Gate 3 for batch D4, delegated under the standing instruction of 2026-10-01: Ivet, Sella, Orsa, Hana and Dren are in the running game at the Reed Chapel, Mirecross, Saltmarket, the Tide Observatory and Wreckers' Rest (board 127.0.0.1:47905, _reviews/gate3-residents-d4). Rig, weights and clips are identical in both candidates, both pass the new tangent check (one vertex of Ivet repaired), are quantized and meshopt-compressed, and pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the five GLBs add 2.67 MB (2.45 MB gzip-9) and all 33 preloaded models total 22.8 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in 19 of 20 scene and quality pairs (one is 0.2 ms higher) and draw calls fall by 26 to 52 per scene; in SwiftShader p50 is within -5.8% and +5.7%. Calibrated lifts all five to their concepts' brightness; the lift saturates the painted backs (Sella's vest, Orsa's and Hana's coats, Dren's tunic) and tints Sella's face orange. As cooked, they stay at 42% to 67% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "3756ae4ca47948f9eb7bc7cd62f6fdc10acbc0f4f085bfbd9a4bdaaffff66a7f",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Sella rear 25202 (Recommended)",
+      "decidedAt": "2026-10-03T03:01:01.906603+02:00",
+      "question": "Gate 1 rear view, batch D4, delegated under the standing instruction of 2026-10-01: which rear-view painting should Sella Brine use? Board 127.0.0.1:47904 (_reviews/gate1-rear-residents-d4).",
+      "sha256": "08b50e84aab3dcdd7586ea4739b5a09e231238d904669dfc6c3175faafc44441",
+      "approvedFileSha256": "ca7fc22c426ef2452faa3ecd4553002c13a54b5eb118d3a020d52bd61b281209",
+      "pixelSha256": "6528e23142e187fb3725237dc52a030308bb76f7fcc748c8ac175b0219e5fc33",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-resident-hana",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Hana v1 seed 15403 (Recommended)",
+      "decidedAt": "2026-10-02T21:55:18.894524+02:00",
+      "question": "Gate 1, batch D4, delegated under the standing instruction of 2026-10-01: which concept should Hana, tide and signal keeper of the Tide Observatory, use? Board 127.0.0.1:47901 (_reviews/gate1-residents-d4): 15401 (a hip bag, check trousers and modern ankle boots), 15402 (an added white roll-neck), 15403 (recommended: the closest face, close hood, red lens clip and period riding boots).",
+      "sha256": "9079caea75fee4b927bdf951c0604c491c72a7a7d68f1ee01b7b790ca948594c",
+      "approvedFileSha256": "9435a6054b18e419ee2bcfdc15414d5ec586ba6a01018b2926639cd85b32cd34",
+      "pixelSha256": "244ba6dc964124ebc68963a4f1b4fe9984922f6e0f4c97065af50b99d0e1de24",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+        "delegatedAt": "2026-10-01T10:52:52.040+02:00"
+      }
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve HD s101 and add a projected rear-view concept (Recommended)",
+      "decidedAt": "2026-10-02T23:18:55.789501+02:00",
+      "question": "Gate 2, batch D4, delegated under the standing instruction of 2026-10-01: which raw TRELLIS mesh should Hana be cooked from? Board 127.0.0.1:47903 (_reviews/gate2-residents-d4).",
+      "sha256": "0ada9f7286da42c56ae7efa93f73410f4a2b1a93d43d106d19e02f70eddaf4cb",
+      "candidate": "hd-s101",
+      "conditions": [
+        "Add a rear-view concept (two local Qwen candidates) and project it in the cook; the raw back is dark.",
+        "Hip-length jacket over trousers and tall boots: the shared humanoid weights; keep the hip lamp weighted to the pelvis.",
+        "Keep the red lens on the strap and the green hood readable after the tone lift.",
+        "Decimate to at most 9,500 triangles; rig with the shared humanoid skeleton and author Idle and Talk."
+      ],
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated residents, ship-001-t-q-m (Recommended)",
+      "decidedAt": "2026-10-03T03:45:57.869511+02:00",
+      "question": "Gate 3 for batch D4, delegated under the standing instruction of 2026-10-01: Ivet, Sella, Orsa, Hana and Dren are in the running game at the Reed Chapel, Mirecross, Saltmarket, the Tide Observatory and Wreckers' Rest (board 127.0.0.1:47905, _reviews/gate3-residents-d4). Rig, weights and clips are identical in both candidates, both pass the new tangent check (one vertex of Ivet repaired), are quantized and meshopt-compressed, and pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the five GLBs add 2.67 MB (2.45 MB gzip-9) and all 33 preloaded models total 22.8 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in 19 of 20 scene and quality pairs (one is 0.2 ms higher) and draw calls fall by 26 to 52 per scene; in SwiftShader p50 is within -5.8% and +5.7%. Calibrated lifts all five to their concepts' brightness; the lift saturates the painted backs (Sella's vest, Orsa's and Hana's coats, Dren's tunic) and tints Sella's face orange. As cooked, they stay at 42% to 67% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "cd4dd12dc2a5c1c274fcf61687c07fb09fdb8369cf33af6003f4dca3d9ff04cd",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Hana rear 25401 (Recommended)",
+      "decidedAt": "2026-10-03T03:01:02.095197+02:00",
+      "question": "Gate 1 rear view, batch D4, delegated under the standing instruction of 2026-10-01: which rear-view painting should Hana Pell use? Board 127.0.0.1:47904 (_reviews/gate1-rear-residents-d4).",
+      "sha256": "319a3d78c842c730518496146255d891097563026552ea7e2c4991b2200cdc0a",
+      "approvedFileSha256": "9cee66b1291334b6f3fd86248907790447791ea5c37189a055a717d2ec5faca5",
+      "pixelSha256": "d15e9e205d40a8d9cd09094309aefd59c89ff2b2398912033e9ce5341e1a541f",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ]
+}

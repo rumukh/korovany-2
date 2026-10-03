@@ -129,6 +129,29 @@ describe('cooked 3D models', () => {
     await expect(parseGlbWithoutTextures(bytes, null)).rejects.toThrow(/setMeshoptDecoder/);
   });
 
+  test.each(MODEL_IDS)('%s: every vertex normal and tangent is a finite unit vector', async id => {
+    // three.js normalizes tangents in the vertex shader: a zero-length one (MikkTSpace on a degenerate UV fan) shades its
+    // triangles NaN, and the high-quality bloom spreads that over a black block of the frame.
+    const { scene } = await parseGlbWithoutTextures(glb(id));
+    const vector = new THREE.Vector3();
+    let checked = 0;
+    scene.traverse(object => {
+      if (!(object instanceof THREE.Mesh)) return;
+      for (const name of ['normal', 'tangent']) {
+        const attribute = (object.geometry as THREE.BufferGeometry).getAttribute(name) as THREE.BufferAttribute | undefined;
+        if (!attribute) continue;
+        for (let index = 0; index < attribute.count; index++) {
+          const length = vector.fromBufferAttribute(attribute, index).length();
+          // 8-bit quantized directions decode within about 0.6% of unit length.
+          if (!(Math.abs(length - 1) < 0.02)) expect.fail(`${object.name} ${name} ${index} has length ${length}`);
+          if (name === 'tangent' && Math.abs(attribute.getW(index)) !== 1) expect.fail(`${object.name} tangent ${index} handedness`);
+        }
+        checked += attribute.count;
+      }
+    });
+    expect(checked).toBeGreaterThan(0);
+  });
+
   test('dye-masked base colour keeps its hidden colour: libwebp exact encoding, pinned to the shipped bytes', () => {
     // The base-colour alpha is the faction-dye mask, not coverage. libwebp's default lossy mode discards RGB under
     // alpha 0, which once flattened every undyed surface of the soldier; the cook records the round-trip error.

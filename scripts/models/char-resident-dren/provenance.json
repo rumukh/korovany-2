@@ -1,0 +1,607 @@
+{
+  "schema": "korovany2-model-provenance/1",
+  "id": "char-resident-dren",
+  "role": "Dren Silt, salvage crew leader (the narrative resident 'dren', presentation only)",
+  "output": {
+    "file": "public/models/char-resident-dren/char-resident-dren.glb",
+    "sha256": "2aa16d423221cc3a7890771bab49f70aa13ef15d8089cdba459b9281afa5d625",
+    "bytes": 620208
+  },
+  "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from a plain civilian body template (itself made locally from the approved line-soldier concept with the blank head of an original Blender mannequin) and the resident's own in-game portrait as the identity reference. The portraits are original Korovany II artwork generated earlier for the project with Azure OpenAI gpt-image-2 (public/portraits/manifest.json); they were used here only as local references, with no new cloud generation. No third-party image, franchise design or real-person likeness was used as input.",
+  "acknowledgment": {
+    "decidedAt": "2026-09-26T23:06:17.4391138+02:00",
+    "decision": "I acknowledge this for korovany-2: commit TRELLIS-derived assets with the restriction recorded",
+    "project": "rumukh/korovany-2"
+  },
+  "delegation": {
+    "decidedAt": "2026-10-01T10:52:52.040+02:00",
+    "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+    "scope": "All remaining Phase 2 review gates (concept selection, unrigged mesh, rear-view choice and in-game approval) for batch D onward: the agent adopts its recommended option, records it as a delegated decision naming this record, and still publishes the review boards with measured limitations and the gap to AAA."
+  },
+  "tools": [
+    {
+      "name": "Qwen Image Edit Plus 2511",
+      "runtime": "WanGP (local, CLI)",
+      "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+      "textEncoder": "Qwen2.5-VL-7B-Instruct_quanto_bf16_int8",
+      "steps": 50,
+      "guidanceScale": 4.0,
+      "role": "concept art"
+    },
+    {
+      "name": "Blender 5.2.2 LTS",
+      "build": "d13f752e3b9c",
+      "role": "reference renders, cooking, baking, rig, clips (CPU Cycles)"
+    },
+    {
+      "name": "TRELLIS-image-large",
+      "model": "microsoft/TRELLIS-image-large",
+      "modelRevision": "25e0d31ffbebe4b5a97464dd851910efc3002d96",
+      "sourceRevision": "442aa1e1afb9014e80681d3bf604e8d728a86ee7",
+      "runnerSha256": "aef0d6a863b77b65869d9f2ce6a127abf7231863e2aae428ad1322df281eea69",
+      "seed": 505,
+      "settings": {
+        "sparseStructureSampler": {
+          "name": "FlowEulerGuidanceIntervalSampler",
+          "args": {
+            "sigma_min": 1e-05
+          },
+          "params": {
+            "steps": 25,
+            "cfg_strength": 5.0,
+            "cfg_interval": [
+              0.5,
+              1.0
+            ],
+            "rescale_t": 3.0
+          }
+        },
+        "slatSampler": {
+          "name": "FlowEulerGuidanceIntervalSampler",
+          "args": {
+            "sigma_min": 1e-05
+          },
+          "params": {
+            "steps": 25,
+            "cfg_strength": 5.0,
+            "cfg_interval": [
+              0.5,
+              1.0
+            ],
+            "rescale_t": 3.0
+          }
+        },
+        "formats": [
+          "gaussian",
+          "mesh"
+        ],
+        "unusedRadianceFieldDecoderLoaded": false,
+        "attention": "xformers",
+        "spconvAlgorithm": "native",
+        "modelPrecision": "unchanged upstream checkpoint config",
+        "localLoader": "LocalPipeline replaces only DINOv2 code/weight discovery; strict same state dict and normalization",
+        "export": {
+          "simplify": 0.85,
+          "fillHoles": true,
+          "fillHolesMaxSize": 0.04,
+          "textureSize": 2048,
+          "bakingMode": "opt",
+          "bakingSteps": 2500,
+          "bakingViews": 100,
+          "bakingViewResolution": 1024,
+          "holeFillViews": 1000,
+          "holeFillResolution": 1024
+        }
+      },
+      "offline": true,
+      "networkCheck": "[Errno 101] Network is unreachable",
+      "inferenceSeconds": 91.5,
+      "peakTorchReservedBytes": 12891193344,
+      "output": {
+        "sha256": "faf8b51e6053a206d2163e99a2604e5ae865f51d5833ae5aabb128e341cda3ec",
+        "bytes": 4216948
+      },
+      "licensing": {
+        "wholeToolchainMit": false,
+        "commercialClearanceEstablished": false
+      }
+    }
+  ],
+  "source": {
+    "references": [
+      {
+        "role": "Picture 1: a civilian body template with a blank grey mannequin head, made locally by Qwen Image Edit Plus 2511 (Scene mode, seed 11001) from the approved line-soldier concept with its head replaced by the blank head of the agent's original Blender mannequin (pipeline/make_blankhead_reference.py): pose, anatomy, bare hands, camera, light and backdrop only; its plain linen shirt, waistcoat, belt, trousers and ankle boots is replaced by the prompt's outfit.",
+        "sha256": "98202b9401ce97681c948769951625843cdb3a6df04a98762aacc337389f5312"
+      },
+      {
+        "role": "Picture 2: the resident's canonical in-game portrait (public/portraits/dren.webp, sha256 2264b587b25990ed14f30c7fd685b7305843737eb84c3d9540e73851511a4441, decoded losslessly to PNG; an original Korovany II portrait generated earlier for the project with Azure OpenAI gpt-image-2, used here only as a local identity reference, no new cloud generation): face, age, skin, hair, headwear and clothing colours.",
+        "sha256": "114a784e2623d957ea610b50be2004a2ed05c7925be74704f905b3fc43c4b1dd"
+      }
+    ],
+    "bodyTemplate": {
+      "sha256": "98202b9401ce97681c948769951625843cdb3a6df04a98762aacc337389f5312",
+      "seed": 11001,
+      "referenceMode": "Scene",
+      "prompt": "template-prompt.txt",
+      "negativePrompt": "template-negative.txt",
+      "input": {
+        "sha256": "958ef9a3030581a9677fd35094f998a571f2b5cd92b6a0378b47e5a217881bc9",
+        "note": "The approved soldier concept 4101 with the blank head of the original Blender mannequin, reproducible byte-for-byte with pipeline/make_blankhead_reference.py."
+      }
+    },
+    "identity": {
+      "portrait": "public/portraits/dren.webp",
+      "sha256": "2264b587b25990ed14f30c7fd685b7305843737eb84c3d9540e73851511a4441",
+      "masterSha256": "d4e11009feecb6d40368ecc3e0209867747d670069308a4d646cf64bdc2e00d1",
+      "note": "The shipped 320 px WebP decoded losslessly; the 1024 px master was not available locally."
+    },
+    "concept": {
+      "file": "concept.png",
+      "sha256": "dc580e3f7e637c39e1b5251db127c81acd075e581eae94432af986613891bed6",
+      "pixelSha256": "66734aee771595ec8b896201ea3b697f7a799c536e2e7f1b52a4b018146ddba4",
+      "approvedFileSha256": "3e013dc6265d4908f16e94abce75467b8b6ebbcef7b49589c8bde7c49191abb9",
+      "seed": 15501,
+      "referenceMode": "Subjects",
+      "prompt": "concept-prompt.txt",
+      "negativePrompt": "concept-negative.txt",
+      "generationSeconds": 1118.1,
+      "note": "Generator metadata was stripped; pixels are identical to the approved file."
+    },
+    "rearConcept": {
+      "file": "concept-rear.png",
+      "sha256": "8ba8f08a0d4cb0774fa3cd3cb64f18e8047f1d3bdd61b5b0af3739eba82adea7",
+      "pixelSha256": "6b2af25445e73d0283c1c935ab80e2fc6c19893c114ae1db47b68194ed76934e",
+      "approvedFileSha256": "86116e3c8590ba75487272356d9fafea690c20a431497c06f91076884e2f9984",
+      "seed": 25502,
+      "prompt": "concept-rear-prompt.txt",
+      "negativePrompt": "concept-rear-negative.txt",
+      "generationSeconds": 1114.9,
+      "method": "Qwen Scene mode repainting an orthographic back render of the approved mesh, with the front concept as identity reference"
+    },
+    "rearProjection": {
+      "scripts": [
+        "pipeline/register_rear_warp.py",
+        "pipeline/project_rear.py"
+      ],
+      "registration": {
+        "mirrored": false,
+        "iouAsGenerated": 0.9197,
+        "iouFinal": 0.9696,
+        "scaleX": 0.9926,
+        "scaleY": 0.9992,
+        "shiftPx": [
+          -2.0,
+          -0.5
+        ]
+      },
+      "texels": {
+        "covered": 2591271,
+        "candidates": 1281587,
+        "visible": 961787,
+        "painted": 961787,
+        "fullyPainted": 725515
+      },
+      "frontTexelsChanged": 0,
+      "backTorsoValue": {
+        "before": 0.10517145693302155,
+        "after": 0.16986720263957977
+      },
+      "frontTorsoValue": {
+        "before": 0.13895222544670105,
+        "after": 0.13895222544670105
+      },
+      "reprojection": {
+        "pixels": 431989,
+        "meanAbsDiff255": 1.9637006521224976,
+        "p95AbsDiff255": 8.000003814697266
+      },
+      "sourceGlbSha256": "5e82d49571abe57907006f94d0b3adbf708d5e1f9eed5b7fad012f3f0b2dd480"
+    }
+  },
+  "cook": {
+    "script": "pipeline/cook_resident.py",
+    "recipe": "recipe.json",
+    "status": "verified",
+    "heightMeters": 2.18,
+    "normalization": {
+      "uniformScale": 2.179796665800692,
+      "targetHeightMeters": 2.18,
+      "yawDegrees": 0
+    },
+    "rawTopology": {
+      "vertices": 14636,
+      "faces": 29299,
+      "triangles": 29299,
+      "boundaryEdges": 3,
+      "nonManifoldEdges": 0,
+      "components": 3,
+      "componentVertexCounts": [
+        14590,
+        43,
+        3
+      ],
+      "degenerateFaces": 0,
+      "inconsistentWindingEdges": 0
+    },
+    "topology": {
+      "vertices": 4660,
+      "faces": 9356,
+      "triangles": 9356,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "components": 1,
+      "componentVertexCounts": [
+        4660
+      ],
+      "degenerateFaces": 0,
+      "inconsistentWindingEdges": 0
+    },
+    "decimation": {
+      "applied": true,
+      "before": 29216,
+      "triangles": 9356,
+      "ratio": 0.32028682913472073
+    },
+    "materials": {
+      "bakeSize": 2048,
+      "textureSize": 1024,
+      "atlasCoverage": 0.5891790390014648,
+      "dyeFractionOfSurface": 0,
+      "metalFractionOfSurface": 0,
+      "toneMatch": [
+        {
+          "regions": [
+            "vest-tone"
+          ],
+          "frontMean": [
+            0.09700000286102295,
+            0.054999999701976776,
+            0.050999999046325684
+          ],
+          "backMeanBefore": [
+            0.14399999380111694,
+            0.041999999433755875,
+            0.03999999910593033
+          ],
+          "backMeanAfter": [
+            0.11299999803304672,
+            0.05000000074505806,
+            0.04699999839067459
+          ],
+          "contrastApplied": [
+            0.6050000190734863,
+            0.9229999780654907,
+            1.0149999856948853
+          ],
+          "texels": 187194
+        },
+        {
+          "regions": [
+            "cape-tone"
+          ],
+          "frontMean": [
+            0.10700000077486038,
+            0.10499999672174454,
+            0.10599999874830246
+          ],
+          "backMeanBefore": [
+            0.09200000017881393,
+            0.10100000351667404,
+            0.10899999737739563
+          ],
+          "backMeanAfter": [
+            0.10199999809265137,
+            0.10300000011920929,
+            0.10599999874830246
+          ],
+          "contrastApplied": [
+            1.1030000448226929,
+            1.00600004196167,
+            0.9200000166893005
+          ],
+          "texels": 80536
+        },
+        {
+          "regions": [
+            "trousers-tone"
+          ],
+          "frontMean": [
+            0.09799999743700027,
+            0.07000000029802322,
+            0.05400000140070915
+          ],
+          "backMeanBefore": [
+            0.20800000429153442,
+            0.10000000149011612,
+            0.0430000014603138
+          ],
+          "backMeanAfter": [
+            0.13199999928474426,
+            0.07900000363588333,
+            0.050999999046325684
+          ],
+          "contrastApplied": [
+            0.5630000233650208,
+            0.6370000243186951,
+            0.7760000228881836
+          ],
+          "texels": 105338
+        }
+      ],
+      "roughnessMean": 0.8330923318862915,
+      "aoMean": 0.7571496367454529,
+      "albedoGain": 1,
+      "reliefStrength": 4,
+      "aoSamples": 64,
+      "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved source mesh, whose back carries the approved rear-view concept projection; tangent normals baked from the source geometry and whiteout-blended with colour relief; AO baked from the decimated geometry; roughness, metalness and dye mask derived from colour inside declared regions. Base colour then lifted by luma power toneGamma after the repairs (chroma ratios kept), calibrated in the game against the approved concept. Artistic derivation, not measured PBR.",
+      "toneGamma": 0.663,
+      "toneCalibration": "Luma power fitted in the game so the resident's mean luma from the default follow camera (world yaw pi, pitch 0.48, 18 and 26 m, 8 facings, high and low quality, resident-only pixels) equals the approved TRELLIS input's foreground mean luma (42.2/255); 22.8/255 as cooked without it.",
+      "toneLift": {
+        "order": "after bake and colour repairs",
+        "meanLumaBefore": 0.1123,
+        "meanLumaAfter": 0.1997
+      }
+    },
+    "toneCalibration": {
+      "method": "Mean Rec.709 luma (0-255) of the resident's own pixels in the game presenter (both qualities, 18 and 26 m, 8 facings, default follow camera at world yaw pi and pitch 0.48), each rendered over two backgrounds with every other drawable hidden; the concept value is the alpha-masked TRELLIS input. toneGamma was interpolated between measured powers (1, 0.85, 0.72, 0.6) to meet the concept, and floored at 0.6, the strongest power measured.",
+      "conceptMeanLuma": 42.2,
+      "asCookedMeanLuma": 22.8,
+      "calibratedMeanLuma": 41.7,
+      "reachesConcept": true,
+      "note": "Calibrated to the concept's mean luma."
+    },
+    "baseEncoding": {
+      "encoder": "Pillow 9.4.0 / libwebp 1.2.4",
+      "script": "webp_exact.py",
+      "scriptSha256": "87f340d373c6807260f3704dff4f5b42bda80e47ff6030022d166def26c2773d",
+      "settings": {
+        "quality": 90,
+        "method": 6,
+        "exact": true,
+        "alpha": "lossless"
+      },
+      "reason": "Base-colour alpha is the dye mask; libwebp's default lossy mode discards RGB under alpha 0.",
+      "images": [
+        {
+          "image": "body-base",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 203614,
+          "sha256": "6036a51029227a064f589d6e910320327292160d1bb9e339c75775654eefd3d9",
+          "bytesBefore": 5664,
+          "meanAbsRgbError": {
+            "dyed": null,
+            "undyed": 2.181
+          },
+          "meanAbsRgbErrorBefore": {
+            "dyed": null,
+            "undyed": 48.758
+          },
+          "undyedFraction": 1
+        }
+      ]
+    },
+    "ormSize": 512,
+    "tangentRepair": {
+      "script": "repair_tangents.py",
+      "scriptSha256": "80b1b0f84dfc08f2a5d50e3651065d987627fdba731468981d273f7920c8e17d",
+      "why": "three.js normalizes vertex tangents in the vertex shader; a zero-length tangent becomes NaN and the bloom spreads it.",
+      "normalsChecked": 8429,
+      "tangentsChecked": 8429,
+      "repaired": [],
+      "inputSha256": "ecad684b024a7eb5e5fc81085da398bc3ee81b5af4e739c4909e8d12f544c10e",
+      "bytesChanged": 0
+    },
+    "quantization": {
+      "script": "quantize_glb.py",
+      "scriptSha256": "46911d96d3deaba53622cbe20ba3ca1d20dea63bdf08af95658332dcdd2f4303",
+      "extension": "KHR_mesh_quantization",
+      "settings": {
+        "POSITION": "SHORT normalized; uniform scale and offset folded into the inverse bind matrices",
+        "NORMAL": "BYTE normalized",
+        "TANGENT": "BYTE normalized",
+        "TEXCOORD_0": "UNSIGNED_SHORT normalized",
+        "WEIGHTS_0": "UNSIGNED_BYTE normalized, largest-remainder rounding to 255",
+        "rotation": "SHORT normalized"
+      },
+      "dequantization": {
+        "scaleMeters": 1.089786,
+        "offsetMeters": [
+          -0.0009,
+          1.089508,
+          -0.03146
+        ]
+      },
+      "maxErrors": {
+        "positionMm": 0.01663,
+        "normalDegrees": 0.36503,
+        "tangentDegrees": 0.36681,
+        "uvTexels2048": 0.01563,
+        "weight": 0.00286,
+        "rotationDegrees": 0.00303
+      },
+      "bounds": {
+        "positionMm": 0.1,
+        "normalDegrees": 0.8,
+        "tangentDegrees": 0.8,
+        "uvTexels2048": 0.05,
+        "weight": 0.004,
+        "rotationDegrees": 0.01
+      },
+      "inputSha256": "ecad684b024a7eb5e5fc81085da398bc3ee81b5af4e739c4909e8d12f544c10e",
+      "bytesBefore": 1168520,
+      "bytesAfter": 777380
+    },
+    "geometryCompression": {
+      "extension": "EXT_meshopt_compression",
+      "encoder": "meshoptimizer 0.22.0 (npm)",
+      "script": "meshopt_glb.mjs",
+      "scriptSha256": "9f5914236e6aac82b541e0685ab34f839a1287d50c41b8322724ddf420597ec8",
+      "filters": "none",
+      "reorder": {
+        "method": "meshoptimizer reorderMesh: vertex-cache triangle order, then vertex-fetch vertex order",
+        "primitives": 1,
+        "kept": 0,
+        "vertices": 8429,
+        "triangles": 9356,
+        "check": "a permutation: every vertex keeps its exact attribute bytes, and the triangles are the same, with the same winding, in another order"
+      },
+      "check": "every view decoded again: attribute views byte-identical to the reordered data; triangle index views hold the same triangles in the same order and winding (only the first vertex may rotate)",
+      "views": {
+        "attributes": {
+          "views": 53,
+          "raw": 297916,
+          "packed": 179249
+        },
+        "triangles": {
+          "views": 1,
+          "raw": 56136,
+          "packed": 9984,
+          "rotatedTriangles": 5430
+        },
+        "indices": {
+          "views": 0,
+          "raw": 0,
+          "packed": 0
+        },
+        "stored": 403074
+      },
+      "inputSha256": "e5dd877d30572003e2db1dbfdeb97abbd9bc3b664658696627fd24375266c152",
+      "bytesBefore": 777380,
+      "bytesAfter": 620208
+    },
+    "derivedFrom": {
+      "cook": "ship-001-t-q",
+      "sha256": "e5dd877d30572003e2db1dbfdeb97abbd9bc3b664658696627fd24375266c152",
+      "bytes": 777380,
+      "note": "The exact ship-001-t-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "derivedFrom": {
+        "cook": "ship-001-t",
+        "sha256": "ecad684b024a7eb5e5fc81085da398bc3ee81b5af4e739c4909e8d12f544c10e",
+        "bytes": 1168520,
+        "note": "The exact ship-001-t output, quantized by quantize_glb.py; the Blender cook was not re-run.",
+        "derivedFrom": {
+          "cook": "ship-001",
+          "sha256": "ecad684b024a7eb5e5fc81085da398bc3ee81b5af4e739c4909e8d12f544c10e",
+          "bytes": 1168520,
+          "note": "The exact ship-001 output, tangents checked and degenerate ones repaired by repair_tangents.py; the Blender cook was not re-run."
+        }
+      }
+    },
+    "weights": {
+      "method": "bone-heat",
+      "joints": 29,
+      "maxInfluences": 4,
+      "relaxationIterations": 16,
+      "finalRelaxation": 2,
+      "lockedVertices": 63
+    },
+    "rig": {
+      "joints": 30,
+      "names": [
+        "root",
+        "pelvis",
+        "spine",
+        "chest",
+        "neck",
+        "head",
+        "clavicle_l",
+        "upperarm_l",
+        "forearm_l",
+        "hand_l",
+        "fingers_l",
+        "thigh_l",
+        "shin_l",
+        "foot_l",
+        "toe_l",
+        "shoulderhelper_l",
+        "kneehelper_l",
+        "clavicle_r",
+        "upperarm_r",
+        "forearm_r",
+        "hand_r",
+        "fingers_r",
+        "thigh_r",
+        "shin_r",
+        "foot_r",
+        "toe_r",
+        "shoulderhelper_r",
+        "kneehelper_r",
+        "skirt_front",
+        "skirt_back"
+      ]
+    },
+    "clips": [
+      {
+        "name": "Idle",
+        "frames": 288,
+        "seconds": 4.8,
+        "loop": true,
+        "maxWristBendDegrees": {
+          "l": 71.4,
+          "r": 71.4
+        },
+        "maxReachShortfallMeters": {
+          "l": 0.0848,
+          "r": 0.0848
+        }
+      },
+      {
+        "name": "Talk",
+        "frames": 360,
+        "seconds": 6,
+        "loop": true,
+        "maxWristBendDegrees": {
+          "l": 71.4,
+          "r": 71.4
+        },
+        "maxReachShortfallMeters": {
+          "l": 0.0791,
+          "r": 0.0551
+        }
+      }
+    ],
+    "animationThinning": {
+      "step": 2,
+      "keyRateHz": 30,
+      "outputBytesBefore": 780000,
+      "outputBytesAfter": 391200
+    },
+    "animationPruning": {
+      "removedChannels": {
+        "scale": 60,
+        "translation": 58,
+        "rotation": 18
+      },
+      "keptChannels": 44,
+      "bytesBefore": 2082872,
+      "bytesAfter": 970516,
+      "tolerance": 1e-06
+    },
+    "scripts": {
+      "cook_resident.py": "ef359157d71dd0c68331288ed98f2fbac79755bd33f3c82d9c8ea6ed4a15e526",
+      "k2rig.py": "acacf7ff3039f58271b996b289ecca657d30bc99e195d7b7013e577003a0fc3c",
+      "k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
+      "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
+      "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
+      "repair_tangents.py": "be1ff6e6aa829a639644a8f7b6960b424c5bcaba0b137fe4ffc5f3da338cb952",
+      "quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f",
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+    },
+    "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
+    "seconds": 28.2,
+    "verification": "tests/resident-models.test.ts verifies every 60 Hz frame of Idle and Talk as planted loops and rejects six deliberately broken copies; tests/models.test.ts checks that every normal and tangent is a finite unit vector; tests/residents-browser.test.ts renders the residents in the game's WebGL presenter."
+  },
+  "limitations": [
+    "Single-view TRELLIS reconstruction: hands are fused 'mitten' shapes and the face is soft, with smeared eye sockets; at the game's closest camera (18 m) a resident is about 140 px tall, so neither reads in play.",
+    "The back is a projected rear-view concept (Qwen repainting an orthographic back render of the approved mesh, with the front concept as identity reference), blended into the reconstructed texture at the sides; the nearest painted colour fills the few back pixels the painting does not reach.",
+    "Roughness, metalness and ambient occlusion are derived from colour inside declared regions and Cycles bakes, not measured PBR or hand-painted masks.",
+    "Linear blend skinning with shoulder and knee helpers and hem panels; edge strain is bounded on every 60 Hz frame (the provenance records the measured maxima).",
+    "Two procedural loops authored in Blender, Idle and Talk, with no motion capture, no facial animation, no lip sync, no finger animation and no cloth simulation; clips are keyed at 30 Hz. Residents stand: there is no walk, turn or work clip, and the presenter turns them to face the hero instantly, as the procedural figures did.",
+    "Re-cooking is not guaranteed to be byte-reproducible: MikkTSpace tangents can round differently on a few vertices.",
+    "From behind, the painted red tunic and the mantle's painted highlights read brighter than his front after the lift; a small reddish stain sits on the mantle's right shoulder.",
+    "Two small TRELLIS floaters (43 and 3 vertices) were removed by the cook."
+  ]
+}

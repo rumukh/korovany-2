@@ -197,7 +197,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked residents in the br
   test('decodes every resident texture and renders the cooked residents on the warmed programs, talking and still', async () => {
     if (!cdp) throw new Error('Browser was not initialized');
     const textures = await evaluate<{ id: string; key: string; width: number; range: number }[]>(cdp, 'window.residentHarness.textures()');
-    expect(new Set(textures.map(texture => texture.id)).size).toBe(15);
+    expect(new Set(textures.map(texture => texture.id)).size).toBe(20);
     for (const texture of textures) {
       expect(texture.width, `${texture.id}:${texture.key}`).toBeGreaterThanOrEqual(512);
       expect(texture.range, `${texture.id}:${texture.key}`).toBeGreaterThan(8);

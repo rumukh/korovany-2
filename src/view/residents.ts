@@ -5,7 +5,7 @@ import { palette } from './palette';
 import { joint, part, shapeGeometry } from './primitives';
 import { ViewResources } from './resources';
 
-/** The procedural stand-in figure of a resident without a cooked model yet. */
+/** The procedural figure of a resident presented without a model library (DOM-free tests) or with an unlisted id. */
 interface ProceduralFigure {
   leftArm: THREE.Group;
   rightArm: THREE.Group;
@@ -100,7 +100,7 @@ function resident(resources: ViewResources, npc: NpcSnapshot): Resident {
   root.name = `resident:${npc.id}`;
   root.userData.npcId = npc.id;
   // With a model library every listed resident must have loaded (a failure stops the game); DOM-free tests that
-  // construct resources without models, and residents whose batch has not shipped, use the procedural figure.
+  // construct resources without models, and ids outside the twenty named residents, use the procedural figure.
   const id = residentModelFor(npc.id);
   const model = id ? residentModel(resources, id, npc.id) : undefined;
   const figure = model ? undefined : proceduralFigure(resources, root, hash);

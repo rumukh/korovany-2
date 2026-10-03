@@ -1,0 +1,68 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-resident-orsa",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Orsa v1 seed 15301 (Recommended)",
+      "decidedAt": "2026-10-02T21:55:18.743326+02:00",
+      "question": "Gate 1, batch D4, delegated under the standing instruction of 2026-10-01: which concept should Orsa, grain factor of Saltmarket, use? Board 127.0.0.1:47901 (_reviews/gate1-residents-d4): 15301 (recommended: the calm appraising face, the standing russet collar, the brass pendant and a long merchant's coat), 15302 (knee-length coat, flatter collar, broad smile), 15303 (hip-length jacket and tan boots, a lighter character).",
+      "sha256": "012226fb38af3db36c2c4cf868623657741a5ea19d2b15607ea033623403172c",
+      "approvedFileSha256": "37e6cf6550fe4f1c7ea492f3ba0e430b2e67f4f3e7b5543b88139330813d755d",
+      "pixelSha256": "872d87460c3788d521da638e0c30e57855292d5ea5a871cc87f1e64cd1977bc6",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+        "delegatedAt": "2026-10-01T10:52:52.040+02:00"
+      }
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve HD s101 and add a projected rear-view concept (Recommended)",
+      "decidedAt": "2026-10-02T23:18:55.642528+02:00",
+      "question": "Gate 2, batch D4, delegated under the standing instruction of 2026-10-01: which raw TRELLIS mesh should Orsa be cooked from? Board 127.0.0.1:47903 (_reviews/gate2-residents-d4).",
+      "sha256": "301e0d034df0472f404ee8894eadbb77329a8367c45e299b513b640407930b64",
+      "candidate": "hd-s101",
+      "conditions": [
+        "Add a rear-view concept (two local Qwen candidates) and project it in the cook; the raw back is dark.",
+        "Mid-calf coat: long-skirt handling (hem band and skirt blend), the boots region capped at the hem.",
+        "The skin reconstructs lighter and yellower than the concept's deep warm brown: calibrate the tone against the concept.",
+        "Decimate to at most 9,500 triangles; rig with the shared humanoid skeleton and author Idle and Talk."
+      ],
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated residents, ship-001-t-q-m (Recommended)",
+      "decidedAt": "2026-10-03T03:45:57.869511+02:00",
+      "question": "Gate 3 for batch D4, delegated under the standing instruction of 2026-10-01: Ivet, Sella, Orsa, Hana and Dren are in the running game at the Reed Chapel, Mirecross, Saltmarket, the Tide Observatory and Wreckers' Rest (board 127.0.0.1:47905, _reviews/gate3-residents-d4). Rig, weights and clips are identical in both candidates, both pass the new tangent check (one vertex of Ivet repaired), are quantized and meshopt-compressed, and pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the five GLBs add 2.67 MB (2.45 MB gzip-9) and all 33 preloaded models total 22.8 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in 19 of 20 scene and quality pairs (one is 0.2 ms higher) and draw calls fall by 26 to 52 per scene; in SwiftShader p50 is within -5.8% and +5.7%. Calibrated lifts all five to their concepts' brightness; the lift saturates the painted backs (Sella's vest, Orsa's and Hana's coats, Dren's tunic) and tints Sella's face orange. As cooked, they stay at 42% to 67% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "0c01415f370cd17ba023cea3f55d6c607f264c0405c5ad0ecfe896ef2a096269",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Orsa rear 25301 (Recommended)",
+      "decidedAt": "2026-10-03T03:01:02.001195+02:00",
+      "question": "Gate 1 rear view, batch D4, delegated under the standing instruction of 2026-10-01: which rear-view painting should Orsa Flint use? Board 127.0.0.1:47904 (_reviews/gate1-rear-residents-d4).",
+      "sha256": "1640ba62f27e54ad9af79cf4b92f1a63510f0cbd3e7b9e72863aa8979787c9e1",
+      "approvedFileSha256": "c47c1b7222ed11162356164e70134292531f8a39d5e7e8562a84cfc7589fb8f9",
+      "pixelSha256": "a9237a72eb88dd6d21330bbcb05273e305e5d62263cf49fe0ad3a570d6fd125c",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ]
+}

@@ -1,0 +1,455 @@
+{
+  "id": "char-resident-sella",
+  "note": "Sella Brine, River salvage diver. PROVISIONAL: the palace officer hero's measured humanoid recipe scaled x0.9058 to 2.02 m; landmarks refitted to the approved mesh before cooking. Cooked metres, Blender axes (+Z up, front -Y, character left +X).",
+  "heightMeters": 2.02,
+  "triangleBudget": 9500,
+  "fillHoleSides": 12,
+  "baseQuality": 90,
+  "ormQuality": 85,
+  "ormSize": 512,
+  "animationKeyStep": 2,
+  "landmarks": {
+    "pelvis": [
+      0.0,
+      0.0181,
+      0.9874
+    ],
+    "spine": [
+      0.0,
+      0.0181,
+      1.1685
+    ],
+    "chest": [
+      0.0,
+      0.0181,
+      1.3633
+    ],
+    "neck": [
+      0.0,
+      0.0272,
+      1.6214
+    ],
+    "head": [
+      0.0,
+      0.0181,
+      1.6939
+    ],
+    "crown": [
+      0.0,
+      0.0,
+      2.02
+    ],
+    "clavicle": [
+      0.0543,
+      0.0,
+      1.5807
+    ],
+    "shoulder": [
+      0.3558,
+      0.01,
+      1.5309
+    ],
+    "elbow": [
+      0.4219,
+      0.0127,
+      1.2829
+    ],
+    "wrist": [
+      0.5232,
+      -0.0262,
+      1.1051
+    ],
+    "knuckle": [
+      0.5826,
+      -0.0182,
+      1.0156
+    ],
+    "fingertip": [
+      0.6301,
+      -0.0118,
+      0.9441
+    ],
+    "hip": [
+      0.1078,
+      0.0181,
+      0.9511
+    ],
+    "knee": [
+      0.1462,
+      0.0651,
+      0.5209
+    ],
+    "ankle": [
+      0.2035,
+      0.0513,
+      0.0996
+    ],
+    "ball": [
+      0.1948,
+      -0.0815,
+      0.0362
+    ],
+    "toe": [
+      0.1948,
+      -0.1721,
+      0.0272
+    ],
+    "skirtFront": [
+      0.0,
+      -0.154,
+      1.0145
+    ],
+    "skirtFrontTip": [
+      0.0,
+      -0.1993,
+      0.5978
+    ],
+    "skirtBack": [
+      0.0,
+      0.1902,
+      1.0145
+    ],
+    "skirtBackTip": [
+      0.0,
+      0.2355,
+      0.5978
+    ]
+  },
+  "regions": {
+    "torsoHalfWidth": 0.2989,
+    "lateralMargin": 0.05,
+    "armpitHeight": 1.3587,
+    "handMinHeight": 0.8877,
+    "crotchHeight": 0.8605,
+    "neckHeight": 1.6305,
+    "soleHeight": 0.0226,
+    "skirtTop": 1.087,
+    "skirtHemHeight": 0.83,
+    "skirtHalfWidth": 0.3261,
+    "headMinHeight": 1.7211,
+    "headHalfWidth": 0.1812,
+    "helmetMinHeight": 1.8117
+  },
+  "weights": {
+    "relax": 16,
+    "partRadius": {
+      "pelvis": 0.3,
+      "spine": 0.3,
+      "chest": 0.3,
+      "clavicle": 0.12,
+      "neck": 0.12,
+      "head": 0.2,
+      "upperarm": 0.14,
+      "forearm": 0.11,
+      "hand": 0.08,
+      "fingers": 0.06,
+      "thigh": 0.15,
+      "shin": 0.11,
+      "foot": 0.1,
+      "toe": 0.08,
+      "skirt_front": 0.1,
+      "skirt_back": 0.1,
+      "shoulderhelper": 0.14,
+      "kneehelper": 0.12
+    },
+    "bands": {
+      "shoulder": 0.24,
+      "hip": 0.12,
+      "neck": 0.06,
+      "armpit": 0.3,
+      "armpitOffset": [
+        0.08,
+        0.05,
+        -0.26
+      ]
+    },
+    "shoulderBlend": {
+      "band": 0.2,
+      "ramp": 0.1
+    },
+    "skirtBlend": {
+      "zTop": 1.0,
+      "zHem": 0.62,
+      "sideRamp": 0.12,
+      "maxShare": 0.3
+    },
+    "elbowBlend": {
+      "band": 0.12,
+      "ramp": 0.06
+    },
+    "kneeBlend": {
+      "band": 0.18,
+      "ramp": 0.09,
+      "shift": 0.03
+    },
+    "helpers": true,
+    "finalRelax": 2,
+    "ambiguity": 1.25,
+    "seamSoften": [
+      {
+        "iterations": 20,
+        "rings": 8
+      },
+      {
+        "iterations": 24,
+        "rings": 5,
+        "threshold": 0.3,
+        "zRange": [
+          1.1,
+          1.85
+        ]
+      },
+      {
+        "iterations": 30,
+        "rings": 6,
+        "threshold": 0.15,
+        "zRange": [
+          1.0,
+          1.6
+        ]
+      }
+    ]
+  },
+  "body": {
+    "bakeSize": 2048,
+    "textureSize": 1024,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.05,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.4,
+    "reliefStrength": 4.0,
+    "roughnessFromDetail": 0.5,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0,
+    "toneGamma": 0.713,
+    "defaultRoughness": 0.86,
+    "regions": [
+      {
+        "name": "trousers-tone",
+        "zMin": 0.12,
+        "zMax": 0.83,
+        "colour": {
+          "maxValue": 0.4
+        }
+      },
+      {
+        "name": "vest-tone",
+        "zMin": 1.0,
+        "zMax": 1.55,
+        "colour": {
+          "minSaturation": 0.15,
+          "maxValue": 0.5
+        }
+      },
+      {
+        "name": "boots",
+        "zMax": 0.2717,
+        "roughness": 0.6
+      },
+      {
+        "name": "face",
+        "zMin": 1.6667,
+        "zMax": 1.8298,
+        "xMax": 0.12,
+        "yMax": -0.04,
+        "colour": {
+          "minSaturation": 0.2
+        },
+        "roughness": 0.6,
+        "metal": 0.0
+      }
+    ],
+    "toneMatch": [
+      {
+        "regions": [
+          "trousers-tone"
+        ],
+        "strength": 0.7,
+        "weightFrom": "position",
+        "backStart": 0.02,
+        "backFull": 0.1
+      },
+      {
+        "regions": [
+          "vest-tone"
+        ],
+        "strength": 0.8,
+        "weightFrom": "position",
+        "backStart": 0.02,
+        "backFull": 0.1
+      }
+    ],
+    "toneCalibration": "Luma power fitted in the game so the resident's mean luma from the default follow camera (world yaw pi, pitch 0.48, 18 and 26 m, 8 facings, high and low quality, resident-only pixels) equals the approved TRELLIS input's foreground mean luma (60.6/255); 40.9/255 as cooked without it."
+  },
+  "clips": {
+    "stanceHalfWidth": 0.1812,
+    "sink": 0.02,
+    "poleBias": 0.45,
+    "skirtFollow": [
+      0.8,
+      0.8
+    ],
+    "poses": {
+      "rest": {
+        "l": {
+          "wrist": [
+            0.3623,
+            -0.0543,
+            0.9692
+          ],
+          "pole": [
+            1.0,
+            0.5,
+            0.0
+          ],
+          "curl": 30
+        },
+        "r": {
+          "wrist": [
+            -0.3623,
+            -0.0543,
+            0.9692
+          ],
+          "pole": [
+            -1.0,
+            0.5,
+            0.0
+          ],
+          "curl": 30
+        }
+      },
+      "talk": {
+        "chest": [
+          2,
+          0,
+          0
+        ],
+        "l": {
+          "wrist": [
+            0.3533,
+            -0.0815,
+            0.9783
+          ],
+          "pole": [
+            1.0,
+            0.5,
+            0.0
+          ],
+          "curl": 30
+        },
+        "r": {
+          "wrist": [
+            -0.3261,
+            -0.1268,
+            1.0145
+          ],
+          "pole": [
+            -1.0,
+            0.4,
+            -0.2
+          ],
+          "curl": 25
+        }
+      }
+    },
+    "idle": {
+      "pose": "rest",
+      "seconds": 4.8,
+      "breaths": 2,
+      "shift": 0.012,
+      "pelvisTilt": 1.2,
+      "pelvisTurn": 2.0,
+      "spineBreath": 0.6,
+      "chestBreath": 1.2,
+      "glance": 4.0,
+      "breathSink": 0.006,
+      "armBreath": 0.008
+    },
+    "talk": {
+      "pose": "talk",
+      "seconds": 6.0,
+      "breaths": 2,
+      "sway": 0.6,
+      "armBreath": 0.006,
+      "gestures": [
+        {
+          "start": 0.4,
+          "end": 2.2,
+          "r": {
+            "wrist": [
+              0.0906,
+              -0.1993,
+              0.1449
+            ],
+            "curl": -15
+          },
+          "chest": [
+            3,
+            0,
+            -4
+          ],
+          "head": [
+            0,
+            0,
+            -3
+          ],
+          "nod": 6
+        },
+        {
+          "start": 2.4,
+          "end": 4.0,
+          "l": {
+            "wrist": [
+              -0.0543,
+              -0.1449,
+              0.0906
+            ],
+            "curl": -10,
+            "pole": [
+              0.6,
+              0.7,
+              -0.4
+            ]
+          },
+          "r": {
+            "wrist": [
+              0.0362,
+              -0.1087,
+              0.0543
+            ],
+            "pole": [
+              -0.6,
+              0.7,
+              -0.4
+            ]
+          },
+          "chest": [
+            2,
+            0,
+            3
+          ],
+          "nod": 4
+        },
+        {
+          "start": 4.2,
+          "end": 5.7,
+          "r": {
+            "wrist": [
+              0.0543,
+              -0.163,
+              0.1812
+            ],
+            "curl": -15
+          },
+          "head": [
+            0,
+            0,
+            4
+          ],
+          "nod": 5
+        }
+      ]
+    }
+  }
+}
