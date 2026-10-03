@@ -1,0 +1,51 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-elf-captain",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Use elf-captain-v2-seed11903 (Recommended): pointed patinated-bronze helmet with cheek guards, broad layered leather pauldrons, scale sleeves and skirt under a scalloped tabard: the broadest captain silhouette and clearest elven read. Limitations: the thin helmet spike is below TRELLIS's voxel size and may be blunted; green-grey scales stay so in legacy brick-red runs; laced boots.",
+      "decidedAt": "2026-10-03T21:44:24.387432+02:00",
+      "question": "Gate 1, batch G (board at 127.0.0.1:47911, _reviews/gate1-troops-g/board.json): which concept should become the warden captain (every elf captain actor, shown x1.2)? Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended candidate is adopted and the rejected ones are recorded.",
+      "sha256": "d72b2a653b87ff45fec354aa96e21d07f7303bba37b65bc8ae9841b4010690ab",
+      "approvedFileSha256": "e0918ab21525a4c92d1f2510625777458e146564e07cff87f7a2866083c7f1c2",
+      "pixelSha256": "2ebc10b4470f74c16498a88b3bb81a94b7a971786d27f328ccb120ce57b8b1fc"
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve the recommended meshes, with 2 rear-view concepts each (Recommended)",
+      "decidedAt": "2026-10-03T22:16:52.069191+02:00",
+      "question": "Gate 2 for batch G, the elves (board at 127.0.0.1:47912, _reviews/gate2-troops-g/board.json): 12 raw TRELLIS candidates, 18.6 GPU-minutes, whole-GPU peaks 14.0-14.1 GiB. Recommended hd-s101 for all three; backs are dark inventions (the captain's far side aside), faces soft, hands mittens. Proposed repair as batch B: a local-Qwen rear-view repaint of each approved mesh's back, two candidates per troop (a third only if neither registers cleanly), projected onto the back at the cook. Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended option is adopted.",
+      "sha256": "cee2af8575cfb94f0e669f425316bfc4bdc68c3cbb6f210c162e7d7ec7d39e4c",
+      "candidate": "hd-s101",
+      "conditions": [
+        "A rear-view concept is generated locally (Qwen Image Edit Plus 2511 in WanGP, Scene mode), painted over an orthographic back render of the approved mesh with the approved front concept as identity reference; two candidates, a third only if neither registers cleanly; selection delegated.",
+        "The selected rear view is projected onto back-visible texels only, occlusion-tested and blended at the sides; the front keeps the TRELLIS texture from the approved concept.",
+        "Cook: decimate to the 12k troop budget with baked normals and 1024 maps; separate or curl the mitten hands; keep the pale wool as the faction dye field; weapons, shields and quivers are separate Blender items.",
+        "The approved mesh faces away from the camera, as all four seeds do: it is turned 180 degrees about the vertical axis by orient_raw.py (a lossless sign flip recorded in raw-turned/hd-s101/orientation.json) before the rear render, the projection and the cook."
+      ]
+    },
+    {
+      "gate": "in-game",
+      "decision": "approve: ship all three elf troops as cooked",
+      "decidedAt": "2026-10-04T00:25:48.620779+02:00",
+      "question": "Ship the elf soldier, archer and captain as cooked (ship-001-t-q-m) in place of the Crown troop models for elf troop actors, after the in-game review at gameplay camera distances, combat, corpse and conversation states, high and low quality, reduced motion and measured cost?",
+      "sha256": "362c5cb950d6e87bcdfebbc89381546af70006f66579874bc31590154f0b4856",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Keep the turned mesh's own back and generate no further candidate (Recommended)",
+      "decidedAt": "2026-10-03T23:48:38.965122+02:00",
+      "question": "Rear view, batch G (board at 127.0.0.1:47913, _reviews/gate1-rear-troops-g/board.json): the only rear candidate (11911) streaks across the upper back in projection; the turned mesh's own back is bright and plausible. Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended option is adopted.",
+      "sha256": "064745334152733247e284ef5907de3d79885246b6c29a433ee10cf94f9516bf",
+      "keptBack": "raw-turned/hd-s101/asset.glb"
+    }
+  ]
+}

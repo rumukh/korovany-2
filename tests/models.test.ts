@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { createCampaign, type FactionId, type GameSnapshot } from '../src/game';
 import { Presentation } from '../src/view';
 import { coatColor } from '../src/view/actors';
-import { CHARACTER_CLIPS, CharacterInstance, LINE_SOLDIER, MODEL_IDS, ModelLibrary, type CharacterFrame, type ModelId } from '../src/view/models';
+import { CHARACTER_CLIPS, CharacterInstance, LINE_SOLDIER, MODEL_IDS, ModelLibrary, TROOPS, troopModelFor, type CharacterFrame, type ModelId } from '../src/view/models';
 import { palette } from '../src/view/palette';
 import { locationStructure, regionThemes } from '../src/view/region-scenery';
 import { ViewResources } from '../src/view/resources';
@@ -312,7 +312,8 @@ describe('model presentation without a DOM', () => {
         expect(skinned[0]!.customDepthMaterial).toBe(library.depthMaterial());
         expect(resources.modelDepthMaterial()).toBe(library.depthMaterial());
         expect(Boolean(root.getObjectByName('allegiance-ring'))).toBe(soldier.allegiance !== 'hostile');
-        expect(root.getObjectByName('item-sword')).toBeDefined();
+        // Each faction's soldier carries its own weapon and shield.
+        for (const item of TROOPS[troopModelFor('soldier', soldier.faction)].items) expect(root.getObjectByName(item), item).toBeDefined();
         expect(root.getObjectByName('item-shield')).toBeDefined();
         expect(root.getObjectByName('actor-body')).toBeUndefined();
         const skeleton = skinned[0]!.skeleton;

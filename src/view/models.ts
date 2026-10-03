@@ -6,7 +6,9 @@ import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 /** Cooked, provenance-tracked GLB assets shipped under `public/models/<id>/<id>.glb`. */
 export type HeroFaction = 'elf' | 'guard' | 'villain';
 export type HeroModelId = `char-hero-${HeroFaction}`;
-export type TroopModelId = 'char-line-soldier' | 'char-archer' | 'char-captain' | 'char-boss-raut' | 'char-boss-marshal';
+/** Crown (guard) troops keep the original line soldier, road archer and infantry captain; the elves have their own. */
+export type FactionTroopModelId = `char-elf-${'soldier' | 'archer' | 'captain'}`;
+export type TroopModelId = 'char-line-soldier' | 'char-archer' | 'char-captain' | 'char-boss-raut' | 'char-boss-marshal' | FactionTroopModelId;
 export type WagonModelId = 'prop-wagon-convoy' | 'prop-wagon-shipment';
 export type ResidentNpc = 'toman' | 'lida' | 'vesk' | 'ren' | 'mara' | 'beran' | 'tessa' | 'ada' | 'mila' | 'elin'
   | 'lev' | 'yara' | 'nika' | 'radek' | 'oss' | 'ivet' | 'sella' | 'orsa' | 'hana' | 'dren';
@@ -20,13 +22,14 @@ export type ModelId = TroopModelId | 'prop-echo-well' | HeroModelId | WagonModel
 export const LANDMARK_IDS: readonly LandmarkModelId[] = ['prop-ward-bell', 'prop-stag-gate', 'prop-frozen-beacon', 'prop-tide-armillary',
   'prop-ward-glass', 'prop-ash-cairn'];
 export const PICKUP_IDS: readonly PickupModelId[] = ['prop-pickup-coin', 'prop-pickup-health', 'prop-pickup-supply'];
+export const FACTION_TROOP_IDS: readonly FactionTroopModelId[] = ['char-elf-soldier', 'char-elf-archer', 'char-elf-captain'];
 export const MODEL_IDS: readonly ModelId[] = ['char-line-soldier', 'prop-echo-well', 'char-hero-elf', 'char-hero-guard', 'char-hero-villain',
   'char-archer', 'char-captain', 'char-boss-raut', 'char-boss-marshal', 'prop-wagon-convoy', 'prop-wagon-shipment', 'char-draft-ox',
   'prop-cargo-load', 'char-resident-toman', 'char-resident-lida', 'char-resident-vesk', 'char-resident-ren', 'char-resident-mara',
   'char-resident-beran', 'char-resident-tessa', 'char-resident-ada', 'char-resident-mila', 'char-resident-elin',
   'char-resident-lev', 'char-resident-yara', 'char-resident-nika', 'char-resident-radek', 'char-resident-oss',
   'char-resident-ivet', 'char-resident-sella', 'char-resident-orsa', 'char-resident-hana', 'char-resident-dren', ...LANDMARK_IDS,
-  ...PICKUP_IDS];
+  ...PICKUP_IDS, ...FACTION_TROOP_IDS];
 
 /**
  * Pickup presentation: each kind's cooked model is scaled uniformly so its largest dimension is `size` metres, centred
@@ -89,8 +92,10 @@ export const LINE_SOLDIER = {
 } as const satisfies TroopContract;
 
 /**
- * Every cooked troop shares the soldier's clip set and its snapshot-driven state machine. The boss model is chosen by
- * the boss's faction: the Palace Marshal defends the Crown (guard) and Commander Raut leads the mountain army.
+ * Every cooked troop shares the soldier's clip set and its snapshot-driven state machine. The Crown fields the line
+ * soldier, road archer and infantry captain, the elves their forest wardens, rangers and warden captains; the mountain
+ * army still wears the Crown's troops, dyed oxblood. The boss model is chosen by the boss's faction: the Palace Marshal
+ * defends the Crown (guard) and Commander Raut leads the mountain army.
  */
 export const TROOPS: Record<TroopModelId, TroopContract> = {
   'char-line-soldier': LINE_SOLDIER,
@@ -98,12 +103,24 @@ export const TROOPS: Record<TroopModelId, TroopContract> = {
   'char-captain': { id: 'char-captain', runSpeed: 3.5, scale: 1.2, loops: LINE_SOLDIER.loops, items: ['item-hammer'] },
   'char-boss-raut': { id: 'char-boss-raut', runSpeed: 3.6, scale: 1.7, loops: LINE_SOLDIER.loops, items: ['item-hammer'] },
   'char-boss-marshal': { id: 'char-boss-marshal', runSpeed: 3.6, scale: 1.7, loops: LINE_SOLDIER.loops, items: ['item-mace'] },
+  'char-elf-soldier': { id: 'char-elf-soldier', runSpeed: 3.5, scale: 1, loops: LINE_SOLDIER.loops, items: ['item-sword', 'item-shield'] },
+  'char-elf-archer': { id: 'char-elf-archer', runSpeed: 3, scale: 1, loops: LINE_SOLDIER.loops, items: ['item-bow', 'item-quiver'] },
+  'char-elf-captain': { id: 'char-elf-captain', runSpeed: 3.5, scale: 1.2, loops: LINE_SOLDIER.loops, items: ['item-glaive'] },
+};
+
+type TroopKind = 'soldier' | 'archer' | 'captain';
+/** Each faction's soldier, archer and captain models; the mountain army and an unknown faction wear the Crown's. */
+export const FACTION_TROOPS: Readonly<Record<HeroFaction, Readonly<Record<TroopKind, TroopModelId>>>> = {
+  guard: { soldier: 'char-line-soldier', archer: 'char-archer', captain: 'char-captain' },
+  elf: { soldier: 'char-elf-soldier', archer: 'char-elf-archer', captain: 'char-elf-captain' },
+  villain: { soldier: 'char-line-soldier', archer: 'char-archer', captain: 'char-captain' },
 };
 
 /** The cooked troop for an actor kind and faction; the shipment wagon has none. */
-export function troopModelFor(kind: 'soldier' | 'archer' | 'captain' | 'boss', faction: string): TroopModelId {
-  return kind === 'soldier' ? 'char-line-soldier' : kind === 'archer' ? 'char-archer' : kind === 'captain' ? 'char-captain'
-    : faction === 'guard' ? 'char-boss-marshal' : 'char-boss-raut';
+export function troopModelFor(kind: TroopKind | 'boss', faction: string): TroopModelId {
+  if (kind === 'boss') return faction === 'guard' ? 'char-boss-marshal' : 'char-boss-raut';
+  const troops = Object.hasOwn(FACTION_TROOPS, faction) ? FACTION_TROOPS[faction as HeroFaction] : FACTION_TROOPS.guard;
+  return troops[kind];
 }
 
 export type HeroClip = 'Idle' | 'AtEase' | 'Run' | 'RunBack' | 'RunLeft' | 'RunRight' | 'Sprint' | 'Dodge' | 'Attack' | 'AttackB'

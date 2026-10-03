@@ -322,8 +322,8 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the brows
       expect(texture.width, `${texture.id}:${texture.key}`).toBeGreaterThanOrEqual(256);
       expect(texture.range, `${texture.id}:${texture.key}`).toBeGreaterThan(8);
     }
-    // Every model's base colour, normal and occlusion/roughness/metal maps decoded, for all forty-two models.
-    expect(new Set(textures.map(texture => texture.id)).size).toBe(42);
+    // Every model's base colour, normal and occlusion/roughness/metal maps decoded, for all forty-five models.
+    expect(new Set(textures.map(texture => texture.id)).size).toBe(45);
     expect(textures.find(texture => texture.id === 'char-line-soldier' && texture.key === 'map' && texture.material === 'body')?.alphaRange)
       .toBeGreaterThan(128);
     const base = await evaluate<{ programs: number; shaderErrors: number; warmup: { programsBefore: number; programsAfter: number; milliseconds: number } }>(

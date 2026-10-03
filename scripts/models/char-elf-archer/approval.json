@@ -1,0 +1,52 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-elf-archer",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Use elf-archer-v2-seed11502 (Recommended): weathered woman ranger, deep hood and pointed mantle, dark leather jerkin for value contrast against the dyed wool, bow strap and pouch, arms clear of the body. Limitations: the mantle's thin points will thicken in TRELLIS; laced boots; baggy trousers.",
+      "decidedAt": "2026-10-03T21:44:24.216842+02:00",
+      "question": "Gate 1, batch G (board at 127.0.0.1:47911, _reviews/gate1-troops-g/board.json): which concept should become the forest ranger (every elf archer actor)? Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended candidate is adopted and the rejected ones are recorded.",
+      "sha256": "61a10998cea1596b89d6d5c6c13408253ed248057169e42e1048e9661f712a14",
+      "approvedFileSha256": "382d8d13b12a4ded700b58a7fdc13915d64428d4426e641f8b7e56e8e89adcc4",
+      "pixelSha256": "ffa4ee7fc75f7d20210d80fcd1fd6c611115dc59e9abe42dd5e36ecdf158b99e"
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve the recommended meshes, with 2 rear-view concepts each (Recommended)",
+      "decidedAt": "2026-10-03T22:16:51.908252+02:00",
+      "question": "Gate 2 for batch G, the elves (board at 127.0.0.1:47912, _reviews/gate2-troops-g/board.json): 12 raw TRELLIS candidates, 18.6 GPU-minutes, whole-GPU peaks 14.0-14.1 GiB. Recommended hd-s101 for all three; backs are dark inventions (the captain's far side aside), faces soft, hands mittens. Proposed repair as batch B: a local-Qwen rear-view repaint of each approved mesh's back, two candidates per troop (a third only if neither registers cleanly), projected onto the back at the cook. Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended option is adopted.",
+      "sha256": "27cf8e7ecf0103215f31e9ef8172a447e5377ad95f153513b9389d0870316977",
+      "candidate": "hd-s101",
+      "conditions": [
+        "A rear-view concept is generated locally (Qwen Image Edit Plus 2511 in WanGP, Scene mode), painted over an orthographic back render of the approved mesh with the approved front concept as identity reference; two candidates, a third only if neither registers cleanly; selection delegated.",
+        "The selected rear view is projected onto back-visible texels only, occlusion-tested and blended at the sides; the front keeps the TRELLIS texture from the approved concept.",
+        "Cook: decimate to the 12k troop budget with baked normals and 1024 maps; separate or curl the mitten hands; keep the pale wool as the faction dye field; weapons, shields and quivers are separate Blender items.",
+        "Declared colour repair at the cook: the green smears around the eyes are retinted toward the face's skin tone, keeping a small dark iris."
+      ]
+    },
+    {
+      "gate": "in-game",
+      "decision": "approve: ship all three elf troops as cooked",
+      "decidedAt": "2026-10-04T00:25:48.620779+02:00",
+      "question": "Ship the elf soldier, archer and captain as cooked (ship-001-t-q-m) in place of the Crown troop models for elf troop actors, after the in-game review at gameplay camera distances, combat, corpse and conversation states, high and low quality, reduced motion and measured cost?",
+      "sha256": "058ce08c11aad554738a90df71ecc74d851a422a6e5fb5198d521dccf9f6ffeb",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Project rear 11511 (Recommended): hood back, pointed mantle, bow strap, jerkin, belt and pouch; mirrored by registration. Limitations: green painted trousers (tone-matched to the front at the cook); a faint seam on the hood back.",
+      "decidedAt": "2026-10-03T23:48:23.594737+02:00",
+      "question": "Rear view, batch G (board at 127.0.0.1:47913, _reviews/gate1-rear-troops-g/board.json): which rear-view concept should be projected onto the forest ranger's back? Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended option is adopted.",
+      "sha256": "a00c8219043b276f678e1e19292fcc0e451b8c9ea362f5b699d4948db38333b3",
+      "approvedFileSha256": "3c4cf8cb677c1820d5546d4c001a283cd021aea522dccdd692cfa95ef10a68dc",
+      "pixelSha256": "1ba9a7df2911e2dfd91da395a7a78f48691079089e982b293b93d1c1a6b32e27"
+    }
+  ]
+}
