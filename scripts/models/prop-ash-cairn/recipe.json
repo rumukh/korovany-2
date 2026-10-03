@@ -1,0 +1,120 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-ash-cairn",
+  "source": {
+    "candidate": "hd-s101",
+    "tool": "TRELLIS-image-large 25e0d31 (source 442aa1e), offline",
+    "seed": 101,
+    "textureSize": 2048,
+    "simplify": 0.85,
+    "glbSha256": "743a60452c2d9476d80d39c1dba226674672c641e57866bd086b7402b1e5a09a",
+    "conceptSha256": "21dcaeb1c0df6e68f116ae216cdc825655fc47e99df7468e414832bce670769e"
+  },
+  "reachMeters": 2.8,
+  "yawDegrees": 0,
+  "minComponentVertices": 40,
+  "triangleBudget": 15000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    1024
+  ],
+  "material": {
+    "bakeSize": 2048,
+    "mapsSize": 1024,
+    "cageExtrusionMeters": 0.03,
+    "maxRayMeters": 0.08,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.86,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "value": [
+          0.08,
+          1
+        ],
+        "name": "banner",
+        "regions": [
+          {
+            "min": [
+              -1.2,
+              -1.2,
+              4.4
+            ],
+            "max": [
+              1.2,
+              1.2,
+              6.8
+            ]
+          }
+        ],
+        "hue": [
+          320,
+          20
+        ],
+        "roughness": 0.9,
+        "saturation": [
+          0.35,
+          1
+        ]
+      },
+      {
+        "value": [
+          0,
+          0.5
+        ],
+        "roughness": 0.82,
+        "name": "timber",
+        "regions": [
+          {
+            "min": [
+              -1.0,
+              -1.0,
+              3.4
+            ],
+            "max": [
+              1.0,
+              1.0,
+              6.8
+            ]
+          }
+        ]
+      },
+      {
+        "value": [
+          0.45,
+          1
+        ],
+        "roughness": 0.88,
+        "name": "stone",
+        "saturation": [
+          0,
+          0.4
+        ]
+      },
+      {
+        "value": [
+          0.12,
+          0.45
+        ],
+        "roughness": 0.95,
+        "name": "ash"
+      },
+      {
+        "value": [
+          0,
+          0.12
+        ],
+        "roughness": 0.95,
+        "name": "gaps"
+      }
+    ],
+    "roughnessFromDetail": 0.6,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 8,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0
+  }
+}

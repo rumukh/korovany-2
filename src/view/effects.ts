@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { GameSnapshot } from '../game/types';
+import { PICKUPS, type LoadedModel, type PickupKind } from './models';
 import { palette } from './palette';
 import { shapeGeometry } from './primitives';
 import { seededRandom, ViewResources } from './resources';
@@ -65,6 +66,83 @@ class InstancePool {
   }
 }
 
+/**
+ * Instances of one cooked static model with the library's own geometry and material: no per-instance colour, so no
+ * extra shader variant, and the scenery's instanced shadow-depth material. Each instance is the model scaled uniformly
+ * to `size` (its largest dimension), centred horizontally with its lowest point at the placement, then turned about the
+ * vertical. The library owns the geometry and material; disposing the pool releases only its instance buffers.
+ */
+class CookedPool {
+  mesh: THREE.InstancedMesh;
+  private count = 0;
+  private readonly template: THREE.Mesh;
+  private readonly name: string;
+  private readonly offset = new THREE.Matrix4();
+  private readonly placement = new THREE.Matrix4();
+  private readonly position = new THREE.Vector3();
+  private readonly turn = new THREE.Quaternion();
+  private readonly up = new THREE.Vector3(0, 1, 0);
+  private readonly unit = new THREE.Vector3(1, 1, 1);
+
+  constructor(private readonly parent: THREE.Object3D, model: LoadedModel, size: number, private capacity: number,
+    private readonly depthMaterial: THREE.Material) {
+    let template: THREE.Mesh | undefined;
+    model.scene.traverse(object => { if (object instanceof THREE.Mesh) template ??= object; });
+    this.template = template!;
+    this.name = `${model.id}:pickups`;
+    const centre = model.bounds.getCenter(new THREE.Vector3());
+    const extent = model.bounds.getSize(new THREE.Vector3());
+    const scale = size / Math.max(extent.x, extent.y, extent.z, 0.001);
+    // The template's node transform holds the static quantization scale; bounds are measured through it.
+    this.offset.makeScale(scale, scale, scale)
+      .multiply(new THREE.Matrix4().makeTranslation(-centre.x, -model.bounds.min.y, -centre.z))
+      .multiply(this.template.matrixWorld);
+    this.mesh = this.createMesh();
+  }
+
+  private createMesh(): THREE.InstancedMesh {
+    const mesh = new THREE.InstancedMesh(this.template.geometry, this.template.material, this.capacity);
+    mesh.name = this.name;
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    mesh.frustumCulled = false;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.customDepthMaterial = this.depthMaterial;
+    mesh.count = 0;
+    this.parent.add(mesh);
+    return mesh;
+  }
+
+  begin(required: number): void {
+    if (required > this.capacity) {
+      this.mesh.removeFromParent();
+      this.mesh.dispose();
+      this.capacity = Math.max(required, this.capacity * 2);
+      this.mesh = this.createMesh();
+    }
+    this.count = 0;
+  }
+
+  /** Places one instance centred horizontally at (x, z) with its lowest point at height y, turned by `yaw`. */
+  add(x: number, y: number, z: number, yaw: number): void {
+    if (this.count >= this.capacity) throw new Error('Presentation instance pool capacity exceeded.');
+    this.turn.setFromAxisAngle(this.up, yaw);
+    this.placement.compose(this.position.set(x, y, z), this.turn, this.unit).multiply(this.offset);
+    this.mesh.setMatrixAt(this.count, this.placement);
+    this.count += 1;
+  }
+
+  finish(): void {
+    this.mesh.count = this.count;
+    this.mesh.instanceMatrix.needsUpdate = true;
+  }
+
+  dispose(): void {
+    this.mesh.removeFromParent();
+    this.mesh.dispose();
+  }
+}
+
 interface Burst {
   x: number;
   z: number;
@@ -84,6 +162,8 @@ export class WorldEffects {
   private readonly crosses: InstancePool;
   private readonly motes: InstancePool;
   private readonly all: InstancePool[];
+  /** Cooked pickup models by kind; undefined for DOM-free resources, which keep the procedural pickups. */
+  private readonly pickups: Readonly<Record<PickupKind, CookedPool>> | undefined;
   private readonly bursts: Burst[] = [];
   private lastEvent = -1;
   private lastTick = -1;
@@ -105,6 +185,13 @@ export class WorldEffects {
     this.crosses = new InstancePool(parent, shapeGeometry(resources, 'box'), unlit, 64);
     this.motes = new InstancePool(parent, shapeGeometry(resources, 'sphere'), unlit, 44);
     this.all = [this.rings, this.arcs, this.sparks, this.arrows, this.arrowheads, this.coins, this.packages, this.crosses, this.motes];
+    // With a model library every pickup kind is its cooked model (a model that failed to load stops the game).
+    const kinds = Object.keys(PICKUPS) as PickupKind[];
+    const models = kinds.map(kind => resources.model(PICKUPS[kind].id));
+    this.pickups = models.every(model => model !== undefined)
+      ? Object.fromEntries(kinds.map((kind, index) => [kind,
+        new CookedPool(parent, models[index]!, PICKUPS[kind].size, 32, resources.depthMaterial())])) as Record<PickupKind, CookedPool>
+      : undefined;
   }
 
   setQuality(low: boolean): void {
@@ -121,6 +208,7 @@ export class WorldEffects {
     this.coins.begin(snapshot.pickups.length);
     this.packages.begin(snapshot.pickups.length * 2);
     this.crosses.begin(snapshot.pickups.length * 2);
+    if (this.pickups) for (const pool of Object.values(this.pickups)) pool.begin(snapshot.pickups.length);
     this.motes.begin();
 
     if (this.lastEvent < 0) {
@@ -190,7 +278,10 @@ export class WorldEffects {
     for (const pickup of snapshot.pickups) {
       const bob = reducedMotion ? 0 : Math.sin(cosmeticTime * 2.5 + pickup.x) * 0.08;
       const turn = reducedMotion ? Math.PI / 6 : cosmeticTime * 1.3;
-      if (pickup.kind === 'coin') {
+      if (this.pickups) {
+        const spec = PICKUPS[pickup.kind];
+        this.pickups[pickup.kind].add(pickup.x, spec.lift + bob, pickup.z, spec.spins ? turn : spec.yaw);
+      } else if (pickup.kind === 'coin') {
         this.coins.add(pickup.x, 0.4 + bob, pickup.z, 0.37, 0.075, 0.37, palette.brass, Math.PI / 2, turn, 0);
       } else if (pickup.kind === 'supply') {
         this.packages.add(pickup.x, 0.23 + bob, pickup.z, 0.48, 0.38, 0.42, palette.timberLight, 0, 0.25, 0);
@@ -211,11 +302,13 @@ export class WorldEffects {
       }
     }
     for (const pool of this.all) pool.finish();
+    if (this.pickups) for (const pool of Object.values(this.pickups)) pool.finish();
     this.lastTick = snapshot.tick;
   }
 
   dispose(): void {
     for (const pool of this.all) pool.dispose();
+    if (this.pickups) for (const pool of Object.values(this.pickups)) pool.dispose();
     this.bursts.length = 0;
   }
 }

@@ -1,0 +1,49 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "prop-tide-armillary",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "The Tide Observatory Armillary v2 seed 28401 (Recommended)",
+      "decidedAt": "2026-10-03T07:17:33.200123+02:00",
+      "question": "Gate 1, batch E, delegated under the standing instruction of 2026-10-01: which concept should the Tide Observatory Armillary use? Board 127.0.0.1:47906 (_reviews/gate1-landmarks): 28401 (recommended: thick verdigris-bronze armillary rings around a darker bronze sphere, on a tiered sandstone pedestal with side piers and a barnacled, mossy footing; thick rings without a thin axis rod....); 28402 (Large ashlar blocks read well, but a thin brown axis rod runs through the sphere: a slende...), 28403 (Equally clean; flatter horizontal coursing and a patchier patina on the rings. Close secon...)",
+      "sha256": "dc3917c03ce1726f26176dab7dc8091ad67c3fd6853a6fe4ff0b752f7d7c2d81",
+      "approvedFileSha256": "9e0edbc8c6487f558f7030c1cdbc952a5da0baff096689a762e1c926679f999d",
+      "pixelSha256": "4bbf4c99afa61dae951d3b9ce7fefc79c853aa3fca0829a74a681034dd60f9f1",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+        "delegatedAt": "2026-10-01T10:52:52.040+02:00"
+      }
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve hd-s505 for cooking (Recommended)",
+      "decidedAt": "2026-10-03T08:26:41.910395+02:00",
+      "question": "Gate 2, batch E: which raw TRELLIS mesh should the Tide Armillary cook from? Board 127.0.0.1:47907 (_reviews/gate2-landmarks-e), delegated under the standing instruction of 2026-10-01.",
+      "sha256": "8cdd418f3734b6075b881fda9297542be4577fc56f9452cc8568435fcf4e1d7a",
+      "candidate": "hd-s505",
+      "conditions": [
+        "Bronze-ball (metalness 0.75), verdigris (metalness 0.3, roughness 0.55), moss and stone classes as in the trial."
+      ],
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the six landmarks and three pickups as cooked and encoded (Recommended)",
+      "decidedAt": "2026-10-03T13:34:50.609284+02:00",
+      "question": "Gate 3 for batches E and F, delegated under the standing instruction of 2026-10-01 (board 127.0.0.1:47910, _reviews/gate3-props-ef). Phase 2, batches E and F: the six signature landmarks (the Ward-Bell Frame at the Bell Foundry and the Reed Chapel, the Stag Shrine Gate, the Frozen Beacon, the Tide Observatory Armillary at the Tide Observatory and the Star Monastery's first building, the Ward-Glass Outcrop at the Glass Quarry and the Ash Cairn) and the three pickups (a coin purse, a healer's satchel and a supply bundle), cooked from the approved concepts and TRELLIS meshes, replace the procedural landmark structures and pickups. Decided under your standing delegation (_reviews/delegation-2026-10-01.json): I ship the recommended candidate and record it without asking; this board stays available for review. Each landmark is scaled uniformly inside its building's authoritative 2.8 m blocker and faces the location centre; each pickup keeps the procedural pickup's size, lift, bob, spin and reduced-motion stillness. Footprints, collision, AI, timing, saves and narrative are unchanged. Every model is quantized (a centred 16-bit position range, worst error 0.14 mm on the 18 m tower) and meshopt-compressed, and all nine pass the tangent check. Measured cost: the nine GLBs add 5.70 MB (5.58 MB gzip-9), so the 42 preloaded models total 28.5 MB, inside the plan's 30 MB; the satchel (286 KB) and the crate (262 KB) exceed the batch F plan's 250 KB per pickup. On the RTX 4070 Ti SUPER, p50 frame time is equal or lower in 24 of 32 location, scene and quality pairs and at most 0.2 ms higher in the rest (all p95 at most 3.5 ms); draw calls fall by 6 to 33 per scene, while triangles rise by 37k to 162k, peaking at 354k against the 400k budget. In SwiftShader, the CI software path, p50 changes by -2.7% to +12.5% (median +5.2%) because software rasterization pays for the extra triangles. This is not AAA: each model is a single-view reconstruction whose back, sides and underside are invented; thin parts (bell rod, antler tines, armillary rings, basket bars, rope, handles) are soft or fused; detail is painted into one texture rather than modelled with trims; colour defects TRELLIS repeated on every seed were repainted by declared, measured repairs rather than authored; roughness and metalness are colour-derived; the concept's studio light is partly baked into the stone; nothing animates except the pickups' bob and spin; and there are no LODs. At the gameplay camera (18 to 40 m) these read as solid, specific landmarks and pickups, not as AAA hero props close up. Which should I ship?",
+      "sha256": "9e3861525e0889d131173a4a8b9c5ffc04ecf97b074b111de63ca65fd89a8de5",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ]
+}

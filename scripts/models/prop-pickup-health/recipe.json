@@ -1,0 +1,147 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-pickup-health",
+  "source": {
+    "candidate": "hd-s42",
+    "tool": "TRELLIS-image-large 25e0d31 (source 442aa1e), offline",
+    "seed": 42,
+    "textureSize": 2048,
+    "simplify": 0.85,
+    "glbSha256": "52ab9efc92d644d2f5532ea69feebb43ea580e8a3f86b457a502300b822d1008",
+    "conceptSha256": "42384241b96ee6574f964f35ccad0deda0dcadf05ffa57250ade12f59354a434"
+  },
+  "reachMeters": 0.244,
+  "yawDegrees": 0,
+  "minComponentVertices": 40,
+  "triangleBudget": 3000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    512
+  ],
+  "material": {
+    "bakeSize": 1024,
+    "mapsSize": 512,
+    "cageExtrusionMeters": 0.004,
+    "maxRayMeters": 0.012,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.75,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "name": "buckle",
+        "value": [
+          0,
+          0.5
+        ],
+        "saturation": [
+          0,
+          0.2
+        ],
+        "regions": [
+          {
+            "max": [
+              0.05,
+              -0.1,
+              0.22
+            ],
+            "min": [
+              -0.05,
+              -0.2,
+              0.08
+            ]
+          }
+        ],
+        "roughness": 0.5,
+        "metalness": 0.6
+      },
+      {
+        "name": "herbs",
+        "hue": [
+          65,
+          160
+        ],
+        "saturation": [
+          0.2,
+          1
+        ],
+        "roughness": 0.9
+      },
+      {
+        "name": "bandage",
+        "saturation": [
+          0,
+          0.2
+        ],
+        "value": [
+          0.6,
+          1
+        ],
+        "roughness": 0.88
+      },
+      {
+        "name": "canvas",
+        "hue": [
+          25,
+          55
+        ],
+        "saturation": [
+          0.4,
+          1
+        ],
+        "value": [
+          0.3,
+          1
+        ],
+        "roughness": 0.8
+      },
+      {
+        "name": "leather",
+        "hue": [
+          0,
+          40
+        ],
+        "saturation": [
+          0.2,
+          1
+        ],
+        "roughness": 0.55
+      }
+    ],
+    "roughnessFromDetail": 0.6,
+    "roughnessMin": 0.3,
+    "roughnessMax": 0.95,
+    "reliefStrength": 8,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0,
+    "retint": [
+      {
+        "name": "back-canvas",
+        "regions": [
+          {
+            "min": [
+              -0.25,
+              0.075,
+              -0.05
+            ],
+            "max": [
+              0.25,
+              0.2,
+              0.6
+            ]
+          }
+        ],
+        "target": [
+          0.643,
+          0.486,
+          0.243
+        ],
+        "strength": 1.0,
+        "keepDetail": 0.25,
+        "edgeMeters": 0.035,
+        "source": "TRELLIS reconstructed the satchel's unseen back panel and the rear strip of its lid near-black on every seed (facing luma 2 sRGB against 93 to 121 on the front and sides). Target: the median canvas colour of the reconstruction's own front panel, sRGB (164, 124, 62), so the back reads as the same canvas as the front; the concept itself shows only the front. The roll and handle lie in front of y 0.075 m and are not repainted."
+      }
+    ]
+  }
+}

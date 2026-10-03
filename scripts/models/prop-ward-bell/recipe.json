@@ -1,0 +1,132 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-ward-bell",
+  "source": {
+    "candidate": "hd-s505",
+    "tool": "TRELLIS-image-large 25e0d31 (source 442aa1e), offline",
+    "seed": 505,
+    "textureSize": 2048,
+    "simplify": 0.85,
+    "glbSha256": "4f0c627021a91731f46d8ed5a05b4a866bdb543b518a53cd3ec42653ff96dab8",
+    "conceptSha256": "a455cf9814f90900c09d2e79bc398ab30a695220108c1aa0719b313d0e98d547"
+  },
+  "reachMeters": 2.8,
+  "yawDegrees": 0,
+  "minComponentVertices": 40,
+  "triangleBudget": 15000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    1024
+  ],
+  "material": {
+    "bakeSize": 2048,
+    "mapsSize": 1024,
+    "cageExtrusionMeters": 0.03,
+    "maxRayMeters": 0.08,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.85,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "name": "bronze",
+        "saturation": [
+          0.08,
+          1
+        ],
+        "value": [
+          0.03,
+          0.6
+        ],
+        "regions": [
+          {
+            "max": [
+              1.35,
+              1.35,
+              6.3
+            ],
+            "min": [
+              -1.35,
+              -1.35,
+              2.9
+            ]
+          }
+        ],
+        "roughness": 0.5,
+        "metalness": 0.6
+      },
+      {
+        "name": "moss",
+        "hue": [
+          60,
+          140
+        ],
+        "saturation": [
+          0.3,
+          1
+        ],
+        "roughness": 0.95
+      },
+      {
+        "name": "timber",
+        "hue": [
+          5,
+          45
+        ],
+        "saturation": [
+          0.2,
+          1
+        ],
+        "value": [
+          0,
+          0.4
+        ],
+        "roughness": 0.82
+      },
+      {
+        "name": "stone",
+        "saturation": [
+          0,
+          0.22
+        ],
+        "value": [
+          0.12,
+          0.95
+        ],
+        "roughness": 0.88
+      }
+    ],
+    "roughnessFromDetail": 0.6,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 8,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0
+  },
+  "moveParts": [
+    {
+      "name": "clapper",
+      "region": {
+        "min": [
+          -0.4,
+          -0.4,
+          2.4
+        ],
+        "max": [
+          0.4,
+          0.4,
+          3.5
+        ]
+      },
+      "maxVertices": 100,
+      "count": 1,
+      "offsetMeters": [
+        0,
+        0,
+        0.2
+      ],
+      "source": "Concept ward-bell-v2-seed28101.png, seen about 15 degrees from above, shows the clapper's tip hanging below the lip's front edge by 16% of the bell's height (45 of 282 px) and no gap above it. In the first cook the bell is 2.26 m tall (lip z 3.64 m at radius 0.9 to 1.2 m) and the detached clapper hung at z 2.77 to 3.14 m, 0.50 m below the lip, so a gap showed under the front lip from that angle. Raised 0.2 m, its bottom sits 0.36 m (16% of the bell) below where the front lip edge projects onto the axis at 15 degrees (z 3.33 m), and its top is hidden behind the lip from every gameplay pitch (22 to 65 degrees)."
+    }
+  ]
+}

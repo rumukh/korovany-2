@@ -1,0 +1,130 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-ward-glass",
+  "source": {
+    "candidate": "hd-s42",
+    "tool": "TRELLIS-image-large 25e0d31 (source 442aa1e), offline",
+    "seed": 42,
+    "textureSize": 2048,
+    "simplify": 0.85,
+    "glbSha256": "285ff9d0ab397f3911a4bd7d2b89b97b54352616e6aee62d4d4808852c82033a",
+    "conceptSha256": "a6819644a239604c66ae690145f0449eecc75dbc0fb478f8fa90d68892bc1090"
+  },
+  "reachMeters": 2.8,
+  "yawDegrees": 0,
+  "minComponentVertices": 40,
+  "triangleBudget": 15000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    1024
+  ],
+  "material": {
+    "bakeSize": 2048,
+    "mapsSize": 1024,
+    "cageExtrusionMeters": 0.03,
+    "maxRayMeters": 0.08,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.86,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "roughness": 0.28,
+        "name": "glass",
+        "hue": [
+          110,
+          190
+        ],
+        "value": [
+          0.25,
+          1
+        ],
+        "saturation": [
+          0.18,
+          1
+        ]
+      },
+      {
+        "roughness": 0.55,
+        "name": "break",
+        "value": [
+          0.6,
+          1
+        ],
+        "saturation": [
+          0,
+          0.18
+        ]
+      },
+      {
+        "roughness": 0.88,
+        "name": "iron-stain",
+        "hue": [
+          5,
+          50
+        ],
+        "saturation": [
+          0.35,
+          1
+        ]
+      },
+      {
+        "roughness": 0.72,
+        "name": "slag",
+        "value": [
+          0,
+          0.3
+        ]
+      },
+      {
+        "roughness": 0.86,
+        "name": "stone",
+        "saturation": [
+          0,
+          0.6
+        ]
+      }
+    ],
+    "roughnessFromDetail": 0.6,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 8,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0,
+    "retint": [
+      {
+        "name": "split-tops",
+        "regions": [
+          {
+            "min": [
+              -3,
+              -3,
+              3.8
+            ],
+            "max": [
+              3,
+              3,
+              6.2
+            ]
+          }
+        ],
+        "colour": {
+          "value": [
+            0,
+            0.2
+          ]
+        },
+        "target": [
+          0.827,
+          0.835,
+          0.824
+        ],
+        "strength": 1.0,
+        "keepDetail": 0.6,
+        "edgeMeters": 0.1,
+        "source": "Concept ward-glass-v3-seed38503.png: the near-neutral pixels of the split column tops (saturation below 0.08, value above 0.72, upper 55% of the frame), median sRGB (211, 213, 210). TRELLIS painted the backs of two split tops near-black, which the concept never shows."
+      }
+    ]
+  }
+}

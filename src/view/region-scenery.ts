@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { Obstacle, Vec2, WorldBlueprint, WorldLocation } from '../game/types';
-import { propInstance } from './models';
+import { landmarkModelFor, propInstance } from './models';
 import { palette } from './palette';
 import { beam, part } from './primitives';
 import type { ViewResources } from './resources';
@@ -124,6 +124,14 @@ export function locationStructure(resources: ViewResources, obstacle: Obstacle, 
     // The cooked Echo Well carries its own flagstone platform. DOM-free resources have no models.
     const well = resources.model('prop-echo-well');
     if (well) root.add(propInstance(well, resources.modelDepthMaterial(), r));
+    return root;
+  }
+  // A signature landmark carries its own plinth, scaled uniformly inside the same footprint. DOM-free resources have no
+  // models and keep the procedural structure below; with a library, a landmark that failed to load stops the game.
+  const landmark = landmarkModelFor(place.id, obstacle.variant);
+  const cooked = landmark ? resources.model(landmark) : undefined;
+  if (cooked) {
+    root.add(propInstance(cooked, resources.modelDepthMaterial(), r));
     return root;
   }
   part(resources, root, 'disc', theme.stone, [0, 0.08, 0], [r * 1.96, 0.16, r * 1.96], [0, 0, 0], 'stone');

@@ -1,0 +1,156 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-tide-armillary",
+  "source": {
+    "candidate": "hd-s505",
+    "tool": "TRELLIS-image-large 25e0d31 (source 442aa1e), offline",
+    "seed": 505,
+    "textureSize": 2048,
+    "simplify": 0.85,
+    "glbSha256": "8cdd418f3734b6075b881fda9297542be4577fc56f9452cc8568435fcf4e1d7a",
+    "conceptSha256": "9e0edbc8c6487f558f7030c1cdbc952a5da0baff096689a762e1c926679f999d"
+  },
+  "reachMeters": 2.8,
+  "yawDegrees": 0,
+  "minComponentVertices": 40,
+  "triangleBudget": 15000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    1024
+  ],
+  "material": {
+    "bakeSize": 2048,
+    "mapsSize": 1024,
+    "cageExtrusionMeters": 0.03,
+    "maxRayMeters": 0.08,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.86,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "regions": [
+          {
+            "max": [
+              0.8,
+              0.8,
+              10.4
+            ],
+            "min": [
+              -0.8,
+              -0.8,
+              8.7
+            ]
+          }
+        ],
+        "hue": [
+          0,
+          40
+        ],
+        "roughness": 0.4,
+        "saturation": [
+          0.25,
+          1
+        ],
+        "name": "bronze-ball",
+        "metalness": 0.75
+      },
+      {
+        "value": [
+          0.1,
+          1
+        ],
+        "regions": [
+          {
+            "max": [
+              2.5,
+              2.5,
+              11.8
+            ],
+            "min": [
+              -2.5,
+              -2.5,
+              7.4
+            ]
+          }
+        ],
+        "hue": [
+          95,
+          180
+        ],
+        "roughness": 0.55,
+        "saturation": [
+          0.15,
+          1
+        ],
+        "name": "verdigris",
+        "metalness": 0.3
+      },
+      {
+        "saturation": [
+          0.22,
+          1
+        ],
+        "roughness": 0.95,
+        "hue": [
+          40,
+          110
+        ],
+        "name": "moss"
+      },
+      {
+        "saturation": [
+          0,
+          0.7
+        ],
+        "roughness": 0.86,
+        "name": "stone"
+      }
+    ],
+    "roughnessFromDetail": 0.6,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 8,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0,
+    "retint": [
+      {
+        "name": "bronze-ball",
+        "regions": [
+          {
+            "min": [
+              -0.8,
+              -0.8,
+              8.7
+            ],
+            "max": [
+              0.8,
+              0.8,
+              10.4
+            ]
+          }
+        ],
+        "colour": {
+          "hue": [
+            0,
+            45
+          ],
+          "saturation": [
+            0.15,
+            1
+          ]
+        },
+        "target": [
+          0.592,
+          0.494,
+          0.376
+        ],
+        "strength": 1.0,
+        "keepDetail": 0.8,
+        "edgeMeters": 0.05,
+        "source": "Concept tide-armillary-v2-seed28401.png: the upper quartile of the ball's pixels (sRGB 151, 126, 96) as its lit bronze colour (the median, 90, 72, 48, includes the studio shading); TRELLIS painted the ball red-brown on every seed."
+      }
+    ]
+  }
+}

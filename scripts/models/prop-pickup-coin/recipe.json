@@ -1,0 +1,91 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-pickup-coin",
+  "source": {
+    "candidate": "hd-s42",
+    "tool": "TRELLIS-image-large 25e0d31 (source 442aa1e), offline",
+    "seed": 42,
+    "textureSize": 2048,
+    "simplify": 0.85,
+    "glbSha256": "b4608a292f3a7ab4a198d457b1c4b09f048c9f08082c448fededa23b4de9142f",
+    "conceptSha256": "2a670112b9f5c8abcc7ff303dc0dd056067cfebfd539454293ce8d0b14dd0a46"
+  },
+  "reachMeters": 0.26,
+  "yawDegrees": 0,
+  "minComponentVertices": 40,
+  "triangleBudget": 3000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    512
+  ],
+  "material": {
+    "bakeSize": 1024,
+    "mapsSize": 512,
+    "cageExtrusionMeters": 0.004,
+    "maxRayMeters": 0.012,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.7,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "name": "gold",
+        "hue": [
+          38,
+          64
+        ],
+        "saturation": [
+          0.3,
+          1
+        ],
+        "value": [
+          0.3,
+          1
+        ],
+        "regions": [
+          {
+            "min": [
+              -1,
+              -1,
+              -0.01
+            ],
+            "max": [
+              1,
+              1,
+              0.035
+            ]
+          }
+        ],
+        "roughness": 0.38,
+        "metalness": 0.9
+      },
+      {
+        "name": "leather",
+        "hue": [
+          0,
+          45
+        ],
+        "saturation": [
+          0.15,
+          1
+        ],
+        "roughness": 0.58
+      },
+      {
+        "name": "dark",
+        "value": [
+          0,
+          0.15
+        ],
+        "roughness": 0.7
+      }
+    ],
+    "roughnessFromDetail": 0.6,
+    "roughnessMin": 0.3,
+    "roughnessMax": 0.95,
+    "reliefStrength": 8,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0
+  }
+}

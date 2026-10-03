@@ -1,0 +1,460 @@
+{
+  "schema": "korovany2-model-provenance/1",
+  "id": "prop-stag-gate",
+  "role": "the antler-crowned shrine gate drawn for every building of the Stag Shrine",
+  "output": {
+    "file": "public/models/prop-stag-gate/prop-stag-gate.glb",
+    "sha256": "0b3f7e9379dbcadc97bc138d91248cc750fdb7e26dd0d799f729fa3ad1cbbe24",
+    "bytes": 833088
+  },
+  "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from the agent's original grey Blender blockout renders (pipeline/make_landmark_references_v2.py); no cloud generation, third-party image, franchise design or real-person likeness was used as input.",
+  "acknowledgment": {
+    "decidedAt": "2026-09-26T23:06:17.4391138+02:00",
+    "decision": "I acknowledge this for korovany-2: commit TRELLIS-derived assets with the restriction recorded",
+    "project": "rumukh/korovany-2"
+  },
+  "tools": [
+    {
+      "name": "Qwen Image Edit Plus 2511",
+      "runtime": "WanGP (local, CLI)",
+      "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+      "textEncoder": "Qwen2.5-VL-7B-Instruct_quanto_bf16_int8",
+      "steps": 50,
+      "guidanceScale": 4.0,
+      "role": "concept art"
+    },
+    {
+      "name": "Blender 5.2.2 LTS",
+      "build": "d13f752e3b9c",
+      "role": "reference renders, cooking, baking, rig, clips (CPU Cycles)"
+    },
+    {
+      "name": "TRELLIS-image-large",
+      "model": "microsoft/TRELLIS-image-large",
+      "modelRevision": "25e0d31ffbebe4b5a97464dd851910efc3002d96",
+      "sourceRevision": "442aa1e1afb9014e80681d3bf604e8d728a86ee7",
+      "runnerSha256": "aef0d6a863b77b65869d9f2ce6a127abf7231863e2aae428ad1322df281eea69",
+      "seed": 505,
+      "settings": {
+        "sparseStructureSampler": {
+          "name": "FlowEulerGuidanceIntervalSampler",
+          "args": {
+            "sigma_min": 1e-05
+          },
+          "params": {
+            "steps": 25,
+            "cfg_strength": 5.0,
+            "cfg_interval": [
+              0.5,
+              1.0
+            ],
+            "rescale_t": 3.0
+          }
+        },
+        "slatSampler": {
+          "name": "FlowEulerGuidanceIntervalSampler",
+          "args": {
+            "sigma_min": 1e-05
+          },
+          "params": {
+            "steps": 25,
+            "cfg_strength": 5.0,
+            "cfg_interval": [
+              0.5,
+              1.0
+            ],
+            "rescale_t": 3.0
+          }
+        },
+        "formats": [
+          "gaussian",
+          "mesh"
+        ],
+        "unusedRadianceFieldDecoderLoaded": false,
+        "attention": "xformers",
+        "spconvAlgorithm": "native",
+        "modelPrecision": "unchanged upstream checkpoint config",
+        "localLoader": "LocalPipeline replaces only DINOv2 code/weight discovery; strict same state dict and normalization",
+        "export": {
+          "simplify": 0.85,
+          "fillHoles": true,
+          "fillHolesMaxSize": 0.04,
+          "textureSize": 2048,
+          "bakingMode": "opt",
+          "bakingSteps": 2500,
+          "bakingViews": 100,
+          "bakingViewResolution": 1024,
+          "holeFillViews": 1000,
+          "holeFillResolution": 1024
+        }
+      },
+      "offline": true,
+      "networkCheck": "[Errno 101] Network is unreachable",
+      "inferenceSeconds": 88.0,
+      "peakTorchReservedBytes": 12830375936,
+      "output": {
+        "sha256": "55b1a352c094af65682ca89f6a5c79778d67d784b05e53c4a989b5d02f3a199a",
+        "bytes": 4569040
+      },
+      "licensing": {
+        "wholeToolchainMit": false,
+        "commercialClearanceEstablished": false
+      }
+    }
+  ],
+  "source": {
+    "references": [
+      {
+        "role": "Picture 1: the agent's original grey Blender blockout (pipeline/make_landmark_references_v2.py, rendered with Cycles on the CPU) that keeps the procedural landmark's layout: camera, three-quarter view, proportions, light and backdrop only. The prompt supplies materials and detail. v2 gives the shapes the real objects have (the v1 primitives were copied too literally).",
+        "sha256": "daff43b5dea389c65f7c286c522ba04668672ff7987cd666fd403c8b9ca8ab5b"
+      }
+    ],
+    "referencesNote": "Picture 1 is the agent's original grey blockout, rendered by pipeline/make_landmark_references_v2.py with Blender Cycles on the CPU; no third-party input.",
+    "concept": {
+      "file": "concept.png",
+      "sha256": "3fdea00bc832f90edb7fb5ecda9c352ab0250c79cc35d341ed37f8a2a56be870",
+      "pixelSha256": "a52915f8d19d412cefe5185a6d3d63f5ef5dfd4800d7227ef64ee8a527459b1b",
+      "approvedFileSha256": "9c9b55d00d78e2845690a58ba6e03e92c12f6fb1d41a5fc6a48a8a9bbee9d35f",
+      "seed": 28201,
+      "referenceMode": "Subjects",
+      "prompt": "concept-prompt.txt",
+      "negativePrompt": "concept-negative.txt",
+      "generationSeconds": 931.7,
+      "note": "Generator metadata was stripped; pixels are identical to the approved file."
+    },
+    "rights": "Original concept generated locally for Korovany II from an original prompt and the agent's original Blender blockout; no third-party images, franchise designs or real-person likeness."
+  },
+  "cook": {
+    "script": "pipeline/cook_landmark.py",
+    "recipe": "recipe.json",
+    "status": "verified",
+    "groundSheet": {
+      "applied": false
+    },
+    "floaters": {
+      "minComponentVertices": 40,
+      "removedComponents": 0,
+      "removedVertices": 0
+    },
+    "normalization": {
+      "uniformScale": 8.528358726765555,
+      "sourceReach": 0.32831639588663514,
+      "reachMeters": 2.8,
+      "yawDegrees": 0,
+      "heightMeters": 8.5382080078125,
+      "baseCentre": [
+        1.0386109352111816e-05,
+        -0.0002575889229774475,
+        -0.5004453063011169
+      ],
+      "footprintMeters": [
+        5.014936923980713,
+        2.6832199096679688
+      ],
+      "axes": "glTF +Y up/+Z forward -> Blender import -> glTF export_yup; no extra axis rotation"
+    },
+    "rawTopology": {
+      "vertices": 11985,
+      "faces": 23970,
+      "triangles": 23970,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "components": 1,
+      "componentVertexCounts": [
+        11985
+      ],
+      "degenerateFaces": 0,
+      "inconsistentWindingEdges": 0
+    },
+    "topology": {
+      "vertices": 7387,
+      "faces": 14774,
+      "triangles": 14774,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "components": 1,
+      "componentVertexCounts": [
+        7387
+      ],
+      "degenerateFaces": 0,
+      "inconsistentWindingEdges": 0
+    },
+    "decimation": {
+      "applied": true,
+      "before": 23970,
+      "triangles": 14774,
+      "ratio": 0.6163954943679599
+    },
+    "materials": {
+      "bakeSize": 2048,
+      "mapsSize": 1024,
+      "albedoSizes": [
+        1024
+      ],
+      "albedoGain": 1,
+      "cageExtrusionMeters": 0.03,
+      "maxRayMeters": 0.08,
+      "atlasCoverage": 0.6296806335449219,
+      "metalFractionOfSurface": 0.024303767561050967,
+      "classFractions": {
+        "iron-straps": 0.032385334439954686,
+        "moss": 0.17332507406083592,
+        "bowl": 0.010239781422089212,
+        "stone": 0.7745248898931949
+      },
+      "unclassifiedFraction": 0.009524920183925315,
+      "roughnessMean": 0.876640796661377,
+      "metalnessMean": 0.018858524039387703,
+      "aoMean": 0.8170284628868103,
+      "colourRepairs": {
+        "retint": [
+          {
+            "name": "antlers-bone",
+            "regions": [
+              {
+                "max": [
+                  2.8,
+                  1.6,
+                  8.8
+                ],
+                "min": [
+                  -2.8,
+                  -1.6,
+                  5.72
+                ]
+              }
+            ],
+            "colour": {},
+            "target": [
+              0.745,
+              0.678,
+              0.616
+            ],
+            "strength": 1,
+            "keepDetail": 0.8,
+            "edgeMeters": 0.1,
+            "texels": 259843,
+            "meanBefore": [
+              95.9,
+              83.3,
+              72.8
+            ],
+            "meanAfter": [
+              181.2,
+              164.8,
+              149.6
+            ],
+            "source": "Concept stag-gate-v2-seed28201.png: median of the antler pixels (sRGB 190, 173, 157) above the arch, luma >= 150 (the iron bands excluded)."
+          }
+        ],
+        "facingBalance": [
+          {
+            "name": "stone-sides",
+            "colour": {},
+            "regions": [
+              {
+                "max": [
+                  3,
+                  3,
+                  5.72
+                ],
+                "min": [
+                  -3,
+                  -3,
+                  -0.1
+                ]
+              }
+            ],
+            "sectors": 8,
+            "maxGain": 5,
+            "strength": 1,
+            "texels": 2381211,
+            "sectorLumaBefore": [
+              35.5,
+              76.9,
+              79.4,
+              84.7,
+              85.8,
+              84.1,
+              77.2,
+              33.4
+            ],
+            "sectorLumaAfter": [
+              78.6,
+              85.9,
+              86.5,
+              85.4,
+              86.2,
+              88.3,
+              84.1,
+              75
+            ],
+            "sectorGains": [
+              5,
+              1.252,
+              1.173,
+              1.026,
+              1,
+              1.043,
+              1.24,
+              5
+            ],
+            "sectorTexels": [
+              156825,
+              176488,
+              169042,
+              186990,
+              177556,
+              167816,
+              174770,
+              199812
+            ],
+            "note": "Sector 0 faces -X; sectors advance counter-clockwise seen from above; luma is sRGB 0-255."
+          }
+        ]
+      },
+      "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active, supersampled) from the approved TRELLIS source mesh, then any declared colour repairs the recipe lists (matchBoxes, retint, facingBalance); tangent normals baked from the approved source mesh and whiteout-blended with relief derived from colour; AO baked from the decimated geometry; roughness and metalness from recipe colour classes. Artistic derivation, not measured PBR."
+    },
+    "tangentRepair": {
+      "script": "repair_tangents.py",
+      "scriptSha256": "80b1b0f84dfc08f2a5d50e3651065d987627fdba731468981d273f7920c8e17d",
+      "why": "three.js normalizes vertex tangents in the vertex shader; a zero-length tangent becomes NaN and the bloom spreads it.",
+      "normalsChecked": 13210,
+      "tangentsChecked": 13210,
+      "repaired": [],
+      "inputSha256": "04ef38dee39d2b154684f52eb27d91e312328c1153ad8574371b04c6047ad052",
+      "bytesChanged": 0
+    },
+    "staticQuantization": {
+      "script": "quantize_prop_glb.py",
+      "scriptSha256": "4fceea5247a9da87d455879dd049eeba1426a67202a5e502e321731f8813378f",
+      "extension": "KHR_mesh_quantization",
+      "settings": {
+        "POSITION": "SHORT normalized about the bounding-box centre with one uniform scale; the scale and centre folded into the root node",
+        "NORMAL": "BYTE normalized",
+        "TANGENT": "BYTE normalized",
+        "TEXCOORD": "UNSIGNED_SHORT normalized where the UVs lie in [0, 1]"
+      },
+      "nodes": [
+        {
+          "node": "prop-stag-gate",
+          "scale": 4.2688,
+          "translation": [
+            -0.000214,
+            4.269413,
+            0.000145
+          ]
+        }
+      ],
+      "positions": [
+        {
+          "mesh": "geometry_0",
+          "centre": [
+            -0.000214,
+            4.269413,
+            0.000145
+          ],
+          "scale": 4.2688,
+          "stepMm": 0.13028,
+          "boundMm": 0.1,
+          "maxErrorMm": 0.06514,
+          "extentMeters": 8.5376,
+          "maxErrorOfExtent": 7.63e-06
+        }
+      ],
+      "floatUvs": [],
+      "maxErrors": {
+        "positionMm": 0.06514,
+        "normalDegrees": 0.36403,
+        "tangentDegrees": 0.37441,
+        "uvTexels2048": 0.01562
+      },
+      "bounds": {
+        "positionMm": 0.1,
+        "positionHalfSteps": 0.51,
+        "normalDegrees": 0.8,
+        "tangentDegrees": 0.8,
+        "uvTexels2048": 0.05
+      },
+      "inputSha256": "04ef38dee39d2b154684f52eb27d91e312328c1153ad8574371b04c6047ad052",
+      "bytesBefore": 1358484,
+      "bytesAfter": 988816
+    },
+    "geometryCompression": {
+      "extension": "EXT_meshopt_compression",
+      "encoder": "meshoptimizer 0.22.0 (npm)",
+      "script": "meshopt_glb.mjs",
+      "scriptSha256": "9f5914236e6aac82b541e0685ab34f839a1287d50c41b8322724ddf420597ec8",
+      "filters": "none",
+      "reorder": {
+        "method": "meshoptimizer reorderMesh: vertex-cache triangle order, then vertex-fetch vertex order",
+        "primitives": 1,
+        "kept": 0,
+        "vertices": 13210,
+        "triangles": 14774,
+        "check": "a permutation: every vertex keeps its exact attribute bytes, and the triangles are the same, with the same winding, in another order"
+      },
+      "check": "every view decoded again: attribute views byte-identical to the reordered data; triangle index views hold the same triangles in the same order and winding (only the first vertex may rotate)",
+      "views": {
+        "attributes": {
+          "views": 4,
+          "raw": 264200,
+          "packed": 180587
+        },
+        "triangles": {
+          "views": 1,
+          "raw": 88644,
+          "packed": 15683,
+          "rotatedTriangles": 9386
+        },
+        "indices": {
+          "views": 0,
+          "raw": 0,
+          "packed": 0
+        },
+        "stored": 633680
+      },
+      "inputSha256": "8e841782c9fe79dcef41e3c3bbe2a19cf35a80477c6fc644405ace40e364edfd",
+      "bytesBefore": 988816,
+      "bytesAfter": 833088
+    },
+    "derivedFrom": {
+      "cook": "ship-002-t-q",
+      "sha256": "8e841782c9fe79dcef41e3c3bbe2a19cf35a80477c6fc644405ace40e364edfd",
+      "bytes": 988816,
+      "note": "The exact ship-002-t-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "derivedFrom": {
+        "cook": "ship-002-t",
+        "sha256": "04ef38dee39d2b154684f52eb27d91e312328c1153ad8574371b04c6047ad052",
+        "bytes": 1358484,
+        "note": "The exact ship-002-t output, quantized by quantize_prop_glb.py; the Blender cook was not re-run.",
+        "derivedFrom": {
+          "cook": "ship-002",
+          "sha256": "04ef38dee39d2b154684f52eb27d91e312328c1153ad8574371b04c6047ad052",
+          "bytes": 1358484,
+          "note": "The exact ship-002 output, tangents checked and degenerate ones repaired by repair_tangents.py; the Blender cook was not re-run."
+        }
+      }
+    },
+    "scripts": {
+      "cook_landmark.py": "6a73d5aefd446b6ca69eff7d9ffce5b69e4b8c156bd3ce7239a0b48a16b6feb7",
+      "k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
+      "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
+      "k2sheet.py": "0141e81990f6318c974fa018c895e02aa71b9c8ba5e23dbdd741e4881e6f177c",
+      "repair_tangents.py": "be1ff6e6aa829a639644a8f7b6960b424c5bcaba0b137fe4ffc5f3da338cb952",
+      "quantize_prop_glb.py": "4fceea5247a9da87d455879dd049eeba1426a67202a5e502e321731f8813378f",
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+    },
+    "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
+    "seconds": 34.1,
+    "verification": "tests/landmark-models.test.ts checks one static mesh and material within the triangle budget, normals, tangents and WebP maps, and that every vertex of every placement stays inside its location's authoritative 2.8 m circular building blocker and above the ground; tests/models.test.ts checks that every normal and tangent is a finite unit vector; tests/models-browser.test.ts decodes its maps and tests/props-browser.test.ts renders it at its locations on the shader programs warmed at load."
+  },
+  "limitations": [
+    "Single-view TRELLIS reconstruction from one approved concept: the far side, back and underside are TRELLIS's invention, with no rear-view painting projected onto them.",
+    "Roughness, metalness and ambient occlusion are derived from colour classes and Cycles bakes, not measured PBR or hand-painted masks.",
+    "Re-cooking is not guaranteed to be byte-reproducible: MikkTSpace tangents can round differently on a few vertices.",
+    "Every TRELLIS seed painted the right antler and the tines near-black where the concept has bone-white antlers; a declared retint repaints both antlers toward the concept's measured bone colour (mean sRGB 96, 83, 73 before, 181, 165, 150 after), so the modelled iron bands are now bone-coloured.",
+    "TRELLIS baked the concept's side light into the stone: the faces toward -X measured 33 to 36 sRGB luma against 77 to 86 elsewhere; a declared facing balance (gain at most 5) lifts them to 75 to 79, and some baked shading remains.",
+    "The back of the arch and the antlers' far side are invented by the single-view reconstruction; placed at 0.98 of the 2.8 m reach, the gate stands 8.4 m on a 4.9 x 2.6 m footprint (the procedural antlers reached about 9.4 m on the 8 m shrine buildings)."
+  ]
+}

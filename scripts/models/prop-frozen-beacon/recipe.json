@@ -1,0 +1,151 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-frozen-beacon",
+  "source": {
+    "candidate": "hd-s505",
+    "tool": "TRELLIS-image-large 25e0d31 (source 442aa1e), offline",
+    "seed": 505,
+    "textureSize": 2048,
+    "simplify": 0.85,
+    "glbSha256": "a274d55c77d191f6f12a476afb3653af54e154c4d594d0f2bef1d0bdebe02262",
+    "conceptSha256": "2cc6b1ef432ba401719897202590a786f08aea354349cda962e5ccde0fe919e0"
+  },
+  "reachMeters": 2.8,
+  "yawDegrees": 0,
+  "minComponentVertices": 40,
+  "triangleBudget": 15000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    1024
+  ],
+  "material": {
+    "bakeSize": 2048,
+    "mapsSize": 1024,
+    "cageExtrusionMeters": 0.03,
+    "maxRayMeters": 0.08,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.86,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "regions": [
+          {
+            "max": [
+              0.9,
+              0.9,
+              16.4
+            ],
+            "min": [
+              -0.9,
+              -0.9,
+              15.0
+            ]
+          },
+          {
+            "max": [
+              2.6,
+              2.6,
+              18.6
+            ],
+            "min": [
+              -2.6,
+              -2.6,
+              16.0
+            ]
+          }
+        ],
+        "value": [
+          0,
+          0.1
+        ],
+        "name": "iron",
+        "roughness": 0.55,
+        "metalness": 0.6
+      },
+      {
+        "regions": [
+          {
+            "max": [
+              3,
+              3,
+              18.6
+            ],
+            "min": [
+              -3,
+              -3,
+              12.8
+            ]
+          }
+        ],
+        "name": "ice",
+        "hue": [
+          170,
+          215
+        ],
+        "value": [
+          0.08,
+          1
+        ],
+        "roughness": 0.22,
+        "saturation": [
+          0.22,
+          1
+        ]
+      },
+      {
+        "value": [
+          0.66,
+          1
+        ],
+        "name": "snow",
+        "roughness": 0.72,
+        "saturation": [
+          0,
+          0.14
+        ]
+      },
+      {
+        "regions": [
+          {
+            "max": [
+              2.6,
+              2.6,
+              18.6
+            ],
+            "min": [
+              -2.6,
+              -2.6,
+              16.0
+            ]
+          }
+        ],
+        "saturation": [
+          0.15,
+          1
+        ],
+        "roughness": 0.8,
+        "name": "timber",
+        "hue": [
+          5,
+          50
+        ]
+      },
+      {
+        "roughness": 0.86,
+        "name": "stone",
+        "saturation": [
+          0,
+          0.45
+        ]
+      }
+    ],
+    "roughnessFromDetail": 0.6,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 8,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0
+  }
+}

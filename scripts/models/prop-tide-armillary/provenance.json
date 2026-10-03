@@ -1,0 +1,404 @@
+{
+  "schema": "korovany2-model-provenance/1",
+  "id": "prop-tide-armillary",
+  "role": "the bronze armillary on its tide-marked pedestal drawn for every building of the Tide Observatory and the Star Monastery's first building",
+  "output": {
+    "file": "public/models/prop-tide-armillary/prop-tide-armillary.glb",
+    "sha256": "9e3861525e0889d131173a4a8b9c5ffc04ecf97b074b111de63ca65fd89a8de5",
+    "bytes": 726760
+  },
+  "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from the agent's original grey Blender blockout renders (pipeline/make_landmark_references_v2.py); no cloud generation, third-party image, franchise design or real-person likeness was used as input.",
+  "acknowledgment": {
+    "decidedAt": "2026-09-26T23:06:17.4391138+02:00",
+    "decision": "I acknowledge this for korovany-2: commit TRELLIS-derived assets with the restriction recorded",
+    "project": "rumukh/korovany-2"
+  },
+  "tools": [
+    {
+      "name": "Qwen Image Edit Plus 2511",
+      "runtime": "WanGP (local, CLI)",
+      "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+      "textEncoder": "Qwen2.5-VL-7B-Instruct_quanto_bf16_int8",
+      "steps": 50,
+      "guidanceScale": 4.0,
+      "role": "concept art"
+    },
+    {
+      "name": "Blender 5.2.2 LTS",
+      "build": "d13f752e3b9c",
+      "role": "reference renders, cooking, baking, rig, clips (CPU Cycles)"
+    },
+    {
+      "name": "TRELLIS-image-large",
+      "model": "microsoft/TRELLIS-image-large",
+      "modelRevision": "25e0d31ffbebe4b5a97464dd851910efc3002d96",
+      "sourceRevision": "442aa1e1afb9014e80681d3bf604e8d728a86ee7",
+      "runnerSha256": "aef0d6a863b77b65869d9f2ce6a127abf7231863e2aae428ad1322df281eea69",
+      "seed": 505,
+      "settings": {
+        "sparseStructureSampler": {
+          "name": "FlowEulerGuidanceIntervalSampler",
+          "args": {
+            "sigma_min": 1e-05
+          },
+          "params": {
+            "steps": 25,
+            "cfg_strength": 5.0,
+            "cfg_interval": [
+              0.5,
+              1.0
+            ],
+            "rescale_t": 3.0
+          }
+        },
+        "slatSampler": {
+          "name": "FlowEulerGuidanceIntervalSampler",
+          "args": {
+            "sigma_min": 1e-05
+          },
+          "params": {
+            "steps": 25,
+            "cfg_strength": 5.0,
+            "cfg_interval": [
+              0.5,
+              1.0
+            ],
+            "rescale_t": 3.0
+          }
+        },
+        "formats": [
+          "gaussian",
+          "mesh"
+        ],
+        "unusedRadianceFieldDecoderLoaded": false,
+        "attention": "xformers",
+        "spconvAlgorithm": "native",
+        "modelPrecision": "unchanged upstream checkpoint config",
+        "localLoader": "LocalPipeline replaces only DINOv2 code/weight discovery; strict same state dict and normalization",
+        "export": {
+          "simplify": 0.85,
+          "fillHoles": true,
+          "fillHolesMaxSize": 0.04,
+          "textureSize": 2048,
+          "bakingMode": "opt",
+          "bakingSteps": 2500,
+          "bakingViews": 100,
+          "bakingViewResolution": 1024,
+          "holeFillViews": 1000,
+          "holeFillResolution": 1024
+        }
+      },
+      "offline": true,
+      "networkCheck": "[Errno 101] Network is unreachable",
+      "inferenceSeconds": 99.1,
+      "peakTorchReservedBytes": 13212057600,
+      "output": {
+        "sha256": "8cdd418f3734b6075b881fda9297542be4577fc56f9452cc8568435fcf4e1d7a",
+        "bytes": 5492008
+      },
+      "licensing": {
+        "wholeToolchainMit": false,
+        "commercialClearanceEstablished": false
+      }
+    }
+  ],
+  "source": {
+    "references": [
+      {
+        "role": "Picture 1: the agent's original grey Blender blockout (pipeline/make_landmark_references_v2.py, rendered with Cycles on the CPU) that keeps the procedural landmark's layout: camera, three-quarter view, proportions, light and backdrop only. The prompt supplies materials and detail. v2 gives the shapes the real objects have (the v1 primitives were copied too literally).",
+        "sha256": "b63120e5c6e9d91802e1cfbb9f13c839cba2599167ea573315e99526ae030a4d"
+      }
+    ],
+    "referencesNote": "Picture 1 is the agent's original grey blockout, rendered by pipeline/make_landmark_references_v2.py with Blender Cycles on the CPU; no third-party input.",
+    "concept": {
+      "file": "concept.png",
+      "sha256": "dc3917c03ce1726f26176dab7dc8091ad67c3fd6853a6fe4ff0b752f7d7c2d81",
+      "pixelSha256": "4bbf4c99afa61dae951d3b9ce7fefc79c853aa3fca0829a74a681034dd60f9f1",
+      "approvedFileSha256": "9e0edbc8c6487f558f7030c1cdbc952a5da0baff096689a762e1c926679f999d",
+      "seed": 28401,
+      "referenceMode": "Subjects",
+      "prompt": "concept-prompt.txt",
+      "negativePrompt": "concept-negative.txt",
+      "generationSeconds": 845.1,
+      "note": "Generator metadata was stripped; pixels are identical to the approved file."
+    },
+    "rights": "Original concept generated locally for Korovany II from an original prompt and the agent's original Blender blockout; no third-party images, franchise designs or real-person likeness."
+  },
+  "cook": {
+    "script": "pipeline/cook_landmark.py",
+    "recipe": "recipe.json",
+    "status": "verified",
+    "groundSheet": {
+      "applied": false
+    },
+    "floaters": {
+      "minComponentVertices": 40,
+      "removedComponents": 0,
+      "removedVertices": 0
+    },
+    "normalization": {
+      "uniformScale": 11.678338589701628,
+      "sourceReach": 0.23976013184522144,
+      "reachMeters": 2.8,
+      "yawDegrees": 0,
+      "heightMeters": 11.677595138549805,
+      "baseCentre": [
+        -0.0005310848355293274,
+        0.0001999586820602417,
+        -0.4997454583644867
+      ],
+      "footprintMeters": [
+        5.461374759674072,
+        5.468123912811279
+      ],
+      "axes": "glTF +Y up/+Z forward -> Blender import -> glTF export_yup; no extra axis rotation"
+    },
+    "rawTopology": {
+      "vertices": 14902,
+      "faces": 29836,
+      "triangles": 29836,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "components": 1,
+      "componentVertexCounts": [
+        14902
+      ],
+      "degenerateFaces": 0,
+      "inconsistentWindingEdges": 0
+    },
+    "topology": {
+      "vertices": 7371,
+      "faces": 14774,
+      "triangles": 14774,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "components": 1,
+      "componentVertexCounts": [
+        7371
+      ],
+      "degenerateFaces": 0,
+      "inconsistentWindingEdges": 0
+    },
+    "decimation": {
+      "applied": true,
+      "before": 29836,
+      "triangles": 14774,
+      "ratio": 0.4952071323233677
+    },
+    "materials": {
+      "bakeSize": 2048,
+      "mapsSize": 1024,
+      "albedoSizes": [
+        1024
+      ],
+      "albedoGain": 1,
+      "cageExtrusionMeters": 0.03,
+      "maxRayMeters": 0.08,
+      "atlasCoverage": 0.6302261352539062,
+      "metalFractionOfSurface": 0.018164760002421163,
+      "classFractions": {
+        "bronze-ball": 0.019084801162157255,
+        "verdigris": 0.12752103383572422,
+        "moss": 0.24313449549058774,
+        "stone": 0.5991087101265057
+      },
+      "unclassifiedFraction": 0.01115095938502512,
+      "roughnessMean": 0.8359426259994507,
+      "metalnessMean": 0.050263844430446625,
+      "aoMean": 0.8022085428237915,
+      "colourRepairs": {
+        "retint": [
+          {
+            "name": "bronze-ball",
+            "regions": [
+              {
+                "min": [
+                  -0.8,
+                  -0.8,
+                  8.7
+                ],
+                "max": [
+                  0.8,
+                  0.8,
+                  10.4
+                ]
+              }
+            ],
+            "colour": {
+              "hue": [
+                0,
+                45
+              ],
+              "saturation": [
+                0.15,
+                1
+              ]
+            },
+            "target": [
+              0.592,
+              0.494,
+              0.376
+            ],
+            "strength": 1,
+            "keepDetail": 0.8,
+            "edgeMeters": 0.05,
+            "texels": 45364,
+            "meanBefore": [
+              75.6,
+              63,
+              51.8
+            ],
+            "meanAfter": [
+              146.2,
+              122,
+              92.8
+            ],
+            "source": "Concept tide-armillary-v2-seed28401.png: the upper quartile of the ball's pixels (sRGB 151, 126, 96) as its lit bronze colour (the median, 90, 72, 48, includes the studio shading); TRELLIS painted the ball red-brown on every seed."
+          }
+        ]
+      },
+      "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active, supersampled) from the approved TRELLIS source mesh, then any declared colour repairs the recipe lists (matchBoxes, retint, facingBalance); tangent normals baked from the approved source mesh and whiteout-blended with relief derived from colour; AO baked from the decimated geometry; roughness and metalness from recipe colour classes. Artistic derivation, not measured PBR."
+    },
+    "tangentRepair": {
+      "script": "repair_tangents.py",
+      "scriptSha256": "80b1b0f84dfc08f2a5d50e3651065d987627fdba731468981d273f7920c8e17d",
+      "why": "three.js normalizes vertex tangents in the vertex shader; a zero-length tangent becomes NaN and the bloom spreads it.",
+      "normalsChecked": 11497,
+      "tangentsChecked": 11497,
+      "repaired": [],
+      "inputSha256": "2f396dba25d0f0e48e23a2fc2e40fe5da5bd87e10abcc2c13374f4f3ae6895d2",
+      "bytesChanged": 0
+    },
+    "staticQuantization": {
+      "script": "quantize_prop_glb.py",
+      "scriptSha256": "4fceea5247a9da87d455879dd049eeba1426a67202a5e502e321731f8813378f",
+      "extension": "KHR_mesh_quantization",
+      "settings": {
+        "POSITION": "SHORT normalized about the bounding-box centre with one uniform scale; the scale and centre folded into the root node",
+        "NORMAL": "BYTE normalized",
+        "TANGENT": "BYTE normalized",
+        "TEXCOORD": "UNSIGNED_SHORT normalized where the UVs lie in [0, 1]"
+      },
+      "nodes": [
+        {
+          "node": "prop-tide-armillary",
+          "scale": 5.838017,
+          "translation": [
+            1e-06,
+            5.838279,
+            -0.000221
+          ]
+        }
+      ],
+      "positions": [
+        {
+          "mesh": "geometry_0",
+          "centre": [
+            1e-06,
+            5.838279,
+            -0.000221
+          ],
+          "scale": 5.838017,
+          "stepMm": 0.17817,
+          "boundMm": 0.1,
+          "maxErrorMm": 0.08908,
+          "extentMeters": 11.676,
+          "maxErrorOfExtent": 7.63e-06
+        }
+      ],
+      "floatUvs": [],
+      "maxErrors": {
+        "positionMm": 0.08908,
+        "normalDegrees": 0.37501,
+        "tangentDegrees": 0.36833,
+        "uvTexels2048": 0.01562
+      },
+      "bounds": {
+        "positionMm": 0.1,
+        "positionHalfSteps": 0.51,
+        "normalDegrees": 0.8,
+        "tangentDegrees": 0.8,
+        "uvTexels2048": 0.05
+      },
+      "inputSha256": "2f396dba25d0f0e48e23a2fc2e40fe5da5bd87e10abcc2c13374f4f3ae6895d2",
+      "bytesBefore": 1194548,
+      "bytesAfter": 872844
+    },
+    "geometryCompression": {
+      "extension": "EXT_meshopt_compression",
+      "encoder": "meshoptimizer 0.22.0 (npm)",
+      "script": "meshopt_glb.mjs",
+      "scriptSha256": "9f5914236e6aac82b541e0685ab34f839a1287d50c41b8322724ddf420597ec8",
+      "filters": "none",
+      "reorder": {
+        "method": "meshoptimizer reorderMesh: vertex-cache triangle order, then vertex-fetch vertex order",
+        "primitives": 1,
+        "kept": 0,
+        "vertices": 11497,
+        "triangles": 14774,
+        "check": "a permutation: every vertex keeps its exact attribute bytes, and the triangles are the same, with the same winding, in another order"
+      },
+      "check": "every view decoded again: attribute views byte-identical to the reordered data; triangle index views hold the same triangles in the same order and winding (only the first vertex may rotate)",
+      "views": {
+        "attributes": {
+          "views": 4,
+          "raw": 229940,
+          "packed": 155653
+        },
+        "triangles": {
+          "views": 1,
+          "raw": 88644,
+          "packed": 16011,
+          "rotatedTriangles": 9441
+        },
+        "indices": {
+          "views": 0,
+          "raw": 0,
+          "packed": 0
+        },
+        "stored": 551962
+      },
+      "inputSha256": "1b29bda6a16062bcd0de557af2c33f31f3f806f6863423130749ea7dad843158",
+      "bytesBefore": 872844,
+      "bytesAfter": 726760
+    },
+    "derivedFrom": {
+      "cook": "ship-002-t-q",
+      "sha256": "1b29bda6a16062bcd0de557af2c33f31f3f806f6863423130749ea7dad843158",
+      "bytes": 872844,
+      "note": "The exact ship-002-t-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "derivedFrom": {
+        "cook": "ship-002-t",
+        "sha256": "2f396dba25d0f0e48e23a2fc2e40fe5da5bd87e10abcc2c13374f4f3ae6895d2",
+        "bytes": 1194548,
+        "note": "The exact ship-002-t output, quantized by quantize_prop_glb.py; the Blender cook was not re-run.",
+        "derivedFrom": {
+          "cook": "ship-002",
+          "sha256": "2f396dba25d0f0e48e23a2fc2e40fe5da5bd87e10abcc2c13374f4f3ae6895d2",
+          "bytes": 1194548,
+          "note": "The exact ship-002 output, tangents checked and degenerate ones repaired by repair_tangents.py; the Blender cook was not re-run."
+        }
+      }
+    },
+    "scripts": {
+      "cook_landmark.py": "6a73d5aefd446b6ca69eff7d9ffce5b69e4b8c156bd3ce7239a0b48a16b6feb7",
+      "k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
+      "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
+      "k2sheet.py": "0141e81990f6318c974fa018c895e02aa71b9c8ba5e23dbdd741e4881e6f177c",
+      "repair_tangents.py": "be1ff6e6aa829a639644a8f7b6960b424c5bcaba0b137fe4ffc5f3da338cb952",
+      "quantize_prop_glb.py": "4fceea5247a9da87d455879dd049eeba1426a67202a5e502e321731f8813378f",
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+    },
+    "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
+    "seconds": 31.5,
+    "verification": "tests/landmark-models.test.ts checks one static mesh and material within the triangle budget, normals, tangents and WebP maps, and that every vertex of every placement stays inside its location's authoritative 2.8 m circular building blocker and above the ground; tests/models.test.ts checks that every normal and tangent is a finite unit vector; tests/models-browser.test.ts decodes its maps and tests/props-browser.test.ts renders it at its locations on the shader programs warmed at load."
+  },
+  "limitations": [
+    "Single-view TRELLIS reconstruction from one approved concept: the far side, back and underside are TRELLIS's invention, with no rear-view painting projected onto them.",
+    "Roughness, metalness and ambient occlusion are derived from colour classes and Cycles bakes, not measured PBR or hand-painted masks.",
+    "Re-cooking is not guaranteed to be byte-reproducible: MikkTSpace tangents can round differently on a few vertices.",
+    "TRELLIS painted the ball red-brown on every seed; a declared retint repaints it toward the concept's lit bronze (mean sRGB 76, 63, 52 before, 146, 122, 93 after), keeping the painted seam detail.",
+    "The rings are soft tubes and the barnacles and moss are painted relief; verdigris is a colour class with metalness 0.3 and roughness 0.55, a patina approximation, and the ball is metalness 0.75.",
+    "The drum's back and the sphere's far rings are invented by the single-view reconstruction; placed at 0.98 of the 2.8 m reach, the armillary stands 11.4 m at every building (the procedural one stood about 10 to 13 m at the Tide Observatory and 7 m at the Star Monastery's 8 m building)."
+  ]
+}
