@@ -146,8 +146,12 @@ without a lift; the ox and wagons are lifted by eye, not calibrated. Faction and
 allegiance colour the soldier's tabard and shield, the archer's hood, cape and
 tabard, the captain's tabard, the palace officer's shield and the wagons'
 pennants (the convoy flies its faction's colour, the shipment its current
-allegiance) without extra shader variants. The game waits for every model before
-presenting a run and stops with an explicit asset error if any fails to load.
+allegiance) without extra shader variants. Each campaign loads only the models it
+can show (its own hero, the boss it fights, the troops of its factions, the
+wagons and pickups, and in story worlds the residents and landmarks): about
+24.6 to 25.4 MB of the 28.5 MB of models for a story campaign and about 8 MB for
+a legacy one. The game waits for those models before presenting a run and stops
+with an explicit asset error if any fails to load.
 
 **Licensing limitation:** TRELLIS code and weights are MIT-licensed, but its
 textured export depends on components restricted to research and evaluation.

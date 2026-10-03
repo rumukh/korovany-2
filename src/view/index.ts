@@ -216,9 +216,11 @@ export class Presentation {
   warmModels(renderer: THREE.WebGLRenderer, x: number, z: number, draw: () => void): ModelWarmup {
     const started = performance.now();
     const programsBefore = renderer.info.programs?.length ?? 0;
+    // The Crown line soldier stands in every campaign, so it carries the shared troop programs; the Echo Well and the
+    // landmarks load only for worlds that show them.
     const soldierModel = this.resources.model('char-line-soldier');
-    const wellModel = this.resources.model('prop-echo-well');
-    if (!soldierModel || !wellModel) return { programsBefore, programsAfter: programsBefore, milliseconds: 0 };
+    const wellModel = this.resources.loadedModel('prop-echo-well');
+    if (!soldierModel) return { programsBefore, programsAfter: programsBefore, milliseconds: 0 };
     const group = new THREE.Group();
     group.name = 'model-warmup';
     // A complete soldier visual (model, allegiance ring, health bar and attack tell), exactly as gameplay shows one.
@@ -231,9 +233,11 @@ export class Presentation {
     visual.bar.root.visible = true;
     visual.tell.visible = true;
     visual.tell.position.set(actor.x, 0, actor.z);
-    const well = propInstance(wellModel, this.resources.modelDepthMaterial(), 2.8);
-    well.position.set(x - 2.5, 0.08, z + 2.5);
-    group.add(well);
+    if (wellModel) {
+      const well = propInstance(wellModel, this.resources.modelDepthMaterial(), 2.8);
+      well.position.set(x - 2.5, 0.08, z + 2.5);
+      group.add(well);
+    }
     // Every other troop model this campaign shows shares the soldier's programs; drawing one of each here uploads its
     // textures too, so no troop's first appearance stalls on a texture upload.
     const troops = new Set<TroopModelId>();
@@ -270,7 +274,7 @@ export class Presentation {
     // is off so each copy draws wherever it lands.
     const propBatch = new StaticBatch(this.resources);
     [...LANDMARK_IDS, ...PICKUP_IDS].forEach((id, index) => {
-      const model = this.resources.model(id);
+      const model = this.resources.loadedModel(id);
       if (!model) return;
       const copy = propInstance(model, this.resources.modelDepthMaterial(), 0.5);
       copy.position.set(x + 2.5 + index * 1.1, 0.08, z + 4);

@@ -474,7 +474,17 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the brows
       if (!origin || !browser) throw new Error('Missing-model server has no URL');
       const page = await openPage(browser.port, 'about:blank', { width: 1024, height: 700 });
       try {
-        await navigateTestPage(page, origin, "window.korovany && window.korovany.inspect().overlay === 'fatal'", 60_000);
+        if (id === 'char-line-soldier') {
+          await navigateTestPage(page, origin, "window.korovany && window.korovany.inspect().overlay === 'fatal'", 60_000);
+        } else {
+          // Each campaign loads only the models it can show: the elf title preview needs neither the mountain sovereign
+          // nor the Palace Marshal he fights, so the title stays usable until his campaign is chosen.
+          await navigateTestPage(page, origin, "window.korovany && window.korovany.inspect().overlay === 'menu'", 60_000);
+          await until(page, 'window.korovany.inspect().models.pending === 0', Boolean, 60_000);
+          expect(await evaluate(page, 'window.korovany.inspect().models.error')).toBeNull();
+          await evaluate(page, `document.querySelector('[data-faction="villain"]').click()`);
+          await until(page, "window.korovany.inspect().overlay === 'fatal'", Boolean, 60_000);
+        }
         const state = await evaluate<{ overlay: string; running: boolean; models: { error: string | null; loaded: number } }>(
           page, 'window.korovany.inspect()');
         expect(state.overlay).toBe('fatal');

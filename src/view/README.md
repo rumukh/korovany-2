@@ -146,8 +146,18 @@ six signature landmarks and three pickups described below.
 remains only for DOM-free tests that construct `ViewResources` without models.
 `troopModelFor()` picks the troop for an actor kind and faction: the Palace
 Marshal is the Crown's (guard) boss, Raut the mountain army's. `ModelLibrary`
-(`models.ts`) starts loading them through `GLTFLoader` as the page opens, behind
-the title menu. Until every
+(`models.ts`) loads them through `GLTFLoader`, per campaign: `campaignModelIds()`
+lists every model a campaign can show from a snapshot on (the player's hero, the
+troop of every actor, the boss faction's soldier for its reinforcement wave, both
+wagons with the ox and cargo, the pickups and, in a world with a story, all
+residents and the Echo Well and landmarks standing in it), and `main.ts`
+requests that set whenever it presents a title preview, a new run or a resumed
+one. The other factions' heroes and boss are never fetched for a campaign that
+cannot show them; a story campaign preloads 24.6 to 25.4 MB of the 28.5 MB of
+models and a legacy one about 8 MB (`tests/campaign-models.test.ts` checks the
+sets, the 30 MB budget and full runs, including the reinforcement wave). Loaded
+models stay for the page, so a faction picked again or the run started from the
+title's preview never waits twice. Until every requested
 model is ready the world is not drawn and the simulation does not step; a small
 status line says so, and a run started early still captures the mouse from its
 own click and begins on the first frame the player can see. A load failure stops
@@ -298,16 +308,17 @@ structures and pickups remain; with one, a landmark or pickup that failed to
 load stops the game on the asset error. A landmark has at most 15,000 triangles
 and 1024 px maps (0.71 to 0.91 MB per file) and a pickup at most 3,000 triangles
 and 512 px maps (0.25 to 0.29 MB); together the nine add 5.70 MB, so the
-forty-two preloaded models total 28.5 MB.
+forty-two models total 28.5 MB, of which one campaign preloads its own set.
 
 After a world mirror is built and after every quality change, `createGameView`
 calls `Presentation.warmModels()` in the same task as the next real frame: a
-temporary soldier visual (model, ring, health bar, tell) and well are drawn twice,
+temporary soldier visual (model, ring, health bar, tell) and, in story worlds, the
+well are drawn twice,
 alone, together with the current hero, one of each other troop model the
 campaign shows, both wagons with their oxen and the convoy's cargo, one of
 each cooked resident the world currently lists (sharing the soldier's and the
 well's programs, so only their textures upload), and one instanced copy of
-every landmark and pickup (compiling the instanced static programs and
+every landmark the campaign loaded and every pickup (compiling the instanced static programs and
 uploading their textures),
 with the scene's real lights, fog, shadow
 maps and output path, then removed, so no model shader compiles when a soldier

@@ -303,26 +303,92 @@ function validate(id: ModelId, scene: THREE.Object3D, clips: ReadonlyMap<string,
   }
 }
 
+/** Models every campaign can show: both wagons with their ox and the convoy's cargo, and the three pickups. */
+export const SHARED_MODEL_IDS: readonly ModelId[] = ['prop-wagon-convoy', 'prop-wagon-shipment', 'char-draft-ox', 'prop-cargo-load',
+  ...PICKUP_IDS];
+
+/** The parts of a game snapshot that decide which cooked models a campaign can present. */
+export interface CampaignModelSource {
+  faction: HeroFaction;
+  actors: readonly { kind: 'soldier' | 'archer' | 'captain' | 'boss' | 'caravan'; faction: string }[];
+  world: {
+    obstacles: readonly { id: string; variant: number }[];
+    exploration?: { locations: readonly { id: string }[] };
+  };
+  narrative?: unknown;
+}
+
+/**
+ * Every cooked model a campaign can present from this snapshot on, loaded before it is drawn: the player's hero, the
+ * troop of every actor, the boss faction's soldier (the only actors created after a campaign starts are the boss's
+ * reinforcement soldiers), the shared wagons and pickups, and, in a world with a story, all twenty residents and
+ * the Echo Well and signature landmarks standing in it. The other factions' heroes and boss are never loaded.
+ */
+export function campaignModelIds(snapshot: CampaignModelSource): ModelId[] {
+  const ids = new Set<ModelId>([HEROES[snapshot.faction].id, ...SHARED_MODEL_IDS]);
+  for (const actor of snapshot.actors) {
+    if (actor.kind === 'caravan') continue;
+    ids.add(troopModelFor(actor.kind, actor.faction));
+    if (actor.kind === 'boss') ids.add(troopModelFor('soldier', actor.faction));
+  }
+  if (snapshot.narrative) for (const resident of Object.values(RESIDENTS)) ids.add(resident.id);
+  const locations = snapshot.world.exploration?.locations ?? [];
+  for (const obstacle of snapshot.world.obstacles) {
+    const place = locations.find(candidate => obstacle.id.startsWith(`${candidate.id}-building-`));
+    if (!place) continue;
+    if (place.id === 'name-well' || place.id === 'cinderwell' && obstacle.variant === 0) ids.add('prop-echo-well');
+    const landmark = landmarkModelFor(place.id, obstacle.variant);
+    if (landmark) ids.add(landmark);
+  }
+  return MODEL_IDS.filter(id => ids.has(id));
+}
+
 /**
  * Owns parsed models for the lifetime of the page. Presentations borrow templates, dyed variants and the model
  * shadow-depth material; only this library disposes their geometry, materials and textures, so a page-lifetime
  * renderer keeps the uploads and shader programs across world mirrors. `releaseGpu` frees one renderer's copies
- * so a replacement renderer can upload the same parsed data again.
+ * so a replacement renderer can upload the same parsed data again. The constructor loads `ids`; `request` adds
+ * models later (a campaign's own set), and every model stays loaded once parsed.
  */
 export class ModelLibrary {
   private readonly models = new Map<ModelId, LoadedModel>();
+  private readonly loads = new Map<ModelId, Promise<void>>();
+  private readonly requested: ModelId[] = [];
   private readonly dyes = new Map<string, THREE.MeshStandardMaterial>();
   private shadowDepth: THREE.MeshDepthMaterial | undefined;
   private failure: Error | undefined;
-  private pendingCount: number;
+  private pendingCount = 0;
   private disposed = false;
   readonly ready: Promise<void>;
 
-  constructor(source: ModelSource, readonly ids: readonly ModelId[] = MODEL_IDS) {
-    this.pendingCount = ids.length;
-    this.ready = Promise.all(ids.map(async id => {
+  constructor(private readonly source: ModelSource, ids: readonly ModelId[] = MODEL_IDS) {
+    this.ready = this.request(ids);
+  }
+
+  /** Every model requested so far, in request order. */
+  get ids(): readonly ModelId[] {
+    return this.requested;
+  }
+
+  /**
+   * Starts loading each model of `ids` that was never requested, and resolves once all of `ids` are loaded. A load
+   * failure rejects every request that includes it and is kept for `status`, `isReady` and `assert`.
+   */
+  request(ids: readonly ModelId[]): Promise<void> {
+    const all = Promise.all(ids.map(id => this.load(id))).then(() => undefined);
+    // Callers observe failures through the returned promise, `status` or `assert`; never as an unhandled rejection.
+    all.catch(() => undefined);
+    return all;
+  }
+
+  private load(id: ModelId): Promise<void> {
+    const existing = this.loads.get(id);
+    if (existing) return existing;
+    this.requested.push(id);
+    this.pendingCount++;
+    const loading = (async () => {
       try {
-        const gltf = await source.load(id);
+        const gltf = await this.source.load(id);
         const clips = new Map(gltf.animations.map(clip => [clip.name, clip] as const));
         validate(id, gltf.scene, clips);
         gltf.scene.updateMatrixWorld(true);
@@ -338,17 +404,19 @@ export class ModelLibrary {
       } finally {
         this.pendingCount--;
       }
-    })).then(() => undefined);
-    // Callers observe failures through `ready`, `status` or `assert`; never as an unhandled rejection.
-    this.ready.catch(() => undefined);
+    })();
+    loading.catch(() => undefined);
+    this.loads.set(id, loading);
+    return loading;
   }
 
   get status(): ModelStatus {
-    return { pending: this.pendingCount, loaded: this.models.size, total: this.ids.length, error: this.failure?.message ?? null };
+    return { pending: this.pendingCount, loaded: this.models.size, total: this.requested.length, error: this.failure?.message ?? null };
   }
 
+  /** True once every requested model has loaded, and none failed. */
   get isReady(): boolean {
-    return !this.failure && this.models.size === this.ids.length;
+    return !this.failure && this.models.size === this.requested.length;
   }
 
   assert(): void {

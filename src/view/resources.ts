@@ -41,6 +41,15 @@ export class ViewResources {
   }
 
   /**
+   * A model template if it has loaded, without requiring it: the load-time warm-up uses this for models only some
+   * campaigns load (the Echo Well and landmarks stand only in story worlds).
+   */
+  loadedModel(id: ModelId): LoadedModel | undefined {
+    this.models?.assert();
+    return this.models?.get(id);
+  }
+
+  /**
    * Faction-tinted copy of a model material; all tints share one shader program. With a model library the copy is
    * the library's page-lifetime variant, so its program outlives this presentation.
    */

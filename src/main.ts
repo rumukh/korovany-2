@@ -4,7 +4,7 @@ import {
   type GameSession, type GameSnapshot, type GameInput as CampaignInput, type MetaProfile, type RunRewards, type UpgradeId, type Vec2,
 } from "./game";
 import { createGameView, createRenderer, type GameView } from "./view";
-import { gltfModelSource, ModelLibrary } from "./view/models";
+import { campaignModelIds, gltfModelSource, ModelLibrary } from "./view/models";
 import { Soundscape } from "./audio/soundscape";
 import { AudioPresentation, type SpeechSelection } from "./audio/presentation";
 import { GameInput } from "./ui/input";
@@ -68,8 +68,9 @@ let disposed = false;
 let fatal = false;
 let raf = 0;
 const lifecycle = new AbortController();
-// Cooked models load once per page, before any run is presented; there is no primitive fallback.
-const models = new ModelLibrary(gltfModelSource());
+// Each campaign's cooked models load before it is presented and stay loaded for the page; there is no primitive
+// fallback. The title preview and the run it starts share one set, so starting the previewed campaign never waits.
+const models = new ModelLibrary(gltfModelSource(), []);
 // One renderer for the page, so model uploads and shader programs survive the title, faction and run changes
 // that replace the world mirror.
 let renderer: ReturnType<typeof createRenderer> | undefined;
@@ -192,7 +193,12 @@ function changeOverlay(overlay: Overlay, selection?: SpeechSelection): void {
 }
 
 function rendererFor(next: GameSnapshot): void {
-  if (!shell || viewWorldId === next.world.id) return;
+  if (!shell) return;
+  // Until this campaign's models have loaded, the view draws nothing and the simulation holds (see `frame`).
+  models.request(campaignModelIds(next)).catch((error: unknown) => {
+    if (!disposed && !fatal) stopForError(error, "assets");
+  });
+  if (viewWorldId === next.world.id) return;
   view?.dispose();
   view = null;
   viewWorldId = null;
@@ -678,9 +684,6 @@ if (import.meta.hot) import.meta.hot.dispose(dispose);
 try {
   updatePreview();
   raf = requestAnimationFrame(frame);
-  models.ready.catch((error: unknown) => {
-    if (!disposed && !fatal) stopForError(error, "assets");
-  });
 } catch (error) {
   stopForError(error, "graphics");
 }
