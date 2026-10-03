@@ -9,14 +9,15 @@ export type HeroModelId = `char-hero-${HeroFaction}`;
 export type TroopModelId = 'char-line-soldier' | 'char-archer' | 'char-captain' | 'char-boss-raut' | 'char-boss-marshal';
 export type WagonModelId = 'prop-wagon-convoy' | 'prop-wagon-shipment';
 export type ResidentNpc = 'toman' | 'lida' | 'vesk' | 'ren' | 'mara' | 'beran' | 'tessa' | 'ada' | 'mila' | 'elin'
-  | 'lev' | 'yara' | 'nika' | 'radek' | 'oss';
+  | 'lev' | 'yara' | 'nika' | 'radek' | 'oss' | 'ivet' | 'sella' | 'orsa' | 'hana' | 'dren';
 export type ResidentModelId = `char-resident-${ResidentNpc}`;
 export type ModelId = TroopModelId | 'prop-echo-well' | HeroModelId | WagonModelId | 'char-draft-ox' | 'prop-cargo-load' | ResidentModelId;
 export const MODEL_IDS: readonly ModelId[] = ['char-line-soldier', 'prop-echo-well', 'char-hero-elf', 'char-hero-guard', 'char-hero-villain',
   'char-archer', 'char-captain', 'char-boss-raut', 'char-boss-marshal', 'prop-wagon-convoy', 'prop-wagon-shipment', 'char-draft-ox',
   'prop-cargo-load', 'char-resident-toman', 'char-resident-lida', 'char-resident-vesk', 'char-resident-ren', 'char-resident-mara',
   'char-resident-beran', 'char-resident-tessa', 'char-resident-ada', 'char-resident-mila', 'char-resident-elin',
-  'char-resident-lev', 'char-resident-yara', 'char-resident-nika', 'char-resident-radek', 'char-resident-oss'];
+  'char-resident-lev', 'char-resident-yara', 'char-resident-nika', 'char-resident-radek', 'char-resident-oss',
+  'char-resident-ivet', 'char-resident-sella', 'char-resident-orsa', 'char-resident-hana', 'char-resident-dren'];
 
 export type CharacterClip = 'Idle' | 'AtEase' | 'Run' | 'Windup' | 'Strike' | 'Recovery' | 'Hit' | 'Death';
 export const CHARACTER_CLIPS: readonly CharacterClip[] = ['Idle', 'AtEase', 'Run', 'Windup', 'Strike', 'Recovery', 'Hit', 'Death'];
@@ -115,9 +116,9 @@ export type ResidentClip = 'Idle' | 'Talk';
 export const RESIDENT_CLIPS: readonly ResidentClip[] = ['Idle', 'Talk'];
 
 /**
- * Named residents with a cooked model, keyed by their stable NPC id; the others keep their procedural figure until
- * their batch ships. `height` is the cooked standing height in metres at the game's heroic scale. Placement, facing,
- * visibility, markers and conversation stay the narrative snapshot's and the presenter's.
+ * All twenty named residents' cooked models, keyed by their stable NPC id. `height` is the cooked standing height in
+ * metres at the game's heroic scale. Placement, facing, visibility, markers and conversation stay the narrative
+ * snapshot's and the presenter's.
  */
 export const RESIDENTS: Readonly<Record<ResidentNpc, { id: ResidentModelId; height: number }>> = {
   toman: { id: 'char-resident-toman', height: 2.2 },
@@ -135,9 +136,14 @@ export const RESIDENTS: Readonly<Record<ResidentNpc, { id: ResidentModelId; heig
   nika: { id: 'char-resident-nika', height: 2.06 },
   radek: { id: 'char-resident-radek', height: 2.16 },
   oss: { id: 'char-resident-oss', height: 2.14 },
+  ivet: { id: 'char-resident-ivet', height: 2.04 },
+  sella: { id: 'char-resident-sella', height: 2.02 },
+  orsa: { id: 'char-resident-orsa', height: 2.06 },
+  hana: { id: 'char-resident-hana', height: 2.08 },
+  dren: { id: 'char-resident-dren', height: 2.18 },
 };
 
-/** The cooked model for a narrative NPC id, or undefined while that resident is still procedural. */
+/** The cooked model for a narrative NPC id, or undefined for an id that is not a named resident. */
 export function residentModelFor(npcId: string): ResidentModelId | undefined {
   return Object.hasOwn(RESIDENTS, npcId) ? RESIDENTS[npcId as ResidentNpc].id : undefined;
 }

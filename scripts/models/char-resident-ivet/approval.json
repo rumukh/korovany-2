@@ -1,0 +1,68 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-resident-ivet",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Ivet v1 seed 15101 (Recommended)",
+      "decidedAt": "2026-10-02T21:55:18.424087+02:00",
+      "question": "Gate 1, batch D4, delegated under the standing instruction of 2026-10-01: which concept should Sister Ivet, keeper and nurse of the Reed Chapel, use? Board 127.0.0.1:47901 (_reviews/gate1-residents-d4): 15101 (recommended: the slate-blue bib apron under the white bandage sash, as in the portrait), 15102 (an added heavy belt, a rounder smiling face), 15103 (the closest face, but no bib, so the chest reads plain grey).",
+      "sha256": "4f503b53fa414f2f86192778e775b0a647d4b0b70383dc6087e36391e27d4abd",
+      "approvedFileSha256": "f9f4d5abb435fc4583afb460e0b71f5430c3b67287dcc6d7443ecc4e11ef66d4",
+      "pixelSha256": "ef61548a3db3961ab7c425677caf3ee82577e05a675f7f9aaeaab0bde63bea8b",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+        "delegatedAt": "2026-10-01T10:52:52.040+02:00"
+      }
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve HD s505 and add a projected rear-view concept (Recommended)",
+      "decidedAt": "2026-10-02T23:18:55.319628+02:00",
+      "question": "Gate 2, batch D4, delegated under the standing instruction of 2026-10-01: which raw TRELLIS mesh should Sister Ivet be cooked from? Board 127.0.0.1:47903 (_reviews/gate2-residents-d4).",
+      "sha256": "15a6e92ea40c21e3fb4da112fb47fadcfc1f62792fa1ac5f458237500e59dcfe",
+      "candidate": "hd-s505",
+      "conditions": [
+        "Add a rear-view concept (two local Qwen candidates) and project it in the cook; the raw back is dark.",
+        "Ankle-length dress: long-skirt handling as proven on Ada and Lev (hem band and skirt blend) with the boots region capped at the hem.",
+        "Keep the white bandage sash and the slate-blue bib readable from the gameplay camera; lift the tone against the concept.",
+        "Decimate to at most 9,500 triangles; rig with the shared humanoid skeleton and author Idle and Talk."
+      ],
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated residents, ship-001-t-q-m (Recommended)",
+      "decidedAt": "2026-10-03T03:45:57.869511+02:00",
+      "question": "Gate 3 for batch D4, delegated under the standing instruction of 2026-10-01: Ivet, Sella, Orsa, Hana and Dren are in the running game at the Reed Chapel, Mirecross, Saltmarket, the Tide Observatory and Wreckers' Rest (board 127.0.0.1:47905, _reviews/gate3-residents-d4). Rig, weights and clips are identical in both candidates, both pass the new tangent check (one vertex of Ivet repaired), are quantized and meshopt-compressed, and pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the five GLBs add 2.67 MB (2.45 MB gzip-9) and all 33 preloaded models total 22.8 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in 19 of 20 scene and quality pairs (one is 0.2 ms higher) and draw calls fall by 26 to 52 per scene; in SwiftShader p50 is within -5.8% and +5.7%. Calibrated lifts all five to their concepts' brightness; the lift saturates the painted backs (Sella's vest, Orsa's and Hana's coats, Dren's tunic) and tints Sella's face orange. As cooked, they stay at 42% to 67% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "f950f849b5b4a6966bb1987c56f98644397305ec4470dcd6d5f7448d8abe79ff",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Ivet rear 25102 (Recommended), with the backs of the boots repainted to the front boots' dark brown in the cook",
+      "decidedAt": "2026-10-03T03:01:01.797081+02:00",
+      "question": "Gate 1 rear view, batch D4, delegated under the standing instruction of 2026-10-01: which rear-view painting should Sister Ivet use? Board 127.0.0.1:47904 (_reviews/gate1-rear-residents-d4).",
+      "sha256": "eb928f871eeecab3b9771796191cddb2a9c4bfb4cdbf9ca8bd10664ad14c8ec4",
+      "approvedFileSha256": "de5b40807cbed76b4c0c654c465ca067140ed4f3990a0e78f5f024ab381ed0d4",
+      "pixelSha256": "1b9e8db186e3523ff35ffa9c3b160a1c53c84bb11b9c61151652355d6662165a",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ]
+}

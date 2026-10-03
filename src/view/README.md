@@ -118,7 +118,7 @@ heraldry distinguishes locked, unlocked and defeated states without a false gate
 
 ## Cooked 3D models
 
-Twenty-three cooked glTF models replace procedural presentation: the troops (the line
+Thirty-three cooked glTF models replace procedural presentation: the troops (the line
 soldier, the road archer, the infantry captain and two bosses, Commander Raut and
 the Palace Marshal, in `public/models/char-line-soldier/`, `char-archer/`,
 `char-captain/`, `char-boss-raut/` and `char-boss-marshal/`), used by every
@@ -129,17 +129,20 @@ Cinderwell structure; one hero per faction (`public/models/char-hero-elf/`,
 the logistics convoy (`public/models/prop-wagon-convoy/`) with its cargo load
 (`prop-cargo-load/`), the Crown shipment and every other `caravan` actor
 (`prop-wagon-shipment/`), and the draft ox that pulls both (`char-draft-ox/`); and
-ten named residents: the home residents of each campaign and the Roadward pair
+all twenty named residents: the home residents of each campaign and the Roadward pair
 (`public/models/char-resident-toman/`, `char-resident-lida/`,
 `char-resident-vesk/`, `char-resident-ren/` and `char-resident-mara/`), the
 residents of Cinderwell, Hollow Village and the Last Archive (`char-resident-beran/`,
 `char-resident-tessa/`, `char-resident-ada/`, `char-resident-mila/` and
-`char-resident-elin/`), and Lev at the Star Monastery, Yara at Thornwatch, Nika
+`char-resident-elin/`), Lev at the Star Monastery, Yara at Thornwatch, Nika
 at the High Pass, Radek at the Bell Foundry and Oss at the Lantern Ferry
 (`char-resident-lev/`, `char-resident-yara/`, `char-resident-nika/`,
-`char-resident-radek/` and `char-resident-oss/`). `residentModelFor()` maps a
-narrative NPC id to its model; the other five residents keep their procedural
-figures until their batch ships.
+`char-resident-radek/` and `char-resident-oss/`), and Ivet at the Reed Chapel,
+Sella at Mirecross, Orsa at Saltmarket, Hana at the Tide Observatory and Dren at
+Wreckers' Rest (`char-resident-ivet/`, `char-resident-sella/`,
+`char-resident-orsa/`, `char-resident-hana/` and `char-resident-dren/`).
+`residentModelFor()` maps a narrative NPC id to its model; the procedural figure
+remains only for DOM-free tests that construct `ViewResources` without models.
 `troopModelFor()` picks the troop for an actor kind and faction: the Palace
 Marshal is the Crown's (guard) boss, Raut the mountain army's. `ModelLibrary`
 (`models.ts`) starts loading them through `GLTFLoader` as the page opens, behind
@@ -165,6 +168,16 @@ in its node, with no offset, so the wagon wheels still spin about their axles;
 float. Code that needs a skinned model's size must measure it through the skin
 (`Box3` does this), not from the raw `position` attribute. Static meshes are
 measured through their node transforms.
+
+Before quantization, models from batch D4 on pass through `repair_tangents.py`.
+It checks that every vertex normal is unit length and replaces any zero-length
+tangent with the mean of its neighbours' tangents, made perpendicular to the
+normal. Blender's MikkTSpace returns a zero tangent where every face around a
+vertex has a degenerate UV mapping. three.js normalizes tangents in the vertex
+shader, so a zero tangent shades its triangles NaN, and at high quality the bloom
+spreads that over a black block of the frame. The repair changed one vertex of
+Ivet and no others. `tests/models.test.ts` checks that every shipped normal and
+tangent is a finite unit vector.
 
 Every model's geometry, skin and animation data are then compressed with
 `EXT_meshopt_compression` (`meshopt_glb.mjs`). First each mesh's vertices and

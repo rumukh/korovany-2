@@ -1,0 +1,68 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-resident-dren",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Dren v1 seed 15501 (Recommended)",
+      "decidedAt": "2026-10-02T21:55:19.027162+02:00",
+      "question": "Gate 1, batch D4, delegated under the standing instruction of 2026-10-01: which concept should Dren, salvage crew leader of Wreckers' Rest, use? Board 127.0.0.1:47901 (_reviews/gate1-residents-d4): 15501 (recommended: the rope tight from shoulder to a hip pouch with no loop or free end), 15502 (crossed harness and sea boots, but a rope loop hanging at the hip), 15503 (a long rope end down the thigh and rope bands round the boots).",
+      "sha256": "dc580e3f7e637c39e1b5251db127c81acd075e581eae94432af986613891bed6",
+      "approvedFileSha256": "3e013dc6265d4908f16e94abce75467b8b6ebbcef7b49589c8bde7c49191abb9",
+      "pixelSha256": "66734aee771595ec8b896201ea3b697f7a799c536e2e7f1b52a4b018146ddba4",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward.",
+        "delegatedAt": "2026-10-01T10:52:52.040+02:00"
+      }
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve HD s505 and add a projected rear-view concept (Recommended)",
+      "decidedAt": "2026-10-02T23:18:55.954492+02:00",
+      "question": "Gate 2, batch D4, delegated under the standing instruction of 2026-10-01: which raw TRELLIS mesh should Dren be cooked from? Board 127.0.0.1:47903 (_reviews/gate2-residents-d4).",
+      "sha256": "faf8b51e6053a206d2163e99a2604e5ae865f51d5833ae5aabb128e341cda3ec",
+      "candidate": "hd-s505",
+      "conditions": [
+        "Add a rear-view concept (two local Qwen candidates) and project it in the cook; the raw back is dark.",
+        "Short oilskin shoulder cape: weight it to the chest and clavicles like Toman's mantle; no skirt handling.",
+        "The cook's keep-largest removes two floaters (43 and 3 vertices); the small-hole fill closes three open edges.",
+        "Decimate to at most 9,500 triangles; rig with the shared humanoid skeleton and author Idle and Talk."
+      ],
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    },
+    {
+      "gate": "in-game",
+      "decision": "Ship the calibrated residents, ship-001-t-q-m (Recommended)",
+      "decidedAt": "2026-10-03T03:45:57.869511+02:00",
+      "question": "Gate 3 for batch D4, delegated under the standing instruction of 2026-10-01: Ivet, Sella, Orsa, Hana and Dren are in the running game at the Reed Chapel, Mirecross, Saltmarket, the Tide Observatory and Wreckers' Rest (board 127.0.0.1:47905, _reviews/gate3-residents-d4). Rig, weights and clips are identical in both candidates, both pass the new tangent check (one vertex of Ivet repaired), are quantized and meshopt-compressed, and pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the five GLBs add 2.67 MB (2.45 MB gzip-9) and all 33 preloaded models total 22.8 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in 19 of 20 scene and quality pairs (one is 0.2 ms higher) and draw calls fall by 26 to 52 per scene; in SwiftShader p50 is within -5.8% and +5.7%. Calibrated lifts all five to their concepts' brightness; the lift saturates the painted backs (Sella's vest, Orsa's and Hana's coats, Dren's tunic) and tints Sella's face orange. As cooked, they stay at 42% to 67% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "2aa16d423221cc3a7890771bab49f70aa13ef15d8089cdba459b9281afa5d625",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Dren rear 25502 (Recommended)",
+      "decidedAt": "2026-10-03T03:01:02.189308+02:00",
+      "question": "Gate 1 rear view, batch D4, delegated under the standing instruction of 2026-10-01: which rear-view painting should Dren Silt use? Board 127.0.0.1:47904 (_reviews/gate1-rear-residents-d4).",
+      "sha256": "8ba8f08a0d4cb0774fa3cd3cb64f18e8047f1d3bdd61b5b0af3739eba82adea7",
+      "approvedFileSha256": "86116e3c8590ba75487272356d9fafea690c20a431497c06f91076884e2f9984",
+      "pixelSha256": "6b2af25445e73d0283c1c935ab80e2fc6c19893c114ae1db47b68194ed76934e",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ]
+}
