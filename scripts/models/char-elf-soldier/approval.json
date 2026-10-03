@@ -1,0 +1,51 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-elf-soldier",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Use elf-soldier-v2-seed11202 (Recommended): leather skullcap with a bronze brow plate over the hood (a head shape unlike the archer's), dark leaf-scale cuirass and pauldrons with no green ornament, scalloped tunic, arms clear of the body. Limitations: ears poke through the hood; laced boots; TRELLIS will soften the scale edges into texture.",
+      "decidedAt": "2026-10-03T21:44:24.094533+02:00",
+      "question": "Gate 1, batch G (board at 127.0.0.1:47911, _reviews/gate1-troops-g/board.json): which concept should become the forest warden infantryman (every elf soldier actor)? Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended candidate is adopted and the rejected ones are recorded.",
+      "sha256": "129b9c7174e7e8e982196f42c00789b77897acf6e39dadaf80e6dac633a45059",
+      "approvedFileSha256": "49b801e0015c0e698998cc26b7f14adda0e225b8a31cb56155f6be45df72e5b5",
+      "pixelSha256": "63b953b6ed997f1df7505f5bc1d0ca496de4194558a10ece784f33a9416822b1"
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve the recommended meshes, with 2 rear-view concepts each (Recommended)",
+      "decidedAt": "2026-10-03T22:16:51.741078+02:00",
+      "question": "Gate 2 for batch G, the elves (board at 127.0.0.1:47912, _reviews/gate2-troops-g/board.json): 12 raw TRELLIS candidates, 18.6 GPU-minutes, whole-GPU peaks 14.0-14.1 GiB. Recommended hd-s101 for all three; backs are dark inventions (the captain's far side aside), faces soft, hands mittens. Proposed repair as batch B: a local-Qwen rear-view repaint of each approved mesh's back, two candidates per troop (a third only if neither registers cleanly), projected onto the back at the cook. Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended option is adopted.",
+      "sha256": "214e8f3c0fc240c7ce704fc166e4f04c08238b7d2c5c8e1ddf2761994a208388",
+      "candidate": "hd-s101",
+      "conditions": [
+        "A rear-view concept is generated locally (Qwen Image Edit Plus 2511 in WanGP, Scene mode), painted over an orthographic back render of the approved mesh with the approved front concept as identity reference; two candidates, a third only if neither registers cleanly; selection delegated.",
+        "The selected rear view is projected onto back-visible texels only, occlusion-tested and blended at the sides; the front keeps the TRELLIS texture from the approved concept.",
+        "Cook: decimate to the 12k troop budget with baked normals and 1024 maps; separate or curl the mitten hands; keep the pale wool as the faction dye field; weapons, shields and quivers are separate Blender items."
+      ]
+    },
+    {
+      "gate": "in-game",
+      "decision": "approve: ship all three elf troops as cooked",
+      "decidedAt": "2026-10-04T00:25:48.620779+02:00",
+      "question": "Ship the elf soldier, archer and captain as cooked (ship-001-t-q-m) in place of the Crown troop models for elf troop actors, after the in-game review at gameplay camera distances, combat, corpse and conversation states, high and low quality, reduced motion and measured cost?",
+      "sha256": "4fcc02697f7465c69affc767eaf0146459eae58aec3ec2ecce5a70c024c201cb",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Project rear 11211 (Recommended): skullcap and hood back, leaf-scale back, belt and scalloped hem; mirrored by registration. Limitations: the belt projects wider at the back; a faint band at the hood's lower edge.",
+      "decidedAt": "2026-10-03T23:48:23.486970+02:00",
+      "question": "Rear view, batch G (board at 127.0.0.1:47913, _reviews/gate1-rear-troops-g/board.json): which rear-view concept should be projected onto the forest warden infantryman's back? Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended option is adopted.",
+      "sha256": "2622f05a3424c1c78ef66f1c1495636b5153f5baa87af316fb4e2854ac942a55",
+      "approvedFileSha256": "29ad8e084e4195973a65f3d57639bc82f1956d393981f53bec8cf9be0b894d6d",
+      "pixelSha256": "2e925f6e281c8b880152ee3e47b67f73ba885b9a18df19cf384d4d049cd37651"
+    }
+  ]
+}

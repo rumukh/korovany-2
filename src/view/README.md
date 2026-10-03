@@ -118,11 +118,13 @@ heraldry distinguishes locked, unlocked and defeated states without a false gate
 
 ## Cooked 3D models
 
-Forty-two cooked glTF models replace procedural presentation: the troops (the line
+Forty-five cooked glTF models replace procedural presentation: the troops (the line
 soldier, the road archer, the infantry captain and two bosses, Commander Raut and
 the Palace Marshal, in `public/models/char-line-soldier/`, `char-archer/`,
-`char-captain/`, `char-boss-raut/` and `char-boss-marshal/`), used by every
-faction's `soldier`, `archer`, `captain` and `boss` actors; the Echo Well
+`char-captain/`, `char-boss-raut/` and `char-boss-marshal/`, and the elves' own
+forest warden, ranger and warden captain in `char-elf-soldier/`,
+`char-elf-archer/` and `char-elf-captain/`), used by the factions' `soldier`,
+`archer`, `captain` and `boss` actors; the Echo Well
 (`public/models/prop-echo-well/`), used by the Echo Well and the matching
 Cinderwell structure; one hero per faction (`public/models/char-hero-elf/`,
 `char-hero-guard/` and `char-hero-villain/`), used for the player; and the wagons:
@@ -144,8 +146,11 @@ Wreckers' Rest (`char-resident-ivet/`, `char-resident-sella/`,
 six signature landmarks and three pickups described below.
 `residentModelFor()` maps a narrative NPC id to its model; the procedural figure
 remains only for DOM-free tests that construct `ViewResources` without models.
-`troopModelFor()` picks the troop for an actor kind and faction: the Palace
-Marshal is the Crown's (guard) boss, Raut the mountain army's. `ModelLibrary`
+`troopModelFor()` picks the troop for an actor kind and faction from
+`FACTION_TROOPS`: elf soldiers, archers and captains wear the elves' models, while
+the Crown and, for now, the mountain army wear the line soldier, road archer and
+infantry captain; the Palace Marshal is the Crown's (guard) boss, Raut the
+mountain army's. `ModelLibrary`
 (`models.ts`) loads them through `GLTFLoader`, per campaign: `campaignModelIds()`
 lists every model a campaign can show from a snapshot on (the player's hero, the
 troop of every actor, the boss faction's soldier for its reinforcement wave, both
@@ -153,8 +158,9 @@ wagons with the ox and cargo, the pickups and, in a world with a story, all
 residents and the Echo Well and landmarks standing in it), and `main.ts`
 requests that set whenever it presents a title preview, a new run or a resumed
 one. The other factions' heroes and boss are never fetched for a campaign that
-cannot show them; a story campaign preloads 24.6 to 25.4 MB of the 28.5 MB of
-models and a legacy one about 8 MB (`tests/campaign-models.test.ts` checks the
+cannot show them, and a campaign without elf troops (the mountain sovereign's)
+never fetches theirs; a story campaign preloads 25.4 to 27.3 MB of the 31.2 MB
+of models and a legacy one about 10.5 to 11.0 MB (`tests/campaign-models.test.ts` checks the
 sets, the 30 MB budget and full runs, including the reinforcement wave). Loaded
 models stay for the page, so a faction picked again or the run started from the
 title's preview never waits twice. Until every requested
@@ -219,8 +225,15 @@ scale so planted feet stay planted. Reduced motion freezes the idle breathing an
 suppresses hit reactions. Clips carry no root motion; position, heading,
 collision and timing stay authoritative. Faction and allegiance colour the
 soldier's tabard and shield, the archer's hood, shoulder cape and tabard and the
-captain's tabard through one dyed material program (`korovany-dye-v1`, dye mask
-in the base-colour alpha); the bosses wear fixed colours and have no dye mask.
+captain's tabard, and on the elves the hood, mantle and tunic, the round shield's
+face, the ranger's hood, mantle and tunic and the warden captain's tabard, through
+one dyed material program (`korovany-dye-v1`, dye mask in the base-colour alpha),
+so an elf troop wears the elves' moss green, neutral stone grey or the legacy
+run's shared brick-red hostile colour by the same allegiance rules as every
+troop; the bosses wear fixed colours and have no dye mask. The elf
+warden carries a leaf-bladed sword and a round shield, the ranger a longbow and
+quiver, and the warden captain a two-handed leaf glaive swung with the captain's
+hammer clips; these items are Blender meshes (`pipeline/k2items_g.py`).
 Colour variants therefore add no shader variants. Because that alpha is a mask rather than
 coverage, dye-masked base colour is encoded with libwebp's `exact` option
 (`pipeline/webp_exact.py`): the default lossy mode discards the colour of every
@@ -307,8 +320,9 @@ simulation's. Without a model library (DOM-free tests) the procedural
 structures and pickups remain; with one, a landmark or pickup that failed to
 load stops the game on the asset error. A landmark has at most 15,000 triangles
 and 1024 px maps (0.71 to 0.91 MB per file) and a pickup at most 3,000 triangles
-and 512 px maps (0.25 to 0.29 MB); together the nine add 5.70 MB, so the
-forty-two models total 28.5 MB, of which one campaign preloads its own set.
+and 512 px maps (0.25 to 0.29 MB); together the nine add 5.70 MB. The three elf
+troops add 2.67 MB (0.80 to 1.01 MB each), so the forty-five models total
+31.2 MB, of which one campaign preloads its own set.
 
 After a world mirror is built and after every quality change, `createGameView`
 calls `Presentation.warmModels()` in the same task as the next real frame: a
