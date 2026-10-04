@@ -312,7 +312,7 @@ describe('model presentation without a DOM', () => {
         expect(skinned[0]!.customDepthMaterial).toBe(library.depthMaterial());
         expect(resources.modelDepthMaterial()).toBe(library.depthMaterial());
         expect(Boolean(root.getObjectByName('allegiance-ring'))).toBe(soldier.allegiance !== 'hostile');
-        // Each faction's soldier carries its own weapon and shield.
+        // Each faction's soldier carries its own weapon (the mountain infantry an axe) and shield.
         for (const item of TROOPS[troopModelFor('soldier', soldier.faction)].items) expect(root.getObjectByName(item), item).toBeDefined();
         expect(root.getObjectByName('item-shield')).toBeDefined();
         expect(root.getObjectByName('actor-body')).toBeUndefined();
