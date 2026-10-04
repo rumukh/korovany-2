@@ -51,18 +51,17 @@ export function factionTroopMotion(id: FactionTroopModelId): MotionContract {
 }
 
 describe('faction troop models', () => {
-  test('the elves field their own soldier, archer and captain; bosses keep their faction models', () => {
+  test('the elves and the mountain army field their own soldier, archer and captain; bosses keep their faction models', () => {
     expect(FACTION_TROOPS.guard).toEqual({ soldier: 'char-line-soldier', archer: 'char-archer', captain: 'char-captain' });
     expect(FACTION_TROOPS.elf).toEqual({ soldier: 'char-elf-soldier', archer: 'char-elf-archer', captain: 'char-elf-captain' });
-    // The mountain army still wears the Crown's troops, dyed oxblood.
-    expect(FACTION_TROOPS.villain).toEqual(FACTION_TROOPS.guard);
+    expect(FACTION_TROOPS.villain).toEqual({ soldier: 'char-mountain-soldier', archer: 'char-mountain-archer', captain: 'char-mountain-captain' });
     for (const faction of ['elf', 'guard', 'villain'] as const) {
       for (const kind of ['soldier', 'archer', 'captain'] as const) expect(troopModelFor(kind, faction)).toBe(FACTION_TROOPS[faction][kind]);
     }
     expect(troopModelFor('boss', 'guard')).toBe('char-boss-marshal');
     expect(troopModelFor('boss', 'villain')).toBe('char-boss-raut');
     expect(troopModelFor('soldier', 'unknown')).toBe('char-line-soldier');
-    expect(new Set(Object.values(FACTION_TROOPS).flatMap(troops => Object.values(troops))).size).toBe(6);
+    expect(new Set(Object.values(FACTION_TROOPS).flatMap(troops => Object.values(troops))).size).toBe(9);
   });
 
   test.each(FACTION_TROOP_IDS)('%s: one skinned body within budget, troop joints, WebP maps and the soldier clip contract', async id => {
@@ -170,12 +169,15 @@ describe('faction troop presentation without a DOM', () => {
           for (const item of TROOPS[id].items) expect(character.root.getObjectByName(item), `${actor.id} ${item}`).toBeInstanceOf(THREE.Mesh);
           shown.add(id);
         }
-        // Elves never wear the Crown's kettle hats, and nobody else wears the elves' hoods.
+        // Every faction wears its own troops: Crown kettle hats, elven hoods and mountain fur and iron never mix.
         const factions = new Set(snapshot.actors.filter(actor => actor.kind !== 'caravan').map(actor => actor.faction));
         expect([...shown].some(id => id.startsWith('char-elf-')), 'elf models shown').toBe(factions.has('elf'));
+        expect([...shown].some(id => id.startsWith('char-mountain-')), 'mountain models shown').toBe(factions.has('villain'));
         for (const actor of snapshot.actors) {
           if (actor.kind === 'caravan' || actor.kind === 'boss') continue;
-          expect(visuals.get(actor.id)!.character!.root.name.startsWith('char-elf-'), actor.id).toBe(actor.faction === 'elf');
+          const name = visuals.get(actor.id)!.character!.root.name;
+          expect(name.startsWith('char-elf-'), actor.id).toBe(actor.faction === 'elf');
+          expect(name.startsWith('char-mountain-'), actor.id).toBe(actor.faction === 'villain');
         }
       } finally {
         presentation.dispose();

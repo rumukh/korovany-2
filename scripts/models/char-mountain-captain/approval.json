@@ -1,0 +1,51 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-mountain-captain",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Use mountain-captain-v2-seed12802 (Recommended): rounded blackened helmet with ridge, riveted brow band and cheek guards, grey fur stole on the shoulders only, massive riveted pauldrons, blackened breastplate, mail sleeves, off-white split skirt (dye field), arms clear of the body: the heaviest silhouette of the three armies. Limitations: the dye field is only the skirt; mostly black iron (mean figure luma 80/255), so the tone lift will struggle; laced boots.",
+      "decidedAt": "2026-10-04T01:08:33.478845+02:00",
+      "question": "Gate 1, batch G2 (board at 127.0.0.1:47911, _reviews/gate1-troops-g2/board.json): which concept should become the mountain host captain (every villain captain actor, shown x1.2)? Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended candidate is adopted and the rejected ones are recorded.",
+      "sha256": "b3723a3892dff6a655a8c1b67d10958d8c1194e722472b3abeeb4ffb381c9096",
+      "approvedFileSha256": "0d6ae0abfeb729e405b2e6a0e87578476c426a9a046ba4067e8ffc12403bf3b1",
+      "pixelSha256": "84cb30a3a4e9b12f4944abd4262ff3eadb15652290bb3feb21cb3afc425a91cd"
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve the recommended meshes, with 2 rear-view concepts each (Recommended)",
+      "decidedAt": "2026-10-04T01:51:48.526234+02:00",
+      "question": "Gate 2 for batch G2, the mountain army (board at 127.0.0.1:47912, _reviews/gate2-troops-g2/board.json): 12 raw TRELLIS candidates, 17.8 GPU-minutes, whole-GPU peaks 13.7-14.3 GiB. Recommended hd-s101 for all three; backs are dark inventions, faces soft, hands mittens or loosely split fingers. Proposed repair as batch G1: a local-Qwen rear-view repaint of each approved mesh's back, two candidates per troop, projected onto the back at the cook. Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended option is adopted.",
+      "sha256": "5abe740c964605279ac91bf157d4e3cd3caf657dbf49114766c2a683330ecb75",
+      "candidate": "hd-s101",
+      "conditions": [
+        "A rear-view concept is generated locally (Qwen Image Edit Plus 2511 in WanGP, Scene mode), painted over an orthographic back render of the approved mesh with the approved front concept as identity reference; two candidates; selection delegated.",
+        "The selected rear view is projected onto back-visible texels only, occlusion-tested and blended at the sides; the front keeps the TRELLIS texture from the approved concept.",
+        "Cook: decimate to the 12k troop budget with baked normals and 1024 maps; keep the pale wool as the faction dye field; the axe, round shield, bow, quiver and hammer are separate Blender items."
+      ]
+    },
+    {
+      "gate": "in-game",
+      "decision": "approve: ship all three mountain troops as cooked",
+      "decidedAt": "2026-10-04T04:31:43.533277+02:00",
+      "question": "Ship the mountain soldier, archer and captain as cooked (ship-001-t-q-m) in place of the Crown troop models for mountain-army (villain) troop actors, after the in-game review at gameplay camera distances, combat, corpse and conversation states, high and low quality, reduced motion and measured cost?",
+      "sha256": "6433b4df8f1c7faea5f66b51194bd3c8c1960b2b5aaf013f16cd83ee97c970f0",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Use rear 12912 (Recommended): riveted helmet back, fur stole, pauldrons over mail, back plate, belt with straps, split pale skirt, tall boots; silhouette IoU 0.917 after warping with 4.2% unpainted. Rear 12811 rejected: its skirt warped into streaks (IoU 0.735, 23.6% unpainted). Limitations: the back plate reads as brown-black leather rather than blackened iron; a few dark streaks at the skirt's split.",
+      "decidedAt": "2026-10-04T03:42:02.229962+02:00",
+      "question": "Gate 1 rear view, batch G2 (board at 127.0.0.1:47913, _reviews/gate1-rear-troops-g2/board.json): which rear-view concept should be projected onto the approved mountain captain mesh? Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended candidate is adopted and the others are recorded.",
+      "sha256": "5553a814be5a8391cc8e050f160ad12a906528645c3c75ccf1e8501d8f27321a",
+      "approvedFileSha256": "76e0cd1a0e981620a0a785515b3ddf7e32e2f6457693759fcdc83fd63dc1ba3e",
+      "pixelSha256": "d28a6b144f0d72e8182ec0d33deda1d6d7006d1d33d6bc365606d0c1d9e2aa1f"
+    }
+  ]
+}

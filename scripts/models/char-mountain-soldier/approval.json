@@ -1,0 +1,51 @@
+{
+  "schema": "korovany2-model-approval/1",
+  "asset": "char-mountain-soldier",
+  "decisions": [
+    {
+      "gate": "concept",
+      "decision": "Use mountain-soldier-seed12202 (Recommended): conical blackened helmet with a riveted brow band and nasal, large grey fur collar, rounded blackened pauldrons, dark mail sleeves under a sleeveless off-white surcoat (dye field), black vambraces and gloves, fur cuffs: the cleanest silhouette and the clearest value split. Limitations: no fur ring on the helmet; reddened cheeks; low shoes under the fur cuffs; figure fills 93% of the height.",
+      "decidedAt": "2026-10-04T01:08:33.244846+02:00",
+      "question": "Gate 1, batch G2 (board at 127.0.0.1:47911, _reviews/gate1-troops-g2/board.json): which concept should become the mountain host infantryman (every villain soldier actor and Raut's reinforcements)? Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended candidate is adopted and the rejected ones are recorded.",
+      "sha256": "19e998d6077a799b78b993081a5a87818dd2b23c41650025eb42d751ab97bfe0",
+      "approvedFileSha256": "ef9f8fd7e406c1e5bfa2954625ceb333571a69dc835c8923ae3463dfdcc84977",
+      "pixelSha256": "9de202dca40d35dfd6dcfb6b5f7e187f02f8420f190264bdd656c22dd493043d"
+    },
+    {
+      "gate": "unrigged-mesh",
+      "decision": "Approve the recommended meshes, with 2 rear-view concepts each (Recommended)",
+      "decidedAt": "2026-10-04T01:51:48.269360+02:00",
+      "question": "Gate 2 for batch G2, the mountain army (board at 127.0.0.1:47912, _reviews/gate2-troops-g2/board.json): 12 raw TRELLIS candidates, 17.8 GPU-minutes, whole-GPU peaks 13.7-14.3 GiB. Recommended hd-s101 for all three; backs are dark inventions, faces soft, hands mittens or loosely split fingers. Proposed repair as batch G1: a local-Qwen rear-view repaint of each approved mesh's back, two candidates per troop, projected onto the back at the cook. Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended option is adopted.",
+      "sha256": "d81c0a54364369e435d57af8508465885a94d554abf3f0d1a0b84fb18fc89443",
+      "candidate": "hd-s101",
+      "conditions": [
+        "A rear-view concept is generated locally (Qwen Image Edit Plus 2511 in WanGP, Scene mode), painted over an orthographic back render of the approved mesh with the approved front concept as identity reference; two candidates; selection delegated.",
+        "The selected rear view is projected onto back-visible texels only, occlusion-tested and blended at the sides; the front keeps the TRELLIS texture from the approved concept.",
+        "Cook: decimate to the 12k troop budget with baked normals and 1024 maps; keep the pale wool as the faction dye field; the axe, round shield, bow, quiver and hammer are separate Blender items."
+      ]
+    },
+    {
+      "gate": "in-game",
+      "decision": "approve: ship all three mountain troops as cooked",
+      "decidedAt": "2026-10-04T04:31:43.533277+02:00",
+      "question": "Ship the mountain soldier, archer and captain as cooked (ship-001-t-q-m) in place of the Crown troop models for mountain-army (villain) troop actors, after the in-game review at gameplay camera distances, combat, corpse and conversation states, high and low quality, reduced motion and measured cost?",
+      "sha256": "d79287a4f62bf830397a1270813b683cacbcfa1ea7f42b08d201184cee1140fc",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "concept-revision:rear-view",
+      "decision": "Use rear 12211 (Recommended): conical helmet back, fur collar wrapping the neck as on the front, mail V, pauldrons, pale surcoat, broad belt, fur cuffs; mirrored automatically at registration. Limitations: a few dark specks from the painted hip strap on the surcoat back; smeared folds where painting and mesh disagree.",
+      "decidedAt": "2026-10-04T03:42:01.962635+02:00",
+      "question": "Gate 1 rear view, batch G2 (board at 127.0.0.1:47913, _reviews/gate1-rear-troops-g2/board.json): which rear-view concept should be projected onto the approved mountain infantryman mesh? Decision delegated by the user (_reviews/delegation-2026-10-01.json); the recommended candidate is adopted and the others are recorded.",
+      "sha256": "812cb359b98d8b2673073731d489a92256459810938c9a6ad9127b45a1439ff0",
+      "approvedFileSha256": "c37e90ee747d00ea0ffe9d8b4658ff7874f34aa6238555c24c578853d59fc71d",
+      "pixelSha256": "b610343a93472ad4e2fe784f8853a6f454c2d0efcd4997b1ea779b941aefbe36"
+    }
+  ]
+}

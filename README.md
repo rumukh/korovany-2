@@ -108,8 +108,9 @@ the generated images, not measured scans.
 
 ### Cooked 3D models
 
-The line soldier, road archer and infantry captain worn by the Crown's and the
-mountain army's troops, the elves' own forest warden, ranger and warden captain,
+The line soldier, road archer and infantry captain worn by the Crown's troops,
+the elves' own forest warden, ranger and warden captain, the mountain army's own
+axeman, fur-capped bowman and hammer captain,
 the two bosses (Commander Raut and the Palace Marshal), the Echo Well,
 the three faction heroes (the elf ranger, the palace officer and the
 mountain sovereign), both wagons (the logistics convoy and the Crown ward-glass
@@ -125,7 +126,7 @@ Armillary at the Tide Observatory and the Star Monastery, the Ward-Glass Outcrop
 at the Glass Quarry and the Ash Cairn) and the three pickups (a coin purse, a
 healer's satchel and a supply crate) are cooked glTF models (`public/models`) instead of procedural meshes. Their concepts were generated
 locally with Qwen Image Edit Plus 2511, from original Blender reference renders
-(for the archer, captain, bosses and elf troops, the approved soldier concept
+(for the archer, captain, bosses and the elf and mountain troops, the approved soldier concept
 with a blank mannequin head; for the residents, plain civilian body templates derived from it;
 for the wagons, ox, cargo, landmarks and pickups, grey blockouts) and, for the heroes and residents,
 the game's own portraits as identity references. They were reconstructed with
@@ -140,26 +141,27 @@ height, bob and spin. TRELLIS cannot resolve
 spokes, so the wagons' wheels, axles and
 harness (shafts, duga arch, bell and pennant) are built in Blender and the
 reconstructed wheels are cut away. Dark TRELLIS textures of the heroes, archer,
-captain, bosses, elf troops and residents are lifted by a tone curve calibrated
+captain, bosses, elf and mountain troops and residents are lifted by a tone curve calibrated
 in the game against each approved concept from the default camera. The heroes,
 bosses and most residents match their concepts' brightness; the archer, the
-captain, the three elf troops and Tessa stop at the strongest lift measured and
+captain, the six elf and mountain troops and Tessa stop at the strongest lift measured and
 stay visibly darker than their concepts, and Toman and Mara slightly darker; the line soldier keeps its TRELLIS colours
 without a lift; the ox and wagons are lifted by eye, not calibrated. Faction and
 allegiance colour the soldier's tabard and shield, the archer's hood, cape and
 tabard, the captain's tabard, the elves' hoods, mantles, tunics and tabards and
-the warden's round shield, the palace officer's shield and the wagons'
+the warden's round shield, the mountain axeman's surcoat and round shield, the
+bowman's tunic and the hammer captain's skirt, the palace officer's shield and the wagons'
 pennants (the convoy flies its faction's colour, the shipment its current
 allegiance) without extra shader variants. Each campaign loads only the models it
 can show (its own hero, the boss it fights, the troops of its factions, the
 wagons and pickups, and in story worlds the residents and landmarks): about
-25.4 to 27.3 MB of the 31.2 MB of models for a story campaign and about 10.5 to
-11.0 MB for a legacy one. The game waits for those models before presenting a run and stops
+28.0 to 29.2 MB of the 33.8 MB of models for a story campaign and about 13.1 to
+13.6 MB for a legacy one. The game waits for those models before presenting a run and stops
 with an explicit asset error if any fails to load.
 
 **Licensing limitation:** TRELLIS code and weights are MIT-licensed, but its
 textured export depends on components restricted to research and evaluation.
-No commercial clearance exists for these forty-five models; the project owner
+No commercial clearance exists for these forty-eight models; the project owner
 acknowledged publishing them here. Concepts, recipes, provenance, approvals and
 the cooking scripts are in `scripts/models`. The rest of the world (houses,
 walls, trees, rocks, roads and the remaining props) is still procedural, so the models
