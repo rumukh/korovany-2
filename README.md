@@ -140,13 +140,14 @@ buildings' authoritative footprints; pickups keep the procedural pickups' size,
 height, bob and spin. TRELLIS cannot resolve
 spokes, so the wagons' wheels, axles and
 harness (shafts, duga arch, bell and pennant) are built in Blender and the
-reconstructed wheels are cut away. Dark TRELLIS textures of the heroes, archer,
-captain, bosses, elf and mountain troops and residents are lifted by a tone curve calibrated
-in the game against each approved concept from the default camera. The heroes,
-bosses and most residents match their concepts' brightness; the archer, the
+reconstructed wheels are cut away. Dark TRELLIS textures of the heroes, line soldier,
+archer, captain, bosses, elf and mountain troops and residents are lifted by a tone curve calibrated
+in the game against each approved concept from the default camera (the line
+soldier's after its cook, by `derive_tone_cook.py`). The heroes,
+bosses and most residents match their concepts' brightness; the line soldier, the archer, the
 captain, the six elf and mountain troops and Tessa stop at the strongest lift measured and
-stay visibly darker than their concepts, and Toman and Mara slightly darker; the line soldier keeps its TRELLIS colours
-without a lift; the ox and wagons are lifted by eye, not calibrated. Faction and
+stay visibly darker than their concepts, and Toman and Mara slightly darker; the
+ox and wagons are lifted by eye, not calibrated. Faction and
 allegiance colour the soldier's tabard and shield, the archer's hood, cape and
 tabard, the captain's tabard, the elves' hoods, mantles, tunics and tabards and
 the warden's round shield, the mountain axeman's surcoat and round shield, the
@@ -155,7 +156,7 @@ pennants (the convoy flies its faction's colour, the shipment its current
 allegiance) without extra shader variants. Each campaign loads only the models it
 can show (its own hero, the boss it fights, the troops of its factions, the
 wagons and pickups, and in story worlds the residents and landmarks): about
-28.0 to 29.2 MB of the 33.8 MB of models for a story campaign and about 13.1 to
+28.0 to 29.3 MB of the 33.9 MB of models for a story campaign and about 13.1 to
 13.6 MB for a legacy one. The game waits for those models before presenting a run and stops
 with an explicit asset error if any fails to load.
 

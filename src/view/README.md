@@ -160,7 +160,7 @@ residents and the Echo Well and landmarks standing in it), and `main.ts`
 requests that set whenever it presents a title preview, a new run or a resumed
 one. The other factions' heroes and boss are never fetched for a campaign that
 cannot show them, and a campaign without elf troops (the mountain sovereign's)
-never fetches theirs; a story campaign preloads 28.0 to 29.2 MB of the 33.8 MB
+never fetches theirs; a story campaign preloads 28.0 to 29.3 MB of the 33.9 MB
 of models and a legacy one about 13.1 to 13.6 MB (`tests/campaign-models.test.ts` checks the
 sets, the 30 MB budget and full runs, including the reinforcement wave). Loaded
 models stay for the page, so a faction picked again or the run started from the
@@ -242,7 +242,12 @@ these items are Blender meshes (`pipeline/k2items_g.py`, `pipeline/k2rig.py`).
 Colour variants therefore add no shader variants. Because that alpha is a mask rather than
 coverage, dye-masked base colour is encoded with libwebp's `exact` option
 (`pipeline/webp_exact.py`): the default lossy mode discards the colour of every
-texel whose alpha is 0, which is every undyed surface. The well scales uniformly
+texel whose alpha is 0, which is every undyed surface. The line soldier's Phase 1
+cook predates the in-cook tone calibration the other troops have, so
+`pipeline/derive_tone_cook.py` lifts its saved base colour afterwards by the same
+luma power (0.6, chroma kept, dye mask unchanged), re-encodes only that image with
+the same `exact` settings and verifies that the rest of the file is byte-identical.
+The well scales uniformly
 into its circular blocker and shares one geometry and material across instances.
 
 The hero (`HeroInstance`) is a `SkeletonUtils` clone with 14 clips: `Idle`,
@@ -327,7 +332,7 @@ load stops the game on the asset error. A landmark has at most 15,000 triangles
 and 1024 px maps (0.71 to 0.91 MB per file) and a pickup at most 3,000 triangles
 and 512 px maps (0.25 to 0.29 MB); together the nine add 5.70 MB. The three elf
 troops add 2.67 MB (0.80 to 1.01 MB each) and the three mountain troops 2.62 MB
-(0.83 to 0.90 MB each), so the forty-eight models total 33.8 MB, of which one
+(0.83 to 0.90 MB each), so the forty-eight models total 33.9 MB, of which one
 campaign preloads its own set.
 
 After a world mirror is built and after every quality change, `createGameView`
