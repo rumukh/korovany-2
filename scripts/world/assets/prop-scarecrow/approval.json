@@ -1,0 +1,26 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-scarecrow",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "41c237233b0fa4900acfae13e87b305d3bb09e0fd71e9b6004dc26cc986be0f0",
+   "rationale": "Both arms fully spread, the post visible down to the ground and a compact base; b has a mound base and c a longer, thinner coat that would read poorly at 26 m."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "75dde9ca94c801204faed8590b35f97b252b0f95cc4e755cfd709a4fc796d026",
+   "rationale": "Cooked 3,447 triangles, 278 KB; 2.79 m tall (heroic scale), 1.02 m reach. Ragged silhouette and hat read; albedoGain 1.9."
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "75dde9ca94c801204faed8590b35f97b252b0f95cc4e755cfd709a4fc796d026",
+   "rationale": "In furrowed fields: a sinister readable silhouette at 26 m, casts a long shadow. Limitation: cloth is rigid (no wind)."
+  }
+ ]
+}

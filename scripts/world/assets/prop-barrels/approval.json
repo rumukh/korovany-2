@@ -1,0 +1,26 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-barrels",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "b",
+   "sha256": "067bb02a5f90184a4a2d417616b7de166b8aca63c5d0fb69ed7be57726d95a6b",
+   "rationale": "All three lids and the iron bands are readable from above; the small barrel in front separates cleanly from the other two."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "e3b7eccff73617c79fb5e17f55a0137dec4ea417ed60896c03387a2de0b7b4c9",
+   "rationale": "Cooked 3,940 triangles, 237 KB; a 1.4 m cluster in a 1.13 m reach. Staves and hoops read; albedoGain 1.7."
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "e3b7eccff73617c79fb5e17f55a0137dec4ea417ed60896c03387a2de0b7b4c9",
+   "rationale": "By house fronts: correct size against the 2.25 m soldier (hip to chest height). Limitation: hoops are texture-level, the lids are flat."
+  }
+ ]
+}

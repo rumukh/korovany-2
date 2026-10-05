@@ -1,0 +1,19 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-fence",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "9b99eb51464ff28173f1e1e89381974aa7354228817c128ecdf2a59f73bc0a90",
+   "rationale": "2 m pale-fence module, 1.45 m tall, 0.24 m collider thickness; 224 triangles; placed every 2 m along v3 yard fences."
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "9b99eb51464ff28173f1e1e89381974aa7354228817c128ecdf2a59f73bc0a90",
+   "rationale": "Placed along roads in every settlement and inn at gameplay cameras (18-40 m): reads at true scale beside the 2.25 m soldier (doors 1.3 x 2.8 m, the soldier clears a door by 0.55 m); walls stay inside the oriented-box collider, eaves overhang at most 0.78 m; the architecture cutaway keeps the hero visible behind it."
+  }
+ ]
+}

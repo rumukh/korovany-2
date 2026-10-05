@@ -1,0 +1,73 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-arch-rubble",
+  "layer": "rubble",
+  "physicalSizeMetres": 2,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of an old rubble fieldstone wall surface, two metres across. The whole image is a close-up of the flat surface itself, filling the frame edge to edge, seen exactly face-on: no wall top, no ground, no sky and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. Each stone shape becomes one rough, flat-faced grey or brown fieldstone laid in rough courses, and the thin dark lines between them become narrow, deep, shadowed joints of dark earthen mortar, so the stones almost touch; the green blobs become damp moss in the joints. Flat overcast diffuse daylight, no cast shadows, no specular highlights, no wet sheen, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, round cobbles, pebbles, tar, wet, glossy, black mortar, grid, regular pattern, white mortar, lime plaster, whitewash, render, wide joints, grass, plants on top",
+  "candidates": [
+    {
+      "seed": 42501,
+      "note": "First recipe revision (stones on a jittered grid, dark mortar): stones came out as round cobbles in black tar on a visible grid."
+    },
+    {
+      "seed": 42502,
+      "note": "Second recipe revision (courses of ellipses, lime mortar): flat-faced stones in courses, but the mortar came out white and filled the slot corners, so the wall read as pebbles in plaster."
+    },
+    {
+      "seed": 42503
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 42501,
+    "noiseMetres": 0.3,
+    "colours": [
+      "#2e2b27",
+      "#36322d"
+    ],
+    "layers": [
+      {
+        "kind": "courses",
+        "height": [
+          0.12,
+          0.24
+        ],
+        "width": [
+          0.16,
+          0.45
+        ],
+        "joint": 0.008,
+        "colours": [
+          "#5e5a52",
+          "#77716a",
+          "#6a6050",
+          "#4e4a44",
+          "#807a70"
+        ],
+        "squareness": 4
+      },
+      {
+        "kind": "blobs",
+        "radius": [
+          0.02,
+          0.06
+        ],
+        "perSquareMetre": 2,
+        "colours": [
+          "#3e4a30",
+          "#4a5636"
+        ]
+      }
+    ]
+  }
+}

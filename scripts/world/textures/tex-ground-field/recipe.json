@@ -1,0 +1,77 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-ground-field",
+  "layer": "field",
+  "physicalSizeMetres": 4,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a photograph of a harvested grain field four metres across. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The short pale strokes become cut straw stubble and loose chaff, the dark ovals become clods of moist earth, and the brown background becomes dark ploughed soil, evenly spread with no rows. Shot straight down from directly above as a flat orthographic photograph: flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no horizon, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours",
+  "candidates": [
+    {
+      "seed": 41501
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 41501,
+    "noiseMetres": 0.5,
+    "colours": [
+      "#3a2e22",
+      "#4e3e2c",
+      "#5e4c36"
+    ],
+    "layers": [
+      {
+        "kind": "strokes",
+        "length": [
+          0.02,
+          0.05
+        ],
+        "width": 0.006,
+        "perSquareMetre": 1500,
+        "colours": [
+          "#b49a62",
+          "#9c8452",
+          "#c8b07a"
+        ]
+      },
+      {
+        "kind": "ellipses",
+        "length": [
+          0.04,
+          0.1
+        ],
+        "aspect": [
+          0.6,
+          0.9
+        ],
+        "perSquareMetre": 30,
+        "colours": [
+          "#2e2418",
+          "#3a2e20"
+        ]
+      },
+      {
+        "kind": "strokes",
+        "length": [
+          0.03,
+          0.08
+        ],
+        "width": 0.003,
+        "perSquareMetre": 400,
+        "colours": [
+          "#a08a58",
+          "#8a7648"
+        ]
+      }
+    ]
+  }
+}

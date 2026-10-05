@@ -1,0 +1,63 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-ground-meadow",
+  "layer": "meadow",
+  "physicalSizeMetres": 4,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a photograph of a late-autumn pasture four metres across. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The fine olive, straw and green strokes become a dense mat of short dead and living grass blades, flattened in places, and the dark blobs become small bare patches of damp soil. Shot straight down from directly above as a flat orthographic photograph: flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no horizon, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, leaves, fallen leaves, clover, flowers, large plants, bare soil patches, holes, molehills",
+  "candidates": [
+    {
+      "seed": 41101,
+      "note": "Generated with the first recipe revision (leaves and clover layers); Qwen rendered both about five times too large."
+    },
+    {
+      "seed": 41102,
+      "note": "Generated with the second recipe revision (dark bare-soil blobs); the blobs became clusters of dark holes that repeat visibly on a 4 m tile."
+    },
+    {
+      "seed": 41103
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 41101,
+    "noiseMetres": 0.8,
+    "colours": [
+      "#4a4a2c",
+      "#6a6438",
+      "#7f7646",
+      "#5a5a34"
+    ],
+    "layers": [
+      {
+        "kind": "strokes",
+        "length": [
+          0.04,
+          0.12
+        ],
+        "width": 0.004,
+        "perSquareMetre": 3000,
+        "colours": [
+          "#7a7442",
+          "#8e8450",
+          "#5e6234",
+          "#a29262",
+          "#4e5a2e"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "evenChroma": true,
+    "note": "Chroma evening: the candidate's straw-gold border and greyer centre repeated as a visible grid every 4 m; the cook divides out the low-frequency tint."
+  }
+}

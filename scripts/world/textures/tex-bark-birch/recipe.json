@@ -1,0 +1,63 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-bark-birch",
+  "layer": "bark-birch",
+  "physicalSizeMetres": 1,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a photograph of old birch tree bark one metre across. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The pale background becomes papery white-grey birch bark, the short horizontal dark dashes become lenticels, and the black lumpy patches become rough fissured black bark where the trunk has aged. Shot straight on as a flat frontal orthographic photograph: flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours",
+  "candidates": [
+    {
+      "seed": 43201
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 43201,
+    "noiseMetres": 0.25,
+    "colours": [
+      "#b8b2a6",
+      "#c9c4b8",
+      "#ddd8cc",
+      "#e6e2d8"
+    ],
+    "layers": [
+      {
+        "kind": "strokes",
+        "orientation": 0,
+        "spread": 3,
+        "length": [
+          0.02,
+          0.08
+        ],
+        "width": 0.006,
+        "perSquareMetre": 120,
+        "colours": [
+          "#3a3632",
+          "#4a4640"
+        ]
+      },
+      {
+        "kind": "blobs",
+        "radius": [
+          0.03,
+          0.12
+        ],
+        "perSquareMetre": 3,
+        "lumpy": 0.6,
+        "colours": [
+          "#2a2826",
+          "#3a3632"
+        ]
+      }
+    ]
+  }
+}

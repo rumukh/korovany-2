@@ -11,8 +11,14 @@ export interface WorldScenery {
   group: THREE.Group;
   heroPosition: THREE.Vector3;
   flagAnchors: Map<string, THREE.Vector3>;
-  update(time: number, reducedMotion: boolean): void;
+  /** `camera` lets version 3 scenery submit only what the view can show; version 1 and 2 scenery ignore it. */
+  update(time: number, reducedMotion: boolean, camera?: THREE.Camera): void;
   setQuality(low: boolean): void;
+  /**
+   * Version 3 only: shows one instance of every pooled part at (x, y, z) for the shader warm-up; `restore` resubmits the
+   * real view on the next update.
+   */
+  warm?(x: number, y: number, z: number): { objects: THREE.Object3D[]; restore(): void };
   dispose(): void;
 }
 
@@ -50,14 +56,27 @@ function worldSeed(seed: string): number {
   return hash >>> 0;
 }
 
-function makeSky(resources: ViewResources): THREE.Mesh {
+/** Sky colours and sun direction; the defaults are the version 1 and 2 sky. */
+export interface SkyGrade {
+  zenith: string;
+  horizon: string;
+  sun: readonly [number, number, number];
+  /** Cloud cover multiplier (1 = v1/v2's scattered clouds). */
+  overcast?: number;
+  /** Cloud colour, linear RGB (v1/v2: warm white). */
+  cloud?: readonly [number, number, number];
+}
+
+export function makeSky(resources: ViewResources, grade: SkyGrade = { zenith: '#61889f', horizon: palette.fog, sun: [-40, 38, 32] }): THREE.Mesh {
   const geometry = resources.geometry('sky', () => new THREE.SphereGeometry(240, 24, 12));
+  const sun = grade.sun.map(value => value.toFixed(1)).join(', ');
+  const cloudEdge = grade.overcast ? `${(0.43 - 0.2 * (grade.overcast - 1)).toFixed(3)}` : '0.43';
   const material = resources.ownMaterial('sky', new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
     uniforms: {
-      zenith: { value: new THREE.Color('#61889f') },
-      horizon: { value: new THREE.Color(palette.fog) },
+      zenith: { value: new THREE.Color(grade.zenith) },
+      horizon: { value: new THREE.Color(grade.horizon) },
     },
     vertexShader: `
       varying vec3 vDirection;
@@ -90,13 +109,13 @@ function makeSky(resources: ViewResources): THREE.Mesh {
         vec3 direction = normalize(vDirection);
         float elevation = max(0.0, direction.y);
         vec3 color = mix(horizon, zenith, smoothstep(0.0, 0.85, elevation));
-        float sunAngle = max(0.0, dot(direction, normalize(vec3(-40.0, 38.0, 32.0))));
+        float sunAngle = max(0.0, dot(direction, normalize(vec3(${sun}))));
         color += vec3(0.45, 0.24, 0.09) * pow(sunAngle, 12.0);
         color += vec3(2.5, 1.9, 1.1) * smoothstep(0.9993, 0.9998, sunAngle);
         vec2 cloudUv = direction.xz / max(0.16, direction.y + 0.16);
-        float cloud = smoothstep(0.43, 0.73, fbm(cloudUv * 1.8));
+        float cloud = smoothstep(${cloudEdge}, 0.73, fbm(cloudUv * 1.8));
         cloud *= smoothstep(0.035, 0.2, elevation);
-        color = mix(color, vec3(0.93, 0.87, 0.73), cloud * 0.8);
+        color = mix(color, vec3(${(grade.cloud ?? [0.93, 0.87, 0.73]).map(value => value.toFixed(2)).join(', ')}), cloud * 0.8);
         // Distant painted ridgelines are sky, never traversable world geometry.
         float ridge = 0.035 + fbm(direction.xz * 8.0) * 0.15;
         float mountains = 1.0 - smoothstep(ridge - 0.005, ridge + 0.005, direction.y);
@@ -117,7 +136,7 @@ function makeSky(resources: ViewResources): THREE.Mesh {
   return sky;
 }
 
-function makeWater(resources: ViewResources, bounds: Bounds): { mesh: THREE.Mesh; time: { value: number } } {
+export function makeWater(resources: ViewResources, bounds: Bounds): { mesh: THREE.Mesh; time: { value: number } } {
   const time = { value: 0 };
   const material = resources.ownMaterial('river-water', new THREE.MeshPhysicalMaterial({
     color: '#365f66', roughness: 0.24, metalness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.18,
@@ -349,7 +368,7 @@ function addRoads(world: WorldBlueprint, batch: StaticBatch): void {
   }
 }
 
-function addBridge(bridge: Bounds, world: WorldBlueprint, batch: StaticBatch): void {
+export function addBridge(bridge: Bounds, world: WorldBlueprint, batch: StaticBatch): void {
   const width = bridge.maxX - bridge.minX;
   const depth = bridge.maxZ - bridge.minZ;
   const centerX = (bridge.minX + bridge.maxX) / 2;
@@ -402,7 +421,7 @@ function applyFoliageDither(resources: ViewResources, hero: THREE.Vector3): void
   }
 }
 
-function applyGroundGrain(resources: ViewResources): void {
+export function applyGroundGrain(resources: ViewResources): void {
   for (const color of new Set([palette.grass, palette.meadow, palette.road, palette.earth, palette.bank,
     ...Object.values(regionThemes).flatMap(theme => [theme.ground, theme.patches])])) {
     const material = resources.material(color, { side: THREE.FrontSide, surface: 'ground' });
@@ -433,6 +452,39 @@ function applyGroundGrain(resources: ViewResources): void {
   }
 }
 
+/**
+ * The procedural structure of a wall obstacle without a cooked world model: the Old Fort's towers and curtain (with
+ * the camera cutaway), a story location's buildings, or a military site's building.
+ */
+export function legacyWall(resources: ViewResources, world: WorldBlueprint, obstacle: Obstacle, heroPosition: THREE.Vector3,
+  fortMaterials: Map<THREE.Material, THREE.Material>): THREE.Group {
+  const oldFort = world.exploration?.locations.find((place) => place.id === 'old-fort');
+  if (oldFort && (obstacle.id.startsWith('old-fort-building-') || obstacle.id.startsWith('old-fort-wall-'))) {
+    const model = oldFortStructure(resources, obstacle, oldFort);
+    model.traverse((object) => {
+      if (!(object instanceof THREE.Mesh) || Array.isArray(object.material)) return;
+      const original: THREE.Material = object.material;
+      let material = fortMaterials.get(original);
+      if (!material) {
+        material = resources.ownMaterial(`old-fort-cutaway:${original.uuid}`, original.clone());
+        material.name = 'old-fort-cutaway';
+        applySightlineDither(material, heroPosition, 1);
+        fortMaterials.set(original, material);
+      }
+      object.material = material;
+    });
+    return model;
+  }
+  const theme = world.exploration ? themeAt(world, obstacle) : undefined;
+  const place = world.exploration?.locations.find(candidate => obstacle.id.startsWith(`${candidate.id}-building-`));
+  if (place && theme) return locationStructure(resources, obstacle, place, theme);
+  const site = world.sites.reduce<WorldSite | undefined>((nearest, candidate) => {
+    if (!nearest) return candidate;
+    return Math.hypot(candidate.x - obstacle.x, candidate.z - obstacle.z) < Math.hypot(nearest.x - obstacle.x, nearest.z - obstacle.z) ? candidate : nearest;
+  }, undefined);
+  return structure(resources, obstacle, site);
+}
+
 export function createWorldScenery(resources: ViewResources, world: WorldBlueprint): WorldScenery {
   const group = new THREE.Group();
   const structures = new StaticBatch(resources);
@@ -442,7 +494,6 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
   const random = seededRandom(worldSeed(world.seed));
   const heroPosition = new THREE.Vector3();
   const flagAnchors = new Map<string, THREE.Vector3>();
-  const oldFort = world.exploration?.locations.find((place) => place.id === 'old-fort');
   const fortMaterials = new Map<THREE.Material, THREE.Material>();
   const bounds = world.bounds;
   const width = bounds.maxX - bounds.minX;
@@ -485,33 +536,7 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
       batch.add('rock', theme?.stone ?? (obstacle.variant % 2 === 0 ? palette.stone : palette.slateLight),
         [obstacle.x, obstacle.height * rockGroundOffset - 0.035, obstacle.z], [scale, obstacle.height, scale], [0, obstacle.variant * 0.61, 0], true, 'rock');
     } else {
-      if (oldFort && (obstacle.id.startsWith('old-fort-building-') || obstacle.id.startsWith('old-fort-wall-'))) {
-        const model = oldFortStructure(resources, obstacle, oldFort);
-        model.traverse((object) => {
-          if (!(object instanceof THREE.Mesh) || Array.isArray(object.material)) return;
-          const original: THREE.Material = object.material;
-          let material = fortMaterials.get(original);
-          if (!material) {
-            material = resources.ownMaterial(`old-fort-cutaway:${original.uuid}`, original.clone());
-            material.name = 'old-fort-cutaway';
-            applySightlineDither(material, heroPosition, 1);
-            fortMaterials.set(original, material);
-          }
-          object.material = material;
-        });
-        batch.append(model);
-        continue;
-      }
-      const place = world.exploration?.locations.find(candidate => obstacle.id.startsWith(`${candidate.id}-building-`));
-      if (place && theme) {
-        batch.append(locationStructure(resources, obstacle, place, theme));
-        continue;
-      }
-      const site = world.sites.reduce<WorldSite | undefined>((nearest, candidate) => {
-        if (!nearest) return candidate;
-        return Math.hypot(candidate.x - obstacle.x, candidate.z - obstacle.z) < Math.hypot(nearest.x - obstacle.x, nearest.z - obstacle.z) ? candidate : nearest;
-      }, undefined);
-      batch.append(structure(resources, obstacle, site));
+      batch.append(legacyWall(resources, world, obstacle, heroPosition, fortMaterials));
     }
   }
   for (const site of world.sites) {

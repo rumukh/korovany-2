@@ -1,0 +1,19 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-cottage-c",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "49585367eb93dae32894a5d4c165c20a1ba07a080db8e6662bbe92e3c7340e83",
+   "rationale": "Rubble-walled cottage, 7 x 9 m, eaves 3.8 m, ridge 8.0 m, thatch roof; 612 triangles."
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "49585367eb93dae32894a5d4c165c20a1ba07a080db8e6662bbe92e3c7340e83",
+   "rationale": "Placed along roads in every settlement and inn at gameplay cameras (18-40 m): reads at true scale beside the 2.25 m soldier (doors 1.3 x 2.8 m, the soldier clears a door by 0.55 m); walls stay inside the oriented-box collider, eaves overhang at most 0.78 m; the architecture cutaway keeps the hero visible behind it."
+  }
+ ]
+}

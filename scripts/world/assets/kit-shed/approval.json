@@ -1,0 +1,19 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-shed",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "7e3b4485ac6c144c0608883a14e7fbf75b9b9f669744af904583c276fcb9b95f",
+   "rationale": "Lean-to plank shed, 4 x 5 m, eaves 3.2 m rising to 4.2 m (raised from 2.9 m so nothing below 3 m leaves the collider); 212 triangles."
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "7e3b4485ac6c144c0608883a14e7fbf75b9b9f669744af904583c276fcb9b95f",
+   "rationale": "Placed along roads in every settlement and inn at gameplay cameras (18-40 m): reads at true scale beside the 2.25 m soldier (doors 1.3 x 2.8 m, the soldier clears a door by 0.55 m); walls stay inside the oriented-box collider, eaves overhang at most 0.78 m; the architecture cutaway keeps the hero visible behind it."
+  }
+ ]
+}

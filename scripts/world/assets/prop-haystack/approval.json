@@ -1,0 +1,26 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-haystack",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "5cd2672378d83e0c44d6fda4ce68871889af3d86efc4b6831fa29b145f33e313",
+   "rationale": "Cleanest silhouette: symmetric drying poles, a single top pole and an even conical stack; b and c are near-identical with noisier crowns."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "d0e83bdf287ad6a8486c12eb4c417aa08c2d66643330a973a2c91f6e9db1e2e1",
+   "rationale": "Cooked 4,924 triangles, 265 KB; 3.19 m tall in a 1.78 m reach at uniform scale. Reads as a pole-dried haystack beside the 2.25 m soldier in four views. r1 albedo was about 1.9x darker than the concept; r2 applies albedoGain 1.9."
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "d0e83bdf287ad6a8486c12eb4c417aa08c2d66643330a973a2c91f6e9db1e2e1",
+   "rationale": "In Greenhollow pastures at 18-40 m cameras: a big readable stack, shadows ground it, no clipping with sheep (collider r 1.78 m). Limitation: the far side and the pole tops are TRELLIS's invention and slightly blobby up close."
+  }
+ ]
+}

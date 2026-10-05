@@ -7,7 +7,7 @@ import type {
   EffectSnapshot, EventKind, GameInput, InteractionSnapshot, ObjectiveSnapshot, ShopItem,
   UpgradeId, Vec2, WorldBlueprint,
 } from './types';
-import { distance, findRoadRoute, moveWithCollision, projectSegment } from './world';
+import { distance, findRoadRoute, moveWithCollision, nearbyObstacles, projectSegment, segmentClearance } from './world';
 
 const dec = (v: number, dt: number): number => Math.max(0, v - dt);
 const direction = (from: Vec2, to: Vec2): Vec2 => {
@@ -533,7 +533,11 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
           const dt = Math.min(ctx.dt, projectile.remaining);
           const end = { x: start.x + projectile.vx * dt, z: start.z + projectile.vz * dt };
           projectile.x = end.x; projectile.z = end.z; projectile.remaining = dec(projectile.remaining, ctx.dt);
-          if (blueprint.obstacles.some(o => distance(o, projectSegment(o, start, end)) < o.radius + projectile.radius) ||
+          const walled = blueprint.version === 3
+            ? nearbyObstacles(blueprint, Math.min(start.x, end.x), Math.min(start.z, end.z), Math.max(start.x, end.x), Math.max(start.z, end.z))
+              .some(o => segmentClearance(o, start, end) < projectile.radius)
+            : blueprint.obstacles.some(o => distance(o, projectSegment(o, start, end)) < o.radius + projectile.radius);
+          if (walled ||
               end.x < blueprint.bounds.minX || end.x > blueprint.bounds.maxX ||
               end.z < blueprint.bounds.minZ || end.z > blueprint.bounds.maxZ) return false;
           if (projectile.owner === 'player') {

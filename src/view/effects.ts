@@ -5,8 +5,13 @@ import { palette } from './palette';
 import { shapeGeometry } from './primitives';
 import { seededRandom, ViewResources } from './resources';
 
+/** Ground height under a world point; version 1 and 2 worlds are flat. */
+export type GroundHeight = (x: number, z: number) => number;
+const flatGround: GroundHeight = () => 0;
+
 class InstancePool {
   mesh: THREE.InstancedMesh;
+  ground: GroundHeight = flatGround;
   private count = 0;
   private readonly transform = new THREE.Object3D();
   private readonly color = new THREE.Color();
@@ -45,7 +50,7 @@ class InstancePool {
 
   add(x: number, y: number, z: number, sx: number, sy: number, sz: number, color: string, rx = 0, ry = 0, rz = 0): void {
     if (this.count >= this.capacity) throw new Error('Presentation instance pool capacity exceeded.');
-    this.transform.position.set(x, y, z);
+    this.transform.position.set(x, y + this.ground(x, z), z);
     this.transform.scale.set(sx, sy, sz);
     this.transform.rotation.set(rx, ry, rz);
     this.transform.updateMatrix();
@@ -74,6 +79,7 @@ class InstancePool {
  */
 class CookedPool {
   mesh: THREE.InstancedMesh;
+  ground: GroundHeight = flatGround;
   private count = 0;
   private readonly template: THREE.Mesh;
   private readonly name: string;
@@ -127,7 +133,7 @@ class CookedPool {
   add(x: number, y: number, z: number, yaw: number): void {
     if (this.count >= this.capacity) throw new Error('Presentation instance pool capacity exceeded.');
     this.turn.setFromAxisAngle(this.up, yaw);
-    this.placement.compose(this.position.set(x, y, z), this.turn, this.unit).multiply(this.offset);
+    this.placement.compose(this.position.set(x, y + this.ground(x, z), z), this.turn, this.unit).multiply(this.offset);
     this.mesh.setMatrixAt(this.count, this.placement);
     this.count += 1;
   }
@@ -170,7 +176,8 @@ export class WorldEffects {
   private trailClock = 0;
   private low = false;
 
-  constructor(resources: ViewResources, parent: THREE.Object3D) {
+  /** `ground` lifts every effect onto a version 3 world's presentation relief. */
+  constructor(resources: ViewResources, parent: THREE.Object3D, ground?: GroundHeight) {
     const unlit = resources.material('#ffffff', { unlit: true, opacity: 0.73, depthWrite: false, side: THREE.DoubleSide });
     const solid = resources.material('#ffffff');
     this.rings = new InstancePool(parent, shapeGeometry(resources, 'ring'), unlit, 64);
@@ -192,6 +199,7 @@ export class WorldEffects {
       ? Object.fromEntries(kinds.map((kind, index) => [kind,
         new CookedPool(parent, models[index]!, PICKUPS[kind].size, 32, resources.depthMaterial())])) as Record<PickupKind, CookedPool>
       : undefined;
+    if (ground) for (const pool of [...this.all, ...Object.values(this.pickups ?? {})]) pool.ground = ground;
   }
 
   setQuality(low: boolean): void {

@@ -1,0 +1,53 @@
+{
+ "schema": "korovany2-surface-cook/1",
+ "layer": "bark-birch",
+ "recipe": "tex-bark-birch",
+ "recipeSha256": "741df34d2ff8c51a6e8c46fbe9233e55a65cb3800a3f55deafb8fcc5012dfb2d",
+ "candidate": "candidate-43201.png",
+ "candidateSha256": "802bcbc3af4c9e1b6d571f5af96ddf50e0561ae3e096a54bcca99b6daa20b562",
+ "script": "scripts/world/pipeline/cook_surface.py",
+ "scriptSha256": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+ "size": 512,
+ "steps": {
+  "delight": {
+   "sigmaPixels": 166.0,
+   "clamp": [
+    0.6,
+    1.7
+   ]
+  },
+  "wrapBlend": {
+   "bandFraction": 0.08,
+   "mode": "variance-preserving",
+   "seamRatioBefore": 11.48,
+   "seamRatioAfter": 1.01
+  },
+  "grade": {
+   "gain": 1.0,
+   "saturation": 1.0
+  },
+  "height": {
+   "blurPixels": 0.8,
+   "percentiles": [
+    1,
+    99
+   ],
+   "inverted": false
+  }
+ },
+ "albedoMeanSrgb": [
+  164.0,
+  162.7,
+  161.6
+ ],
+ "outputs": {
+  "bark-birch-albedo.webp": {
+   "bytes": 76714,
+   "sha256": "42dacfc86413ffab447fadeaccb057a2b908c7caf1d98ee0964dff7e4c4213d3"
+  },
+  "bark-birch-height.webp": {
+   "bytes": 50738,
+   "sha256": "9ed8b7840b9b30d64b6e966442f3d576641d5039ef813a3c933c295ed0ba30b9"
+  }
+ }
+}

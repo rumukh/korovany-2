@@ -1,0 +1,26 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-hay-cart",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "74e84ce3e45418dd73b96d47190c8eeaf5aeeec7a01f77acfc59d68f8181fd98",
+   "rationale": "Both wheels and both shafts are visible and the hay load is contained; b and c hide more of the far wheel behind overflowing hay."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "49c90cbe795f1b8339d3aa97b4ef6a1220f2a9d9e30cf33308b9bcec8906cebc",
+   "rationale": "Cooked 5,416 triangles, 369 KB; 1.84 m tall in a 2.3 x 3.85 m box. Wheels, shafts and load read; albedoGain 1.85."
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "49c90cbe795f1b8339d3aa97b4ef6a1220f2a9d9e30cf33308b9bcec8906cebc",
+   "rationale": "In settlement yards beside the 2.25 m soldier: right size, shafts on the ground. Limitation: wheels are not round up close and do not turn (static prop)."
+  }
+ ]
+}

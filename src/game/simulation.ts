@@ -91,14 +91,26 @@ function initialState(options: CampaignOptions, blueprint: WorldBlueprint): Camp
     fortress: { id: 'fortress', x: fortress.x, z: fortress.z, unlocked: false, bossId: 'boss', bossDefeated: false, reinforcementWaves: 0 },
     rewards: null, raidComplete: false, eventSequence: 0, transientSequence: 0, spawnSequence: 0,
     followTimer: 0, convoyWeaponTimer: 0, reinforcementTimer: 0, dodgeDirection: { x: 0, z: 1 },
-    ...(blueprint.version === 2 ? { narrative: createNarrative(blueprint, options.faction), military: createMilitary() } : {}),
+    ...(blueprint.version !== 1 ? { narrative: createNarrative(blueprint, options.faction), military: createMilitary() } : {}),
   };
+}
+
+/** Deep-freezes a plain JSON-like value in place and returns it. */
+function deepFreeze<T>(value: T): T {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const child of Object.values(value)) deepFreeze(child);
+  }
+  return value;
 }
 
 function session(world: World, blueprint: WorldBlueprint): GameSession {
   const simulation = createSimulation({
     world, schedule: createSchedule().addAll(campaignSystems(blueprint)), tickRate: TICK_RATE,
   });
+  // A version 3 world is about 1 MB of JSON (thousands of obstacles): every snapshot shares one deep-frozen copy instead
+  // of cloning it per frame. It is immutable by contract; v1/v2 snapshots keep their own clone, unchanged.
+  const sharedWorld = blueprint.version === 3 ? deepFreeze(structuredClone(blueprint)) : undefined;
   return {
     step(input: GameInput = {}) {
       if (campaign(world).phase !== 'playing') return;
@@ -136,8 +148,8 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
         const { vx: _vx, vz: _vz, damage: _damage, ...visible } = p;
         return visible;
       });
-      return structuredClone({
-        version: 1, phase: s.phase, tick: world.tick, elapsed: world.tick / TICK_RATE,
+      const view = {
+        version: 1 as const, phase: s.phase, tick: world.tick, elapsed: world.tick / TICK_RATE,
         seed: s.seed, runId: s.runId, faction: s.faction, world: blueprint,
         player: s.player, actors: visibleActors, convoy: s.convoy, outposts: s.outposts,
         pickups: s.pickups, projectiles, effects: s.effects, events: s.events,
@@ -145,7 +157,10 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
         shop: shopItems(s, blueprint), rewards: s.rewards,
         ...(s.narrative ? { narrative: narrativeSnapshot(s, blueprint, actors(world)) } : {}),
         ...(s.military ? { campaign: factionCampaignSnapshot(s) } : {}),
-      });
+      };
+      if (!sharedWorld) return structuredClone(view);
+      const { world: _world, ...rest } = view;
+      return { ...structuredClone(rest), world: sharedWorld };
     },
     serialize(): CampaignSave {
       const s = campaign(world);
@@ -190,7 +205,9 @@ function populateActors(world: World, data: CampaignData, blueprint: WorldBluepr
 
 export function createCampaign(options: CampaignOptions): GameSession {
   assertRecord(options, 'Campaign options');
-  if (options.worldVersion !== undefined && options.worldVersion !== 1 && options.worldVersion !== 2) throw new Error('Unsupported world version');
+  if (options.worldVersion !== undefined && options.worldVersion !== 1 && options.worldVersion !== 2 && options.worldVersion !== 3) {
+    throw new Error('Unsupported world version');
+  }
   validateFaction(options.faction);
   const blueprint = configureFactionWorld(generateWorld(options.seed, options.worldVersion ?? 2), options.faction);
   const data = initialState(options, blueprint);
@@ -204,11 +221,13 @@ export function createCampaign(options: CampaignOptions): GameSession {
 
 export function restoreCampaign(save: unknown): GameSession {
   assertRecord(save, 'Campaign save');
-  if (save.namespace !== 'korovany2:campaign' || (save.version !== 1 && save.version !== 2)) throw new Error('Unsupported campaign save');
+  if (save.namespace !== 'korovany2:campaign' || (save.version !== 1 && save.version !== 2 && save.version !== 3)) {
+    throw new Error('Unsupported campaign save');
+  }
   if (typeof save.seed !== 'string' || normalizeSeed(save.seed) !== save.seed) throw new Error('Invalid saved seed');
   validateFaction(save.faction);
   if (typeof save.runId !== 'string' || !save.runId || save.runId.length > 128) throw new Error('Invalid saved run ID');
-  if (save.version === 2) {
+  if (save.version !== 1) {
     assertRecord(save.engine, 'Engine save'); assertRecord(save.engine.resources, 'Saved resources');
     assertRecord(save.engine.resources.KorovanyCampaign, 'Saved campaign');
     const narrative = save.engine.resources.KorovanyCampaign.narrative;

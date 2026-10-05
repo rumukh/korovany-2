@@ -1,0 +1,84 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-ground-road",
+ "layer": "road",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/road-albedo.webp",
+   "sha256": "722d00ba7b9a83b50c06684fbcfe566bfc0e834fbeaba7583f95b1e96423b178",
+   "bytes": 130756
+  },
+  "height": {
+   "file": "public/world/surfaces/road-height.webp",
+   "sha256": "4c690c683b9610c8d9fc610b828522374f329ce3ab5c622aae25adbafb10ae13",
+   "bytes": 112626
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-41303.png",
+  "candidateSha256": "c50b8b62a4684e5c642bba4b094bc4dfdf26d45a74684b25696e1ac2242fba70",
+  "seed": 41303,
+  "generationSeconds": 853.4,
+  "layoutSha256": "d661ea3ba69e26b2ff1e0cf3d96a5cc2eb99c7422709e20d4007de7f32dfb176"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Directionless packed earth with even fine gravel and darker damp patches at the 4 m tile scale: no ruts (41302) and no large stones (41301), so roads read the same in every direction.",
+  "limitations": [
+   "The candidate had a dark strip along one edge; the cook uses a narrower de-light (cook.delightFraction 0.05) and a wider wrap band (0.15), leaving the tile edges within 9% of its mean.",
+   "Darker damp patches still repeat every 4 m along long straight roads."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 66.4,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.15,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 2.455,
+    "seamRatioAfter": 1.098
+   },
+   "grade": {
+    "gain": 1.0,
+    "saturation": 1.0
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   96.1,
+   78.0,
+   59.9
+  ]
+ }
+}

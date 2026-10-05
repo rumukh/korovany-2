@@ -1,0 +1,26 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "char-sheep",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "ffc34d6756b5f7c01e22a33355b2d8cee5e08722ff9a4ec3c99db5dd8194199f",
+   "rationale": "Head nearly in profile and in line with the body (best for a quadruped rig); all four legs separated. b and c turn the head to camera."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "86538c6111f2e41a0787c6ff255c21441a1d9960ec3d13060e99a7edc7bd6f26",
+   "rationale": "Cooked 5,895 triangles, 595 KB, 1.3 m tall (0.95 m class at the shoulder, x1.28 heroic scale). Five clips (Idle, Graze, Walk 1.0 m/s, Run 4.2 m/s, Startle) reviewed in the animation page: hooves stay planted (foot lock 4.5 cm), no flapping legs after per-leg weighting."
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "86538c6111f2e41a0787c6ff255c21441a1d9960ec3d13060e99a7edc7bd6f26",
+   "rationale": "Flocks of 5-9 graze, wander, startle and flee from the hero (9 m / 15 m) in every settlement pasture; animate within 60 m, hidden beyond 120 m. Limitation: procedural clips, no blending between grazing and walking; fleece is TRELLIS texture, no fur shading."
+  }
+ ]
+}

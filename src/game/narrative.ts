@@ -150,7 +150,7 @@ function progress(state: NarrativeState): StoryProgress {
 
 export function createNarrative(world: WorldBlueprint, faction: FactionId): NarrativeState {
   const { QUESTS, NPCS, NPC_BY_ID, ACTION_BY_ID } = catalog(faction);
-  if (world.version !== 2 || !world.exploration) throw new Error('Narrative requires a version 2 exploration world');
+  if (world.version === 1 || !world.exploration) throw new Error('Narrative requires an exploration world (version 2 or 3)');
   if (ACTION_BY_ID.size !== QUESTS.reduce((sum, q) => sum + q.stages.reduce((n, st) => n + st.actions.length, 0), 0)) {
     throw new Error('Duplicate authored narrative action');
   }

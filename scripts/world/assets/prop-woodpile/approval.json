@@ -1,0 +1,26 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-woodpile",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "b",
+   "sha256": "79ca7e150c12ffddd36a43986e546301e42fcc26a5bea8a0aebe7867e39eb420",
+   "rationale": "Clearest three-quarter view (depth for TRELLIS), posts at both ends and a straight top; a is nearly frontal and c has a ragged top course."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "ec202ff0632cb6831da4b088a9ef869b61098d3210657c5948d452a14c9ebd3b",
+   "rationale": "Cooked 5,910 triangles, 462 KB; 1.23 m tall, 3.2 m long against a gable wall. Log ends and bark read at gameplay distance; albedoGain 2.0 after r1 came out about 2x dark."
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "ec202ff0632cb6831da4b088a9ef869b61098d3210657c5948d452a14c9ebd3b",
+   "rationale": "Stacked against cottage gables: fits its 1.0 x 3.2 m box, no gaps to the wall in the default camera. Limitation: the log ends are soft, not individually modelled."
+  }
+ ]
+}

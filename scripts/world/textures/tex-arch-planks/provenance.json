@@ -1,0 +1,80 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-arch-planks",
+ "layer": "planks",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/planks-albedo.webp",
+   "sha256": "7f80a7d7d9a3f0506c4ec9b2a5e2908d2ab7ed48a528e12a62cd92e170d7c83e",
+   "bytes": 41136
+  },
+  "height": {
+   "file": "public/world/surfaces/planks-height.webp",
+   "sha256": "b80f1c397c9533ea25417dc5bff633e2dccc160e1804c8d30cec982485c5e284",
+   "bytes": 54604
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-42601.png",
+  "candidateSha256": "8c16f21ac0a97a7054b919ffaa897e14b1713a4565e5796ab92eae83f18e556c",
+  "seed": 42601,
+  "generationSeconds": 855.1,
+  "layoutSha256": "f6e6049513008b475d7f4b79fe59377367bcdd634c30fe3772ed445cd07f09ac"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Face-on vertical boards with joints, knots and nail heads at the 2 m tile scale. Limitation: the grain follows the layout strokes too literally and reads as drawn rather than photographed up close; acceptable on barn and shed walls at gameplay distance, flagged for regeneration in W1.",
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 0.706,
+    "seamRatioAfter": 0.803
+   },
+   "grade": {
+    "gain": 1.6,
+    "saturation": 1.0
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   93.0,
+   80.3,
+   69.1
+  ]
+ }
+}

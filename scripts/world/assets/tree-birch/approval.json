@@ -1,0 +1,19 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "tree-birch",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "00976911aa833c2578892837ccc198b4538ac1e3a195b30694796ad8a9775b67",
+   "rationale": "Two birch variants 13.5-15.5 m with white bark from the birch layer, 327 wood and 180 leaf-card triangles each, plus impostors."
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "00976911aa833c2578892837ccc198b4538ac1e3a195b30694796ad8a9775b67",
+   "rationale": "Birch stands at forest edges and in the fens: pale trunks give the dark forest contrast at gameplay distance."
+  }
+ ]
+}

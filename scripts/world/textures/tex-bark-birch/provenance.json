@@ -1,0 +1,84 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-bark-birch",
+ "layer": "bark-birch",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/bark-birch-albedo.webp",
+   "sha256": "42dacfc86413ffab447fadeaccb057a2b908c7caf1d98ee0964dff7e4c4213d3",
+   "bytes": 76714
+  },
+  "height": {
+   "file": "public/world/surfaces/bark-birch-height.webp",
+   "sha256": "9ed8b7840b9b30d64b6e966442f3d576641d5039ef813a3c933c295ed0ba30b9",
+   "bytes": 50738
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-43201.png",
+  "candidateSha256": "802bcbc3af4c9e1b6d571f5af96ddf50e0561ae3e096a54bcca99b6daa20b562",
+  "seed": 43201,
+  "generationSeconds": 816.6,
+  "layoutSha256": "f974ef26dfabe63b10d32f1aa2b8bd4789e00d15522c8f7a7fec18ea766c696a"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Papery white-grey birch bark at the 1 m tile scale with horizontal lenticels and black diamond-shaped branch scars; reads unmistakably as birch.",
+  "limitations": [
+   "The black scars carry baked relief and shading in the albedo and repeat every metre up the trunk.",
+   "Lenticels sit in fairly regular rows."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 11.48,
+    "seamRatioAfter": 1.01
+   },
+   "grade": {
+    "gain": 1.0,
+    "saturation": 1.0
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   164.0,
+   162.7,
+   161.6
+  ]
+ }
+}

@@ -5,6 +5,7 @@ import {
 } from "./game";
 import { createGameView, createRenderer, type GameView } from "./view";
 import { campaignModelIds, gltfModelSource, ModelLibrary } from "./view/models";
+import { gltfWorldSource, WorldAssetLibrary, worldAssetIds } from "./view/world-assets";
 import { Soundscape } from "./audio/soundscape";
 import { AudioPresentation, type SpeechSelection } from "./audio/presentation";
 import { GameInput } from "./ui/input";
@@ -71,6 +72,11 @@ const lifecycle = new AbortController();
 // Each campaign's cooked models load before it is presented and stay loaded for the page; there is no primitive
 // fallback. The title preview and the run it starts share one set, so starting the previewed campaign never waits.
 const models = new ModelLibrary(gltfModelSource(), []);
+// Version 3 worlds also load their world assets (buildings, props, trees, rocks, animals and surfaces) first.
+const worldAssets = new WorldAssetLibrary(gltfWorldSource());
+// Until W2, new campaigns use the version 3 world only in the `?world=next` preview; saved v3 campaigns always restore.
+const worldVersion = new URLSearchParams(location.search).get("world") === "next" ? 3 as const : undefined;
+const assetsReady = (): boolean => models.isReady && worldAssets.isReady;
 // One renderer for the page, so model uploads and shader programs survive the title, faction and run changes
 // that replace the world mirror.
 let renderer: ReturnType<typeof createRenderer> | undefined;
@@ -198,6 +204,9 @@ function rendererFor(next: GameSnapshot): void {
   models.request(campaignModelIds(next)).catch((error: unknown) => {
     if (!disposed && !fatal) stopForError(error, "assets");
   });
+  worldAssets.request(worldAssetIds(next.world)).catch((error: unknown) => {
+    if (!disposed && !fatal) stopForError(error, "assets");
+  });
   if (viewWorldId === next.world.id) return;
   view?.dispose();
   view = null;
@@ -207,6 +216,7 @@ function rendererFor(next: GameSnapshot): void {
     quality: settings.quality,
     reducedMotion: settings.reducedMotion,
     models,
+    worldAssets,
     renderer,
   });
   viewWorldId = next.world.id;
@@ -219,6 +229,7 @@ function updatePreview(): void {
     faction: selectedFaction,
     upgrades: profile.upgrades,
     runId: "title-preview",
+    worldVersion,
   }).snapshot();
   rendererFor(preview);
 }
@@ -257,7 +268,7 @@ function begin(sameSeed?: boolean, confirmed = false): void {
   reconcileProfile();
   campaign = createCampaign({
     seed: selectedSeed.trim(), faction: selectedFaction,
-    upgrades: profile.upgrades, runId: crypto.randomUUID(),
+    upgrades: profile.upgrades, runId: crypto.randomUUID(), worldVersion,
   });
   snapshot = campaign.snapshot();
   audio.reset(snapshot);
@@ -527,10 +538,11 @@ function frame(time: number): void {
       raf = requestAnimationFrame(frame);
       return;
     }
-    // Until the cooked models are ready the world is not drawn, so the simulation holds as well: a run that
-    // starts early (its click still captures the mouse) begins on the first frame the player can see.
-    shell?.setModelsLoading(!models.isReady);
-    if (running && campaign && models.isReady) {
+    // Until the cooked models (and a version 3 world's assets) are ready the world is not drawn, so the simulation
+    // holds as well: a run that starts early (its click still captures the mouse) begins on the first frame the
+    // player can see.
+    shell?.setModelsLoading(!assetsReady());
+    if (running && campaign && assetsReady()) {
       accumulator += delta;
       let stepped = false;
       while (accumulator >= STEP) {
@@ -564,7 +576,7 @@ function frame(time: number): void {
       console.error("Korovany II recovery controls failed.", error);
       return;
     }
-    stopForError(error, models.status.error ? "assets" : "game");
+    stopForError(error, models.status.error || worldAssets.status.error ? "assets" : "game");
     return;
   }
   raf = requestAnimationFrame(frame);
@@ -652,6 +664,7 @@ Object.defineProperty(window, "korovany", {
       profile: { ...profile, upgrades: { ...profile.upgrades }, completedRuns: [...profile.completedRuns] },
       viewWorldId,
       models: models.status,
+      worldAssets: worldAssets.status,
       moveBasis: view?.getMoveBasis() ?? null,
       mouseLook: input?.mouseLocked ?? false,
       controller: {
@@ -674,6 +687,7 @@ function dispose(): void {
   controllerInput?.dispose();
   view?.dispose();
   models.dispose();
+  worldAssets.dispose();
   renderer?.dispose();
   sound.dispose();
   shell?.dispose();

@@ -1,0 +1,69 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-woodpile",
+  "source": {
+    "candidate": "b-s5201",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 5201,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "bb2f176c9c844b232bce73c3084bc26cafe5ae607e89edc6831661c08be6d88f",
+    "conceptSha256": "a1cac6f94a9ed2081d64304e745ca5caa153b9fb45d142080c099eb0e3987a5d"
+  },
+  "reachMeters": 1.6,
+  "yawDegrees": 90,
+  "minComponentVertices": 30,
+  "triangleBudget": 6000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    512
+  ],
+  "material": {
+    "bakeSize": 1024,
+    "mapsSize": 512,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.06,
+    "aoSamples": 32,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.88,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "name": "cut-ends",
+        "value": [
+          0.45,
+          1
+        ],
+        "saturation": [
+          0,
+          0.55
+        ],
+        "roughness": 0.88
+      },
+      {
+        "name": "bark",
+        "value": [
+          0.08,
+          0.45
+        ],
+        "roughness": 0.92
+      },
+      {
+        "name": "gaps",
+        "value": [
+          0,
+          0.08
+        ],
+        "roughness": 0.97
+      }
+    ],
+    "roughnessFromDetail": 0.5,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 6,
+    "normalMapStrength": 1.0,
+    "albedoGain": 2.0
+  },
+  "albedoGainNote": "Linear gain matching the cooked albedo's mean luminance to the approved concept's foreground (TRELLIS textures came out about 1.7-1.9 times darker; the woodpile gain is capped at 2.0). Measured by luminance ratio, not calibrated in the game."
+}

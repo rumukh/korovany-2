@@ -1,0 +1,70 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-barrels",
+  "source": {
+    "candidate": "b-s5301",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 5301,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "1998ac22a39326e23cc58cdbcd9ff3bfe0a5eb46296ba41e194e89ea783102b9",
+    "conceptSha256": "487d37d8bddb05d9f4f649104159fbd722def58d25d3147600a3169a830ca5fe"
+  },
+  "reachMeters": 1.13,
+  "yawDegrees": 0,
+  "minComponentVertices": 30,
+  "triangleBudget": 4000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    512
+  ],
+  "material": {
+    "bakeSize": 1024,
+    "mapsSize": 512,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.06,
+    "aoSamples": 32,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.88,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "name": "iron",
+        "value": [
+          0,
+          0.3
+        ],
+        "saturation": [
+          0,
+          0.18
+        ],
+        "roughness": 0.58,
+        "metalness": 0.55
+      },
+      {
+        "name": "staves",
+        "value": [
+          0.08,
+          1
+        ],
+        "roughness": 0.84
+      },
+      {
+        "name": "gaps",
+        "value": [
+          0,
+          0.08
+        ],
+        "roughness": 0.95
+      }
+    ],
+    "roughnessFromDetail": 0.5,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 6,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.7
+  },
+  "albedoGainNote": "Linear gain matching the cooked albedo's mean luminance to the approved concept's foreground (TRELLIS textures came out about 1.7-1.9 times darker; the woodpile gain is capped at 2.0). Measured by luminance ratio, not calibrated in the game."
+}

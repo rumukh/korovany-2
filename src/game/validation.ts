@@ -85,12 +85,12 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
       kind: 'arrow', radius: 0.1, remaining: 0, vx: 0, vz: 0, damage: 1 }],
     effects: [{ id: '', x: 0, z: 0, heading: 0, faction: 'elf', kind: 'hit', radius: 1, remaining: 0, duration: 1 }],
     events: [{ id: 1, tick: 0, kind: 'attack', key: '', x: 0, z: 0, amount: 0, targetId: '',
-      ...(blueprint.version === 2 ? { label: { en: '', ru: '' } } : {}) }],
+      ...(blueprint.version !== 1 ? { label: { en: '', ru: '' } } : {}) }],
     rewards: raw.rewards === null ? null : { runId: '', claimed: false, renown: 0, victory: false },
   };
   shape(baseRaw, template, 'campaign');
   const s = baseRaw;
-  if (blueprint.version === 2) {
+  if (blueprint.version !== 1) {
     assertRecord(rawMilitary, 'Military state'); assertRecord(rawMilitary.shipment, 'Military shipment');
     const militaryTemplate: MilitaryState = {
       version: 1, directive: rawMilitary.directive === null ? null : 'shelter',
@@ -107,7 +107,7 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     same(s.military.shipment.destination, s.military.shipment.claimed ? shipmentDestination(s) : null, 'shipment destination');
     same(s.raidComplete, s.military.shipment.delivered, 'shipment delivery outcome');
   }
-  if (blueprint.version === 2) s.narrative = validateNarrativeState(rawNarrative, blueprint, s);
+  if (blueprint.version !== 1) s.narrative = validateNarrativeState(rawNarrative, blueprint, s);
   if (input.narrative || ((s.narrative?.dialogue || s.narrative?.inspection) && Object.keys(input).length > 0)) {
     throw new Error('Saved story scene contains stale intent');
   }

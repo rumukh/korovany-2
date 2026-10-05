@@ -1,0 +1,19 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "tree-spruce",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "2f3931edd77a6f19268faddd02e15db5a56d37d9a84c713775f0c8ed88df212a",
+   "rationale": "Three spruce variants 18-22.5 m (natural size), lod0 trunk and branch wood 680-864 triangles plus 1,826-2,196 triangles of alpha-tested needle cards, and a 6-triangle crossed-card impostor each; darker palette after the dev review."
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "2f3931edd77a6f19268faddd02e15db5a56d37d9a84c713775f0c8ed88df212a",
+   "rationale": "Dense dark Greenmarch and Hollowvale forest at 18-40 m cameras: the canopy cone cutaway keeps the hero and the ground around them visible; impostors from 58 m fade as their cards turn edge-on (no horizontal-card lines)."
+  }
+ ]
+}
