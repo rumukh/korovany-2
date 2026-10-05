@@ -1,0 +1,98 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-arch-planks",
+  "layer": "planks",
+  "physicalSizeMetres": 2,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of a weathered vertical oak plank surface, two metres across. The whole image is a close-up of the flat surface itself, filling the frame edge to edge, seen exactly face-on: no roof edge, no ridge, no eaves, no sky, no ground, no horizon and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. Each vertical rectangle becomes one grey-brown weathered oak board with straight vertical grain, the thin dark gaps become the shadowed joints between boards, the dark ovals become knots and the tiny black dots become iron nail heads. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, roof edge, ridge, eaves, sky, horizon, landscape, building, house, wall corner, sticks, twigs, branches, protruding objects",
+  "candidates": [
+    {
+      "seed": 42601
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 42601,
+    "noiseMetres": 0.3,
+    "colours": [
+      "#141210",
+      "#1c1814"
+    ],
+    "layers": [
+      {
+        "kind": "rows",
+        "vertical": true,
+        "row": 0.22,
+        "length": [
+          0.6,
+          2.0
+        ],
+        "gap": 0.012,
+        "colours": [
+          "#4d443a",
+          "#62584b",
+          "#403a32",
+          "#564c40"
+        ]
+      },
+      {
+        "kind": "strokes",
+        "orientation": 90,
+        "spread": 1.5,
+        "length": [
+          0.1,
+          0.5
+        ],
+        "width": 0.003,
+        "perSquareMetre": 500,
+        "colours": [
+          "#3a322a",
+          "#6a5e50"
+        ]
+      },
+      {
+        "kind": "ellipses",
+        "length": [
+          0.025,
+          0.05
+        ],
+        "aspect": [
+          0.5,
+          0.7
+        ],
+        "perSquareMetre": 3,
+        "colours": [
+          "#2a221a"
+        ]
+      },
+      {
+        "kind": "ellipses",
+        "length": [
+          0.008,
+          0.012
+        ],
+        "aspect": [
+          0.9,
+          1.0
+        ],
+        "perSquareMetre": 8,
+        "colours": [
+          "#141414"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "gain": 1.6,
+    "note": "Brightened in linear light (gain 1.6) so barn and shed walls in shade keep readable values beside the darker timber frames."
+  }
+}

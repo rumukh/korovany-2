@@ -1,0 +1,84 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-arch-daub",
+ "layer": "daub",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/daub-albedo.webp",
+   "sha256": "319a331c16936903823eb97c165bdf2ac65cf66ddd5a6dbe17be7575d6ece9b1",
+   "bytes": 92348
+  },
+  "height": {
+   "file": "public/world/surfaces/daub-height.webp",
+   "sha256": "0e9f2578b24a6c5ac18db7e50d5dffc129e8735b071e7b64607729cb55c07cb3",
+   "bytes": 98438
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-42102.png",
+  "candidateSha256": "3aa44797de7aebd72025ef251490cd3ed46bb4445f170b9c4f718b77e9c909cb",
+  "seed": 42102,
+  "generationSeconds": 884.0,
+  "layoutSha256": "3c034967c85de1a0c3a3858ed4d941a664f31b8a6884b1090ff810d167d0f371"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Face-on grey-ochre clay and lime render at the 2 m tile scale with hairline cracks, grime streaks and flaked patches showing clay; the revised layout no longer produces protruding sticks (42101).",
+  "limitations": [
+   "The hairline cracks read slightly like inked lines up close.",
+   "Two flaked patches about 25 cm across repeat every 2 m; the timber framing breaks most panels up."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 1.988,
+    "seamRatioAfter": 1.284
+   },
+   "grade": {
+    "gain": 1.0,
+    "saturation": 1.0
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   134.6,
+   124.5,
+   106.7
+  ]
+ }
+}

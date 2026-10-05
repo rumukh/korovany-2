@@ -1,0 +1,121 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-ground-forest",
+  "layer": "forest",
+  "physicalSizeMetres": 4,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a photograph of a dark spruce forest floor four metres across. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The fine brown strokes become fallen brown spruce needles, the green blobs become low cushions of moss, the brown ovals become fallen spruce cones, the yellow ovals become fallen birch leaves, and the long thin dark strokes become small dead twigs; the brown background becomes damp needle litter and black soil. Shot straight down from directly above as a flat orthographic photograph: flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no horizon, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours",
+  "candidates": [
+    {
+      "seed": 41401
+    },
+    {
+      "seed": 41402
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 41401,
+    "noiseMetres": 0.6,
+    "colours": [
+      "#3a2a1c",
+      "#5a3e26",
+      "#6e4c2c",
+      "#4a3a26"
+    ],
+    "layers": [
+      {
+        "kind": "strokes",
+        "length": [
+          0.02,
+          0.05
+        ],
+        "width": 0.003,
+        "perSquareMetre": 2500,
+        "colours": [
+          "#6a4a2c",
+          "#7e5832",
+          "#4e3826",
+          "#8a6238"
+        ]
+      },
+      {
+        "kind": "blobs",
+        "radius": [
+          0.08,
+          0.22
+        ],
+        "perSquareMetre": 1.2,
+        "colours": [
+          "#3f5a2a",
+          "#4e6a30",
+          "#36502a"
+        ]
+      },
+      {
+        "kind": "ellipses",
+        "length": [
+          0.06,
+          0.09
+        ],
+        "aspect": [
+          0.4,
+          0.5
+        ],
+        "perSquareMetre": 3,
+        "colours": [
+          "#5a3a22",
+          "#6b4628"
+        ]
+      },
+      {
+        "kind": "ellipses",
+        "length": [
+          0.04,
+          0.06
+        ],
+        "aspect": [
+          0.6,
+          0.8
+        ],
+        "perSquareMetre": 2,
+        "colours": [
+          "#c9a43c",
+          "#b8892e",
+          "#8a6a2a"
+        ]
+      },
+      {
+        "kind": "strokes",
+        "length": [
+          0.15,
+          0.4
+        ],
+        "width": 0.008,
+        "perSquareMetre": 1.5,
+        "colours": [
+          "#4a3a2c",
+          "#5e4a36"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "gain": 1.45,
+    "saturation": 0.95,
+    "highlights": {
+      "knee": 0.2,
+      "ceiling": 0.36
+    },
+    "note": "Highlight roll-off: the candidate's near-white specks (linear albedo up to 0.98, about 20x the median) read as confetti on a damp forest floor; they are rolled off toward 0.36."
+  }
+}

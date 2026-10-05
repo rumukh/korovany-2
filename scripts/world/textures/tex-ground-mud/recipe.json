@@ -1,0 +1,75 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-ground-mud",
+  "layer": "mud",
+  "physicalSizeMetres": 4,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a photograph of churned wet dark mud four metres across. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The small dark ovals become hoof prints pressed into the mud, the pale strokes become sodden straws, and the mottled brown background becomes wet churned earth with a faint damp sheen in its hollows. Shot straight down from directly above as a flat orthographic photograph: flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no horizon, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, puddles, standing water, boot prints, footprints, shoe prints, grass tufts",
+  "candidates": [
+    {
+      "seed": 41201,
+      "note": "Generated with the first recipe revision (grey puddle blobs); a pale puddle about 1.6 m across and a single boot print would repeat every 4 m."
+    },
+    {
+      "seed": 41202
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 41201,
+    "noiseMetres": 0.5,
+    "colours": [
+      "#2a2018",
+      "#3a2c20",
+      "#4a3828",
+      "#33281e"
+    ],
+    "layers": [
+      {
+        "kind": "ellipses",
+        "length": [
+          0.1,
+          0.14
+        ],
+        "aspect": [
+          0.5,
+          0.7
+        ],
+        "perSquareMetre": 3,
+        "colours": [
+          "#221a12",
+          "#281e16"
+        ]
+      },
+      {
+        "kind": "strokes",
+        "length": [
+          0.05,
+          0.15
+        ],
+        "width": 0.004,
+        "perSquareMetre": 15,
+        "colours": [
+          "#9a8650",
+          "#7a6a40"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "highlights": {
+      "knee": 0.07,
+      "ceiling": 0.13
+    },
+    "note": "Highlight roll-off: the water standing in the hoof prints reflects a pale sky (linear luminance up to about 0.5); it is rolled off toward 0.13 so it reads as a dull wet sheen under the overcast grade."
+  }
+}

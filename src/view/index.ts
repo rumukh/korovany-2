@@ -8,7 +8,11 @@ import { part, shapeGeometry, StaticBatch } from './primitives';
 import { ViewResources } from './resources';
 import { residentModel, WorldResidents } from './residents';
 import { createWorldScenery, type WorldScenery } from './world';
-import { lightWorld, positionSun, skyEnvironment } from './atmosphere';
+import { createWorldSceneryV3 } from './scenery-v3';
+import { terrainFor, type Terrain } from './terrain';
+import type { WorldAssetLibrary } from './world-assets';
+import { WorldFauna } from './fauna';
+import { lightWorld, lightWorldV3, positionSun, positionSunV3, skyEnvironment, V3_GRADE } from './atmosphere';
 import { WorldPostprocessing } from './postprocessing';
 import { DRAFT_OX, gltfModelSource, HEROES, LANDMARK_IDS, ModelLibrary, PICKUP_IDS, propInstance, troopModelFor, WAGONS, type CharacterInstance, type HeroInstance, type ModelStatus, type TroopModelId, type WagonModelId } from './models';
 
@@ -28,6 +32,11 @@ export interface GameViewOptions {
   reducedMotion?: boolean;
   /** Page-lifetime model library; created and owned by the view when omitted. */
   models?: ModelLibrary;
+  /**
+   * Page-lifetime world asset library for version 3 worlds (`worldAssetIds`). A version 3 world is presented only once
+   * its assets are loaded; without a library it cannot be presented.
+   */
+  worldAssets?: WorldAssetLibrary;
   /**
    * Page-lifetime renderer from `createRenderer`, shared by successive views so cooked-model uploads and shader
    * programs survive a world change. Created and owned by the view when omitted; a borrowed renderer is never
@@ -137,6 +146,10 @@ function createTell(resources: ViewResources, parent: THREE.Object3D): { group: 
 export class Presentation {
   readonly scene = new THREE.Scene();
   readonly scenery: WorldScenery;
+  /** Presentation-only ground relief: exactly flat for version 1 and 2 worlds. */
+  readonly terrain: Terrain;
+  /** Presentation-only animals of a version 3 world. */
+  readonly fauna: WorldFauna | undefined;
   readonly sun: THREE.DirectionalLight;
   readonly effects: WorldEffects;
   readonly residents: WorldResidents;
@@ -167,13 +180,19 @@ export class Presentation {
   private sinceTick = 0;
 
   constructor(readonly world: WorldBlueprint, readonly resources = new ViewResources(), environment?: THREE.Texture) {
-    this.scenery = createWorldScenery(this.resources, world);
+    this.terrain = terrainFor(world);
+    const relief = this.terrain.flat ? undefined : (x: number, z: number) => this.terrain.height(x, z);
+    this.scenery = world.version === 3 ? createWorldSceneryV3(this.resources, world) : createWorldScenery(this.resources, world);
     this.scene.add(this.scenery.group);
+    if (world.version === 3 && this.resources.world) {
+      this.fauna = new WorldFauna(world, this.resources.world, this.terrain);
+      this.scene.add(this.fauna.group);
+    }
     this.scene.environment = environment ?? null;
-    this.scene.environmentIntensity = 0.55;
-    this.effects = new WorldEffects(this.resources, this.scene);
-    this.residents = new WorldResidents(this.resources, this.scene);
-    this.sun = lightWorld(this.scene);
+    this.scene.environmentIntensity = world.version === 3 ? V3_GRADE.environment : 0.55;
+    this.effects = new WorldEffects(this.resources, this.scene, relief);
+    this.residents = new WorldResidents(this.resources, this.scene, relief);
+    this.sun = world.version === 3 ? lightWorldV3(this.scene) : lightWorld(this.scene);
     const fortress = world.sites.find((site) => site.kind === 'fortress');
     if (fortress) {
       const color = world.version === 1 ? palette.villain : factionColors[fortress.faction];
@@ -194,6 +213,11 @@ export class Presentation {
       this.fortressRing.scale.set(fortress.radius * 2, 1, fortress.radius * 2);
       this.scene.add(this.fortressRing);
     }
+  }
+
+  /** Height of an actor's root: just above the presentation ground (0.08 m on flat v1/v2 worlds). */
+  private lift(x: number, z: number): number {
+    return 0.08 + this.terrain.height(x, z);
   }
 
   setQuality(low: boolean): void {
@@ -229,13 +253,13 @@ export class Presentation {
       hp: 1, maxHp: 2, state: 'windup', stateTime: 0.25, radius: 0.7, attackRange: 2.3,
     } as unknown as ActorSnapshot;
     const visual = this.makeActor(actor, false);
-    visual.root.position.set(actor.x, 0.08, actor.z);
+    visual.root.position.set(actor.x, this.lift(actor.x, actor.z), actor.z);
     visual.bar.root.visible = true;
     visual.tell.visible = true;
-    visual.tell.position.set(actor.x, 0, actor.z);
+    visual.tell.position.set(actor.x, this.terrain.height(actor.x, actor.z), actor.z);
     if (wellModel) {
       const well = propInstance(wellModel, this.resources.modelDepthMaterial(), 2.8);
-      well.position.set(x - 2.5, 0.08, z + 2.5);
+      well.position.set(x - 2.5, this.lift(x, z), z + 2.5);
       group.add(well);
     }
     // Every other troop model this campaign shows shares the soldier's programs; drawing one of each here uploads its
@@ -245,7 +269,7 @@ export class Presentation {
     troops.delete('char-line-soldier');
     const extras = [...troops].map((id, index) => {
       const troop = createModelTroop(this.resources, this.resources.model(id)!, 'soldier', 'guard', 'friendly');
-      troop.root.position.set(x - 1.5 - index * 1.4, 0.08, z + 1.5);
+      troop.root.position.set(x - 1.5 - index * 1.4, this.lift(x, z), z + 1.5);
       troop.character.update({ state: 'idle', progress: 0, speed: 0, hit: false, relaxed: false, reducedMotion: true }, 0);
       group.add(troop.root);
       return troop;
@@ -254,7 +278,7 @@ export class Presentation {
     // uploads their textures before either first appears.
     const wagons = (['prop-wagon-convoy', 'prop-wagon-shipment'] as const).map((id, index) => {
       const wagon = this.makeWagon(id, true, palette.teal);
-      wagon.root.position.set(x + 4 + index * 3.5, 0.08, z - 3);
+      wagon.root.position.set(x + 4 + index * 3.5, this.lift(x, z), z - 3);
       wagon.update({ distance: 0, speed: 0, tilt: 0, cargo: true, hit: false, reducedMotion: true, time: 0 }, 0);
       group.add(wagon.root);
       return wagon;
@@ -263,7 +287,7 @@ export class Presentation {
     // walking into a village never stalls on them.
     const residents = [...this.residents.modelIds].map((id, index) => {
       const person = residentModel(this.resources, id, id)!;
-      person.root.position.set(x - 3 + index * 1.2, 0.08, z - 4.5);
+      person.root.position.set(x - 3 + index * 1.2, this.lift(x, z), z - 4.5);
       person.update({ talking: false, reducedMotion: true }, 0);
       group.add(person.root);
       return person;
@@ -277,15 +301,20 @@ export class Presentation {
       const model = this.resources.loadedModel(id);
       if (!model) return;
       const copy = propInstance(model, this.resources.modelDepthMaterial(), 0.5);
-      copy.position.set(x + 2.5 + index * 1.1, 0.08, z + 4);
+      copy.position.set(x + 2.5 + index * 1.1, this.lift(x, z), z + 4);
       propBatch.append(copy);
     });
     const props = propBatch.finish(group);
     for (const mesh of props) mesh.frustumCulled = false;
     this.scene.add(group);
+    // Version 3: one instance of every pooled scenery part (trees and impostors of every species, every building and prop)
+    // and one sheep, so none of them compiles on first appearance.
+    const ground = this.terrain.height(x, z);
+    const worldWarm = [this.scenery.warm?.(x - 4, ground, z - 4), this.fauna?.warm(x + 4, ground, z - 4)];
     const warming = new Set<THREE.Object3D>();
     // The hero, when already built, shares the soldier's programs; drawing it here also uploads its own textures.
     for (const root of [group, visual.root, visual.bar.root, visual.tell, this.hero?.root]) root?.traverse(object => warming.add(object));
+    for (const warm of worldWarm) for (const root of warm?.objects ?? []) root.traverse(object => warming.add(object));
     const hidden: THREE.Object3D[] = [];
     this.scene.traverseVisible(object => {
       const drawn = object as THREE.Object3D & { isMesh?: boolean; isLine?: boolean; isPoints?: boolean; isSprite?: boolean };
@@ -299,6 +328,7 @@ export class Presentation {
       draw();
     } finally {
       for (const object of hidden) object.visible = true;
+      for (const warm of worldWarm) warm?.restore();
       group.removeFromParent();
       for (const extra of extras) extra.character.dispose();
       for (const wagon of wagons) wagon.dispose();
@@ -451,7 +481,7 @@ export class Presentation {
     // A stalled tick means the shell paused the simulation: never run in place.
     const paused = storyOpen || snapshot.phase !== 'playing' || this.sinceTick > 0.1;
     const heroRoot = this.hero.root;
-    heroRoot.position.set(snapshot.player.x, 0.08, snapshot.player.z);
+    heroRoot.position.set(snapshot.player.x, this.lift(snapshot.player.x, snapshot.player.z), snapshot.player.z);
     heroRoot.rotation.y = snapshot.player.heading;
     if (this.hero.character) {
       let attack = false;
@@ -498,8 +528,9 @@ export class Presentation {
         reducedMotion,
       });
     }
-    this.scenery.heroPosition.set(snapshot.player.x, 1.15, snapshot.player.z);
-    this.scenery.update(this.cosmeticTime, reducedMotion);
+    this.scenery.heroPosition.set(snapshot.player.x, 1.15 + this.terrain.height(snapshot.player.x, snapshot.player.z), snapshot.player.z);
+    this.scenery.update(this.cosmeticTime, reducedMotion, camera);
+    this.fauna?.update(snapshot.player, snapshot.player, dt, reducedMotion, paused);
     const fortress = snapshot.world.sites.find((site) => site.kind === 'fortress');
     const legacyFortressColor = snapshot.fortress.bossDefeated ? palette.teal : snapshot.fortress.unlocked ? palette.brass : palette.villain;
     const fortressColor = snapshot.campaign && fortress
@@ -516,10 +547,11 @@ export class Presentation {
       this.fortressRing.material = this.resources.material(fortressRingColor, { unlit: true, opacity: 0.45, depthWrite: false });
     }
     // A player-centred shadow frustum preserves detail without a map-sized shadow texture.
-    positionSun(this.sun, snapshot.player.x, snapshot.player.z);
+    if (this.world.version === 3) positionSunV3(this.sun, snapshot.player.x, snapshot.player.z, this.terrain.height(snapshot.player.x, snapshot.player.z));
+    else positionSun(this.sun, snapshot.player.x, snapshot.player.z);
 
     if (this.convoy && this.convoyBar) {
-      this.convoy.root.position.set(snapshot.convoy.x, 0.08, snapshot.convoy.z);
+      this.convoy.root.position.set(snapshot.convoy.x, this.lift(snapshot.convoy.x, snapshot.convoy.z), snapshot.convoy.z);
       this.convoy.root.rotation.y = snapshot.convoy.heading;
       // Travel moves the convoy with the hero: a jump is not driving.
       const driving = this.convoySpeed < 30;
@@ -555,7 +587,7 @@ export class Presentation {
       }
       if (dead) corpses += 1;
       visual.root.visible = !dead || corpses <= 8;
-      visual.root.position.set(actor.x, 0.08, actor.z);
+      visual.root.position.set(actor.x, this.lift(actor.x, actor.z), actor.z);
       visual.root.rotation.y = actor.heading;
       let moved = 0;
       if (tickChanged) {
@@ -603,7 +635,7 @@ export class Presentation {
       updateHealth(visual.bar, actor.hp, actor.maxHp, camera, visual.root);
       visual.tell.visible = actor.state === 'windup' && !dead &&
         (actor.allegiance === undefined || actor.allegiance === 'hostile');
-      visual.tell.position.set(actor.x, 0, actor.z);
+      visual.tell.position.set(actor.x, this.terrain.height(actor.x, actor.z), actor.z);
       visual.tell.rotation.y = actor.heading;
       visual.tellRing.scale.setScalar((actor.kind === 'archer' ? actor.radius + 0.45 : actor.attackRange) * 2);
       visual.tellRing.visible = true;
@@ -646,6 +678,7 @@ export class Presentation {
     this.hero?.character?.dispose();
     this.effects.dispose();
     this.residents.dispose();
+    this.fauna?.dispose();
     this.scenery.dispose();
     this.sun.shadow.dispose();
     this.scene.clear();
@@ -698,7 +731,14 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
   const camera = new FollowCamera(canvas);
   const ownsModels = options.models === undefined;
   const models = options.models ?? new ModelLibrary(gltfModelSource());
-  const createResources = () => new ViewResources(new THREE.TextureLoader(), renderer.capabilities.getMaxAnisotropy(), models);
+  const worldAssets = options.worldAssets;
+  const createResources = () => new ViewResources(new THREE.TextureLoader(), renderer.capabilities.getMaxAnisotropy(), models, worldAssets);
+  /** Everything a world presents has loaded: the cooked models and, for a version 3 world, its world assets. */
+  const ready = (world: WorldBlueprint): boolean => {
+    if (world.version !== 3) return models.isReady;
+    if (!worldAssets) throw new Error('A version 3 world needs the world asset library.');
+    return models.isReady && worldAssets.isReady;
+  };
   let presentation: Presentation | undefined;
   let environment: THREE.WebGLRenderTarget | undefined;
   let postprocessing: WorldPostprocessing | undefined;
@@ -764,7 +804,7 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
   canvas.addEventListener('webglcontextrestored', onContextRestored);
   camera.setReducedMotion(reducedMotion);
   resize();
-  if (models.isReady) present(blueprint);
+  if (ready(blueprint)) present(blueprint);
   else applyQuality();
 
   return {
@@ -772,7 +812,8 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
       assertUsable();
       if (!Number.isFinite(dt) || dt < 0) throw new Error('View frame time must be a finite nonnegative number.');
       models.assert();
-      if (!models.isReady) {
+      worldAssets?.assert();
+      if (!ready(snapshot.world)) {
         renderer.setRenderTarget(null);
         renderer.clear();
         return;
@@ -786,7 +827,7 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
       faction = snapshot.faction;
       lastTick = snapshot.tick;
       const frameDt = Math.min(dt, 0.1);
-      camera.update(snapshot.player, frameDt);
+      camera.update(snapshot.player, frameDt, current.terrain.height(snapshot.player.x, snapshot.player.z));
       current.update(snapshot, frameDt, camera.camera, reducedMotion);
       const draw = (): void => {
         if (postprocessing) postprocessing.render();
@@ -842,6 +883,7 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
       if (ownsRenderer) {
         // A borrowed library's GPU copies belong to this renderer; release them before it goes away.
         if (!ownsModels) models.releaseGpu();
+        worldAssets?.releaseGpu();
         renderer.dispose();
       }
     },

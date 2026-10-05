@@ -26,8 +26,8 @@ export interface CampaignOptions {
   upgrades?: Partial<Upgrades>;
   /** Shell should persist a unique run ID, e.g. crypto.randomUUID(); default is seed/faction. */
   runId?: string;
-  /** New runs default to v2; explicit v1 retains the original military-only campaign. */
-  worldVersion?: 1 | 2;
+  /** New runs default to v2; explicit v1 retains the original military-only campaign; v3 is the dark-fantasy world. */
+  worldVersion?: WorldVersion;
 }
 
 export interface GameInput {
@@ -156,13 +156,25 @@ export interface GameEvent extends Vec2 {
 }
 export interface RoadNode extends Vec2 { id: string }
 export interface RoadEdge { from: string; to: string; width: number }
+/**
+ * Version 3 only: an oriented rectangle centred on the obstacle. `heading` uses the world convention (atan2(x, z)):
+ * the box's local +Z half-extent `halfZ` lies along (sin h, cos h) and `halfX` along (cos h, -sin h). The obstacle's
+ * `radius` is then the bounding circle, kept for broadphase and older consumers.
+ */
+export interface BoxShape { kind: 'box'; halfX: number; halfZ: number; heading: number }
 export interface Obstacle extends Vec2 {
   id: string;
   kind: 'tree' | 'rock' | 'wall';
   radius: number;
   height: number;
   variant: number;
+  /** Version 3 only: an exact rectangle instead of the circle. Absent in v1/v2 worlds. */
+  shape?: BoxShape;
+  /** Version 3 only: the presentation asset that stands on this footprint. Never affects rules. */
+  model?: string;
 }
+/** Version 3 only: a non-colliding field strip for presentation (crops and stubble). */
+export interface WorldField extends Vec2 { id: string; halfX: number; halfZ: number; heading: number; crop: 'stubble' | 'furrow' }
 export interface WorldSite extends Vec2 {
   id: string;
   kind: 'home' | 'outpost' | 'fortress' | 'raid';
@@ -172,8 +184,9 @@ export interface WorldSite extends Vec2 {
   allegiance?: 'friendly' | 'hostile' | 'neutral';
   radius: number;
 }
+export type WorldVersion = 1 | 2 | 3;
 export interface WorldBlueprint {
-  version: 1 | 2;
+  version: WorldVersion;
   seed: string;
   id: string;
   bounds: Bounds;
@@ -186,6 +199,8 @@ export interface WorldBlueprint {
   /** Visual biome regions; not additional collision. */
   biomes: { kind: 'forest' | 'countryside' | 'mountains'; bounds: Bounds }[];
   exploration?: ExplorationWorld;
+  /** Version 3 only: presentation hints for farmland; never collision. */
+  fields?: WorldField[];
 }
 
 export interface ObjectiveSnapshot {
@@ -258,7 +273,7 @@ export interface GameSnapshot {
 /** Opaque JSON save; restoreCampaign accepts unknown and rejects invalid/corrupt saves. */
 export interface CampaignSave {
   namespace: 'korovany2:campaign';
-  version: 1 | 2;
+  version: WorldVersion;
   seed: string;
   faction: FactionId;
   runId: string;

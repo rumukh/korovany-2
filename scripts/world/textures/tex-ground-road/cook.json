@@ -1,0 +1,53 @@
+{
+ "schema": "korovany2-surface-cook/1",
+ "layer": "road",
+ "recipe": "tex-ground-road",
+ "recipeSha256": "ce9321df921b63ff7ddb5b9020fc47b7042c993c6247b20c18bc74854a5cdc93",
+ "candidate": "candidate-41303.png",
+ "candidateSha256": "c50b8b62a4684e5c642bba4b094bc4dfdf26d45a74684b25696e1ac2242fba70",
+ "script": "scripts/world/pipeline/cook_surface.py",
+ "scriptSha256": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+ "size": 512,
+ "steps": {
+  "delight": {
+   "sigmaPixels": 66.4,
+   "clamp": [
+    0.6,
+    1.7
+   ]
+  },
+  "wrapBlend": {
+   "bandFraction": 0.15,
+   "mode": "variance-preserving",
+   "seamRatioBefore": 2.455,
+   "seamRatioAfter": 1.098
+  },
+  "grade": {
+   "gain": 1.0,
+   "saturation": 1.0
+  },
+  "height": {
+   "blurPixels": 0.8,
+   "percentiles": [
+    1,
+    99
+   ],
+   "inverted": false
+  }
+ },
+ "albedoMeanSrgb": [
+  96.1,
+  78.0,
+  59.9
+ ],
+ "outputs": {
+  "road-albedo.webp": {
+   "bytes": 130756,
+   "sha256": "722d00ba7b9a83b50c06684fbcfe566bfc0e834fbeaba7583f95b1e96423b178"
+  },
+  "road-height.webp": {
+   "bytes": 112626,
+   "sha256": "4c690c683b9610c8d9fc610b828522374f329ce3ab5c622aae25adbafb10ae13"
+  }
+ }
+}

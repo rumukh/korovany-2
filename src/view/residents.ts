@@ -119,7 +119,9 @@ function resident(resources: ViewResources, npc: NpcSnapshot): Resident {
 export class WorldResidents {
   private readonly people = new Map<string, Resident>();
 
-  constructor(private readonly resources: ViewResources, private readonly scene: THREE.Scene) {}
+  /** `ground` stands residents on a version 3 world's presentation relief (flat for v1/v2). */
+  constructor(private readonly resources: ViewResources, private readonly scene: THREE.Scene,
+    private readonly ground: (x: number, z: number) => number = () => 0) {}
 
   /** Cooked resident models currently presented (for the shader and texture warm-up). */
   get modelIds(): Set<ResidentModelId> {
@@ -147,7 +149,7 @@ export class WorldResidents {
       const distance = Math.hypot(npc.x - snapshot.player.x, npc.z - snapshot.player.z);
       person.root.visible = distance < 120;
       if (!person.root.visible) continue;
-      person.root.position.set(npc.x, 0.06, npc.z);
+      person.root.position.set(npc.x, 0.06 + this.ground(npc.x, npc.z), npc.z);
       person.root.rotation.y = distance < 8
         ? Math.atan2(snapshot.player.x - npc.x, snapshot.player.z - npc.z) : npc.heading;
       person.marker.visible = distance < 32;

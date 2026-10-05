@@ -1,0 +1,19 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-longhouse",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "3b704f77bcfd3cd5884b669a3e9efa4c53af2e9c40ebf3c1ec75a024b93eed6a",
+   "rationale": "Daub and timber longhouse, 8 x 18 m, eaves 4.2 m, ridge 9.0 m, thatch roof with two chimneys and two doors; 2,080 triangles."
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "3b704f77bcfd3cd5884b669a3e9efa4c53af2e9c40ebf3c1ec75a024b93eed6a",
+   "rationale": "Placed along roads in every settlement and inn at gameplay cameras (18-40 m): reads at true scale beside the 2.25 m soldier (doors 1.3 x 2.8 m, the soldier clears a door by 0.55 m); walls stay inside the oriented-box collider, eaves overhang at most 0.78 m; the architecture cutaway keeps the hero visible behind it."
+  }
+ ]
+}

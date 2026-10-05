@@ -1,0 +1,80 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-arch-daub",
+  "layer": "daub",
+  "physicalSizeMetres": 2,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of an old clay-and-lime daub wall surface, two metres across. The whole image is a close-up of the flat surface itself, filling the frame edge to edge, seen exactly face-on: no roof edge, no ridge, no eaves, no sky, no ground, no horizon and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The mottled background becomes dirty grey-ochre clay and lime render with a rough trowelled texture, the thin dark lines become fine hairline cracks in the render, the faint vertical streaks become grime stains, and the brown blobs become small patches where the render has flaked off to the clay beneath. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, roof edge, ridge, eaves, sky, horizon, landscape, building, house, wall corner, sticks, twigs, branches, protruding objects",
+  "candidates": [
+    {
+      "seed": 42101,
+      "note": "Rejected: the crack strokes became sticks protruding from the wall and the render came out near-white."
+    },
+    {
+      "seed": 42102,
+      "note": "Second recipe revision: face-on framing in the prompt and negative prompt."
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 42101,
+    "noiseMetres": 0.4,
+    "colours": [
+      "#6e6452",
+      "#857a64",
+      "#9a8e74",
+      "#7a705c"
+    ],
+    "layers": [
+      {
+        "kind": "strokes",
+        "length": [
+          0.03,
+          0.12
+        ],
+        "width": 0.0025,
+        "perSquareMetre": 14,
+        "colours": [
+          "#4a4236",
+          "#544a3c"
+        ]
+      },
+      {
+        "kind": "strokes",
+        "orientation": 90,
+        "spread": 3,
+        "length": [
+          0.2,
+          0.8
+        ],
+        "width": 0.03,
+        "perSquareMetre": 2,
+        "colours": [
+          "#6e6554",
+          "#736a58"
+        ]
+      },
+      {
+        "kind": "blobs",
+        "radius": [
+          0.05,
+          0.12
+        ],
+        "perSquareMetre": 0.5,
+        "colours": [
+          "#6a5640",
+          "#5e4c38"
+        ]
+      }
+    ]
+  }
+}

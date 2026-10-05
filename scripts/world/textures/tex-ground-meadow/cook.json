@@ -1,0 +1,54 @@
+{
+ "schema": "korovany2-surface-cook/1",
+ "layer": "meadow",
+ "recipe": "tex-ground-meadow",
+ "recipeSha256": "b512b984fb675bed1745650319d6b1cf6ba69c7a2351351b142bd73d9d0d9a99",
+ "candidate": "candidate-41103.png",
+ "candidateSha256": "c0a38d10f2cb725066b99a4fd1f324ec4c87df39da5d3da7dd07a9873dd5f0fa",
+ "script": "scripts/world/pipeline/cook_surface.py",
+ "scriptSha256": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+ "size": 512,
+ "steps": {
+  "delight": {
+   "sigmaPixels": 166.0,
+   "clamp": [
+    0.6,
+    1.7
+   ]
+  },
+  "wrapBlend": {
+   "bandFraction": 0.08,
+   "mode": "variance-preserving",
+   "seamRatioBefore": 1.486,
+   "seamRatioAfter": 1.029
+  },
+  "grade": {
+   "gain": 1.0,
+   "saturation": 1.0,
+   "evenChroma": true
+  },
+  "height": {
+   "blurPixels": 0.8,
+   "percentiles": [
+    1,
+    99
+   ],
+   "inverted": false
+  }
+ },
+ "albedoMeanSrgb": [
+  106.4,
+  90.0,
+  63.1
+ ],
+ "outputs": {
+  "meadow-albedo.webp": {
+   "bytes": 124836,
+   "sha256": "f154c3044a9f00341b472314b5db133c5036941fbf4c403009c1f547ecc2550b"
+  },
+  "meadow-height.webp": {
+   "bytes": 118752,
+   "sha256": "657a5f480634d339b1f2bab881ae3e1696f8a676716392e03e31288c238ed351"
+  }
+ }
+}

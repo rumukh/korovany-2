@@ -6,7 +6,7 @@ configuration and these implemented functions:
 ```ts
 createCampaign(options: CampaignOptions): GameSession
 restoreCampaign(save: unknown): GameSession
-generateWorld(seed: string | number, version?: 1 | 2): WorldBlueprint
+generateWorld(seed: string | number, version?: 1 | 2 | 3): WorldBlueprint
 isWalkable(world: WorldBlueprint, point: Vec2, radius?: number): boolean
 findRoadRoute(world: WorldBlueprint, from: Vec2, destination: string): Vec2[]
 createProfile(): MetaProfile
@@ -33,7 +33,19 @@ An open conversation or inspection also blocks ordinary combat ticks until a
 `close` command (or the conversation's offered `leave` choice). The shell may therefore submit dialogue and
 journal commands while its fixed-step loop is paused.
 `snapshot` returns an independent plain object. Its world is immutable by contract
-for the lifetime of that run; renderer can cache scenery by `world.id`.
+for the lifetime of that run; renderer can cache scenery by `world.id`. A version 3
+world (about 6,000 obstacles) is not copied per snapshot: every snapshot of a run
+shares one deep-frozen copy of it, and only the rest of the snapshot is fresh.
+
+Version 3 (`generateWorld(seed, 3)`, `CampaignOptions.worldVersion: 3`) keeps the
+v2 geography, regions, locations, roads, river, bridges, sites and story, and
+rebuilds settlements, inns, woodland and boulders. Its obstacles may carry an
+oriented rectangle `shape: { kind: 'box', halfX, halfZ, heading }` (local X is
+`(cos heading, -sin heading)`), which collision, walkability and projectile sweeps
+treat exactly; `radius` stays the shape's bounding circle. Every v3 obstacle also
+names its presentation `model`. Its strip `fields` are open ground. Versions 1
+and 2 never contain either field, so their worlds, ids and saves are unchanged.
+Default `generateWorld`/`createCampaign` versions stay 2.
 
 Renderer sees player, actors (including the enemy caravan), convoy, collision
 obstacles, road graph, water/bridges, pickups, effects, projectiles, faction colors,

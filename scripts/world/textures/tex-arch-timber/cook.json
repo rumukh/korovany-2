@@ -1,0 +1,53 @@
+{
+ "schema": "korovany2-surface-cook/1",
+ "layer": "timber",
+ "recipe": "tex-arch-timber",
+ "recipeSha256": "c297a802f131c506129df83942fde7e529db5684f439432648e50e1da17bf9ea",
+ "candidate": "candidate-42201.png",
+ "candidateSha256": "34a098b81c259f320d1bebfd471db14d188f928c48675829309c825c77254628",
+ "script": "scripts/world/pipeline/cook_surface.py",
+ "scriptSha256": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+ "size": 512,
+ "steps": {
+  "delight": {
+   "sigmaPixels": 166.0,
+   "clamp": [
+    0.6,
+    1.7
+   ]
+  },
+  "wrapBlend": {
+   "bandFraction": 0.08,
+   "mode": "variance-preserving",
+   "seamRatioBefore": 2.466,
+   "seamRatioAfter": 0.802
+  },
+  "grade": {
+   "gain": 1.0,
+   "saturation": 1.0
+  },
+  "height": {
+   "blurPixels": 0.8,
+   "percentiles": [
+    1,
+    99
+   ],
+   "inverted": false
+  }
+ },
+ "albedoMeanSrgb": [
+  79.1,
+  75.5,
+  70.5
+ ],
+ "outputs": {
+  "timber-albedo.webp": {
+   "bytes": 77908,
+   "sha256": "ec84a3c637d1e690129bf21bef6bbc2ec42acd82100c4c960b7e1b90f6a11125"
+  },
+  "timber-height.webp": {
+   "bytes": 70078,
+   "sha256": "bcc3610f253764db4fdb53ba7087497aa642c4384ab9e5173c3fa2a97612719d"
+  }
+ }
+}

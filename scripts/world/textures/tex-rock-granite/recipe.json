@@ -1,0 +1,85 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-rock-granite",
+  "layer": "granite",
+  "physicalSizeMetres": 2,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of the rough, weathered face of a grey granite boulder, two metres across. The whole image is a close-up of the rock surface itself, filling the frame edge to edge, seen exactly face-on: no boulder outline, no edges, no sky, no ground, no horizon and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The tiny black specks become grains of black mica, the tiny pale specks become grains of white quartz and feldspar, and the soft grey mottling becomes slight natural variation in the colour of the stone. The rock is rough, matte and unpolished, with a faintly granular, weathered surface. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, boulder outline, rock edge, round rock, sticks, needles, lines, cracks, blobs, patches, camouflage, terrazzo, polished stone, tiles, moss, lichen",
+  "candidates": [
+    {
+      "seed": 43101,
+      "note": "First recipe (moss and orange lichen spots): fine granite grain and cracks, but large moss cushions, saturated lichen rosettes and dark pits crowd the 2 m tile."
+    },
+    {
+      "seed": 43102,
+      "note": "Second recipe revision (sparse grey lichen, no moss): Qwen drew a whole boulder in perspective with sky and horizon, mint lichen spots and inked cracks."
+    },
+    {
+      "seed": 43103,
+      "note": "Third recipe revision (sparse faint fissure strokes, mottling blobs): the blobs became camouflage patches and the strokes protruding sticks on a terrazzo-like speckle."
+    },
+    {
+      "seed": 43104
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 43104,
+    "noiseMetres": 0.6,
+    "colours": [
+      "#6a6863",
+      "#77746e",
+      "#827f78"
+    ],
+    "layers": [
+      {
+        "kind": "ellipses",
+        "length": [
+          0.004,
+          0.011
+        ],
+        "aspect": [
+          0.6,
+          1.0
+        ],
+        "perSquareMetre": 2200,
+        "colours": [
+          "#2a2826",
+          "#353330",
+          "#403d39"
+        ]
+      },
+      {
+        "kind": "ellipses",
+        "length": [
+          0.004,
+          0.012
+        ],
+        "aspect": [
+          0.6,
+          1.0
+        ],
+        "perSquareMetre": 1800,
+        "colours": [
+          "#b4b1aa",
+          "#c2bfb8",
+          "#a7a49d"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "gain": 0.6,
+    "saturation": 0.5,
+    "note": "Darkened (linear gain 0.6) and desaturated (0.5): the candidate is a cool, fairly bright grey (sRGB mean 130/136/141); in game the boulders read as pale plastic against the meadow, so this sits them with the world's wet-slate palette."
+  }
+}

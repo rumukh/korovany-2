@@ -1,0 +1,65 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-scarecrow",
+  "source": {
+    "candidate": "a-s5401",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 5401,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "b883961af6e73580b536694906b5d30f43a5c40e170352765fe7a6c30fc7aebe",
+    "conceptSha256": "9feb36f1c4827e8acfb464e6a406fb73fe07e1abc9dfdb00c7e57519865e3db4"
+  },
+  "reachMeters": 1.02,
+  "yawDegrees": 0,
+  "minComponentVertices": 30,
+  "triangleBudget": 3500,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    512
+  ],
+  "material": {
+    "bakeSize": 1024,
+    "mapsSize": 512,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.06,
+    "aoSamples": 32,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.88,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "name": "straw",
+        "hue": [
+          35,
+          65
+        ],
+        "saturation": [
+          0.3,
+          1
+        ],
+        "value": [
+          0.3,
+          1
+        ],
+        "roughness": 0.96
+      },
+      {
+        "name": "cloth",
+        "value": [
+          0,
+          1
+        ],
+        "roughness": 0.95
+      }
+    ],
+    "roughnessFromDetail": 0.5,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 6,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.9
+  },
+  "albedoGainNote": "Linear gain matching the cooked albedo's mean luminance to the approved concept's foreground (TRELLIS textures came out about 1.7-1.9 times darker; the woodpile gain is capped at 2.0). Measured by luminance ratio, not calibrated in the game."
+}

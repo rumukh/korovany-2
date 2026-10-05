@@ -1,6 +1,7 @@
 import { createPrng } from '@aegis/core';
-import type { Bounds, RoadNode, Vec2, WorldBlueprint } from './types';
+import type { Bounds, Obstacle, RoadNode, Vec2, WorldBlueprint, WorldVersion } from './types';
 import { expandWorld } from './world-expansion';
+import { buildWorldV3 } from './world-v3';
 
 export function normalizeSeed(seed: string | number): string {
   if ((typeof seed !== 'string' && typeof seed !== 'number') ||
@@ -35,7 +36,107 @@ export function isWalkable(world: WorldBlueprint, p: Vec2, radius = 0.65): boole
       p.x + radius > water.minX && p.x - radius < water.maxX &&
       !world.bridges.some(b => p.x >= b.minX + radius && p.x <= b.maxX - radius &&
         p.z >= b.minZ - radius && p.z <= b.maxZ + radius)) return false;
+  if (world.version === 3) return !blockedV3(world, p, radius);
   return !world.obstacles.some(o => distance(p, o) < radius + o.radius);
+}
+
+/**
+ * Distance from `p` to an obstacle's solid boundary, negative inside. Circles keep the v1/v2 rule exactly; version 3
+ * boxes use the exact rectangle.
+ */
+export function obstacleClearance(o: Obstacle, p: Vec2): number {
+  if (!o.shape) return distance(p, o) - o.radius;
+  const dx = p.x - o.x, dz = p.z - o.z;
+  const c = Math.cos(o.shape.heading), s = Math.sin(o.shape.heading);
+  const qx = Math.abs(dx * c - dz * s) - o.shape.halfX;
+  const qz = Math.abs(dx * s + dz * c) - o.shape.halfZ;
+  return Math.hypot(Math.max(qx, 0), Math.max(qz, 0)) + Math.min(Math.max(qx, qz), 0);
+}
+
+/** Shortest distance between segment a-b and an obstacle's solid boundary (0 when they touch or cross). */
+export function segmentClearance(o: Obstacle, a: Vec2, b: Vec2): number {
+  if (!o.shape) return Math.max(0, distance(o, projectSegment(o, a, b)) - o.radius);
+  const c = Math.cos(o.shape.heading), s = Math.sin(o.shape.heading);
+  const local = (p: Vec2): Vec2 => {
+    const dx = p.x - o.x, dz = p.z - o.z;
+    return { x: dx * c - dz * s, z: dx * s + dz * c };
+  };
+  const la = local(a), lb = local(b), hx = o.shape.halfX, hz = o.shape.halfZ;
+  // Liang-Barsky clip against the rectangle: any surviving interval means the segment crosses it.
+  let t0 = 0, t1 = 1;
+  const dx = lb.x - la.x, dz = lb.z - la.z;
+  const clips: [number, number][] = [[-dx, la.x + hx], [dx, hx - la.x], [-dz, la.z + hz], [dz, hz - la.z]];
+  let crosses = true;
+  for (const [p, q] of clips) {
+    if (p === 0) { if (q < 0) { crosses = false; break; } continue; }
+    const t = q / p;
+    if (p < 0) { if (t > t1) { crosses = false; break; } if (t > t0) t0 = t; }
+    else { if (t < t0) { crosses = false; break; } if (t < t1) t1 = t; }
+  }
+  if (crosses) return 0;
+  // Separated convex shapes: the closest pair includes a segment end or a rectangle corner.
+  const pointBox = (p: Vec2): number => Math.hypot(Math.max(Math.abs(p.x) - hx, 0), Math.max(Math.abs(p.z) - hz, 0));
+  let best = Math.min(pointBox(la), pointBox(lb));
+  for (const corner of [{ x: hx, z: hz }, { x: -hx, z: hz }, { x: hx, z: -hz }, { x: -hx, z: -hz }]) {
+    best = Math.min(best, distance(corner, projectSegment(corner, la, lb)));
+  }
+  return best;
+}
+
+/** Bodies wider than this fall back to the exhaustive v3 scan; every current body radius is at most 1.5 m. */
+const GRID_REACH = 2;
+const GRID_CELL = 16;
+interface ObstacleGrid { minX: number; minZ: number; columns: number; rows: number; cells: number[][]; count: number }
+const obstacleGrids = new Map<string, ObstacleGrid>();
+
+function buildGrid(world: WorldBlueprint): ObstacleGrid {
+  const { minX, minZ, maxX, maxZ } = world.bounds;
+  const columns = Math.max(1, Math.ceil((maxX - minX) / GRID_CELL)), rows = Math.max(1, Math.ceil((maxZ - minZ) / GRID_CELL));
+  const cells: number[][] = Array.from({ length: columns * rows }, () => []);
+  world.obstacles.forEach((o, index) => {
+    const reach = o.radius + GRID_REACH;
+    const x0 = Math.max(0, Math.floor((o.x - reach - minX) / GRID_CELL)), x1 = Math.min(columns - 1, Math.floor((o.x + reach - minX) / GRID_CELL));
+    const z0 = Math.max(0, Math.floor((o.z - reach - minZ) / GRID_CELL)), z1 = Math.min(rows - 1, Math.floor((o.z + reach - minZ) / GRID_CELL));
+    for (let z = z0; z <= z1; z++) for (let x = x0; x <= x1; x++) cells[z * columns + x]!.push(index);
+  });
+  return { minX, minZ, columns, rows, cells, count: world.obstacles.length };
+}
+
+/**
+ * The exact broadphase of a version 3 world, cached by its content-hashed id. Generation-time worlds (empty id) and
+ * worlds whose obstacle count no longer matches their cached grid are rebuilt rather than trusted.
+ */
+export function obstacleGrid(world: WorldBlueprint): ObstacleGrid {
+  const cached = world.id ? obstacleGrids.get(world.id) : undefined;
+  if (cached && cached.count === world.obstacles.length) return cached;
+  const grid = buildGrid(world);
+  if (world.id) {
+    if (obstacleGrids.size >= 8) obstacleGrids.delete(obstacleGrids.keys().next().value!);
+    obstacleGrids.set(world.id, grid);
+  }
+  return grid;
+}
+
+/** Obstacle indices whose solid shape may lie within GRID_REACH of the cells covering x0..x1, z0..z1. */
+export function nearbyObstacles(world: WorldBlueprint, x0: number, z0: number, x1: number, z1: number): Obstacle[] {
+  const grid = obstacleGrid(world);
+  const cx0 = Math.max(0, Math.floor((x0 - grid.minX) / GRID_CELL)), cx1 = Math.min(grid.columns - 1, Math.floor((x1 - grid.minX) / GRID_CELL));
+  const cz0 = Math.max(0, Math.floor((z0 - grid.minZ) / GRID_CELL)), cz1 = Math.min(grid.rows - 1, Math.floor((z1 - grid.minZ) / GRID_CELL));
+  const found = new Set<number>();
+  for (let z = cz0; z <= cz1; z++) for (let x = cx0; x <= cx1; x++) for (const index of grid.cells[z * grid.columns + x]!) found.add(index);
+  return [...found].sort((a, b) => a - b).map(index => world.obstacles[index]!);
+}
+
+function blockedV3(world: WorldBlueprint, p: Vec2, radius: number): boolean {
+  if (radius > GRID_REACH) return world.obstacles.some(o => obstacleClearance(o, p) < radius);
+  const grid = obstacleGrid(world);
+  const cx = Math.min(grid.columns - 1, Math.max(0, Math.floor((p.x - grid.minX) / GRID_CELL)));
+  const cz = Math.min(grid.rows - 1, Math.max(0, Math.floor((p.z - grid.minZ) / GRID_CELL)));
+  // Every obstacle within GRID_REACH of p was inserted into p's cell, so one cell is exact.
+  for (const index of grid.cells[cz * grid.columns + cx]!) {
+    if (obstacleClearance(world.obstacles[index]!, p) < radius) return true;
+  }
+  return false;
 }
 
 /** Substeps prevent both sprint and dodge from tunnelling through collision. */
@@ -51,10 +152,12 @@ export function moveWithCollision(world: WorldBlueprint, body: Vec2, dx: number,
   }
 }
 
-export function generateWorld(seed: string | number, version: 1 | 2 = 2): WorldBlueprint {
-  if (version !== 1 && version !== 2) throw new Error('Unsupported world version');
+export function generateWorld(seed: string | number, version: WorldVersion = 2): WorldBlueprint {
+  if (version !== 1 && version !== 2 && version !== 3) throw new Error('Unsupported world version');
   const legacy = generateLegacyWorld(seed);
-  return version === 1 ? legacy : expandWorld(legacy);
+  if (version === 1) return legacy;
+  const expanded = expandWorld(legacy);
+  return version === 2 ? expanded : buildWorldV3(expanded);
 }
 
 // Keep this generator and its serialization order unchanged for existing saves.

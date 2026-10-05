@@ -1,0 +1,82 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-ground-road",
+  "layer": "road",
+  "physicalSizeMetres": 4,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a photograph of a packed dirt cart road surface four metres across. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The tiny grey ovals become small gravel embedded in the earth, the larger grey and brown ovals become pebbles no bigger than a walnut, and the mottled brown background becomes evenly compacted, trodden earth with faint darker damp areas where the mottling is darker; the surface has no direction: no wheel ruts, no tracks and no streaks. Shot straight down from directly above as a flat orthographic photograph: flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no horizon, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, large stones, boulders, rocks, puddles, standing water, wheel ruts, tyre tracks, tracks, streaks, stripes, lines, furrows, grooves",
+  "candidates": [
+    {
+      "seed": 41301,
+      "note": "Generated with the first recipe revision (dark damp-patch blobs); Qwen turned the hard-edged blobs into stones 0.5-0.7 m across that repeat visibly on a 4 m tile."
+    },
+    {
+      "seed": 41302,
+      "note": "Second recipe revision (no damp-patch blobs): even gravel and no large stones, but two dark rut-like streaks run along one tile axis; roads sample the layer in world-axis UVs, so on roads that run across that axis they read as bands every 2 m."
+    },
+    {
+      "seed": 41303
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 41301,
+    "noiseMetres": 0.7,
+    "colours": [
+      "#5a4a38",
+      "#6a5842",
+      "#7a6850",
+      "#4e4436"
+    ],
+    "layers": [
+      {
+        "kind": "ellipses",
+        "length": [
+          0.01,
+          0.03
+        ],
+        "aspect": [
+          0.6,
+          0.9
+        ],
+        "perSquareMetre": 900,
+        "colours": [
+          "#7a7672",
+          "#8e8a84",
+          "#5e5a56"
+        ]
+      },
+      {
+        "kind": "ellipses",
+        "length": [
+          0.04,
+          0.08
+        ],
+        "aspect": [
+          0.6,
+          0.9
+        ],
+        "perSquareMetre": 25,
+        "colours": [
+          "#6e6a64",
+          "#7e6e5a",
+          "#9a948a"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "delightFraction": 0.05,
+    "blendFraction": 0.15,
+    "note": "Narrow de-light and a wider wrap band: the candidate has a dark strip about 120 px wide along its right edge and darker top rows, which would show as stripes every 4 m."
+  }
+}

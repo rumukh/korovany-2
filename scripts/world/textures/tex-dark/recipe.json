@@ -1,0 +1,13 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-dark",
+  "layer": "dark",
+  "physicalSizeMetres": 1,
+  "derivedFrom": "tex-arch-timber",
+  "note": "Soot-dark reveals behind shutters and doors and iron straps: the accepted timber candidate, darkened and desaturated; no generation of its own.",
+  "cook": {
+    "gain": 0.11,
+    "saturation": 0.45,
+    "heightBlur": 1.2
+  }
+}

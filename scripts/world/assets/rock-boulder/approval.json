@@ -1,0 +1,19 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "rock-boulder",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "5919ed3bc357206463266431a99730030b011657afd27bbf1bad4d02096f2b6c",
+   "rationale": "Four boulder variants about 2 m across, 320 triangles each, granite layer with baked AO; sunk 25% into the ground."
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "5919ed3bc357206463266431a99730030b011657afd27bbf1bad4d02096f2b6c",
+   "rationale": "Scattered boulders sit into the terrain at gameplay cameras with no floating edges; they block as rock colliders."
+  }
+ ]
+}

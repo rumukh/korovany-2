@@ -1,0 +1,84 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-arch-rubble",
+ "layer": "rubble",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/rubble-albedo.webp",
+   "sha256": "35195f094f56a338ad945be77ef0e33d6f03f88e9e256372475ab2199a480754",
+   "bytes": 100456
+  },
+  "height": {
+   "file": "public/world/surfaces/rubble-height.webp",
+   "sha256": "30d6878793f06104f610e573dfd8405ff2780829848b67134a62510bf1f1edea",
+   "bytes": 75032
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-42503.png",
+  "candidateSha256": "791fefbc2a13399ae4c097123e0a2318e4d9d7ef4bea47e8f49bd1738a7a4d65",
+  "seed": 42503,
+  "generationSeconds": 820.1,
+  "layoutSha256": "4bcb6bc486ce476af898b4ddf8843794062db6177788f396122cd08dd163f6b5"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Rough-hewn grey and brown fieldstones in courses with thin, dark, recessed joints and moss in the beds, at the 2 m tile scale; the superellipse layout fixed the white-plaster look of 42502 and the cobbles-in-tar look of 42501.",
+  "limitations": [
+   "Each stone carries soft top-lit shading in the albedo, which doubles up with the derived normal map under a low sun.",
+   "Courses are fairly even and moss streaks repeat every 2 m; reads as coursed rubble rather than random fieldstone."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 2.836,
+    "seamRatioAfter": 1.432
+   },
+   "grade": {
+    "gain": 1.0,
+    "saturation": 1.0
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   90.8,
+   82.9,
+   68.9
+  ]
+ }
+}

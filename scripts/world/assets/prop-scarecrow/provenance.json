@@ -1,0 +1,232 @@
+{
+ "schema": "korovany2-world-asset/1",
+ "id": "prop-scarecrow",
+ "kind": "prop",
+ "output": {
+  "file": "public/world/prop-scarecrow/prop-scarecrow.glb",
+  "sha256": "75dde9ca94c801204faed8590b35f97b252b0f95cc4e755cfd709a4fc796d026",
+  "bytes": 277544
+ },
+ "license": "Derived from TRELLIS-image-large output. TRELLIS's textured GLB export depends on components licensed for research and evaluation only (Gaussian export, diffoctreerast); no commercial clearance is established. The owner acknowledged publishing TRELLIS-derived assets on the public Korovany II site on 2026-09-26.",
+ "tools": [
+  {
+   "name": "Azure OpenAI gpt-image-2.5-sunburst",
+   "runtime": "Azure OpenAI image generation (cloud)",
+   "role": "concept art",
+   "approval": "Owner approved cloud concept generation for in-game objects on 2026-10-04."
+  },
+  {
+   "name": "TRELLIS-image-large",
+   "model": "microsoft/TRELLIS-image-large",
+   "modelRevision": "25e0d31ffbebe4b5a97464dd851910efc3002d96",
+   "offline": true,
+   "licensing": {
+    "wholeToolchainMit": false,
+    "commercialClearanceEstablished": false
+   },
+   "seed": 5401,
+   "inferenceSeconds": 67.4,
+   "output": {
+    "sha256": "b883961af6e73580b536694906b5d30f43a5c40e170352765fe7a6c30fc7aebe",
+    "bytes": 1589848
+   }
+  },
+  {
+   "name": "Blender 5.2.2 LTS",
+   "build": "d13f752e3b9c",
+   "role": "generation, cooking, rigging and bakes (CPU Cycles)"
+  },
+  {
+   "name": "meshoptimizer 0.22.0 (npm)",
+   "role": "lossless EXT_meshopt_compression"
+  }
+ ],
+ "source": {
+  "concept": {
+   "candidate": "a",
+   "sha256": "41c237233b0fa4900acfae13e87b305d3bb09e0fd71e9b6004dc26cc986be0f0",
+   "note": "Pixels of the accepted Azure candidate, re-encoded without metadata."
+  },
+  "trellis": {
+   "candidate": "a-s5401",
+   "sha256": "b883961af6e73580b536694906b5d30f43a5c40e170352765fe7a6c30fc7aebe"
+  }
+ },
+ "limitations": [
+  "Single-view TRELLIS reconstruction from one approved concept: the far side, back and underside are TRELLIS's invention.",
+  "Roughness and metalness come from colour classes and Cycles bakes, not measured PBR."
+ ],
+ "cook": {
+  "scripts": {
+   "models/pipeline/cook_landmark.py": "6a73d5aefd446b6ca69eff7d9ffce5b69e4b8c156bd3ce7239a0b48a16b6feb7",
+   "models/pipeline/k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
+   "models/pipeline/k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
+   "models/pipeline/k2sheet.py": "0141e81990f6318c974fa018c895e02aa71b9c8ba5e23dbdd741e4881e6f177c",
+   "models/pipeline/repair_tangents.py": "be1ff6e6aa829a639644a8f7b6960b424c5bcaba0b137fe4ffc5f3da338cb952",
+   "models/pipeline/quantize_prop_glb.py": "4fceea5247a9da87d455879dd049eeba1426a67202a5e502e321731f8813378f",
+   "models/pipeline/meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+  },
+  "scriptsNote": "SHA-256 of each script with LF line endings, equal to its committed copy.",
+  "normalization": {
+   "uniformScale": 2.784891606874124,
+   "sourceReach": 0.36626201087405685,
+   "reachMeters": 1.02,
+   "yawDegrees": 0,
+   "heightMeters": 2.7883009910583496,
+   "baseCentre": [
+    0.0015469193458557129,
+    0.007208235561847687,
+    -0.5009695291519165
+   ],
+   "footprintMeters": [
+    2.039301872253418,
+    0.7250710725784302
+   ],
+   "axes": "glTF +Y up/+Z forward -> Blender import -> glTF export_yup; no extra axis rotation"
+  },
+  "topology": {
+   "vertices": 1694,
+   "faces": 3447,
+   "triangles": 3447,
+   "boundaryEdges": 2,
+   "nonManifoldEdges": 4,
+   "components": 1,
+   "componentVertexCounts": [
+    1694
+   ],
+   "degenerateFaces": 0,
+   "inconsistentWindingEdges": 0
+  },
+  "decimation": {
+   "applied": true,
+   "before": 9943,
+   "triangles": 3447,
+   "ratio": 0.3467263401387911
+  },
+  "materials": {
+   "bakeSize": 1024,
+   "mapsSize": 512,
+   "albedoSizes": [
+    512
+   ],
+   "albedoGain": 1.9,
+   "cageExtrusionMeters": 0.02,
+   "maxRayMeters": 0.06,
+   "atlasCoverage": 0.586822509765625,
+   "metalFractionOfSurface": 0,
+   "classFractions": {
+    "straw": 0.009412865983670497,
+    "cloth": 0.9905871340163295
+   },
+   "unclassifiedFraction": 0,
+   "roughnessMean": 0.9500805139541626,
+   "metalnessMean": 0,
+   "aoMean": 0.6965134143829346,
+   "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active, supersampled) from the approved TRELLIS source mesh, then any declared colour repairs the recipe lists (matchBoxes, retint, facingBalance); tangent normals baked from the approved source mesh and whiteout-blended with relief derived from colour; AO baked from the decimated geometry; roughness and metalness from recipe colour classes. Artistic derivation, not measured PBR."
+  },
+  "geometryCompression": {
+   "extension": "EXT_meshopt_compression",
+   "encoder": "meshoptimizer 0.22.0 (npm)",
+   "script": "meshopt_glb.mjs",
+   "scriptSha256": "9f5914236e6aac82b541e0685ab34f839a1287d50c41b8322724ddf420597ec8",
+   "filters": "none",
+   "reorder": {
+    "method": "meshoptimizer reorderMesh: vertex-cache triangle order, then vertex-fetch vertex order",
+    "primitives": 1,
+    "kept": 0,
+    "vertices": 4493,
+    "triangles": 3447,
+    "check": "a permutation: every vertex keeps its exact attribute bytes, and the triangles are the same, with the same winding, in another order"
+   },
+   "check": "every view decoded again: attribute views byte-identical to the reordered data; triangle index views hold the same triangles in the same order and winding (only the first vertex may rotate)",
+   "views": {
+    "attributes": {
+     "views": 4,
+     "raw": 89860,
+     "packed": 65881
+    },
+    "triangles": {
+     "views": 1,
+     "raw": 20682,
+     "packed": 3622,
+     "rotatedTriangles": 1819
+    },
+    "indices": {
+     "views": 0,
+     "raw": 0,
+     "packed": 0
+    },
+    "stored": 204928
+   },
+   "inputSha256": "a139b75d1063c37727108d83841ac5ae7b20bfda88c8b22005de976db13574d0",
+   "bytesBefore": 317752,
+   "bytesAfter": 277544
+  },
+  "staticQuantization": {
+   "script": "quantize_prop_glb.py",
+   "scriptSha256": "6b79b80c0c1ae58fc21cf8cd2b23ac6a0f13462e48530110f5247a5fb312d6fe",
+   "extension": "KHR_mesh_quantization",
+   "settings": {
+    "POSITION": "SHORT normalized about the bounding-box centre with one uniform scale; the scale and centre folded into the root node",
+    "NORMAL": "BYTE normalized",
+    "TANGENT": "BYTE normalized",
+    "TEXCOORD": "UNSIGNED_SHORT normalized where the UVs lie in [0, 1]"
+   },
+   "nodes": [
+    {
+     "node": "prop-scarecrow",
+     "scale": 1.393092,
+     "translation": [
+      0.000212,
+      1.394163,
+      0.000973
+     ]
+    }
+   ],
+   "positions": [
+    {
+     "mesh": "geometry_0",
+     "centre": [
+      0.000212,
+      1.394163,
+      0.000973
+     ],
+     "scale": 1.393092,
+     "stepMm": 0.04252,
+     "boundMm": 0.1,
+     "maxErrorMm": 0.02125,
+     "extentMeters": 2.7862,
+     "maxErrorOfExtent": 7.63e-06
+    }
+   ],
+   "floatUvs": [],
+   "maxErrors": {
+    "positionMm": 0.02125,
+    "normalDegrees": 0.35985,
+    "tangentDegrees": 0.3516,
+    "uvTexels2048": 0.01562
+   },
+   "bounds": {
+    "positionMm": 0.1,
+    "positionHalfSteps": 0.51,
+    "normalDegrees": 0.8,
+    "tangentDegrees": 0.8,
+    "uvTexels2048": 0.05
+   },
+   "inputSha256": "d52107f4094eb288051a1ab05a876f048176ded745887a388d483fde2a6100e8",
+   "bytesBefore": 443340,
+   "bytesAfter": 317752
+  },
+  "tangentRepair": {
+   "script": "repair_tangents.py",
+   "scriptSha256": "80b1b0f84dfc08f2a5d50e3651065d987627fdba731468981d273f7920c8e17d",
+   "why": "three.js normalizes vertex tangents in the vertex shader; a zero-length tangent becomes NaN and the bloom spreads it.",
+   "normalsChecked": 4493,
+   "tangentsChecked": 4493,
+   "repaired": [],
+   "inputSha256": "d52107f4094eb288051a1ab05a876f048176ded745887a388d483fde2a6100e8",
+   "bytesChanged": 0
+  },
+  "seconds": 4.8162122999783605
+ }
+}

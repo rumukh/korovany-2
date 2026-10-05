@@ -1,0 +1,57 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-bark-spruce",
+  "layer": "bark-spruce",
+  "physicalSizeMetres": 1,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of the bark of an old spruce trunk, one metre across, seen exactly face-on and filling the frame edge to edge. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. Each small grey-brown shape becomes one thin, flat, flaky scale of bark lying flush against the trunk, overlapping its neighbours like fish scales, and the dark reddish-brown background between them becomes shallow fissures in the inner bark. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, discs, coins, shells, raised plates, wires, sticks, threads, moss, lichen tufts, resin drops, mushrooms",
+  "candidates": [
+    {
+      "seed": 43101,
+      "note": "First recipe (scale ovals, fissure strokes, resin dots, lichen blobs): the ovals became raised coin-like discs and the strokes protruding wires."
+    },
+    {
+      "seed": 43102
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 43102,
+    "noiseMetres": 0.2,
+    "colours": [
+      "#2e2219",
+      "#3a2a1e",
+      "#45332a"
+    ],
+    "layers": [
+      {
+        "kind": "stones",
+        "cell": 0.05,
+        "colours": [
+          "#5a4e42",
+          "#665848",
+          "#4e443a",
+          "#6e6252",
+          "#5e5246"
+        ],
+        "fill": [
+          0.62,
+          0.78
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "saturation": 0.7,
+    "note": "Desaturated (0.7) so the reddish inner bark sits in the world's muted palette."
+  }
+}

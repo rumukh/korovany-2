@@ -3,6 +3,7 @@ import { palette } from './palette';
 import { surfaceForColor, surfaceUrl, type Surface } from './surfaces';
 import { applySightlineDither } from './sightline';
 import { dyedMaterial, type LoadedModel, type ModelId, type ModelLibrary } from './models';
+import type { WorldAssetLibrary } from './world-assets';
 
 /** One owner for shared GPU assets, including assets held by invisible pools. */
 export class ViewResources {
@@ -19,12 +20,14 @@ export class ViewResources {
 
   /**
    * `models` is the page-lifetime GLB library. It is omitted only by DOM-free geometry tests;
-   * `createGameView` always supplies it and never builds a presentation before it is ready.
+   * `createGameView` always supplies it and never builds a presentation before it is ready. `world` is the page-lifetime
+   * world asset library that version 3 worlds draw from.
    */
   constructor(
     private readonly loader?: Pick<THREE.TextureLoader, 'load'>,
     private readonly anisotropy = 1,
     readonly models?: ModelLibrary,
+    readonly world?: WorldAssetLibrary,
   ) {}
 
   get textureStatus(): { pending: number; error: string | null; surfaces: number } {

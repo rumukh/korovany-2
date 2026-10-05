@@ -1,0 +1,81 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-arch-timber",
+  "layer": "timber",
+  "physicalSizeMetres": 1,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a photograph of the face of an old weathered oak beam one metre across. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The fine vertical strokes become deep straight wood grain running from top to bottom, the long black strokes become drying splits, and the dark ovals become knots; the whole surface is dark grey-brown seasoned oak. Shot straight on as a flat frontal orthographic photograph: flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours",
+  "candidates": [
+    {
+      "seed": 42201
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 42201,
+    "noiseMetres": 0.2,
+    "colours": [
+      "#2e2822",
+      "#4a3e32",
+      "#5c4e3e",
+      "#3a3229"
+    ],
+    "layers": [
+      {
+        "kind": "strokes",
+        "orientation": 90,
+        "spread": 2,
+        "length": [
+          0.2,
+          0.9
+        ],
+        "width": 0.003,
+        "perSquareMetre": 900,
+        "colours": [
+          "#3a3026",
+          "#5e5040",
+          "#2a241e",
+          "#6a5a48"
+        ]
+      },
+      {
+        "kind": "strokes",
+        "orientation": 90,
+        "spread": 1,
+        "length": [
+          0.1,
+          0.5
+        ],
+        "width": 0.006,
+        "perSquareMetre": 6,
+        "colours": [
+          "#1a1612"
+        ]
+      },
+      {
+        "kind": "ellipses",
+        "length": [
+          0.03,
+          0.06
+        ],
+        "aspect": [
+          0.45,
+          0.6
+        ],
+        "perSquareMetre": 2,
+        "colours": [
+          "#2a221a"
+        ]
+      }
+    ]
+  }
+}

@@ -31,8 +31,10 @@ export class FollowCamera {
     this.camera.updateProjectionMatrix();
   }
 
-  update(point: GroundPoint, dt: number): void {
-    this.target.set(point.x, 0.65, point.z);
+  update(point: GroundPoint, dt: number, ground = 0): void {
+    this.target.set(point.x, 0.65 + ground, point.z);
+    // Pointer aim intersects the hero's own ground height (version 3 relief; 0 on flat worlds).
+    this.ground.constant = -ground;
     if (!this.initialized || this.focus.distanceToSquared(this.target) > 625 || this.reducedMotion) {
       this.focus.copy(this.target);
       this.initialized = true;

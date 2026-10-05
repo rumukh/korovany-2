@@ -1,0 +1,19 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "tree-deadoak",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "e4910b84feb229a9039d64fd04d4a80198e26ee5a44e12bd3a81c45b05cd3015",
+   "rationale": "Two dead oaks 9.5-11 m with a few withered leaf clusters, about 1,970 wood triangles each, plus impostors."
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "e4910b84feb229a9039d64fd04d4a80198e26ee5a44e12bd3a81c45b05cd3015",
+   "rationale": "Scattered in heartlands, fens and saltcoast: bare silhouettes carry the dark-fantasy mood without hiding the hero."
+  }
+ ]
+}

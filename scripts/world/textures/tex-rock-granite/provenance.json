@@ -1,0 +1,85 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-rock-granite",
+ "layer": "granite",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/granite-albedo.webp",
+   "sha256": "daf7ab0aa2ec8d676158587b25b980d732115f74b0b2d8e9d06d4c4c0da90da1",
+   "bytes": 114190
+  },
+  "height": {
+   "file": "public/world/surfaces/granite-height.webp",
+   "sha256": "13f35fa65bc88fef130b0607cd240d230c541e9be3d8f0fdcf4934a3290668c8",
+   "bytes": 129756
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-43104.png",
+  "candidateSha256": "e0ba60fc48e19526f5f3148fb4e9fd30a73b1523e3265ebcc545b0eb8715eebf",
+  "seed": 43104,
+  "generationSeconds": 893.3,
+  "layoutSha256": "9b6a67571a82253b1caa575ed5cd45ed472cc244424e61626706f34ac4eac948"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Face-on, rough, matte grey granite with black mica and pale feldspar grains at the 2 m tile scale and nothing that repeats as a feature; the speckle-only layout fixed the moss cushions (43101), the whole-boulder perspective (43102) and the camouflage patches (43103).",
+  "limitations": [
+   "Very even: little large-scale colour or weathering variation, so close up it reads slightly like coarse concrete; boulder shape and baked AO carry the variation.",
+   "No lichen, cracks or moss; mountains and cliffs in W3 need a weathered rock layer.",
+   "Graded darker and greyer in the cook (gain 0.6, saturation 0.5); on the smooth W0 boulders it still reads as a cool, even grey under the overcast sky."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 2.369,
+    "seamRatioAfter": 1.101
+   },
+   "grade": {
+    "gain": 0.6,
+    "saturation": 0.5
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   104.8,
+   107.0,
+   109.0
+  ]
+ }
+}

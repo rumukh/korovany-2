@@ -1,0 +1,478 @@
+{
+  "schema": "korovany2-sheep-recipe/1",
+  "id": "char-sheep",
+  "note": "Sheep cooked from the delegated-gate concept candidate a and TRELLIS raw a-s5601. Landmarks measured on the normalized mesh (session profile of leg columns and the midline); the head already faces -Y (yaw 0).",
+  "source": {
+    "candidate": "a-s5601",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 5601,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "545f243bd17eb116fa1ec7545a72eaec9e447a2e7103f52ce30cda2e2ba34f4b",
+    "conceptSha256": "134558b0e5e0a1499e0e9d4dc6f5b465ce93111a7e00377fbcbdae3411c0a7d6"
+  },
+  "yawDegrees": 0,
+  "heightMeters": 1.3,
+  "feetFraction": 0.035,
+  "triangleBudget": 6000,
+  "baseQuality": 90,
+  "ormQuality": 85,
+  "minEdgeMeters": 0.008,
+  "landmarks": {
+    "hipCentre": [
+      0,
+      0.4,
+      0.92
+    ],
+    "lumbar": [
+      0,
+      0.15,
+      0.98
+    ],
+    "back": [
+      0,
+      -0.12,
+      0.98
+    ],
+    "withers": [
+      0,
+      -0.32,
+      0.98
+    ],
+    "neckBase": [
+      0,
+      -0.42,
+      0.82
+    ],
+    "neckMid": [
+      0,
+      -0.6,
+      0.98
+    ],
+    "poll": [
+      0,
+      -0.72,
+      1.17
+    ],
+    "muzzle": [
+      0,
+      -0.92,
+      1.08
+    ],
+    "tailRoot": [
+      0,
+      0.6,
+      0.92
+    ],
+    "tailTip": [
+      0,
+      0.645,
+      0.76
+    ],
+    "ear": [
+      0.09,
+      -0.7,
+      1.21
+    ],
+    "earTip": [
+      0.23,
+      -0.68,
+      1.22
+    ],
+    "legs": {
+      "LF": {
+        "scapulaTop": [
+          0.12,
+          -0.36,
+          0.98
+        ],
+        "shoulder": [
+          0.17,
+          -0.46,
+          0.7
+        ],
+        "elbow": [
+          0.18,
+          -0.4,
+          0.46
+        ],
+        "carpus": [
+          0.18,
+          -0.385,
+          0.27
+        ],
+        "fetlock": [
+          0.19,
+          -0.395,
+          0.09
+        ],
+        "toe": [
+          0.19,
+          -0.46,
+          0.0
+        ]
+      },
+      "RF": {
+        "scapulaTop": [
+          -0.12,
+          -0.36,
+          0.98
+        ],
+        "shoulder": [
+          -0.15,
+          -0.46,
+          0.7
+        ],
+        "elbow": [
+          -0.1,
+          -0.38,
+          0.46
+        ],
+        "carpus": [
+          -0.09,
+          -0.35,
+          0.27
+        ],
+        "fetlock": [
+          -0.09,
+          -0.345,
+          0.09
+        ],
+        "toe": [
+          -0.11,
+          -0.41,
+          0.0
+        ]
+      },
+      "LH": {
+        "hip": [
+          0.15,
+          0.4,
+          0.86
+        ],
+        "stifle": [
+          0.12,
+          0.25,
+          0.52
+        ],
+        "hock": [
+          0.075,
+          0.36,
+          0.32
+        ],
+        "fetlock": [
+          0.08,
+          0.3,
+          0.1
+        ],
+        "toe": [
+          0.08,
+          0.21,
+          0.0
+        ]
+      },
+      "RH": {
+        "hip": [
+          -0.15,
+          0.42,
+          0.86
+        ],
+        "stifle": [
+          -0.15,
+          0.38,
+          0.52
+        ],
+        "hock": [
+          -0.14,
+          0.53,
+          0.3
+        ],
+        "fetlock": [
+          -0.15,
+          0.51,
+          0.1
+        ],
+        "toe": [
+          -0.17,
+          0.44,
+          0.0
+        ]
+      }
+    }
+  },
+  "weights": {
+    "legHalfWidth": 0.1,
+    "legHalfDepth": 0.14,
+    "legTopMargin": -0.04,
+    "midlineGap": 0.02,
+    "tailHalfWidth": 0.07,
+    "tailLead": 0.03,
+    "headMargin": 0.02,
+    "neckMargin": -0.02,
+    "shoulderRadius": 0.22,
+    "thighRadius": 0.22,
+    "legBlend": 0.08,
+    "hoofLockHeight": 0.045,
+    "dewlapZ": 0.66,
+    "humerusAbove": 0.04,
+    "humerusMinX": 0.1,
+    "relax": 10,
+    "finalRelax": 4,
+    "minWeight": 0.01,
+    "earRadius": 0.16,
+    "groundLegHeight": 0.2
+  },
+  "gaits": {
+    "Walk": {
+      "speed": 1.0,
+      "duty": 0.65,
+      "sweep": 0.3,
+      "offsets": {
+        "LH": 0.0,
+        "LF": 0.25,
+        "RH": 0.5,
+        "RF": 0.75
+      },
+      "lift": {
+        "F": 0.06,
+        "H": 0.05
+      },
+      "flex_F": 50,
+      "flex_H": 25,
+      "fetlockFlex": 25,
+      "heelLift": 8,
+      "rollFraction": 0.25,
+      "liftPeak": {
+        "F": 0.45,
+        "H": 0.5
+      },
+      "flexPeak": {
+        "F": 0.45,
+        "H": 0.5
+      },
+      "bob": [
+        0.01,
+        2,
+        0.1
+      ],
+      "pitch": [
+        1.0,
+        2,
+        0.35
+      ],
+      "roll": [
+        1.5,
+        1,
+        0.1
+      ],
+      "yaw": [
+        1.0,
+        1,
+        0.35
+      ],
+      "sway": [
+        0.006,
+        1,
+        0.1
+      ],
+      "nod": [
+        4.0,
+        2,
+        0.15
+      ],
+      "counter": 0.3,
+      "scapula": 5,
+      "tail": [
+        6,
+        1,
+        0.3
+      ],
+      "tailLag": 0.06,
+      "drop": -0.03
+    },
+    "Run": {
+      "speed": 4.2,
+      "duty": 0.34,
+      "sweep": 0.32,
+      "offsets": {
+        "LH": 0.0,
+        "RH": 0.12,
+        "LF": 0.45,
+        "RF": 0.57
+      },
+      "lift": {
+        "F": 0.12,
+        "H": 0.1
+      },
+      "flex_F": 75,
+      "flex_H": 38,
+      "fetlockFlex": 45,
+      "heelLift": 8,
+      "rollFraction": 0.35,
+      "liftPeak": {
+        "F": 0.42,
+        "H": 0.5
+      },
+      "flexPeak": {
+        "F": 0.4,
+        "H": 0.5
+      },
+      "bob": [
+        0.04,
+        1,
+        0.9
+      ],
+      "pitch": [
+        4.0,
+        1,
+        0.65
+      ],
+      "flex": [
+        5,
+        1,
+        0.65
+      ],
+      "nod": [
+        5,
+        1,
+        0.6
+      ],
+      "counter": 0.6,
+      "scapula": 7,
+      "tail": [
+        5,
+        1,
+        0.3
+      ],
+      "tailLag": 0.05,
+      "drop": -0.05
+    }
+  },
+  "idle": {
+    "seconds": 4.0,
+    "breath": [
+      1,
+      2,
+      0
+    ],
+    "breathRise": 0.004,
+    "breathPitch": 0.6,
+    "sway": [
+      0.004,
+      1,
+      0.1
+    ],
+    "nod": [
+      4,
+      1,
+      0.2
+    ],
+    "look": [
+      8,
+      1,
+      0.55
+    ],
+    "tailSwishAt": [
+      1.0
+    ],
+    "tailSwishSeconds": 0.8,
+    "tailSwishDegrees": 18,
+    "earFlickAt": [
+      [
+        2.6
+      ],
+      [
+        2.9
+      ]
+    ],
+    "earFlickSeconds": 0.3,
+    "earFlickDegrees": 20
+  },
+  "graze": {
+    "seconds": 4.0,
+    "neck": [
+      88,
+      22,
+      -4
+    ],
+    "pitch": 7.0,
+    "drop": -0.04,
+    "shiftForward": 0.0,
+    "chew": [
+      4,
+      6,
+      0
+    ],
+    "sweep": [
+      6,
+      1,
+      0.25
+    ],
+    "look": [
+      10,
+      1,
+      0.1
+    ],
+    "breath": [
+      1,
+      2,
+      0
+    ],
+    "tail": [
+      5,
+      1,
+      0.4
+    ],
+    "earFlickAt": [
+      [
+        1.4
+      ],
+      [
+        3.1
+      ]
+    ],
+    "earFlickSeconds": 0.3,
+    "earFlickDegrees": 20
+  },
+  "startle": {
+    "seconds": 0.7,
+    "back": 0.05,
+    "sink": 0.05,
+    "pitch": -6,
+    "roll": 3,
+    "neck": -18,
+    "headYaw": 14,
+    "ears": 25,
+    "tailLift": 12
+  },
+  "body": {
+    "bakeSize": 2048,
+    "textureSize": 1024,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.05,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.4,
+    "reliefStrength": 4.0,
+    "roughnessFromDetail": 0.5,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0,
+    "toneGamma": 0.85,
+    "defaultRoughness": 0.95,
+    "regions": [
+      {
+        "name": "face-and-legs",
+        "colour": {
+          "maxValue": 0.18
+        },
+        "roughness": 0.75
+      },
+      {
+        "name": "hooves",
+        "zMax": 0.05,
+        "roughness": 0.5
+      }
+    ],
+    "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved TRELLIS source mesh; there is no rear-view projection, so the back, far side and underside are as TRELLIS invented them from the single approved concept. Tangent normals baked from the source geometry and whiteout-blended with colour relief; AO baked from the decimated geometry; roughness set inside declared regions (the dark face and legs by colour value, hooves by height) and otherwise the default, both reduced by colour detail; no metal and no dye mask (the sheep is never dyed). Base colour lifted by luma power toneGamma (chroma ratios kept), set by eye in review renders, not calibrated against the concept. Artistic derivation, not measured PBR."
+  }
+}
