@@ -4,8 +4,8 @@
  "kind": "fauna",
  "output": {
   "file": "public/world/char-sheep/char-sheep.glb",
-  "sha256": "86538c6111f2e41a0787c6ff255c21441a1d9960ec3d13060e99a7edc7bd6f26",
-  "bytes": 595436
+  "sha256": "2fd3926dbef9465f6f5eb3fd67f627fa3283de9b3b1cd524c72940cc523c5d44",
+  "bytes": 371412
  },
  "license": "Derived from TRELLIS-image-large output. TRELLIS's textured GLB export depends on components licensed for research and evaluation only (Gaussian export, diffoctreerast); no commercial clearance is established. The owner acknowledged publishing TRELLIS-derived assets on the public Korovany II site on 2026-09-26.",
  "tools": [
@@ -55,7 +55,10 @@
  "limitations": [
   "Single-view TRELLIS reconstruction from one approved concept: the far side, back and underside are TRELLIS's invention.",
   "Roughness and metalness come from colour classes and Cycles bakes, not measured PBR.",
-  "Clips are procedural (IK gaits, oscillators), not motion capture; there is no blending of grazing into walking."
+  "Clips are procedural (IK gaits, oscillators), not motion capture; there is no blending of grazing into walking.",
+  "Fleece detail is softer at 512 px when the camera is at its closest.",
+  "Clips are procedural (IK gaits, oscillators), not motion capture.",
+  "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
  ],
  "cook": {
   "scripts": {
@@ -101,19 +104,19 @@
    "ratio": 0.3019157088122605
   },
   "materials": {
-   "bakeSize": 2048,
-   "textureSize": 1024,
-   "atlasCoverage": 0.5685873031616211,
+   "bakeSize": 1024,
+   "textureSize": 512,
+   "atlasCoverage": 0.5686187744140625,
    "dyeFractionOfSurface": 0,
    "metalFractionOfSurface": 0,
    "regionFractions": {
-    "face-and-legs": 0.14407412190732413,
-    "hooves": 0.01919803021433831
+    "face-and-legs": 0.14382128002146788,
+    "hooves": 0.019213739433785054
    },
    "dyeFills": {},
    "toneMatch": [],
-   "roughnessMean": 0.9158163666725159,
-   "aoMean": 0.8969300985336304,
+   "roughnessMean": 0.9168933629989624,
+   "aoMean": 0.8969597220420837,
    "albedoGain": 1,
    "reliefStrength": 4,
    "aoSamples": 64,
@@ -282,14 +285,14 @@
    "fallbackVertices": 389,
    "blends": [],
    "regions": {
-    "leg_LH": 73,
     "trunk": 1964,
-    "tail": 35,
-    "neck": 496,
-    "leg_RH": 67,
-    "head": 201,
     "leg_RF": 54,
+    "head": 201,
+    "leg_RH": 67,
+    "leg_LH": 73,
     "leg_LF": 61,
+    "neck": 496,
+    "tail": 35,
     "lockedHoofVertices": 44
    },
    "pruning": {
@@ -329,11 +332,11 @@
      "raw": 0,
      "packed": 0
     },
-    "stored": 367248
+    "stored": 143220
    },
-   "inputSha256": "57132cad85fcd6bfd7743d2ea88896716ab9d4154787b425527ed5e7ec80807b",
-   "bytesBefore": 736600,
-   "bytesAfter": 595436
+   "inputSha256": "2d465b1fc74ea5dd9653d47bcf425cc31b1b023045adcc3cd47776dd6ae16882",
+   "bytesBefore": 512572,
+   "bytesAfter": 371412
   },
   "quantization": {
    "script": "quantize_glb.py",
@@ -371,9 +374,9 @@
     "weight": 0.004,
     "rotationDegrees": 0.01
    },
-   "inputSha256": "9f0bbdac4cd56450874cd9dc37e7233a9d0240aab93ea91e39dd88125f2a25bc",
-   "bytesBefore": 1082556,
-   "bytesAfter": 736600
+   "inputSha256": "b49fc2af963ca4677cb7a95d1521021da4166a2832fcad688774ec86681fbaa9",
+   "bytesBefore": 858440,
+   "bytesAfter": 512572
   },
   "baseEncoding": {
    "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
@@ -390,24 +393,24 @@
     {
      "image": "body-base",
      "size": [
-      1024,
-      1024
+      512,
+      512
      ],
-     "bytes": 125036,
-     "sha256": "b930e041578ca33207b5cf9e6e7cbfdaf6e5d817018f2471ffca981112f80558",
-     "bytesBefore": 6012,
+     "bytes": 49486,
+     "sha256": "b7ca0ddac5ae21cdd5ea36ff10e32583eea4390865868e72cf55ea54d8ad2d61",
+     "bytesBefore": 1666,
      "meanAbsRgbError": {
       "dyed": null,
-      "undyed": 1.444
+      "undyed": 1.835
      },
      "meanAbsRgbErrorBefore": {
       "dyed": null,
-      "undyed": 40.856
+      "undyed": 41.145
      },
      "undyedFraction": 1
     }
    ]
   },
-  "seconds": 24.46683369996026
+  "seconds": 8.62892089993693
  }
 }

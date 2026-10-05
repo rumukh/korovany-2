@@ -71,17 +71,18 @@ and budgets.
 only once `worldAssetIds(world)` and the surface layers have loaded; a failed load is thrown by `render` (there is no
 primitive fallback). Version 1 and 2 worlds request nothing from it.
 
-- **Surfaces.** Twenty-six 512 px tiling layers (`WORLD_SURFACES`: architecture, ground, rock and bark) form two
+- **Surfaces.** Twenty-eight 512 px tiling layers (`WORLD_SURFACES`: architecture, ground, rock and bark) form two
   `DataArrayTexture`s: sRGB albedo, and tangent normal plus roughness derived at load from each layer's grayscale
   height map (`deriveSurface`). Kit, bark and rock meshes carry the layer index in UV1.x and baked AO in UV1.y and
   share one program (`kitMaterial`); the ground blends eight layers by 1024-texel control maps (`terrainMaterial`,
   `terrainControl`) with height-based transitions and furrows turned along each field: meadow, forest, mud, road and
   field everywhere, a regional base and overlay (`REGION_GROUND`: reed mud in the Fens, cold grass with shingle on the
-  Salt Coast, ash on the Ash Steppe, cold grass with snow in the Frostspine, cold grass in Hollowvale) and cobbled
-  streets in the stone towns (`COBBLED_PLACES`). The layers ship as WebP and upload as RGBA8; KTX2/Basis was measured
+  Salt Coast, ash on the Ash Steppe, cold grass with snow in the Frostspine, cold grass in Hollowvale), cobbled
+  streets in the stone towns (`COBBLED_PLACES`) and fortress courtyards (`COURTYARDS`: cobbles in the Royal Citadel,
+  trampled ground in the Old Fort). The layers ship as WebP and upload as RGBA8; KTX2/Basis was measured
   at W0 and deferred (ETC1S saved 282 KB and 15 MiB of GPU memory but needs a 585 KB transcoder). The whole v3 world
-  needs about 154 MiB of texture memory, within its 160 MiB budget; W1 props use 256 px normal and ORM maps, and the
-  small ones a 256 px albedo.
+  needs about 155 MiB of texture memory, within its 160 MiB budget; W1 and W2 props use 256 px normal and ORM maps,
+  the small ones a 256 px albedo, and the sheep 512 px maps.
 - **Settlements.** Each region builds its own vernacular from the scripted kit (`build_kit.py`, `build_kit_w1.py`):
   timber cottages, longhouses and barns in the Heartlands, the Greenmarch and Hollowvale, stone and brick houses,
   jettied townhouses with cobbles in Crownbridge, stilt huts and a reed-roofed chapel in the Fens, salt sheds and
@@ -89,6 +90,13 @@ primitive fallback). Version 1 and 2 worlds request nothing from it.
   watchtowers, market stalls, and dry-stone or fenced yards. Cooked props dress them (bell posts, stocks, handcarts,
   crates, troughs, anvils, lantern posts, net racks, beehives, graveyards with warded graves) and the roads
   (signposts at junctions, wayside shrines and gibbets at turns).
+- **Castles, ruins and landmarks.** `build_kit_w2.py` adds a 6 m curtain module and its ruined variant, round,
+  square and ruined towers, a keep, a gatehouse arch, a roofless chapel and house, and a timber camp tower. Curtain
+  runs are boxes the presentation fills with repeated modules (`V3_MODULES`; ruined modules turn end for end at
+  random); round pieces (`V3_ROUND`) are circles and turn by a hash of their id. Gate arches are presentation-only
+  `WorldBlueprint.decor` (drawn like the kit, never colliding; nothing of an arch comes below 6.8 m). The cooked
+  landmarks kept from v2 are drawn through `legacyWall` as before but with the sightline cutaway, like the kit.
+  Remains (giant skulls and ribcages, troll gibbets, standing stones) are cooked props.
 - **Terrain.** `terrainFor(world)` is a presentation-only heightfield (exactly 0 for v1/v2): level on roads, sites,
   clearings, footprints, fields and combat zones, hills elsewhere with slopes of at most about 11 degrees. Terrain
   chunks are 128 m meshes of 2 m quads. Actors, residents, pickups, effects, rings, the sun target and the camera
@@ -108,7 +116,8 @@ primitive fallback). Version 1 and 2 worlds request nothing from it.
 - **Animals.** `WorldFauna` grazes sheep flocks on settlement pastures (deterministic from the seed; each flock's
   home is the first walkable point of its stubble field, since haystacks may stand anywhere in it). They flee the
   hero within 9 m, move with the world's own `isWalkable`, stop animating beyond 60 m, hide beyond 120 m and freeze
-  in reduced motion. Crow flocks (`crowHomes`) peck on the other stubble fields, at chapels, gibbets and the Echo
+  in reduced motion. Crow flocks (`crowHomes`) peck on the other stubble fields, at chapels, gibbets, the giant
+  remains and the Echo
   Well; they take off when the hero comes within 10 m, fly off and land again once the hero is 34 m away (the
   perched and flying models swap at take-off and landing). Animals are never in snapshots, saves or rules.
 

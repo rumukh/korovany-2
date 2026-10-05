@@ -175,6 +175,11 @@ export interface Obstacle extends Vec2 {
 }
 /** Version 3 only: a non-colliding field strip for presentation (crops and stubble). */
 export interface WorldField extends Vec2 { id: string; halfX: number; halfZ: number; heading: number; crop: 'stubble' | 'furrow' }
+/**
+ * Version 3 only: a presentation-only structure piece with no collision, such as a gate arch spanning a road between
+ * two gate towers. `heading` uses the box convention (local +Z along (sin h, cos h)).
+ */
+export interface WorldDecor extends Vec2 { id: string; model: string; heading: number }
 export interface WorldSite extends Vec2 {
   id: string;
   kind: 'home' | 'outpost' | 'fortress' | 'raid';
@@ -201,6 +206,8 @@ export interface WorldBlueprint {
   exploration?: ExplorationWorld;
   /** Version 3 only: presentation hints for farmland; never collision. */
   fields?: WorldField[];
+  /** Version 3 only: presentation-only structure pieces (gate arches); never collision. */
+  decor?: WorldDecor[];
 }
 
 export interface ObjectiveSnapshot {

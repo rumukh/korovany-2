@@ -1,0 +1,66 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-arch-castle",
+  "layer": "castle",
+  "physicalSizeMetres": 3,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of the curtain wall of an old castle built of large dark granite blocks, three metres across. The whole image is a close-up of the flat surface itself, filling the frame edge to edge, seen exactly face-on: no edges, no corners, no roof, no ground, no sky, no horizon and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. Each block shape becomes one large, roughly dressed, rock-faced dark grey granite block with a chisel-worked, weathered face, laid in level courses of slightly different heights, and the thin dark lines between them become narrow recessed joints of dark lime mortar. The stone is evenly weathered and darkened by soot and rain, with only faint differences in tone from block to block and no growth on it. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, rounded stones, pebbles, cobbles, bricks, white mortar, wide joints, moss, lichen, lichen clumps, ivy, plants, drips, tar, wet streaks, stains, holes, pitted stone, windows, doors, arrow slits, battlements, wall corner, sticks, protruding objects, bright stone, limestone, sandstone",
+  "candidates": [
+    {
+      "seed": 46101,
+      "note": "First recipe (grey lichen blobs and damp streaks in the swatch): good dark blocks, but Qwen grew raised pale lichen clumps and black tar-like drips that repeat in an obvious grid every 3 m once the tile is repeated on a curtain wall."
+    },
+    {
+      "seed": 46102,
+      "note": "First recipe, as 46101: the same lichen clumps and drips, and pitted, hole-riddled stone faces."
+    },
+    {
+      "seed": 46103
+    },
+    {
+      "seed": 46104,
+      "note": "Second recipe, as 46103: the same dark rock-faced courses with a more pronounced course of notched blocks; 46103 was chosen."
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 46103,
+    "noiseMetres": 0.5,
+    "colours": [
+      "#2a2927",
+      "#33312e"
+    ],
+    "layers": [
+      {
+        "kind": "courses",
+        "height": [
+          0.4,
+          0.6
+        ],
+        "width": [
+          0.65,
+          1.3
+        ],
+        "joint": 0.012,
+        "squareness": 7,
+        "colours": [
+          "#5f5d58",
+          "#56544f",
+          "#67645e",
+          "#4f4d49",
+          "#5b5853",
+          "#626058"
+        ]
+      }
+    ]
+  }
+}

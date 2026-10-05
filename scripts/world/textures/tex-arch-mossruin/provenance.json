@@ -1,0 +1,85 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-arch-mossruin",
+ "layer": "mossruin",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/mossruin-albedo.webp",
+   "sha256": "c3171c512eccbc320e671156a8bda5e9ea69794256200823d2d89c1e3e00314d",
+   "bytes": 86912
+  },
+  "height": {
+   "file": "public/world/surfaces/mossruin-height.webp",
+   "sha256": "feb2b0649462a9a6c11d658db60d25278b1b5c7acf0f6c52e468adeee458a2fa",
+   "bytes": 54814
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-46205.png",
+  "candidateSha256": "50bbb0c404dc77be2d775e3afaf365fd331172c6623e20ddaa50682613e13d29",
+  "seed": 46205,
+  "generationSeconds": 833.3,
+  "layoutSha256": "670c879d56493dedfa9ee353f2f527d293038a22e317373aff32f8e0228d3c12"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Broken, angular dark fieldstones in rough courses, half sunk in a continuous carpet of short dark green moss, with no tufts: on the ruins' broken copings and floors it reads as a moss-grown wall top, darker than the castle stone below it. Verified in game on the Old Fort's ruined stretch, Thornwatch, the Old Cloister and a roofless chapel.",
+  "limitations": [
+   "Stones are laid in level rows, so a large moss floor (the ruined tower's) reads slightly as a pattern of courses from the steep camera.",
+   "The moss is one even dark green with no dry or brown patches, ferns or grass.",
+   "The stones carry Qwen's baked top-left relief shading."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 3.793,
+    "seamRatioAfter": 0.848
+   },
+   "grade": {
+    "gain": 1.0,
+    "saturation": 1.0
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   36.8,
+   39.3,
+   27.5
+  ]
+ }
+}

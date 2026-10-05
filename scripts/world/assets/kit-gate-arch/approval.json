@@ -1,0 +1,27 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-gate-arch",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "d13a75c8013d93a0580b2573da0c48322e56e8c234b51b7e6b80cd402d7af810",
+   "rationale": "Gatehouse arch over a 10 m road between two round towers: a segmental vault springing at 6.8 m, voussoirs, a raised portcullis and a crenellated wall-walk; its ends run 3 m into the towers; 418 triangles, 35,388 bytes before meshopt. Nothing of it comes below 6.8 m and its end faces lie inside the round gate towers (world-v3-castles test); baked AO at 48 samples.",
+   "limitations": [
+    "The portcullis is fixed in its raised position; gates have no doors.",
+    "The vault's underside is the same castle layer, without ribs or murder holes.",
+    "Masonry is the castle surface layer tiled every 3 m and the moss layer every 2 m; there is no unique wear, grime gradient or decal per piece."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "d13a75c8013d93a0580b2573da0c48322e56e8c234b51b7e6b80cd402d7af810",
+   "rationale": "In every castle gate (the citadel's Crownbridge gate and one per road at the Old Fort); presentation only, it never collides, at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at true scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss, with shadows on the level castle ground. The sightline cutaway shows the hero through it (castle browser suite: 100% of hero pixels visible behind a citadel curtain with the cutaway, 0.4% without), and a camera inside its bounds plus 2 m hides it instead of showing the hollow inside.",
+   "limitations": [
+    "Castles and ruins are scenery: no doors open, no interiors and no reachable walls or towers."
+   ]
+  }
+ ]
+}

@@ -1,0 +1,87 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-troll-gibbet",
+  "source": {
+    "candidate": "a-s6231",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 6231,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "76ba3c34dbbf4deb30424304fa2050418f1b58f8ad42602176935258223c3bf4",
+    "conceptSha256": "bcb16a34bfdfc7490595f39ecdef73be0b7cc9bd415a622f73e08fd9297cba5a"
+  },
+  "reachMeters": 3.23,
+  "yawDegrees": 90,
+  "minComponentVertices": 30,
+  "triangleBudget": 6000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    512
+  ],
+  "material": {
+    "bakeSize": 1024,
+    "mapsSize": 256,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.06,
+    "aoSamples": 32,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.88,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "name": "iron",
+        "value": [
+          0,
+          0.22
+        ],
+        "saturation": [
+          0,
+          0.16
+        ],
+        "roughness": 0.6,
+        "metalness": 0.45
+      },
+      {
+        "name": "bone",
+        "saturation": [
+          0,
+          0.32
+        ],
+        "value": [
+          0.4,
+          1
+        ],
+        "roughness": 0.72
+      },
+      {
+        "name": "stone",
+        "saturation": [
+          0,
+          0.14
+        ],
+        "value": [
+          0.22,
+          1
+        ],
+        "roughness": 0.92
+      },
+      {
+        "name": "wood",
+        "value": [
+          0,
+          1
+        ],
+        "roughness": 0.86
+      }
+    ],
+    "roughnessFromDetail": 0.5,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 6,
+    "normalMapStrength": 1.0,
+    "albedoGain": 2.0
+  },
+  "sizeNote": "reachMeters gives a 8.41 m tall prop (a gallows 8.4 m tall with a troll's skeleton about twice a soldier's height; beam along local Z, the skeleton facing local +X).",
+  "albedoGainNote": "Linear gain 2.0, the W0 cap: the approved concept's foreground is 2.8-5 times brighter in mean linear luminance than the raw TRELLIS texels (about 2.1-3.9 times with W0's calibration), so the cooked albedo is still somewhat darker than the concept. Measured by luminance ratio, not calibrated in the game."
+}
