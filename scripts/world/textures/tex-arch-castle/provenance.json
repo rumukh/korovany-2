@@ -1,0 +1,85 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-arch-castle",
+ "layer": "castle",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/castle-albedo.webp",
+   "sha256": "679d12164c29c84b6ec7880fbc383786cb57fea203581bb0ebd3e738479311b7",
+   "bytes": 82882
+  },
+  "height": {
+   "file": "public/world/surfaces/castle-height.webp",
+   "sha256": "448fa85c3856f671c53318a1a65d08daa4bc3a1532356349c47852d3fafad422",
+   "bytes": 69926
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-46103.png",
+  "candidateSha256": "a9d3e49f8e0247e6aff3147bf8a6156f4ad39e94c5bf577b000d3ef5910ac95e",
+  "seed": 46103,
+  "generationSeconds": 846.2,
+  "layoutSha256": "1b1165ed62b29ff49bcda28a2c0b9d907e8a6646892d685310cf4736d3acb42e"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Dark, rock-faced granite blocks in level courses of varied height with narrow recessed dark joints, evenly sooted by rain and smoke: it reads as a grim castle wall at every gameplay camera and tiles every 3 m without a visible grid. Verified in game on the Royal Citadel and the Old Fort, including through the sightline cutaway.",
+  "limitations": [
+   "One course of notched, irregular blocks repeats every 3 m; on long curtains it can read as a faint horizontal band.",
+   "The faces carry Qwen's baked top-left relief shading, so the blocks look lit from the upper left whatever the sun does.",
+   "Uniform tone: no water staining below the battlements, no moss line at the plinth, no repairs in other stone."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 3.803,
+    "seamRatioAfter": 1.417
+   },
+   "grade": {
+    "gain": 1.0,
+    "saturation": 1.0
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   45.7,
+   49.9,
+   52.5
+  ]
+ }
+}

@@ -34,6 +34,16 @@ export const WORLD_MODELS = {
   'kit-boathut': { kind: 'kit' },
   'kit-kiln': { kind: 'kit' },
   'kit-wall': { kind: 'kit' },
+  'kit-curtain': { kind: 'kit' },
+  'kit-curtain-ruin': { kind: 'kit' },
+  'kit-tower-round': { kind: 'kit' },
+  'kit-tower-square': { kind: 'kit' },
+  'kit-tower-ruin': { kind: 'kit' },
+  'kit-keep': { kind: 'kit' },
+  'kit-gate-arch': { kind: 'kit' },
+  'kit-ruin-chapel': { kind: 'kit' },
+  'kit-ruin-house': { kind: 'kit' },
+  'kit-camp-tower': { kind: 'kit' },
   'prop-haystack': { kind: 'prop' },
   'prop-woodpile': { kind: 'prop' },
   'prop-barrels': { kind: 'prop' },
@@ -54,6 +64,10 @@ export const WORLD_MODELS = {
   'prop-net-rack': { kind: 'prop' },
   'prop-stocks': { kind: 'prop' },
   'prop-beehives': { kind: 'prop' },
+  'prop-giant-skull': { kind: 'prop' },
+  'prop-giant-ribs': { kind: 'prop' },
+  'prop-standing-stones': { kind: 'prop' },
+  'prop-troll-gibbet': { kind: 'prop' },
   'tree-spruce': { kind: 'tree' },
   'tree-birch': { kind: 'tree' },
   'tree-deadoak': { kind: 'tree' },
@@ -71,7 +85,7 @@ export const WORLD_MODEL_IDS = Object.keys(WORLD_MODELS) as WorldModelId[];
  */
 export const WORLD_SURFACES = ['daub', 'timber', 'thatch', 'shingle', 'rubble', 'planks', 'dark',
   'meadow', 'forest', 'mud', 'road', 'field', 'granite', 'bark-spruce', 'bark-birch',
-  'ashlar', 'slate', 'lime', 'tarred', 'brick', 'reedmud', 'pebbles', 'ash', 'snow', 'cobbles', 'coldgrass'] as const;
+  'ashlar', 'slate', 'lime', 'tarred', 'brick', 'reedmud', 'pebbles', 'ash', 'snow', 'cobbles', 'coldgrass', 'castle', 'mossruin'] as const;
 export type WorldSurface = typeof WORLD_SURFACES[number];
 /** Every surface layer is a square tiling image of this many pixels. */
 export const SURFACE_SIZE = 512;
@@ -80,6 +94,7 @@ export const SURFACE_METRES: Readonly<Record<WorldSurface, number>> = {
   daub: 2, timber: 1, thatch: 2, shingle: 2, rubble: 2, planks: 2, dark: 1,
   meadow: 4, forest: 4, mud: 4, road: 4, field: 4, granite: 2, 'bark-spruce': 1, 'bark-birch': 1,
   ashlar: 2, slate: 2, lime: 2, tarred: 2, brick: 2, reedmud: 4, pebbles: 4, ash: 4, snow: 4, cobbles: 4, coldgrass: 4,
+  castle: 3, mossruin: 2,
 };
 /**
  * How each layer's grayscale height map becomes its surface data at load: tangent normals from the height gradient
@@ -95,6 +110,7 @@ export const SURFACE_FINISH: Readonly<Record<WorldSurface, { relief: number; rou
   tarred: { relief: 3, roughness: 0.8 }, brick: { relief: 4, roughness: 0.9 }, reedmud: { relief: 2.5, roughness: 0.76 },
   pebbles: { relief: 5, roughness: 0.86 }, ash: { relief: 2, roughness: 0.97 }, snow: { relief: 2, roughness: 0.74 },
   cobbles: { relief: 5, roughness: 0.86 }, coldgrass: { relief: 3, roughness: 0.96 },
+  castle: { relief: 4.5, roughness: 0.91 }, mossruin: { relief: 4, roughness: 0.94 },
 };
 /** The sheep's animation clips. */
 export const FAUNA_CLIPS = ['Idle', 'Graze', 'Walk', 'Run', 'Startle'] as const;
@@ -236,15 +252,16 @@ function validate(id: WorldModelId, scene: THREE.Object3D, clips: ReadonlyMap<st
 }
 
 /**
- * Every world model a world can present: all of a v3 world's obstacle models, its sheep when it has pastures, and the
- * crows, which every v3 world has (they gather on fields, graveyards and gibbets).
+ * Every world model a world can present: all of a v3 world's obstacle and decor models, its sheep when it has
+ * pastures, and the crows, which every v3 world has (they gather on fields, graveyards and gibbets).
  */
-export function worldAssetIds(world: Pick<WorldBlueprint, 'version' | 'obstacles' | 'fields'>): WorldModelId[] {
+export function worldAssetIds(world: Pick<WorldBlueprint, 'version' | 'obstacles' | 'fields' | 'decor'>): WorldModelId[] {
   if (world.version !== 3) return [];
   const ids = new Set<string>(['char-crow', 'char-crow-flight']);
   // Flocks graze on stubble fields (fauna.ts flockHomes).
   if (world.fields?.some(field => field.crop === 'stubble')) ids.add('char-sheep');
   for (const obstacle of world.obstacles) if (obstacle.model) ids.add(obstacle.model);
+  for (const decor of world.decor ?? []) ids.add(decor.model);
   for (const id of ids) if (!(id in WORLD_MODELS)) throw new Error(`World obstacle model ${id} is not a registered world asset.`);
   return WORLD_MODEL_IDS.filter(id => ids.has(id));
 }

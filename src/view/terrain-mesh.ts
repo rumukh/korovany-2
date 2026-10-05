@@ -25,6 +25,11 @@ export const REGION_GROUND: Readonly<Record<string, { base: WorldSurface; overla
 };
 /** Stone towns whose squares and streets are cobbled (the mud and road layers turn to cobbles near the centre). */
 export const COBBLED_PLACES: ReadonlySet<string> = new Set(['crownbridge', 'saltmarket', 'cinderwell']);
+/** Fortress courtyards out to `radius` metres: trampled ground, which the Royal Citadel's cobbles pave. */
+export const COURTYARDS: Readonly<Record<string, { radius: number; paved: boolean }>> = {
+  'palace-citadel': { radius: 24, paved: true },
+  'old-fort': { radius: 23, paved: false },
+};
 /** Depth of the river channel below the water plane, reached this far inside its banks. */
 const RIVER_DEPTH = 1.6;
 const RIVER_SHELF = 4;
@@ -219,6 +224,12 @@ export function terrainControl(world: WorldBlueprint): TerrainControl {
     const reach = Math.min(place.radius, 16) + 4;
     paint(mud, place.x - reach, place.z - reach, place.x + reach, place.z + reach,
       (x, z) => 0.55 * (1 - smoothstep(reach * 0.4, reach, Math.hypot(x - place.x, z - place.z))));
+    const yard = Object.hasOwn(COURTYARDS, place.id) ? COURTYARDS[place.id]! : undefined;
+    if (yard) {
+      const edge = yard.radius + 2;
+      paint(mud, place.x - edge, place.z - edge, place.x + edge, place.z + edge,
+        (x, z) => 0.9 * (1 - smoothstep(yard.radius - 4, edge, Math.hypot(x - place.x, z - place.z))));
+    }
   }
   const river = world.river;
   paint(mud, river.minX - 4, river.minZ - 4, river.maxX + 4, river.maxZ + 4, (x, z) => {
@@ -348,15 +359,17 @@ function regionalGround(world: WorldBlueprint, size: number, cell: number):
     }
   }
   for (const place of world.exploration?.locations ?? []) {
-    if (!COBBLED_PLACES.has(place.id)) continue;
-    const reach = 54;
+    const yard = Object.hasOwn(COURTYARDS, place.id) && COURTYARDS[place.id]!.paved ? COURTYARDS[place.id]! : undefined;
+    if (!COBBLED_PLACES.has(place.id) && !yard) continue;
+    // Town cobbles fade out between 30 and 54 m; a paved courtyard ends at its curtain.
+    const [inner, reach] = yard ? [yard.radius - 2, yard.radius + 2] : [30, 54];
     const c0 = Math.max(0, Math.floor((place.x - reach - minX) / cell)), c1 = Math.min(size - 1, Math.ceil((place.x + reach - minX) / cell));
     const r0 = Math.max(0, Math.floor((place.z - reach - minZ) / cell)), r1 = Math.min(size - 1, Math.ceil((place.z + reach - minZ) / cell));
     for (let r = r0; r <= r1; r++) {
       for (let c = c0; c <= c1; c++) {
         const d = Math.hypot(minX + (c + 0.5) * cell - place.x, minZ + (r + 0.5) * cell - place.z);
         const i = r * size + c;
-        weights[i * 4 + 2] = Math.max(weights[i * 4 + 2]!, Math.round((1 - smoothstep(30, reach, d)) * 255));
+        weights[i * 4 + 2] = Math.max(weights[i * 4 + 2]!, Math.round((1 - smoothstep(inner, reach, d)) * 255));
       }
     }
   }

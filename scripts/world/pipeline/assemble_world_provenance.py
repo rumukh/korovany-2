@@ -231,6 +231,9 @@ W1_KIT = {"kit-stonehouse", "kit-brickhouse", "kit-townhouse-a", "kit-townhouse-
           "kit-chapel-fen", "kit-smithy", "kit-watchtower", "kit-stall", "kit-stilthut", "kit-saltshed", "kit-boathut", "kit-kiln",
           "kit-wall"}
 W1_KIT_REVISION = "r1"
+W2_KIT = {"kit-curtain", "kit-curtain-ruin", "kit-tower-round", "kit-tower-square", "kit-tower-ruin", "kit-keep", "kit-gate-arch",
+          "kit-ruin-chapel", "kit-ruin-house", "kit-camp-tower"}
+W2_KIT_REVISION = "r1"
 
 
 if __name__ == "__main__":
@@ -251,7 +254,8 @@ if __name__ == "__main__":
                           ["cook_landmark.py", "k2cook.py", "k2materials.py", "k2sheet.py", "repair_tangents.py", "quantize_prop_glb.py", "meshopt_glb.mjs"],
                           PROP_LIMITS)
         elif asset == "char-sheep":
-            trellis_asset(asset, "fauna", "r1", "char-sheep.glb",
+            # W2 recooked the sheep at 512 px (texture memory); the shipped bytes name their revision.
+            trellis_asset(asset, "fauna", shipped_cook(asset, "char-sheep.glb"), "char-sheep.glb",
                           ["cook_sheep.py", "k2rig.py", "k2cook.py", "k2materials.py", "k2sheet.py", "webp_exact.py", "quantize_glb.py", "meshopt_glb.mjs"],
                           PROP_LIMITS + ["Clips are procedural (IK gaits, oscillators), not motion capture; there is no blending of grazing into walking."])
         elif asset in ("char-crow", "char-crow-flight"):
@@ -260,6 +264,14 @@ if __name__ == "__main__":
                           PROP_LIMITS + ["Clips are procedural oscillators on a small rig (body, head, tail; arms and hands of each wing), not motion capture.",
                                          "TRELLIS fused the perched crow's folded wings into its body and the flying crow's feathers into flat sheets; "
                                          "the view swaps the perched and flying models at take-off and landing instead of folding the wings."])
+        elif asset in W2_KIT:
+            # build_kit_w2.py imports the W0 and W1 kits' builders, frustums, roofs, bake and export unchanged: all three
+            # scripts made these bytes.
+            generated_asset(asset, "kit", "kit-w2", W2_KIT_REVISION, "build_kit_w2.py",
+                            ["Box-modelled masonry: flat wall faces, straight battlements and many-sided round towers; stones, joints "
+                             "and moss are in the surface layers, not in the geometry.",
+                             "Towers, keep and gatehouse are closed shells: no interiors, stairs or reachable wall-walks."],
+                            scripts=["build_kit_w2.py", "build_kit_w1.py", "build_kit.py", "meshopt_glb.mjs"])
         elif asset in W1_KIT:
             # build_kit_w1.py imports the W0 kit's builder, roof, bake and export unchanged: both scripts made these bytes.
             generated_asset(asset, "kit", "kit-w1", W1_KIT_REVISION, "build_kit_w1.py",

@@ -1,0 +1,78 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-giant-skull",
+  "source": {
+    "candidate": "c-s6201",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 6201,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "fbf437cc0c1ccbfb7fcd5b8f4c4a225234bcceb9721c7861c82df28f0ab45fef",
+    "conceptSha256": "5351965988a48fdbdf49340bc1a7ee7b09e87f63398252839b323a4f3572749e"
+  },
+  "reachMeters": 4.75,
+  "yawDegrees": 90,
+  "minComponentVertices": 30,
+  "triangleBudget": 6000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    512
+  ],
+  "material": {
+    "bakeSize": 1024,
+    "mapsSize": 256,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.06,
+    "aoSamples": 32,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.88,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "name": "bone",
+        "saturation": [
+          0,
+          0.32
+        ],
+        "value": [
+          0.4,
+          1
+        ],
+        "roughness": 0.72
+      },
+      {
+        "name": "grass",
+        "hue": [
+          45,
+          150
+        ],
+        "saturation": [
+          0.22,
+          1
+        ],
+        "value": [
+          0.12,
+          1
+        ],
+        "roughness": 0.97
+      },
+      {
+        "name": "earth",
+        "value": [
+          0,
+          1
+        ],
+        "roughness": 0.95
+      }
+    ],
+    "roughnessFromDetail": 0.5,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 6,
+    "normalMapStrength": 1.0,
+    "albedoGain": 2.0
+  },
+  "sizeNote": "reachMeters gives a 4.60 m tall prop (a 9 m skull and mound, four soldiers long; its snout along local +Z).",
+  "albedoGainNote": "Linear gain 2.0, the W0 cap: the approved concept's foreground is 2.8-5 times brighter in mean linear luminance than the raw TRELLIS texels (about 2.1-3.9 times with W0's calibration), so the cooked albedo is still somewhat darker than the concept. Measured by luminance ratio, not calibrated in the game."
+}

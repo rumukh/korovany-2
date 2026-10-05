@@ -43,8 +43,15 @@ rebuilds settlements, inns, woodland and boulders. Its obstacles may carry an
 oriented rectangle `shape: { kind: 'box', halfX, halfZ, heading }` (local X is
 `(cos heading, -sin heading)`), which collision, walkability and projectile sweeps
 treat exactly; `radius` stays the shape's bounding circle. Every v3 obstacle also
-names its presentation `model`. Its strip `fields` are open ground. Versions 1
-and 2 never contain either field, so their worlds, ids and saves are unchanged.
+names its presentation `model`. Its strip `fields` are open ground, and its
+`decor` pieces (gate arches over castle roads) are presentation only and never
+collide. Round towers and camp towers stay circles. Versions 1 and 2 never
+contain `shape`, `model`, `fields` or `decor`, so their worlds, ids and saves are
+unchanged. In v3 the Royal Citadel keeps nothing solid within 23.5 m of its
+centre (the villain's fortress arena) and the Old Fort keeps 16.5 m open, with a
+gate over each road. Kept v2 landmark buildings (`<place>-building-<n>` without a
+`model`) keep their ids and centres and may grow to their place's standard radius
+where the road allows.
 Default `generateWorld`/`createCampaign` versions stay 2.
 
 Renderer sees player, actors (including the enemy caravan), convoy, collision
@@ -110,6 +117,9 @@ sections and two tall northern gate towers. The original six building radii are
 unchanged; their heights describe stone keeps/towers rather than cottages.
 Placement preserves the 9m home clearing and both road approaches. Presentation
 must keep the road gaps open rather than adding an invisible gate collision.
+In version 3 worlds these v2 blockers are replaced by the ring fort's towers and
+curtains (`old-fort-tower-*`, `old-fort-curtain-*`), whose gates leave both roads
+open at convoy width.
 
 The same `enemy-caravan` actor is a Crown ward-glass shipment in all campaigns,
 not an enemy simply because of its legacy ID. It begins friendly for guard and

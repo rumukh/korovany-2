@@ -1,0 +1,26 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-ruin-house",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "1585b928868949ad829d231995cb01fd03c2f6a2259a4d1e269bd6131771949e",
+   "rationale": "Roofless rubble house 7 x 10 m: walls broken at 1.6-4.8 m, one gable still standing to 7.1 m, a doorway and window gaps, fallen stones inside; 640 triangles, 52,860 bytes before meshopt. Everything stays inside its collider below 3 m and within 0.8 m above it (world-assets footprint test); baked AO at 48 samples.",
+   "limitations": [
+    "Every ruined house is the same mesh, turned to face its place's centre.",
+    "Masonry is the castle surface layer tiled every 3 m and the moss layer every 2 m; there is no unique wear, grime gradient or decal per piece."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "1585b928868949ad829d231995cb01fd03c2f6a2259a4d1e269bd6131771949e",
+   "rationale": "In Thornwatch, the Old Cloister, the Drowned Archive, the Sealed Vault, the Old Orchard and the Glass Quarry, at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at true scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss, with shadows on the level castle ground. The sightline cutaway shows the hero through it (castle browser suite: 100% of hero pixels visible behind a citadel curtain with the cutaway, 0.4% without), and a camera inside its bounds plus 2 m hides it instead of showing the hollow inside.",
+   "limitations": [
+    "Castles and ruins are scenery: no doors open, no interiors and no reachable walls or towers."
+   ]
+  }
+ ]
+}

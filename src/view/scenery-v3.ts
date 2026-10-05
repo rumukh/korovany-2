@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Obstacle, WorldBlueprint } from '../game/types';
+import { V3_MODULES } from '../game/world-v3';
 import { palette } from './palette';
 import { StaticBatch } from './primitives';
 import { seededRandom, type ViewResources } from './resources';
@@ -65,9 +66,9 @@ function placedGeometry(resources: ViewResources, key: string, mesh: THREE.Mesh)
 }
 
 /**
- * Version 3 scenery: the presentation heightfield with its splatted ground, the scripted timber kit, cooked farm props,
- * generated trees and boulders as distance-banded instance pools, and the v2 structures of every place the v3
- * generator has not rebuilt yet (castles, ruins, shrines, landmarks and military posts until W2).
+ * Version 3 scenery: the presentation heightfield with its splatted ground, the scripted kit (houses, castles and
+ * ruins, with presentation-only gate arches), cooked props and remains, generated trees and boulders as
+ * distance-banded instance pools, and the cooked landmarks kept from v2, which take the sightline cutaway here.
  */
 export function createWorldSceneryV3(resources: ViewResources, world: WorldBlueprint): WorldScenery {
   const assets = resources.world;
@@ -187,22 +188,26 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
     const id = o.model as WorldModelId;
     const kind = WORLD_MODELS[id].kind;
     const y = terrain.height(o.x, o.z);
-    if (id === 'kit-fence' || id === 'kit-wall') {
-      // Boundary runs repeat their 2 m module along the box's longer side.
+    const module = Object.hasOwn(V3_MODULES, id) ? V3_MODULES[id]! : 0;
+    if (module) {
+      // Boundary and curtain runs repeat their module along the box's longer side.
       const shape = o.shape!;
       const alongZ = shape.halfZ >= shape.halfX;
       const length = 2 * (alongZ ? shape.halfZ : shape.halfX);
       const heading = alongZ ? shape.heading : shape.heading + Math.PI / 2;
-      const count = Math.max(1, Math.round(length / 2));
+      const count = Math.max(1, Math.round(length / module));
       const axis = { x: Math.sin(heading), z: Math.cos(heading) };
       for (let index = 0; index < count; index++) {
         const along = -length / 2 + (index + 0.5) * length / count;
-        placements.push({ kind: kindFor(id), matrix: matrix(o.x + axis.x * along, y, o.z + axis.z * along, heading, 1, 1, length / count / 2) });
+        // Ruined modules turn end for end at random so their broken tops do not repeat every 6 m.
+        const turn = id === 'kit-curtain-ruin' && hashId(`${o.id}:${index}`) < 0.5 ? Math.PI : 0;
+        placements.push({ kind: kindFor(id), matrix: matrix(o.x + axis.x * along, y, o.z + axis.z * along, heading + turn, 1, 1, length / count / module) });
       }
       return;
     }
     if (kind === 'kit') {
-      placements.push({ kind: kindFor(id), matrix: matrix(o.x, y, o.z, o.shape!.heading) });
+      // Round towers are circles: they turn by a stable hash of their id.
+      placements.push({ kind: kindFor(id), matrix: matrix(o.x, y, o.z, o.shape ? o.shape.heading : hashId(o.id) * Math.PI * 2) });
     } else if (kind === 'prop') {
       placements.push({ kind: kindFor(id), matrix: matrix(o.x, y, o.z, o.shape ? o.shape.heading : hashId(o.id) * Math.PI * 2) });
     } else if (kind === 'rock') {
@@ -226,8 +231,20 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
   };
   for (const obstacle of world.obstacles) {
     if (obstacle.model) place(obstacle);
-    else if (obstacle.kind === 'wall') legacy.at(obstacle).append(legacyWall(resources, world, obstacle, heroPosition, fortMaterials));
-    else throw new Error(`Version 3 obstacle ${obstacle.id} has no world model.`);
+    else if (obstacle.kind === 'wall') {
+      // Kept cooked landmarks (the bell frames, beacon, armillary, gates, cairn and wells) take the sightline cutaway.
+      const structure = legacyWall(resources, world, obstacle, heroPosition, fortMaterials);
+      structure.traverse(object => {
+        if (object instanceof THREE.Mesh && !Array.isArray(object.material)) {
+          object.material = cutaway(object.material, `landmark:${object.material.uuid}`, 1);
+        }
+      });
+      legacy.at(obstacle).append(structure);
+    } else throw new Error(`Version 3 obstacle ${obstacle.id} has no world model.`);
+  }
+  // Presentation-only pieces (gate arches) are drawn like the kit but never collide.
+  for (const decor of world.decor ?? []) {
+    placements.push({ kind: kindFor(decor.model as WorldModelId), matrix: matrix(decor.x, terrain.height(decor.x, decor.z), decor.z, decor.heading) });
   }
   const scatter = new ScatterField(group, kinds, 'world-scatter');
   for (const { kind, matrix: m } of placements) scatter.add(kind, m);

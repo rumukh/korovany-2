@@ -32,8 +32,31 @@ export const V3_BUILDINGS = {
   'kit-kiln': { width: 6.5, length: 6.5, height: 11.5 },
   /** One 2 m module of dry-stone yard wall: wall runs repeat it along their length, like the fence. */
   'kit-wall': { width: 0.6, length: 2, height: 1.95 },
+  /** W2 castles and ruins. One 6 m module of curtain wall (an 11.4 m wall-walk between crenellated parapets) and its
+   * ruined variant: curtain runs repeat them along their length. */
+  'kit-curtain': { width: 3.5, length: 6, height: 14 },
+  'kit-curtain-ruin': { width: 3.5, length: 6, height: 9 },
+  'kit-tower-round': { width: 9, length: 9, height: 30.5 },
+  'kit-tower-square': { width: 8, length: 8, height: 24.5 },
+  'kit-tower-ruin': { width: 9, length: 9, height: 15 },
+  'kit-keep': { width: 15, length: 15, height: 35 },
+  'kit-ruin-chapel': { width: 9, length: 20, height: 10 },
+  'kit-ruin-house': { width: 7, length: 10, height: 7 },
+  /** The military posts' timber watch towers, standing on the posts' original circular footings. */
+  'kit-camp-tower': { width: 3.6, length: 3.6, height: 9.5 },
 } as const;
 export type V3BuildingModel = keyof typeof V3_BUILDINGS;
+/** Round pieces collide as the circle of diameter `width` (their models stay inside it below 3 m), not a rectangle. */
+export const V3_ROUND: ReadonlySet<string> = new Set<V3BuildingModel>(['kit-tower-round', 'kit-tower-ruin', 'kit-camp-tower']);
+/** Runs the presentation draws as a module repeated along the box's longer side: the module's length in metres. */
+export const V3_MODULES: Readonly<Record<string, number>> = { 'kit-fence': 2, 'kit-wall': 2, 'kit-curtain': 6, 'kit-curtain-ruin': 6 };
+/**
+ * Presentation-only pieces (`WorldBlueprint.decor`), drawn but never colliding. A gate arch spans the road between two
+ * round gate towers whose faces stand `span` metres apart: `width` is its depth through the gate (local X), each end
+ * runs `embed` metres into a tower (along local Z), and nothing of it comes lower than `spring` metres.
+ */
+export const V3_DECOR = { 'kit-gate-arch': { width: 7, span: 10, embed: 3, spring: 6.8, height: 14 } } as const;
+export type V3DecorModel = keyof typeof V3_DECOR;
 export const V3_FENCE = { model: 'kit-fence', thickness: 0.24, height: 1.3 } as const;
 /** Boundary runs the presentation draws as repeated 2 m modules along a box's longer side. */
 export const V3_BOUNDARIES = {
@@ -62,6 +85,11 @@ export const V3_PROPS = {
   'prop-net-rack': { width: 1.4, length: 3.8, height: 2.2 },
   'prop-stocks': { width: 1.25, length: 2.6, height: 1.7 },
   'prop-beehives': { width: 1.0, length: 2.05, height: 1.8 },
+  /** W2 remains in the wilds, of creatures far larger than any soldier, and standing stones at old holy places. */
+  'prop-giant-skull': { width: 7.7, length: 9.0, height: 4.6 },
+  'prop-giant-ribs': { width: 8.45, length: 13.0, height: 5.9 },
+  'prop-standing-stones': { radius: 3.14, height: 5.6 },
+  'prop-troll-gibbet': { width: 4.6, length: 6.15, height: 8.45 },
 } as const;
 export type V3PropModel = keyof typeof V3_PROPS;
 /** Tree species: trunk collider radius and height ranges (natural sizes; nature is not scaled up). */
@@ -215,8 +243,9 @@ function insideBounds(world: WorldBlueprint, o: Obstacle, margin: number): boole
 }
 
 /** Clearances in metres: to road surfaces, other locations' centres, military sites' edges, other obstacles, and the
- * extra margin trees and rocks keep from buildings and fences so crowns do not cut through roofs. */
-interface Rules { road: number; location: number; site: number; obstacle: number; structure?: number }
+ * extra margin trees and rocks keep from buildings and fences so crowns do not cut through roofs. `own` replaces the
+ * open centre a place keeps round itself (a fortress keeps its whole courtyard open for the fight there). */
+interface Rules { road: number; location: number; site: number; obstacle: number; structure?: number; own?: number }
 /** Locations that become combat arenas in some campaign (the villain's royal-citadel fortress). */
 const COMBAT_LOCATIONS = new Set(['palace-citadel']);
 
@@ -225,7 +254,7 @@ function fits(place: Placement, o: Obstacle, rules: Rules, own?: WorldLocation):
   if (!insideBounds(world, o, 6) || !riverClear(world, o, 3)) return false;
   if (place.roadClearance(o) < rules.road) return false;
   for (const location of world.exploration!.locations) {
-    const clearing = location === own ? LOCATION_CLEARING : Math.max(LOCATION_CLEARING, rules.location,
+    const clearing = location === own ? rules.own ?? LOCATION_CLEARING : Math.max(LOCATION_CLEARING, rules.location,
       COMBAT_LOCATIONS.has(location.id) ? COMBAT_YARD : 0);
     if (obstacleClearance(o, location) < clearing) return false;
   }
@@ -771,30 +800,353 @@ function boulders(place: Placement, seed: string): void {
   }
 }
 
+/** A kit building at a point: round pieces are circles of diameter `width`, the rest rectangles turned to `heading`. */
+function building(id: string, model: V3BuildingModel, at: Vec2, heading: number, variant = 0): Obstacle {
+  const size = V3_BUILDINGS[model];
+  if (V3_ROUND.has(model)) return { id, kind: 'wall', x: at.x, z: at.z, radius: size.width / 2, height: size.height, variant, model };
+  return box(id, at.x, at.z, size.width / 2, size.length / 2, heading, size.height, model, variant);
+}
+
+/** The heading that turns a piece at compass angle `angle` from a place's centre to face it (local +X inwards). */
+function facing(angle: number): number {
+  return Math.atan2(Math.cos(angle), -Math.sin(angle));
+}
+
+interface FortPlan {
+  /** Towers and the keep, in world coordinates; round towers ignore `heading`. */
+  towers: { model: V3BuildingModel; at: Vec2; heading: number }[];
+  /** Curtain runs between two towers (indices into `towers`), each running a metre short of both towers' far faces. */
+  runs: { from: number; to: number; model: 'kit-curtain' | 'kit-curtain-ruin' }[];
+  /** Gate arches over a road between two round towers whose faces stand the arch's span apart. */
+  gates: { from: number; to: number }[];
+  /** Open ground round the centre where the place's own defenders fight: no piece comes closer. */
+  yard: number;
+}
+
+/** How far a curtain run reaches into a tower: a metre short of its far side, so the run's end face stays hidden. */
+function runInset(tower: Obstacle): number {
+  return (tower.shape ? Math.min(tower.shape.halfX, tower.shape.halfZ) : tower.radius) - 1;
+}
+
 /**
- * Version 3: the v2 geography, regions, locations, roads, river, bridges, sites and story stay; every settlement and
- * inn is rebuilt at the heroic scale in its region's building family with yards, stalls and fields, the Reed Chapel and
- * the Star Monastery are rebuilt round chapels, woodland becomes real forest, and boulders replace the upright blobs.
- * Ruins, other shrines, landmarks, the Old Fort and the military posts keep their v2 structures until W2.
+ * An authored fortification: towers and a keep, curtain runs between neighbouring towers (boxes the presentation fills
+ * with repeated 6 m modules) and gate arches as presentation-only decor. The plan is authored, so a piece that does
+ * not fit is a generator error, not something to skip.
+ */
+function fortification(place: Placement, location: WorldLocation, plan: FortPlan): void {
+  const rules: Rules = { road: 0.9, location: 26, site: COMBAT_YARD, obstacle: 1, own: plan.yard };
+  const towers = plan.towers.map((tower, index) => building(`${location.id}-tower-${index}`, tower.model, tower.at, tower.heading, index));
+  const pieces = [...towers];
+  plan.runs.forEach((run, index) => {
+    const a = towers[run.from]!, b = towers[run.to]!;
+    const length = distance(a, b);
+    const d = { x: (b.x - a.x) / length, z: (b.z - a.z) / length };
+    const start = runInset(a), end = length - runInset(b);
+    const size = V3_BUILDINGS[run.model];
+    pieces.push(box(`${location.id}-curtain-${index}`, a.x + d.x * (start + end) / 2, a.z + d.z * (start + end) / 2, size.width / 2,
+      (end - start) / 2, Math.atan2(d.x, d.z), size.height, run.model, index));
+  });
+  // Pieces of one fortification meet and overlap by design, so each is checked against the world before any is added.
+  for (const piece of pieces) if (!fits(place, piece, rules, location)) throw new Error(`Cannot build ${piece.id} at ${location.id}`);
+  for (const piece of pieces) place.add(piece);
+  const arch = V3_DECOR['kit-gate-arch'];
+  plan.gates.forEach((gate, index) => {
+    const a = towers[gate.from]!, b = towers[gate.to]!;
+    const span = distance(a, b) - a.radius - b.radius;
+    if (a.shape || b.shape || Math.abs(span - arch.span) > 1e-6) throw new Error(`The gate at ${location.id} spans ${span} m, not ${arch.span} m`);
+    place.world.decor!.push({ id: `${location.id}-gate-${index}`, model: 'kit-gate-arch', x: (a.x + b.x) / 2, z: (a.z + b.z) / 2,
+      heading: Math.atan2(b.x - a.x, b.z - a.z) });
+  });
+}
+
+/**
+ * The Royal Citadel: a curtain of round towers round a courtyard kept open for the villain's final battle (the Palace
+ * Marshal is leashed 22 m to its centre), the keep in the north wall facing the courtyard, and the gatehouse arch over
+ * the Crownbridge road. Its south-east curtain follows the Crownbridge-Bell Foundry road 2 m off its verge. Offsets in
+ * metres east (x) and north (z) of the citadel's centre.
+ */
+const CITADEL = {
+  towers: [
+    ['kit-tower-round', 9.5, -33.8], ['kit-tower-round', -9.5, -33.8], ['kit-tower-round', 35.2, 9.2], ['kit-tower-round', 11.5, 33],
+    ['kit-tower-round', -11.5, 33], ['kit-tower-round', -35, 9], ['kit-tower-round', -27, -24], ['kit-keep', 0, 38],
+  ] as const,
+  runs: [[0, 2], [2, 3], [4, 5], [5, 6], [6, 1]] as const,
+  gates: [[1, 0]] as const,
+  yard: 23.5,
+};
+
+function citadelPlan(location: WorldLocation): FortPlan {
+  return {
+    towers: CITADEL.towers.map(([model, x, z]) => ({ model, at: { x: location.x + x, z: location.z + z }, heading: facing(Math.atan2(x, z)) })),
+    runs: CITADEL.runs.map(([from, to]) => ({ from, to, model: 'kit-curtain' })),
+    gates: CITADEL.gates.map(([from, to]) => ({ from, to })),
+    yard: CITADEL.yard,
+  };
+}
+
+/**
+ * The Old Fort, the mountain ruler's seat: a ring of round towers `radius` metres out with a gate over each road that
+ * leaves it, towers about every 50 degrees between the gates, curtains between neighbours, the stretch opposite the
+ * gates fallen to ruin round a broken tower, and a square keep standing inside the curtain farthest from the gates.
+ */
+function ringFortPlan(world: WorldBlueprint, location: WorldLocation, radius: number, yard: number): FortPlan {
+  const arch = V3_DECOR['kit-gate-arch'];
+  const half = V3_BUILDINGS['kit-tower-round'].width / 2;
+  const flank = Math.asin((arch.span / 2 + half) / radius);
+  const roads = roadsFrom(world, location).map(way => Math.atan2(way.dir.x, way.dir.z)).sort((a, b) => a - b);
+  const ring: { angle: number; gate: boolean }[] = [];
+  roads.forEach((road, index) => {
+    const next = index + 1 < roads.length ? roads[index + 1]! : roads[0]! + Math.PI * 2;
+    const from = road + flank, to = next - flank;
+    if (to - from < 0.3) throw new Error(`The roads at ${location.id} leave no room between its gates`);
+    ring.push({ angle: road - flank, gate: true }, { angle: from, gate: false });
+    const between = Math.max(0, Math.round((to - from) / (50 * Math.PI / 180)) - 1);
+    for (let k = 1; k <= between; k++) ring.push({ angle: from + (to - from) * k / (between + 1), gate: false });
+  });
+  const gap = (a: number, b: number): number => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+  const fromGates = (angle: number): number => Math.min(...roads.map(road => gap(angle, road)));
+  // The keep stands inside the curtain whose middle lies farthest from every gate.
+  let keepRun = -1, keepAngle = 0;
+  for (let index = 0; index < ring.length; index++) {
+    if (ring[index]!.gate) continue;
+    const a = ring[index]!.angle, b = ring[(index + 1) % ring.length]!.angle;
+    const middle = a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) / 2;
+    if (keepRun < 0 || fromGates(middle) > fromGates(keepAngle)) { keepRun = index; keepAngle = middle; }
+  }
+  // The broken tower is the inner tower (not a gate's) farthest from the keep; both curtains beside it are ruins too.
+  let ruin = -1;
+  ring.forEach((tower, index) => {
+    const gateTower = tower.gate || ring[(index - 1 + ring.length) % ring.length]!.gate;
+    if (!gateTower && (ruin < 0 || gap(tower.angle, keepAngle) > gap(ring[ruin]!.angle, keepAngle))) ruin = index;
+  });
+  const at = (angle: number, r: number): Vec2 => ({ x: location.x + Math.sin(angle) * r, z: location.z + Math.cos(angle) * r });
+  const towers: FortPlan['towers'] = ring.map((tower, index) =>
+    ({ model: index === ruin ? 'kit-tower-ruin' : 'kit-tower-round', at: at(tower.angle, radius), heading: facing(tower.angle) }));
+  const runs: FortPlan['runs'] = [], gates: FortPlan['gates'] = [];
+  ring.forEach((tower, index) => {
+    const next = (index + 1) % ring.length;
+    if (tower.gate) gates.push({ from: index, to: next });
+    else runs.push({ from: index, to: next, model: index === ruin || next === ruin ? 'kit-curtain-ruin' : 'kit-curtain' });
+  });
+  // The keep's back stands 0.4 m inside the curtain behind it.
+  const a = ring[keepRun]!.angle, b = ring[(keepRun + 1) % ring.length]!.angle;
+  const inner = radius * Math.cos(gap(a, b) / 2) - V3_BUILDINGS['kit-curtain'].width / 2;
+  const keep = V3_BUILDINGS['kit-tower-square'];
+  towers.push({ model: 'kit-tower-square', at: at(keepAngle, inner - 0.4 - keep.width / 2), heading: facing(keepAngle) });
+  return { towers, runs, gates, yard };
+}
+
+/**
+ * The cooked landmark buildings v3 keeps of each place's v2 structures (by variant), and the radius each grows to where
+ * the road beside it allows (the cooked model scales uniformly into its footprint).
+ */
+const LANDMARKS: Readonly<Record<string, { variants: readonly number[]; radius: number }>> = {
+  'reed-chapel': { variants: [0], radius: 2.8 },
+  'star-monastery': { variants: [0], radius: 2.8 },
+  'bell-foundry': { variants: [0, 1], radius: 3.4 },
+  'stag-shrine': { variants: [0], radius: 3.2 },
+  'frozen-beacon': { variants: [0], radius: 2.8 },
+  'tide-observatory': { variants: [0], radius: 3.4 },
+  'glass-quarry': { variants: [0], radius: 3.6 },
+  'ash-cairn': { variants: [0], radius: 3.8 },
+  'name-well': { variants: [0], radius: 2.8 },
+};
+
+function ownerOf(world: WorldBlueprint, o: Obstacle): WorldLocation | undefined {
+  return world.exploration!.locations.find(l => o.id.startsWith(`${l.id}-building-`));
+}
+
+/** Kept landmarks grow towards their radius, staying a metre off road verges and other structures. */
+function growLandmarks(world: WorldBlueprint, roads: Segment[]): void {
+  for (const o of world.obstacles) {
+    const owner = ownerOf(world, o);
+    const spec = owner && Object.hasOwn(LANDMARKS, owner.id) ? LANDMARKS[owner.id]! : undefined;
+    if (!spec || spec.radius <= o.radius) continue;
+    let room = spec.radius - o.radius;
+    for (const road of roads) room = Math.min(room, segmentClearance(o, road.a, road.b) - road.half - 1);
+    for (const other of world.obstacles) if (other !== o) room = Math.min(room, obstacleClearance(other, o) - o.radius - 1);
+    if (room > 0) o.radius += room;
+  }
+}
+
+/** Kit pieces and props of a ruin, landmark or shrine: `at` metres from its centre, `run` the length of a curtain run. */
+interface ClusterPiece { model: V3BuildingModel | V3PropModel; at: number; run?: number }
+
+/**
+ * Ruins and holy places rebuilt round their story: Thornwatch's broken watchtower, the Old Cloister's and the Drowned
+ * Archive's roofless halls, the Sealed Vault's strongroom tower and storehouse, the Glass Quarry's furnaces, the Tide
+ * Observatory's tower, the Bell Foundry's furnace and forge, the Frozen Beacon's watch hut, and standing stones at the
+ * Stag Shrine and the Ash Cairn (whose lore marks the mound's edge with white stones).
+ */
+const CLUSTERS: Readonly<Record<string, readonly ClusterPiece[]>> = {
+  thornwatch: [{ model: 'kit-tower-ruin', at: 17 }, { model: 'kit-curtain-ruin', at: 18, run: 12 }, { model: 'kit-ruin-house', at: 24 },
+    { model: 'kit-curtain-ruin', at: 21, run: 12 }],
+  'last-archive': [{ model: 'kit-ruin-chapel', at: 23 }, { model: 'kit-ruin-house', at: 20 }, { model: 'kit-ruin-house', at: 25 },
+    { model: 'kit-curtain-ruin', at: 18, run: 12 }],
+  'drowned-archive': [{ model: 'kit-ruin-chapel', at: 22 }, { model: 'kit-ruin-house', at: 20 }, { model: 'kit-ruin-house', at: 25 }],
+  'tax-vault': [{ model: 'kit-tower-square', at: 18 }, { model: 'kit-stonehouse', at: 21 }, { model: 'kit-ruin-house', at: 22 },
+    { model: 'kit-curtain-ruin', at: 18, run: 12 }],
+  'old-orchard': [{ model: 'kit-ruin-house', at: 19 }],
+  'glass-quarry': [{ model: 'kit-kiln', at: 19 }, { model: 'kit-kiln', at: 23 }, { model: 'kit-ruin-house', at: 22 }],
+  'tide-observatory': [{ model: 'kit-tower-round', at: 18 }, { model: 'kit-stonehouse', at: 22 }],
+  'bell-foundry': [{ model: 'kit-kiln', at: 19 }, { model: 'kit-smithy', at: 22 }, { model: 'kit-stonehouse', at: 24 }],
+  'frozen-beacon': [{ model: 'kit-shed', at: 17 }],
+  'stag-shrine': [{ model: 'prop-standing-stones', at: 17 }],
+  'ash-cairn': [{ model: 'prop-standing-stones', at: 17 }, { model: 'prop-standing-stones', at: 19 }],
+};
+
+/** Places each piece at the first free direction off the roads, facing the centre; curtain runs lie across it. */
+function cluster(place: Placement, location: WorldLocation, seed: string, pieces: readonly ClusterPiece[]): void {
+  const random = stream(`korovany2:v3:${seed}:${location.id}:cluster`);
+  const angles = openAngles(place.world, location, 36, 0.3, random.next() * Math.PI * 2);
+  const rules: Rules = { road: 2.5, location: 26, site: COMBAT_YARD, obstacle: 2 };
+  pieces.forEach((spec, index) => {
+    const id = `${location.id}-piece-${index}`;
+    for (const angle of angles) {
+      const r = spec.at + random.range(-1, 1);
+      const at = { x: location.x + Math.cos(angle) * r, z: location.z + Math.sin(angle) * r };
+      // Local +X towards the centre: (cos h, -sin h) = -(cos a, sin a).
+      const heading = Math.atan2(Math.sin(angle), -Math.cos(angle)) + random.range(-0.12, 0.12);
+      let piece: Obstacle;
+      if (Object.hasOwn(V3_PROPS, spec.model)) piece = prop(id, spec.model as V3PropModel, at, heading, index);
+      else if (spec.run) {
+        const size = V3_BUILDINGS[spec.model as V3BuildingModel];
+        piece = box(id, at.x, at.z, size.width / 2, spec.run / 2, heading, size.height, spec.model, index);
+      } else piece = building(id, spec.model as V3BuildingModel, at, heading, index);
+      if (!fits(place, piece, rules, location)) continue;
+      place.add(piece);
+      return;
+    }
+  });
+}
+
+/** The Old Orchard: rows of short dead oaks round the ruined farmhouse, bordered by a broken pale fence. */
+function orchard(place: Placement, location: WorldLocation, seed: string): void {
+  const random = stream(`korovany2:v3:${seed}:${location.id}:orchard`);
+  const axis = roadsFrom(place.world, location)[0]!.dir;
+  const across = { x: -axis.z, z: axis.x };
+  const rules: Rules = { road: 3, location: 26, site: 24, obstacle: 1.2, structure: 2.5, own: 14 };
+  let serial = 0;
+  for (let row = -8; row <= 8; row++) {
+    for (let column = -9; column <= 9; column++) {
+      const u = column * 5.5 + random.range(-0.5, 0.5), v = row * 6.5 + random.range(-0.5, 0.5);
+      const p = { x: location.x + axis.x * u + across.x * v, z: location.z + axis.z * u + across.z * v };
+      const spot = random.next();
+      const reach = distance(p, location);
+      // A seventh of the trees are gone.
+      if (reach < 15 || reach > 46 || spot < 0.14 || insideField(place.world, p, 2)) continue;
+      const tree: Obstacle = { id: `${location.id}-tree-${serial}`, kind: 'tree', x: p.x, z: p.z, radius: 0.45 + spot * 0.15,
+        height: 8 + spot * 2.5, variant: Math.floor(spot * 97) % V3_TREES['tree-deadoak'].variants, model: 'tree-deadoak' };
+      if (!fits(place, tree, rules, location)) continue;
+      place.add(tree);
+      serial++;
+    }
+  }
+  const start = random.next() * Math.PI * 2;
+  for (let k = 0; k < 16; k++) {
+    const angle = start + k * Math.PI / 8;
+    const length = random.range(6, 11);
+    if (random.next() < 0.35) continue;
+    const at = { x: location.x + Math.cos(angle) * 50, z: location.z + Math.sin(angle) * 50 };
+    // Local Z along the ring's tangent (-sin a, cos a).
+    const fence = box(`${location.id}-fence-${k}`, at.x, at.z, V3_FENCE.thickness / 2, length / 2, Math.atan2(-Math.sin(angle), Math.cos(angle)),
+      V3_FENCE.height, V3_FENCE.model, 0);
+    if (fits(place, fence, { ...FENCE_RULES, own: 14 }, location)) place.add(fence);
+  }
+}
+
+/** The military posts' four circular footings carry timber watch towers; their collision is unchanged. */
+function campTowers(world: WorldBlueprint): void {
+  const size = V3_BUILDINGS['kit-camp-tower'];
+  for (const o of world.obstacles) {
+    if (!world.sites.some(site => o.id.startsWith(`${site.id}-wall-`))) continue;
+    if (o.shape || Math.abs(o.radius - size.width / 2) > 1e-9) throw new Error(`${o.id} is not a camp tower footing`);
+    o.model = 'kit-camp-tower';
+    o.height = size.height;
+  }
+}
+
+/**
+ * Remains in the wilds beside the roads: giant skulls and ribcages in the Ash Steppe and Hollowvale, troll gibbets on
+ * the Frostspine roads, and standing stones in Greenmarch. `along` lays a piece's length along the road; otherwise its
+ * length points at the road. Either way its front (local +X, or +Z for a piece facing the road) is towards the road.
+ */
+const REMAINS: readonly { model: V3PropModel; road: readonly [string, string]; along: boolean }[] = [
+  { model: 'prop-giant-skull', road: ['ash-cairn', 'glass-quarry'], along: false },
+  { model: 'prop-giant-skull', road: ['name-well', 'hollow-village'], along: false },
+  { model: 'prop-giant-ribs', road: ['cinderwell', 'glass-quarry'], along: true },
+  { model: 'prop-giant-ribs', road: ['southwest-turn', 'ash-cairn'], along: true },
+  { model: 'prop-troll-gibbet', road: ['high-pass', 'old-fort'], along: true },
+  { model: 'prop-troll-gibbet', road: ['star-monastery', 'frozen-beacon'], along: true },
+  { model: 'prop-standing-stones', road: ['greenhollow', 'thornwatch'], along: true },
+];
+
+function remains(place: Placement, seed: string): void {
+  const world = place.world;
+  const random = stream(`korovany2:v3:${seed}:remains`);
+  const node = (id: string): Vec2 => world.roads.nodes.find(n => n.id === id)!;
+  const rules: Rules = { road: 5, location: 40, site: COMBAT_YARD, obstacle: 3, structure: 2 };
+  REMAINS.forEach((spec, index) => {
+    const a = node(spec.road[0]), b = node(spec.road[1]);
+    const length = distance(a, b);
+    const d = { x: (b.x - a.x) / length, z: (b.z - a.z) / length };
+    const n = { x: d.z, z: -d.x };
+    const size = V3_PROPS[spec.model];
+    const reach = 'radius' in size ? size.radius : (spec.along ? size.width : size.length) / 2;
+    const first = random.next() < 0.5 ? 1 : -1;
+    for (const t of [0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74]) {
+      for (const side of [first, -first]) {
+        const offset = 4 + 8 + reach + random.range(0, 5);
+        const at = { x: a.x + d.x * length * t + n.x * side * offset, z: a.z + d.z * length * t + n.z * side * offset };
+        // Along: local Z along the road and local +X, (cos h, -sin h) = (d.z, -d.x) at h = atan2(d.x, d.z), towards it.
+        const heading = spec.along ? Math.atan2(d.x, d.z) + (side > 0 ? Math.PI : 0) : Math.atan2(-side * n.x, -side * n.z);
+        const piece = prop(`remains-${index}`, spec.model, at, heading, index);
+        if (!fits(place, piece, rules)) continue;
+        place.add(piece);
+        return;
+      }
+    }
+  });
+}
+
+/**
+ * Version 3: the v2 geography, regions, locations, roads, river, bridges, sites and story stay; every place is rebuilt
+ * at the heroic scale. Settlements and inns get their region's building family with yards, stalls and fields; the Reed
+ * Chapel and the Star Monastery are rebuilt round chapels; the Royal Citadel and the Old Fort become castles; ruins,
+ * shrines and landmarks are rebuilt round their cooked landmarks; the military posts get watch towers; remains of huge
+ * creatures lie in the wilds; woodland becomes real forest, and boulders replace the upright blobs.
  */
 export function buildWorldV3(world: WorldBlueprint): WorldBlueprint {
   const locations = world.exploration!.locations;
-  const rebuilt = new Set(locations.filter(l => ((l.kind === 'settlement' || l.kind === 'inn') && l.id !== 'old-fort')
+  const byId = (id: string): WorldLocation => locations.find(l => l.id === id)!;
+  const settled = new Set(locations.filter(l => ((l.kind === 'settlement' || l.kind === 'inn') && l.id !== 'old-fort')
     || CHAPEL_SHRINES.has(l.id)).map(l => l.id));
   world.version = 3;
   world.id = '';
   world.fields = [];
+  world.decor = [];
   world.obstacles = world.obstacles.filter(o => {
     if (o.kind !== 'wall') return false;
-    // The original home's walls have no home in story worlds (homes move to each faction's location).
-    if (o.id.startsWith('home-wall-')) return false;
-    const owner = locations.find(l => o.id.startsWith(`${l.id}-building-`));
-    if (owner && CHAPEL_SHRINES.has(owner.id)) return o.id === `${owner.id}-building-0`;
-    return !owner || !rebuilt.has(owner.id);
+    // The original home's walls have no home in story worlds (homes move to each faction's location), and the Old
+    // Fort's v2 perimeter gives way to its castle.
+    if (o.id.startsWith('home-wall-') || o.id.startsWith('old-fort-wall-')) return false;
+    const owner = ownerOf(world, o);
+    return !owner || (Object.hasOwn(LANDMARKS, owner.id) && LANDMARKS[owner.id]!.variants.includes(o.variant));
   });
-  const place = new Placement(world, roadSegments(world));
-  for (const location of locations) if (rebuilt.has(location.id)) layoutSettlement(place, location, world.seed);
+  const roads = roadSegments(world);
+  growLandmarks(world, roads);
+  campTowers(world);
+  const place = new Placement(world, roads);
+  fortification(place, byId('palace-citadel'), citadelPlan(byId('palace-citadel')));
+  fortification(place, byId('old-fort'), ringFortPlan(world, byId('old-fort'), 30, 16.5));
+  for (const location of locations) if (settled.has(location.id)) layoutSettlement(place, location, world.seed);
+  for (const location of locations) {
+    const pieces = Object.hasOwn(CLUSTERS, location.id) ? CLUSTERS[location.id] : undefined;
+    if (pieces) cluster(place, location, world.seed, pieces);
+  }
+  orchard(place, byId('old-orchard'), world.seed);
   roadsideProps(place, world.seed);
+  remains(place, world.seed);
   vegetation(place, world.seed);
   boulders(place, world.seed);
   let hash = 2166136261;

@@ -1,0 +1,34 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-giant-ribs",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "c",
+   "sha256": "34f948a3632f623bc70f0bab74169e1e34c43f185ed65c377a47498f8231625c",
+   "rationale": "A complete arched ribcage with its spine on a low mound: thick, regular ribs on both sides with open gaps between them, the best TRELLIS candidate (a breaks the spine mid-span; b's ribs are thinner)."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "b9f15f60cad3bc21d15238afa2f97c81ef9a8b0f49b221a74750ef3b83b3690c",
+   "rationale": "Arched ribcage of a colossus with its spine, on a low mound (Azure concept c, TRELLIS c-s6211, chosen over the second seed for the cleaner silhouette). Cooked 5,910 triangles, 252,180 bytes; 5.88 m tall in a 6.79 m reach at uniform scale. Albedo 512 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "A ribcage only: no skull, limbs or tail.",
+    "Rib feet are fused into the mound; the floor between them is a flat TRELLIS surface.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "b9f15f60cad3bc21d15238afa2f97c81ef9a8b0f49b221a74750ef3b83b3690c",
+   "rationale": "In the wilds beside the Ash Steppe roads, its spine along the road, at gameplay cameras (18-40 m): reads as the remains of something huge beside the troops, grounded by shadows on the relief, and stays inside its collider; crows gather at the skulls, ribcages and gibbets.",
+   "limitations": [
+    "Static scenery: no sound, smell cues or story text yet."
+   ]
+  }
+ ]
+}

@@ -1,0 +1,27 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-curtain",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "32a06a03c82a0a0d1c3b2f68a4710df4d0605ac5a876dda0c1def644feb5253f",
+   "rationale": "Curtain module 3.5 m thick and 6 m long: a battered plinth, a string course, arrow slits and a wall-walk at 11.4 m between two crenellated parapets (merlons to 14.0 m); 116 triangles, 11,244 bytes before meshopt. Everything stays inside its collider below 3 m and within 0.8 m above it (world-assets footprint test); baked AO at 48 samples.",
+   "limitations": [
+    "Flat wall faces: no buttresses, putlog holes or stone relief in the geometry.",
+    "The wall-walk is not reachable: there are no stairs and no interior.",
+    "Masonry is the castle surface layer tiled every 3 m and the moss layer every 2 m; there is no unique wear, grime gradient or decal per piece."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "32a06a03c82a0a0d1c3b2f68a4710df4d0605ac5a876dda0c1def644feb5253f",
+   "rationale": "In the Royal Citadel and the Old Fort, repeated in 6 m modules between towers, at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at true scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss, with shadows on the level castle ground. The sightline cutaway shows the hero through it (castle browser suite: 100% of hero pixels visible behind a citadel curtain with the cutaway, 0.4% without), and a camera inside its bounds plus 2 m hides it instead of showing the hollow inside.",
+   "limitations": [
+    "Castles and ruins are scenery: no doors open, no interiors and no reachable walls or towers."
+   ]
+  }
+ ]
+}

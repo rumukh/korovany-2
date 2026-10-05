@@ -131,7 +131,11 @@ export function crowHomes(world: WorldBlueprint): { id: string; x: number; z: nu
   }
   for (const o of world.obstacles) {
     if (o.model === 'prop-gibbet') add(o.id, o.x + 2.6, o.z + 1.4);
-    else if ((o.model === 'kit-chapel' || o.model === 'kit-chapel-fen') && o.shape) {
+    else if (o.model === 'prop-troll-gibbet' || o.model === 'prop-giant-skull' || o.model === 'prop-giant-ribs') {
+      // Crows pick at the remains of giant beasts, just off their local +X side ((cos h, -sin h)).
+      const heading = o.shape?.heading ?? 0, reach = (o.shape?.halfX ?? o.radius) + 1.6;
+      add(o.id, o.x + Math.cos(heading) * reach, o.z - Math.sin(heading) * reach);
+    } else if ((o.model === 'kit-chapel' || o.model === 'kit-chapel-fen') && o.shape) {
       // Among the graves behind the chapel (its back is local -X: (-cos h, sin h)).
       const back = o.shape.halfX + 5;
       add(o.id, o.x - Math.cos(o.shape.heading) * back, o.z + Math.sin(o.shape.heading) * back);

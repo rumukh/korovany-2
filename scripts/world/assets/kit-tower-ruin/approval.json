@@ -1,0 +1,26 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-tower-ruin",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "9721a60582ea53b79d052eaea3d36c573a9ac67802c246b1783789edd2e03252",
+   "rationale": "Ruined round tower: a hollow 9 m shell broken off along a sloping line from 14.9 m down to 3 m, with a breach, mossy wall tops, a rubble floor and fallen stones; 220 triangles, 20,196 bytes before meshopt. Walls stay inside the round collider below 3 m (world-v3-castles: circle footprint test); baked AO at 48 samples.",
+   "limitations": [
+    "The shell's inside is the same castle layer as its outside; no stairs, floors or beam holes.",
+    "Masonry is the castle surface layer tiled every 3 m and the moss layer every 2 m; there is no unique wear, grime gradient or decal per piece."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "9721a60582ea53b79d052eaea3d36c573a9ac67802c246b1783789edd2e03252",
+   "rationale": "In the Old Fort (opposite the gates) and Thornwatch, at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at true scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss, with shadows on the level castle ground. The sightline cutaway shows the hero through it (castle browser suite: 100% of hero pixels visible behind a citadel curtain with the cutaway, 0.4% without), and a camera inside its bounds plus 2 m hides it instead of showing the hollow inside.",
+   "limitations": [
+    "Castles and ruins are scenery: no doors open, no interiors and no reachable walls or towers."
+   ]
+  }
+ ]
+}

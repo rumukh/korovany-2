@@ -1,0 +1,73 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-arch-mossruin",
+  "layer": "mossruin",
+  "physicalSizeMetres": 2,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of the moss-grown top of an ancient ruined stone wall, two metres across, seen straight from above. The whole image is a close-up of the flat surface itself, filling the frame edge to edge: no edges, no corners, no sky, no horizon and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. Each grey stone shape becomes one broken, angular, weathered dark fieldstone laid in rough courses and half sunk in moss; the dark green background becomes a flat, continuous, even carpet of short, dense, dark green moss filling the wide joints between the stones, with no clumps or tufts. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, tufts, clumps, cushions, mounds, popcorn, pale moss, yellow moss, lichen, flowers, protruding moss, bright green, grass blades, ivy leaves, leaves, rounded cobbles, pebbles, gravel, bricks, white mortar, lime plaster, render, windows, doors, sky, ground, wet, glossy, grid, regular pattern",
+  "candidates": [
+    {
+      "seed": 46201,
+      "note": "First recipe (a fieldstone wall face with green moss blobs): Qwen grew raised, bright moss cushions on pale stones that repeat in an obvious grid every 2 m once tiled."
+    },
+    {
+      "seed": 46202,
+      "note": "First recipe, as 46201: the same repeating moss cushions."
+    },
+    {
+      "seed": 46203,
+      "note": "Second recipe (stones in rough courses in a moss carpet, with small green specks): Qwen turned every speck into a raised, pale yellow-green tuft that reads as popcorn scattered over the stones."
+    },
+    {
+      "seed": 46204,
+      "note": "Second recipe (stones in rough courses in a moss carpet, with small green specks): Qwen turned every speck into a raised, pale yellow-green tuft that reads as popcorn scattered over the stones."
+    },
+    {
+      "seed": 46205
+    },
+    {
+      "seed": 46206,
+      "note": "Third recipe, as 46205: flatter, more regular stones in the same moss carpet; 46205 was chosen."
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 46205,
+    "noiseMetres": 0.35,
+    "colours": [
+      "#26301d",
+      "#2b3520",
+      "#222b1a"
+    ],
+    "layers": [
+      {
+        "kind": "courses",
+        "height": [
+          0.14,
+          0.26
+        ],
+        "width": [
+          0.18,
+          0.42
+        ],
+        "joint": 0.035,
+        "squareness": 3,
+        "colours": [
+          "#55544e",
+          "#4d4c47",
+          "#5d5b54",
+          "#46453f"
+        ]
+      }
+    ]
+  }
+}

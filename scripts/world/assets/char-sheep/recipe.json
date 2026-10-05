@@ -446,8 +446,8 @@
     "tailLift": 12
   },
   "body": {
-    "bakeSize": 2048,
-    "textureSize": 1024,
+    "bakeSize": 1024,
+    "textureSize": 512,
     "cageExtrusionMeters": 0.02,
     "maxRayMeters": 0.05,
     "aoSamples": 64,
@@ -474,5 +474,6 @@
       }
     ],
     "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved TRELLIS source mesh; there is no rear-view projection, so the back, far side and underside are as TRELLIS invented them from the single approved concept. Tangent normals baked from the source geometry and whiteout-blended with colour relief; AO baked from the decimated geometry; roughness set inside declared regions (the dark face and legs by colour value, hooves by height) and otherwise the default, both reduced by colour detail; no metal and no dye mask (the sheep is never dyed). Base colour lifted by luma power toneGamma (chroma ratios kept), set by eye in review renders, not calibrated against the concept. Artistic derivation, not measured PBR."
-  }
+  },
+  "textureNote": "Recooked at 512 px (baked at 1024) in W2 to keep the version 3 world's texture memory within its 160 MiB budget as castle surfaces and remains were added; a sheep is at most about 90 px tall at the closest camera."
 }

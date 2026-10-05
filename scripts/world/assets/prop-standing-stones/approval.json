@@ -1,0 +1,33 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-standing-stones",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "324f025a629fbe218261941c9524eabdebf1403ef143d3ae1a0cc6f48997c8e2",
+   "rationale": "Three leaning lichened menhirs with a fallen lintel on a turf disc: the most separated, chunky stones of the three, readable at gameplay distance beside shrines."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "d22e73633e418370b724575eed8f2fee8154fcebb75cef311cea5261cd3954aa",
+   "rationale": "Three lichened menhirs with a fallen lintel slab on a turf mound (Azure concept a, TRELLIS a-s6222, chosen over the second seed for the cleaner silhouette). Cooked 4,924 triangles, 192,556 bytes; 5.61 m tall in a 3.14 m reach at uniform scale. Albedo 512 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "Lichen and moss are baked colour; the stones have no wet sheen.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "d22e73633e418370b724575eed8f2fee8154fcebb75cef311cea5261cd3954aa",
+   "rationale": "In the wilds the Stag Shrine, the Ash Cairn and the Greenhollow-Thornwatch road, at gameplay cameras (18-40 m): reads as the remains of something huge beside the troops, grounded by shadows on the relief, and stays inside its collider; crows gather at the skulls, ribcages and gibbets.",
+   "limitations": [
+    "Static scenery: no sound, smell cues or story text yet."
+   ]
+  }
+ ]
+}
