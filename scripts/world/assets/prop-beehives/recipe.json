@@ -1,0 +1,67 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-beehives",
+  "source": {
+    "candidate": "b-s6118",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 6118,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "7eba0d872f10366780b41f29cb541e16cb3ed6cb4d51ecaacfc26c64f082b153",
+    "conceptSha256": "d14371b37def2809d00d965497965916d3cf6292d9018c70c93f9ce0e81b71cd"
+  },
+  "reachMeters": 1.07,
+  "yawDegrees": 90,
+  "minComponentVertices": 30,
+  "triangleBudget": 5000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    256
+  ],
+  "material": {
+    "bakeSize": 1024,
+    "mapsSize": 256,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.06,
+    "aoSamples": 32,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.88,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "name": "straw",
+        "hue": [
+          30,
+          62
+        ],
+        "saturation": [
+          0.3,
+          1
+        ],
+        "value": [
+          0.3,
+          1
+        ],
+        "roughness": 0.96
+      },
+      {
+        "name": "wood",
+        "value": [
+          0,
+          1
+        ],
+        "roughness": 0.86
+      }
+    ],
+    "roughnessFromDetail": 0.5,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 6,
+    "normalMapStrength": 1.0,
+    "albedoGain": 2.0
+  },
+  "sizeNote": "reachMeters gives a 1.74 m tall prop (at a man's chest, scaled 1.28).",
+  "albedoGainNote": "Linear gain 2.0, the W0 cap: the approved concept's foreground is 2.8-5 times brighter in mean linear luminance than the raw TRELLIS texels (about 2.1-3.9 times with W0's calibration), so the cooked albedo is still somewhat darker than the concept. Measured by luminance ratio, not calibrated in the game.",
+  "textureNote": "Under 2 m tall, so at most about 100 px tall at the closest camera: 256 px base colour, normal and ORM maps."
+}

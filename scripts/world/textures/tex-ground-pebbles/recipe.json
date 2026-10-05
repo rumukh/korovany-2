@@ -1,0 +1,74 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-ground-pebbles",
+  "layer": "pebbles",
+  "physicalSizeMetres": 4,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of a cold beach of rounded shingle pebbles, four metres across, shot straight down from directly above as a flat orthographic photograph. The whole image is the ground surface itself, filling the frame edge to edge: no horizon, no sky and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The larger ovals become rounded, smooth beach pebbles of grey, brown and slate blue, packed tightly together and slightly damp, the smaller ovals become small pebbles and grit between them, and the dark background becomes coarse dark sand. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, large rocks, boulders, shells, seaweed heaps, water, waves, foam, driftwood, footprints, sky",
+  "candidates": [
+    {
+      "seed": 45201
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 45201,
+    "noiseMetres": 0.7,
+    "colours": [
+      "#3e3a34",
+      "#4a463e"
+    ],
+    "layers": [
+      {
+        "kind": "ellipses",
+        "length": [
+          0.01,
+          0.025
+        ],
+        "aspect": [
+          0.6,
+          0.95
+        ],
+        "perSquareMetre": 1200,
+        "colours": [
+          "#5e5a54",
+          "#6a645c",
+          "#58544e"
+        ]
+      },
+      {
+        "kind": "ellipses",
+        "length": [
+          0.025,
+          0.07
+        ],
+        "aspect": [
+          0.55,
+          0.9
+        ],
+        "perSquareMetre": 520,
+        "colours": [
+          "#7a7670",
+          "#8a847a",
+          "#6c6862",
+          "#948e84",
+          "#7e7262",
+          "#68707a"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "gain": 1.25,
+    "note": "Lifted slightly (linear gain 1.25, to a linear albedo of about 0.096) so the shingle patches read a step lighter than the cold grass and mud around them, as dry grey beach pebbles do."
+  }
+}

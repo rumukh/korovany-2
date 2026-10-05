@@ -15,6 +15,11 @@ export interface ScatterKind {
   parts: ScatterPart[];
   /** Bounding radius of one instance at scale 1, for the view-cone test. */
   radius: number;
+  /**
+   * Local bounds of an architecture kind. An instance is not drawn while the camera is inside them, grown by
+   * `CAMERA_CLEARANCE`, so a camera passing through a tall building never shows its hollow, one-sided inside.
+   */
+  hollow?: THREE.Box3;
 }
 
 interface Item {
@@ -23,9 +28,13 @@ interface Item {
   z: number;
   radius: number;
   matrix: Float32Array;
+  /** World to instance space, for kinds with `hollow` bounds. */
+  inverse?: THREE.Matrix4;
 }
 
 const CELL = 32;
+/** Metres around a hollow instance's bounds that hide it from a camera inside; more than the 1.5 m resubmit step. */
+export const CAMERA_CLEARANCE = 2;
 /** Instances this close to the hero are always submitted (they may shade the hero's ground). */
 const ALWAYS = 36;
 /** Horizontal half-angle of the submitted view cone: the 48 degree camera at up to 21:9, plus a margin. */
@@ -42,6 +51,7 @@ export class ScatterField {
   private pools: THREE.InstancedMesh[][] = [];
   private readonly group = new THREE.Group();
   private readonly lastCamera = new THREE.Vector3(Infinity, 0, 0);
+  private readonly local = new THREE.Vector3();
   private lastYaw = Infinity;
   private reach = 0;
   private scale = 1;
@@ -58,6 +68,7 @@ export class ScatterField {
     const e = matrix.elements;
     const scale = Math.max(Math.hypot(e[0]!, e[1]!, e[2]!), Math.hypot(e[8]!, e[9]!, e[10]!), Math.hypot(e[4]!, e[5]!, e[6]!));
     const item: Item = { kind, x: e[12]!, z: e[14]!, radius: this.kinds[kind]!.radius * scale, matrix: new Float32Array(e) };
+    if (this.kinds[kind]!.hollow) item.inverse = matrix.clone().invert();
     const key = this.key(Math.floor(item.x / CELL), Math.floor(item.z / CELL));
     let cell = this.grid.get(key);
     if (!cell) this.grid.set(key, cell = []);
@@ -159,6 +170,7 @@ export class ScatterField {
             // The cone widens by the instance's own angular radius.
             if (along < cosHalf - item.radius / distance) continue;
           }
+          if (camera && item.inverse && this.surrounds(item, eye)) continue;
           const parts = this.kinds[item.kind]!.parts;
           for (let p = 0; p < parts.length; p++) {
             const part = parts[p]!;
@@ -179,6 +191,15 @@ export class ScatterField {
         pool.instanceMatrix.needsUpdate = true;
       }
     }));
+  }
+
+  /** Whether the eye is inside the item's hollow bounds grown by the clearance (in instance units; kits are unscaled). */
+  private surrounds(item: Item, eye: THREE.Vector3): boolean {
+    const box = this.kinds[item.kind]!.hollow!;
+    const local = this.local.copy(eye).applyMatrix4(item.inverse!);
+    return local.x > box.min.x - CAMERA_CLEARANCE && local.x < box.max.x + CAMERA_CLEARANCE
+      && local.y > box.min.y - CAMERA_CLEARANCE && local.y < box.max.y + CAMERA_CLEARANCE
+      && local.z > box.min.z - CAMERA_CLEARANCE && local.z < box.max.z + CAMERA_CLEARANCE;
   }
 
   dispose(): void {

@@ -1,0 +1,28 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-stilthut",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "ad24867ccda1acf68745c26f63e52f7ee4f02a27a461899d54c5403747d72b96",
+   "rationale": "Fen stilt hut, 6.5 x 8 m, a tarred-plank hut on a 1.7 m deck with a porch rail and a step ladder, reed thatch to 8.0 m; 516 triangles, 44,972 bytes before meshopt. Walls stay inside the oriented-box collider below 3 m and eaves overhang at most 0.78 m above it (check-kit: OK); baked AO at 48 samples.",
+   "limitations": [
+    "Stilts stand on flat ground; there is no standing water under them yet (lakes come with W3).",
+    "The ladder is decorative; the deck is not walkable.",
+    "Surfaces are tiled 2 m layers shared by the whole kit; there is no unique wear, grime gradient or decals per building."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "ad24867ccda1acf68745c26f63e52f7ee4f02a27a461899d54c5403747d72b96",
+   "rationale": "In Mirecross, Reed Chapel and Lantern Ferry (Fens) at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at true scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss; shadows ground it on the relief; the 1.6-3.2 m architecture cutaway keeps the hero visible behind it, and a camera inside its bounds (plus 2 m) hides it instead of showing the hollow inside.",
+   "limitations": [
+    "Not enterable: interiors are not modelled.",
+    "Lighting is the overcast day grade only; windows never light up."
+   ]
+  }
+ ]
+}

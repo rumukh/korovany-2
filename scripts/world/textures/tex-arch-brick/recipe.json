@@ -1,0 +1,59 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-arch-brick",
+  "layer": "brick",
+  "physicalSizeMetres": 2,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of an old sooty brick wall, two metres across. The whole image is a close-up of the flat surface itself, filling the frame edge to edge, seen exactly face-on: no edges, no corners, no roof, no ground, no sky, no horizon and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. Each small block becomes one old hand-made red-brown clay brick, rough and slightly irregular, laid in running bond; many bricks are darkened by soot; the thin grey lines stay as recessed lime mortar joints. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, stones, wide white mortar, graffiti, moss cushions, plants, windows, doors, cracks, holes, protruding objects",
+  "candidates": [
+    {
+      "seed": 44501
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 44501,
+    "noiseMetres": 0.3,
+    "colours": [
+      "#46403b",
+      "#504a44"
+    ],
+    "layers": [
+      {
+        "kind": "courses",
+        "height": [
+          0.085,
+          0.085
+        ],
+        "width": [
+          0.24,
+          0.26
+        ],
+        "joint": 0.009,
+        "squareness": 10,
+        "colours": [
+          "#5e3a2c",
+          "#6a4232",
+          "#4e3226",
+          "#3e2a22",
+          "#704838"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "gain": 2.4,
+    "saturation": 0.8,
+    "delightFraction": 0.03125,
+    "note": "Lifted (linear gain 2.4) and slightly desaturated (0.8): the candidate's sooty bricks average a linear albedo of about 0.03, darker than tar; this brings them to about 0.072, beside the world's timber and mud, and keeps the red-brown from turning orange. De-lit at 1/32 of the tile (about 41 px) instead of 1/8: the soot patches otherwise line up into diagonal bands across tiled walls."
+  }
+}

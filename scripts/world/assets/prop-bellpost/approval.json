@@ -1,0 +1,35 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-bellpost",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "b",
+   "sha256": "ac7583f2c3b8ece92ff822da3cf880d61baedafa85e0c7c051a18aa0d5be0c69",
+   "rationale": "Both posts stand on one fieldstone base under a shingled ridge, so the frame reconstructs as one solid; the verdigris bell and rope pull read clearly."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "de4ee051b3a2ab2d7269cca24b9e78b3ecd0aa40b493874fbde0b0c674d2d723",
+   "rationale": "Village bell post: two oak posts on a stone plinth under a shingle hood with a verdigris bronze bell and clapper (Azure concept b, TRELLIS b-s6101). Cooked 4,925 triangles, 211,452 bytes; 4.51 m tall in a 1.25 m reach at uniform scale. Albedo 512 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "The bell does not swing or ring.",
+    "Posts carry TRELLIS's soft grain rather than crisp adze marks.",
+    "TRELLIS invents the unseen back; it is softer than the concept view.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "de4ee051b3a2ab2d7269cca24b9e78b3ecd0aa40b493874fbde0b0c674d2d723",
+   "rationale": "In Settlement squares (not Hollow Village, whose lore has an empty bell hook) at gameplay cameras (18-40 m): reads at true scale beside the troops, grounded by shadows on the relief, and stays inside its collider (radius 1.25 m or its box).",
+   "limitations": [
+    "Static: no animation, sound or interaction."
+   ]
+  }
+ ]
+}

@@ -1,0 +1,34 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-stocks",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "b",
+   "sha256": "17fca942878e2ae29ecb8966ceedc312f4a2cd6ff346c0f1dd19b350c4baa4ad",
+   "rationale": "Braced posts on a plank platform holding the three-holed plank with hinges and a padlock; empty, no text."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "03512e47e97a53422046a02c12580244e20b6836729ef0bcc869664f038692a0",
+   "rationale": "Village stocks on a plank floor (Azure concept b, TRELLIS b-s6117). Cooked 4,432 triangles, 149,988 bytes; 1.67 m tall in a 1.42 m reach at uniform scale. Albedo 256 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "Plain wood; no iron hasp detail at 256 px.",
+    "TRELLIS invents the unseen back; it is softer than the concept view.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "03512e47e97a53422046a02c12580244e20b6836729ef0bcc869664f038692a0",
+   "rationale": "In Greenhollow and Crownbridge squares at gameplay cameras (18-40 m): reads at true scale beside the troops, grounded by shadows on the relief, and stays inside its collider (radius 1.42 m or its box).",
+   "limitations": [
+    "Static: no animation, sound or interaction."
+   ]
+  }
+ ]
+}

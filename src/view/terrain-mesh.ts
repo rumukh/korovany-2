@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import type { Obstacle, WorldBlueprint } from '../game/types';
+import { fbm } from '../game/world-v3';
 import type { Terrain } from './terrain';
+import { WORLD_SURFACES, type WorldSurface } from './world-assets';
 import type { TerrainControl } from './world-materials';
 
 /** Terrain chunks: 128 m squares of 2 m quads, so a view draws about a dozen of them. */
@@ -10,6 +12,19 @@ export const TERRAIN_SPACING = 2;
 export const TERRAIN_MARGIN = 128;
 /** Control map texels per side over the world bounds. */
 export const CONTROL_SIZE = 1024;
+/**
+ * Regional ground: a base layer that replaces the meadow inside a region (meeting the meadow again at the borders it
+ * shares with other regions) and an overlay in noise patches above `patches`; meadow survives in a few patches too.
+ */
+export const REGION_GROUND: Readonly<Record<string, { base: WorldSurface; overlay?: WorldSurface; patches?: number }>> = {
+  fenlands: { base: 'reedmud' },
+  saltcoast: { base: 'coldgrass', overlay: 'pebbles', patches: 0.6 },
+  ashsteppe: { base: 'ash' },
+  frostspine: { base: 'coldgrass', overlay: 'snow', patches: 0.53 },
+  hollowvale: { base: 'coldgrass' },
+};
+/** Stone towns whose squares and streets are cobbled (the mud and road layers turn to cobbles near the centre). */
+export const COBBLED_PLACES: ReadonlySet<string> = new Set(['crownbridge', 'saltmarket', 'cinderwell']);
 /** Depth of the river channel below the water plane, reached this far inside its banks. */
 const RIVER_DEPTH = 1.6;
 const RIVER_SHELF = 4;
@@ -180,13 +195,13 @@ export function terrainControl(world: WorldBlueprint): TerrainControl {
       const reach = Math.min(6.5, Math.max(2.8, o.height * 0.3));
       paint(forest, o.x - reach, o.z - reach, o.x + reach, o.z + reach,
         (x, z) => 1 - smoothstep(reach * 0.45, reach, Math.hypot(x - o.x, z - o.z)));
-    } else if (o.kind === 'wall' && o.model?.startsWith('kit-') && o.model !== 'kit-fence') {
+    } else if (o.kind === 'wall' && o.model?.startsWith('kit-') && o.model !== 'kit-fence' && o.model !== 'kit-wall') {
       const f = footprintOf(o), reach = Math.hypot(f.halfX, f.halfZ) + 5;
       paint(mud, o.x - reach, o.z - reach, o.x + reach, o.z + reach,
         (x, z) => 0.85 * (1 - smoothstep(0.5, 4.5, boxDistance(x, z, o.x, o.z, f.halfX, f.halfZ, f.heading))));
-    } else if (o.kind === 'wall' && o.model === 'kit-fence' && o.id.endsWith('-back')) {
-      // The yard: from the house's back wall to its back fence.
-      const house = world.obstacles.find(h => h.id === o.id.replace('-yard-', '-house-').replace(/-back$/, ''));
+    } else if (o.kind === 'wall' && (o.model === 'kit-fence' || o.model === 'kit-wall') && o.id.endsWith('-back')) {
+      // The yard or an inn's courtyard: from the building's back wall to its back fence or wall.
+      const house = world.obstacles.find(h => h.id === o.id.replace(/-(yard|court)-/, '-house-').replace(/-back$/, ''));
       if (!house?.shape) continue;
       const hx = (o.x + house.x) / 2, hz = (o.z + house.z) / 2;
       const depth = Math.hypot(o.x - house.x, o.z - house.z) - house.shape.halfX;
@@ -237,6 +252,7 @@ export function terrainControl(world: WorldBlueprint): TerrainControl {
   }
   const weights = new Uint8Array(size * size * 4);
   const fields = new Uint8Array(size * size * 4);
+  const ground = regionalGround(world, size, cell);
   for (let i = 0; i < size * size; i++) {
     const roadWeight = road.data[i]!;
     const keep = 1 - roadWeight;
@@ -254,7 +270,8 @@ export function terrainControl(world: WorldBlueprint): TerrainControl {
     weights[i * 4 + 3] = Math.round(fieldWeight * 255);
     fields[i * 4] = heading[i]!;
     fields[i * 4 + 1] = stubble[i]!;
-    fields[i * 4 + 3] = 255;
+    fields[i * 4 + 2] = ground.baseLayer[i]!;
+    fields[i * 4 + 3] = ground.overlayLayer[i]!;
   }
   const texture = (data: Uint8Array<ArrayBuffer>, filter: THREE.MagnificationTextureFilter): THREE.DataTexture => {
     const result = new THREE.DataTexture(data, size, size, THREE.RGBAFormat, THREE.UnsignedByteType);
@@ -266,5 +283,82 @@ export function terrainControl(world: WorldBlueprint): TerrainControl {
     result.needsUpdate = true;
     return result;
   };
-  return { weights: texture(weights, THREE.LinearFilter), fields: texture(fields, THREE.NearestFilter), minX, minZ, size: cell * size };
+  return {
+    weights: texture(weights, THREE.LinearFilter), fields: texture(fields, THREE.NearestFilter), ground: texture(ground.weights, THREE.LinearFilter),
+    minX, minZ, size: cell * size,
+  };
+}
+
+/**
+ * Regional ground weights (R: the region's base layer, G: its overlay, B: cobbles) and, per texel, the surface layer
+ * indices of the base and the overlay. Weights reach 0 a few metres before a border shared with another region, so the
+ * nearest-sampled indices only change where neither layer shows.
+ */
+function regionalGround(world: WorldBlueprint, size: number, cell: number):
+  { weights: Uint8Array<ArrayBuffer>; baseLayer: Uint8Array; overlayLayer: Uint8Array } {
+  const { minX, minZ, maxX, maxZ } = world.bounds;
+  const weights = new Uint8Array(size * size * 4);
+  const baseLayer = new Uint8Array(size * size), overlayLayer = new Uint8Array(size * size);
+  const regions = world.exploration?.regions ?? [];
+  // Patch noise on a coarse grid (4 texels), interpolated: two octave sums per grid point instead of per texel.
+  let seed = 2166136261;
+  for (const c of `korovany2:v3:${world.seed}:ground`) seed = Math.imul(seed ^ c.charCodeAt(0), 16777619);
+  const step = 4, grid = Math.ceil(size / step) + 1;
+  const patchNoise = new Float32Array(grid * grid), meadowNoise = new Float32Array(grid * grid);
+  for (let r = 0; r < grid; r++) {
+    for (let c = 0; c < grid; c++) {
+      const x = minX + c * step * cell, z = minZ + r * step * cell;
+      patchNoise[r * grid + c] = fbm(x / 46, z / 46, seed, 3);
+      meadowNoise[r * grid + c] = fbm(x / 70 + 31.7, z / 70 - 12.3, seed ^ 0x5bd1e995, 2);
+    }
+  }
+  const sample = (noise: Float32Array, row: number, column: number): number => {
+    const fr = row / step, fc = column / step, r0 = Math.floor(fr), c0 = Math.floor(fc), tr = fr - r0, tc = fc - c0;
+    const at = (r: number, c: number) => noise[Math.min(grid - 1, r) * grid + Math.min(grid - 1, c)]!;
+    const top = at(r0, c0) + (at(r0, c0 + 1) - at(r0, c0)) * tc, bottom = at(r0 + 1, c0) + (at(r0 + 1, c0 + 1) - at(r0 + 1, c0)) * tc;
+    return top + (bottom - top) * tr;
+  };
+  const layer = (name: WorldSurface): number => WORLD_SURFACES.indexOf(name);
+  for (const region of regions) {
+    const rule = Object.hasOwn(REGION_GROUND, region.id) ? REGION_GROUND[region.id]! : undefined;
+    if (!rule) continue;
+    const b = region.bounds;
+    const c0 = Math.max(0, Math.floor((b.minX - minX) / cell)), c1 = Math.min(size - 1, Math.floor((b.maxX - minX) / cell));
+    const r0 = Math.max(0, Math.floor((b.minZ - minZ) / cell)), r1 = Math.min(size - 1, Math.floor((b.maxZ - minZ) / cell));
+    // Only borders shared with other regions fade; the world's edge does not.
+    const open = (edge: number, bound: number) => (Math.abs(edge - bound) < 1 ? Infinity : 0);
+    for (let r = r0; r <= r1; r++) {
+      const z = minZ + (r + 0.5) * cell;
+      for (let c = c0; c <= c1; c++) {
+        const x = minX + (c + 0.5) * cell;
+        if (x < b.minX || x > b.maxX || z < b.minZ || z > b.maxZ) continue;
+        const inside = Math.min(x - b.minX + open(b.minX, minX), b.maxX - x + open(b.maxX, maxX),
+          z - b.minZ + open(b.minZ, minZ), b.maxZ - z + open(b.maxZ, maxZ));
+        const fade = smoothstep(5, 28, inside);
+        const i = r * size + c;
+        const base = fade * (1 - 0.75 * smoothstep(0.66, 0.74, sample(meadowNoise, r, c)));
+        weights[i * 4] = Math.round(base * 255);
+        baseLayer[i] = layer(rule.base);
+        if (rule.overlay) {
+          const patch = smoothstep(rule.patches! - 0.04, rule.patches! + 0.04, sample(patchNoise, r, c));
+          weights[i * 4 + 1] = Math.round(fade * patch * 255);
+          overlayLayer[i] = layer(rule.overlay);
+        }
+      }
+    }
+  }
+  for (const place of world.exploration?.locations ?? []) {
+    if (!COBBLED_PLACES.has(place.id)) continue;
+    const reach = 54;
+    const c0 = Math.max(0, Math.floor((place.x - reach - minX) / cell)), c1 = Math.min(size - 1, Math.ceil((place.x + reach - minX) / cell));
+    const r0 = Math.max(0, Math.floor((place.z - reach - minZ) / cell)), r1 = Math.min(size - 1, Math.ceil((place.z + reach - minZ) / cell));
+    for (let r = r0; r <= r1; r++) {
+      for (let c = c0; c <= c1; c++) {
+        const d = Math.hypot(minX + (c + 0.5) * cell - place.x, minZ + (r + 0.5) * cell - place.z);
+        const i = r * size + c;
+        weights[i * 4 + 2] = Math.max(weights[i * 4 + 2]!, Math.round((1 - smoothstep(30, reach, d)) * 255));
+      }
+    }
+  }
+  return { weights, baseLayer, overlayLayer };
 }

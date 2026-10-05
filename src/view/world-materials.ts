@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { applySightlineDither } from './sightline';
-import { SURFACE_METRES, WORLD_SURFACES, type WorldSurfaces } from './world-assets';
+import { SURFACE_METRES, WORLD_SURFACES, type WorldSurface, type WorldSurfaces } from './world-assets';
 
 /** Three's screen-space cotangent frame (normal mapping without tangent attributes), under a private name. */
 const TANGENT_FRAME = `
@@ -101,29 +101,38 @@ export function kitMaterial(surfaces: WorldSurfaces, hero: THREE.Vector3,
 export interface TerrainControl {
   /** RGBA8 weights over the world bounds, one texel per `cell` metres, row 0 at minZ. */
   weights: THREE.DataTexture;
-  /** R: field furrow heading / PI, G: 1 for stubble fields; sampled at the nearest texel. */
+  /**
+   * R: field furrow heading / PI, G: 1 for stubble fields, B: the regional base surface layer, A: the regional overlay
+   * surface layer (layer indices into the surface arrays); sampled at the nearest texel.
+   */
   fields: THREE.DataTexture;
+  /** RGBA8 regional weights: R the base layer (replacing the meadow), G the overlay, B cobbles (replacing mud and road). */
+  ground: THREE.DataTexture;
   minX: number;
   minZ: number;
   size: number;
 }
 
 /**
- * Ground: five tiling layers blended per pixel by the control map, with luminance as pseudo-height so transitions
- * follow stones and tufts instead of soft gradients, a field layer turned along each strip, and broad tonal variation
- * that breaks up tiling at a distance.
+ * Ground: eight tiling layers blended per pixel by the control maps (the meadow, forest floor, mud, road and field, plus
+ * each region's own base and overlay layers and town cobbles), with luminance as pseudo-height so transitions follow
+ * stones and tufts instead of soft gradients, a field layer turned along each strip, and broad tonal variation that breaks
+ * up tiling at a distance. A layer is only sampled where its weight is above zero.
  */
 export function terrainMaterial(surfaces: WorldSurfaces, control: TerrainControl): THREE.MeshStandardMaterial {
   const material = new THREE.MeshStandardMaterial({ roughness: 1, metalness: 0 });
   material.name = 'world-terrain';
-  material.customProgramCacheKey = () => 'korovany-world-terrain-v1';
-  const layers = (['meadow', 'forest', 'mud', 'road', 'field'] as const).map(name => `${surfaceLayer(name)}.0`);
-  const scales = (['meadow', 'forest', 'mud', 'road', 'field'] as const).map(name => (1 / SURFACE_METRES[name]).toFixed(5));
+  material.customProgramCacheKey = () => 'korovany-world-terrain-v2';
+  const names = ['meadow', 'forest', 'mud', 'road', 'field'] as const;
+  // Layers 5 and 6 come from the fields map per texel; 7 is the cobbles.
+  const layers = [...names.map(name => `${surfaceLayer(name)}.0`), 'regionalLayer', 'overlayLayer', `${surfaceLayer('cobbles')}.0`];
+  const scales = [...names, 'meadow', 'meadow', 'cobbles'].map(name => (1 / SURFACE_METRES[name as WorldSurface]).toFixed(5));
   material.onBeforeCompile = shader => {
     shader.uniforms.surfaceAlbedo = { value: surfaces.albedo };
     shader.uniforms.surfaceData = { value: surfaces.surface };
     shader.uniforms.terrainWeights = { value: control.weights };
     shader.uniforms.terrainFields = { value: control.fields };
+    shader.uniforms.terrainGround = { value: control.ground };
     shader.uniforms.terrainArea = { value: new THREE.Vector3(control.minX, control.minZ, 1 / control.size) };
     shader.vertexShader = `varying vec3 vTerrainWorld;\n${shader.vertexShader}`.replace('#include <worldpos_vertex>', `
       #include <worldpos_vertex>
@@ -134,6 +143,7 @@ export function terrainMaterial(surfaces: WorldSurfaces, control: TerrainControl
         uniform highp sampler2DArray surfaceData;
         uniform sampler2D terrainWeights;
         uniform sampler2D terrainFields;
+        uniform sampler2D terrainGround;
         uniform vec3 terrainArea;
         varying vec3 vTerrainWorld;
         ${TANGENT_FRAME}
@@ -146,22 +156,34 @@ export function terrainMaterial(surfaces: WorldSurfaces, control: TerrainControl
       .replace('#include <map_fragment>', `
         vec2 areaUv = (vTerrainWorld.xz - terrainArea.xy) * terrainArea.z;
         vec4 control = texture2D(terrainWeights, areaUv);
+        vec4 regional = texture2D(terrainGround, areaUv);
         vec4 field = texelFetch(terrainFields, clamp(ivec2(areaUv * vec2(textureSize(terrainFields, 0))), ivec2(0),
           textureSize(terrainFields, 0) - 1), 0);
+        float regionalLayer = floor(field.b * 255.0 + 0.5);
+        float overlayLayer = floor(field.a * 255.0 + 0.5);
         // Wobble the control lookups' edges at sub-texel scale so borders read as natural, not as bilinear blur.
         float wobble = terrainNoise(vTerrainWorld.xz * 1.7) - 0.5;
         control = clamp(control + wobble * 0.22 * (1.0 - abs(control * 2.0 - 1.0)), 0.0, 1.0);
+        regional = clamp(regional + wobble * 0.22 * (1.0 - abs(regional * 2.0 - 1.0)), 0.0, 1.0);
         float heading = field.r * 3.14159265;
         vec2 fieldUv = mat2(cos(heading), -sin(heading), sin(heading), cos(heading)) * vTerrainWorld.xz * ${scales[4]};
         vec2 groundUv = vTerrainWorld.xz;
-        float weights[5];
-        weights[1] = control.r; weights[2] = control.g; weights[3] = control.b; weights[4] = control.a;
-        weights[0] = clamp(1.0 - control.r - control.g - control.b - control.a, 0.0, 1.0);
-        vec4 colours[5];
-        vec4 datas[5];
+        float weights[8];
+        float open = clamp(1.0 - control.r - control.g - control.b - control.a, 0.0, 1.0);
+        // The region's base replaces the meadow; its overlay covers open ground and forest floor; cobbles pave mud and road.
+        weights[0] = open * (1.0 - regional.r) * (1.0 - regional.g);
+        weights[5] = open * regional.r * (1.0 - regional.g);
+        weights[6] = (open + control.r) * regional.g;
+        weights[1] = control.r * (1.0 - regional.g);
+        weights[2] = control.g * (1.0 - regional.b);
+        weights[3] = control.b * (1.0 - regional.b);
+        weights[7] = (control.g + control.b) * regional.b;
+        weights[4] = control.a;
+        vec4 colours[8];
+        vec4 datas[8];
         float best = 0.0;
-        float heights[5];
-        ${[0, 1, 2, 3, 4].map(i => `
+        float heights[8];
+        ${[0, 1, 2, 3, 4, 5, 6, 7].map(i => `
         heights[${i}] = -1.0;
         if (weights[${i}] > 0.003) {
           vec3 uvw = vec3(${i === 4 ? 'fieldUv' : `groundUv * ${scales[i]}`}, ${layers[i]});
@@ -173,7 +195,7 @@ export function terrainMaterial(surfaces: WorldSurfaces, control: TerrainControl
         vec3 groundColour = vec3(0.0);
         vec4 groundData = vec4(0.0);
         float total = 0.0;
-        ${[0, 1, 2, 3, 4].map(i => `
+        ${[0, 1, 2, 3, 4, 5, 6, 7].map(i => `
         if (heights[${i}] > best - 0.28) {
           float blend = heights[${i}] - (best - 0.28);
           groundColour += colours[${i}].rgb * blend;

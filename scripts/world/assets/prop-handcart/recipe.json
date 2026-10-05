@@ -1,0 +1,80 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-handcart",
+  "source": {
+    "candidate": "a-s6104",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 6104,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "6df8d18c21e5d28ac500a6397554e74fc23e0ce834f1c44c58baeab6fa11dabc",
+    "conceptSha256": "4436477ebebc8badecf71dfa6e5f8414b81a3d09c4a5503dbbc4ec75355dd464"
+  },
+  "reachMeters": 1.67,
+  "yawDegrees": 90,
+  "minComponentVertices": 30,
+  "triangleBudget": 5000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    256
+  ],
+  "material": {
+    "bakeSize": 1024,
+    "mapsSize": 256,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.06,
+    "aoSamples": 32,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.88,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "name": "iron",
+        "value": [
+          0,
+          0.22
+        ],
+        "saturation": [
+          0,
+          0.16
+        ],
+        "roughness": 0.6,
+        "metalness": 0.45
+      },
+      {
+        "name": "sackcloth",
+        "hue": [
+          22,
+          52
+        ],
+        "saturation": [
+          0.2,
+          0.62
+        ],
+        "value": [
+          0.38,
+          1
+        ],
+        "roughness": 0.95
+      },
+      {
+        "name": "wood",
+        "value": [
+          0,
+          1
+        ],
+        "roughness": 0.86
+      }
+    ],
+    "roughnessFromDetail": 0.5,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 6,
+    "normalMapStrength": 1.0,
+    "albedoGain": 2.0
+  },
+  "sizeNote": "reachMeters gives a 1.24 m tall prop (2.5 m long, scaled 1.28).",
+  "albedoGainNote": "Linear gain 2.0, the W0 cap: the approved concept's foreground is 2.8-5 times brighter in mean linear luminance than the raw TRELLIS texels (about 2.1-3.9 times with W0's calibration), so the cooked albedo is still somewhat darker than the concept. Measured by luminance ratio, not calibrated in the game.",
+  "textureNote": "Under 2 m tall, so at most about 100 px tall at the closest camera: 256 px base colour, normal and ORM maps."
+}

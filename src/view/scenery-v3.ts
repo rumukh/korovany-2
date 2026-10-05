@@ -110,16 +110,17 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
   const kinds: ScatterKind[] = [];
   const kindOf = new Map<string, number>();
   const radiusOf = (geometry: THREE.BufferGeometry): number => geometry.boundingSphere!.center.length() + geometry.boundingSphere!.radius;
-  const define = (key: string, parts: ScatterPart[]): number => {
-    kinds.push({ parts, radius: Math.max(...parts.map(part => radiusOf(part.geometry))) });
+  const define = (key: string, parts: ScatterPart[], hollow?: THREE.Box3): number => {
+    kinds.push({ parts, radius: Math.max(...parts.map(part => radiusOf(part.geometry))), hollow });
     kindOf.set(key, kinds.length - 1);
     return kinds.length - 1;
   };
-  const banded = (key: string, geometry: THREE.BufferGeometry, material: THREE.Material, band: { shadow: number; far: number }): number =>
+  const banded = (key: string, geometry: THREE.BufferGeometry, material: THREE.Material, band: { shadow: number; far: number },
+    hollow?: THREE.Box3): number =>
     define(key, [
       { name: `${key}:near`, geometry, material, near: 0, far: band.shadow, castShadow: true, depthMaterial: depth },
       { name: `${key}:far`, geometry, material, near: band.shadow, far: band.far, castShadow: false },
-    ]);
+    ], hollow);
   const cutawayMaterials = new Map<THREE.Material, THREE.Material>();
   /** A presentation-owned copy of a library material with the camera-to-hero cutaway. */
   const cutaway = (source: THREE.Material, key: string, strength: number,
@@ -140,7 +141,10 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
     const kind = WORLD_MODELS[id].kind;
     if (kind === 'kit') {
       const mesh = model.scene.getObjectByProperty('isMesh', true) as THREE.Mesh;
-      return banded(key, placedGeometry(resources, id, mesh), kit, BANDS.building);
+      const geometry = placedGeometry(resources, id, mesh);
+      if (!geometry.boundingBox) geometry.computeBoundingBox();
+      // Kit walls are one-sided: a camera inside a building hides that building instead of showing its hollow inside.
+      return banded(key, geometry, kit, BANDS.building, geometry.boundingBox!);
     }
     if (kind === 'rock') {
       const mesh = meshNamed(model.scene, `variant-${variant}`);
@@ -183,7 +187,8 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
     const id = o.model as WorldModelId;
     const kind = WORLD_MODELS[id].kind;
     const y = terrain.height(o.x, o.z);
-    if (id === 'kit-fence') {
+    if (id === 'kit-fence' || id === 'kit-wall') {
+      // Boundary runs repeat their 2 m module along the box's longer side.
       const shape = o.shape!;
       const alongZ = shape.halfZ >= shape.halfX;
       const length = 2 * (alongZ ? shape.halfZ : shape.halfX);

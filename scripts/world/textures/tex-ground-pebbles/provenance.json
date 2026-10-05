@@ -1,0 +1,84 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-ground-pebbles",
+ "layer": "pebbles",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/pebbles-albedo.webp",
+   "sha256": "44051b9e5e57bd04654d112b8f246ded52f3c2322bf13eeaa265bef06b48993b",
+   "bytes": 137404
+  },
+  "height": {
+   "file": "public/world/surfaces/pebbles-height.webp",
+   "sha256": "3d65d1f8fc3031faf89575104c71897254f42468eb159dbd945d834f97b1e1dd",
+   "bytes": 107366
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-45201.png",
+  "candidateSha256": "e99192ff9a4cb6e3ef36b56df7e1ad1f572de5c1c98c4e542e1cd56479c12a5b",
+  "seed": 45201,
+  "generationSeconds": 841.3,
+  "layoutSha256": "1ef8f33f943ba54155da65720337722465fd6e15a2f30bea1f954890063878de"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Top-down beach shingle: small rounded grey, brown and slate pebbles packed in coarse dark sand, with looser and denser drifts; at 4 m the pebbles are 3-6 cm, true to a shingle beach, and no single stone stands out to repeat.",
+  "limitations": [
+   "The pebbles are smaller and more uniform than storm shingle; there are no larger cobbles, shells or wrack lines.",
+   "The sand between them is nearly as dark as the stones, so from 40 m the layer reads as dark gravel."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 4.068,
+    "seamRatioAfter": 0.976
+   },
+   "grade": {
+    "gain": 1.25,
+    "saturation": 1.0
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   74.3,
+   69.5,
+   67.4
+  ]
+ }
+}

@@ -1,0 +1,28 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-wall",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "f9751ebee12cc931290c01e6ecc04eae3c1141737ecfb84df1fa0b27823ac44a",
+   "rationale": "Dry-stone boundary module, 2 m long, 0.6 m wide, 2.0 m high with a slab coping; repeated along yard and courtyard sides; 20 triangles, 3,016 bytes before meshopt. Walls stay inside the oriented-box collider below 3 m and eaves overhang at most 0.78 m above it (check-kit: OK); baked AO at 48 samples.",
+   "limitations": [
+    "Modules repeat every 2 m with identical stones; long runs show the repeat.",
+    "Corners overlap two modules instead of a corner stone.",
+    "Surfaces are tiled 2 m layers shared by the whole kit; there is no unique wear, grime gradient or decals per building."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "f9751ebee12cc931290c01e6ecc04eae3c1141737ecfb84df1fa0b27823ac44a",
+   "rationale": "In Yards and inn courtyards in stone country (Greenhollow gardens, Saltmarket, Cinderwell, Crownbridge, Roadward, Lantern Ferry, High Pass, Wreckers' Rest) at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at true scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss; shadows ground it on the relief; the 1.6-3.2 m architecture cutaway keeps the hero visible behind it, and a camera inside its bounds (plus 2 m) hides it instead of showing the hollow inside.",
+   "limitations": [
+    "Not enterable: interiors are not modelled.",
+    "Lighting is the overcast day grade only; windows never light up."
+   ]
+  }
+ ]
+}

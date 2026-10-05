@@ -1,0 +1,28 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-stable",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "7c561409978a75ff883df8262d44aa4dde2d86d51c615ae1249b33502bc95679",
+   "rationale": "Open-fronted stable, 6 x 14 m, four bays under a 38 degree shingle roof, eaves 3.6 m; 176 triangles, 16,080 bytes before meshopt. Walls stay inside the oriented-box collider below 3 m and eaves overhang at most 0.78 m above it (check-kit: OK); baked AO at 48 samples.",
+   "limitations": [
+    "Stalls are empty and the bays dark; no hay racks, horses or tack.",
+    "Seen from the open side, the inside back wall is one flat plank face.",
+    "Surfaces are tiled 2 m layers shared by the whole kit; there is no unique wear, grime gradient or decals per building."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "7c561409978a75ff883df8262d44aa4dde2d86d51c615ae1249b33502bc95679",
+   "rationale": "In Inn courtyards (Roadward, Lantern Ferry, High Pass) at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at true scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss; shadows ground it on the relief; the 1.6-3.2 m architecture cutaway keeps the hero visible behind it, and a camera inside its bounds (plus 2 m) hides it instead of showing the hollow inside.",
+   "limitations": [
+    "Not enterable: interiors are not modelled.",
+    "Lighting is the overcast day grade only; windows never light up."
+   ]
+  }
+ ]
+}

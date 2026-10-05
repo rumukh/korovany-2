@@ -1,0 +1,28 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-townhouse-a",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "267057fb44adb220d37eb42dbd38816c46215705a7d008b180919e9a1a561eb2",
+   "rationale": "Jettied two-storey townhouse, 7.5 x 11 m, ashlar ground floor and lime-washed jettied upper storey (0.6 m jetty), steep 55 degree slate roof to 14.6 m, eaves front with four upper windows; 1,112 triangles, 94,836 bytes before meshopt. Walls stay inside the oriented-box collider below 3 m and eaves overhang at most 0.78 m above it (check-kit: OK); baked AO at 48 samples.",
+   "limitations": [
+    "Upper-storey timber framing is painted into the lime layer only as flat beams; no carved brackets under the jetty.",
+    "All townhouses share one window and door size, so a street of them repeats visibly.",
+    "Surfaces are tiled 2 m layers shared by the whole kit; there is no unique wear, grime gradient or decals per building."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "267057fb44adb220d37eb42dbd38816c46215705a7d008b180919e9a1a561eb2",
+   "rationale": "In Crownbridge (Crownlands) at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at true scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss; shadows ground it on the relief; the 1.6-3.2 m architecture cutaway keeps the hero visible behind it, and a camera inside its bounds (plus 2 m) hides it instead of showing the hollow inside.",
+   "limitations": [
+    "Not enterable: interiors are not modelled.",
+    "Lighting is the overcast day grade only; windows never light up."
+   ]
+  }
+ ]
+}

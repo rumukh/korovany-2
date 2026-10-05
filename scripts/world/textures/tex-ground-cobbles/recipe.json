@@ -1,0 +1,57 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-ground-cobbles",
+  "layer": "cobbles",
+  "physicalSizeMetres": 4,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of an old cobbled street, four metres across, shot straight down from directly above as a flat orthographic photograph. The whole image is the ground surface itself, filling the frame edge to edge: no horizon, no sky and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. Each stone shape becomes exactly one large, worn, rounded granite cobblestone about the size of a loaf of bread, tightly packed against its neighbours, slightly domed and smoothed by cart wheels and hooves, dull and matte, grey-brown with dirt in its pores; the thin dark gaps between them become packed mud and grit. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, bricks, tiles, square paving slabs, moss cushions, puddles, kerb, painted lines, manholes, cars, gravel, small pebbles, beads, loose stones, shiny wet stones, blue tint",
+  "candidates": [
+    {
+      "seed": 45501,
+      "note": "First recipe (0.18 m cells): Qwen drew about twice as many, bead-sized pebbles, loosely spaced in bare dirt, bluish and shiny; it reads as a gravel path, not a cobbled street."
+    },
+    {
+      "seed": 45502
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 45502,
+    "noiseMetres": 0.5,
+    "colours": [
+      "#24201c",
+      "#2a2621"
+    ],
+    "layers": [
+      {
+        "kind": "stones",
+        "cell": 0.26,
+        "fill": [
+          0.46,
+          0.53
+        ],
+        "colours": [
+          "#5e5a52",
+          "#68635a",
+          "#575249",
+          "#716b60",
+          "#4f4b44"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "gain": 0.6,
+    "saturation": 0.75,
+    "note": "Darkened (linear gain 0.6, to a linear albedo of about 0.12, a step paler than the road and mud it paves) and slightly desaturated (0.75): the candidate's stones are a pale, warm beige-grey."
+  }
+}

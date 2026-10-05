@@ -1,0 +1,84 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-arch-lime",
+ "layer": "lime",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/lime-albedo.webp",
+   "sha256": "b5e3203d082a7a12364a9ecf742d8c8ad1767a8d6d09465f08f8484af3d33191",
+   "bytes": 66572
+  },
+  "height": {
+   "file": "public/world/surfaces/lime-height.webp",
+   "sha256": "6051eb81dae99e002b8b46f39fbe1ce228a1427459c9986e6041889f61349f2e",
+   "bytes": 114056
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-44301.png",
+  "candidateSha256": "7bc9c24e7e2b05b608bb08aa16fa7e8c25dc7cea5a2dde187312bb4b820576b1",
+  "seed": 44301,
+  "generationSeconds": 824.7,
+  "layoutSha256": "a1f51d4b342e3ba6c346827d13f59fca06c3d23d6c187fd2de8dd0f7042269f9"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Face-on, matte, slightly uneven lime plaster with fine dark grit and soft trowel relief across the 2 m tile; no cracks, holes or repeating marks, so it tiles quietly between the townhouse timbers.",
+  "limitations": [
+   "Very even and clean: the rain-washed grime streaks the recipe asked for did not appear, so the render reads newer than the timber around it.",
+   "Graded darker and slightly warmer in the cook (gain 0.72) so it does not glare beside the daub and timber."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 2.114,
+    "seamRatioAfter": 1.042
+   },
+   "grade": {
+    "gain": 0.72,
+    "saturation": 1.0
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   166.1,
+   162.7,
+   153.7
+  ]
+ }
+}

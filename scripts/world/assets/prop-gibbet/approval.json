@@ -1,0 +1,35 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-gibbet",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "b",
+   "sha256": "1fe21c1008406a3e5a225cf84f272071eb2737e4f7082ec75139941066777491",
+   "rationale": "Braced oak post on a stone heap with an empty strap-iron cage on a short chain; the short chain keeps the cage attached, which a single-view reconstruction needs."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "dc30441d6392a3c079bf720022e98733d17297fb4c22b9bc1ff8af986fe8c981",
+   "rationale": "Roadside gibbet: braced oak post on a stone heap with an empty strap-iron cage on a short chain (Azure concept b, TRELLIS b-s6102). Cooked 4,925 triangles, 229,940 bytes; 5.59 m tall in a 1.72 m reach at uniform scale. Albedo 512 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "A pale smear where the braces meet the post (a TRELLIS texture artefact) and the heap's stones are lighter than the concept.",
+    "The chain is fused into a solid strap.",
+    "TRELLIS invents the unseen back; it is softer than the concept view.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "dc30441d6392a3c079bf720022e98733d17297fb4c22b9bc1ff8af986fe8c981",
+   "rationale": "In Two roadside turns, with crows below at gameplay cameras (18-40 m): reads at true scale beside the troops, grounded by shadows on the relief, and stays inside its collider (radius 1.72 m or its box).",
+   "limitations": [
+    "Static: no animation, sound or interaction."
+   ]
+  }
+ ]
+}

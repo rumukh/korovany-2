@@ -79,18 +79,83 @@ export function flockHomes(world: WorldBlueprint): { id: string; x: number; z: n
   return homes;
 }
 
+/** Crow flight: authored clip speeds are not ground speeds, so these only pace the view's movement. */
+const CROW_RADIUS = 0.2;
+/** The hero puts a flock up inside this distance of any of its crows; it comes back when the hero is this far. */
+const CROW_ALARM = 10;
+const CROW_RETURN = 34;
+const CROW_SPEED = 7;
+const CROW_CRUISE = 22;
+/** A crow that has flown this far from home is out of sight and waits there to come back. */
+const CROW_AWAY = 70;
+
+type CrowState = 'ground' | 'takeoff' | 'flying' | 'away' | 'landing';
+
+interface Crow {
+  perched: THREE.Object3D;
+  flight: THREE.Object3D;
+  perchedMixer: THREE.AnimationMixer;
+  flightMixer: THREE.AnimationMixer;
+  perch: { Perch: THREE.AnimationAction; Peck: THREE.AnimationAction };
+  wing: { Fly: THREE.AnimationAction; Glide: THREE.AnimationAction; TakeOff: THREE.AnimationAction };
+  flock: CrowFlock;
+  spot: Vec2;
+  x: number;
+  y: number;
+  z: number;
+  heading: number;
+  state: CrowState;
+  timer: number;
+  random: () => number;
+}
+
+interface CrowFlock { id: string; x: number; z: number; count: number; crows: Crow[]; alarmed: boolean; quiet: number }
+
 /**
- * Presentation-only sheep flocks of a version 3 world: they graze and wander inside their pasture, startle and flee from
- * the hero, and walk back afterwards. Deterministic placement from the world seed; behaviour runs on cosmetic time. They
- * are never part of snapshots, saves or rules, and move with the world's own walkability so they never cross buildings.
+ * Crow flocks: on one more stubble or furrow field per settlement than the sheep use, in each chapel's graveyard and at
+ * each roadside gibbet; 3-6 crows each, deterministic from the seed.
+ */
+export function crowHomes(world: WorldBlueprint): { id: string; x: number; z: number; count: number }[] {
+  const homes: { id: string; x: number; z: number; count: number }[] = [];
+  const sheep = new Set(flockHomes(world).map(home => home.id));
+  const used = new Set<string>();
+  const add = (id: string, x: number, z: number) => {
+    const random = stream(hash(`${world.seed}:${id}:crows`));
+    homes.push({ id, x, z, count: 3 + Math.floor(random() * 4) });
+  };
+  for (const field of world.fields ?? []) {
+    const settlement = field.id.replace(/-field-\d+$/, '');
+    if (used.has(settlement) || sheep.has(field.id) || !isWalkable(world, field, CROW_RADIUS)) continue;
+    used.add(settlement);
+    add(field.id, field.x, field.z);
+  }
+  for (const o of world.obstacles) {
+    if (o.model === 'prop-gibbet') add(o.id, o.x + 2.6, o.z + 1.4);
+    else if ((o.model === 'kit-chapel' || o.model === 'kit-chapel-fen') && o.shape) {
+      // Among the graves behind the chapel (its back is local -X: (-cos h, sin h)).
+      const back = o.shape.halfX + 5;
+      add(o.id, o.x - Math.cos(o.shape.heading) * back, o.z + Math.sin(o.shape.heading) * back);
+    } else if (o.id === 'name-well-grave-0') add(o.id, o.x + 2, o.z);
+  }
+  return homes;
+}
+
+/**
+ * Presentation-only sheep flocks and crows of a version 3 world. Sheep graze and wander inside their pasture, startle
+ * and flee from the hero, and walk back afterwards. Crows peck and look about on fields, in graveyards and under
+ * gibbets; when the hero comes close the flock takes off, flies away out of sight and comes back down once the hero has
+ * gone. Deterministic placement from the world seed; behaviour runs on cosmetic time. They are never part of snapshots,
+ * saves or rules, and walking animals move with the world's own walkability so they never cross buildings.
  */
 export class WorldFauna {
   private readonly sheep: Sheep[] = [];
+  private readonly flocks: CrowFlock[] = [];
   readonly group = new THREE.Group();
 
   constructor(private readonly world: WorldBlueprint, assets: WorldAssetLibrary, private readonly terrain: Terrain) {
     this.group.name = 'world-fauna';
     if (world.version !== 3) return;
+    this.addCrows(assets);
     const model = assets.require('char-sheep');
     for (const home of flockHomes(world)) {
       const random = stream(hash(`${world.seed}:${home.id}:sheep`));
@@ -140,21 +205,222 @@ export class WorldFauna {
     return this.sheep.length;
   }
 
-  /** Shader warm-up: the first sheep stands at (x, y, z), visible, until `restore`. */
+  get crowCount(): number {
+    return this.flocks.reduce((sum, flock) => sum + flock.crows.length, 0);
+  }
+
+  private addCrows(assets: WorldAssetLibrary): void {
+    const homes = crowHomes(this.world);
+    if (!homes.length) return;
+    const perchedModel = assets.require('char-crow'), flightModel = assets.require('char-crow-flight');
+    const clip = (model: typeof perchedModel, name: string): THREE.AnimationClip => {
+      const found = model.clips.get(name);
+      if (!found) throw new Error(`The crow model has no ${name} clip.`);
+      return found;
+    };
+    for (const home of homes) {
+      const flock: CrowFlock = { ...home, crows: [], alarmed: false, quiet: 0 };
+      const random = stream(hash(`${this.world.seed}:${home.id}:crow`));
+      for (let index = 0; index < home.count; index++) {
+        let spot: Vec2 = { x: home.x, z: home.z };
+        for (let attempt = 0; attempt < 12; attempt++) {
+          const angle = random() * Math.PI * 2, distance = 0.8 + random() * 3.5;
+          const candidate = { x: home.x + Math.sin(angle) * distance, z: home.z + Math.cos(angle) * distance };
+          if (isWalkable(this.world, candidate, CROW_RADIUS)) { spot = candidate; break; }
+        }
+        const perched = cloneSkinned(perchedModel.scene), flight = cloneSkinned(flightModel.scene);
+        perched.name = `crow:${home.id}:${index}:perched`;
+        flight.name = `crow:${home.id}:${index}:flight`;
+        for (const root of [perched, flight]) {
+          root.traverse(object => {
+            if ((object as THREE.Mesh).isMesh) {
+              object.castShadow = true;
+              object.receiveShadow = true;
+              object.frustumCulled = false;
+            }
+          });
+        }
+        const perchedMixer = new THREE.AnimationMixer(perched), flightMixer = new THREE.AnimationMixer(flight);
+        const perch = { Perch: perchedMixer.clipAction(clip(perchedModel, 'Perch')), Peck: perchedMixer.clipAction(clip(perchedModel, 'Peck')) };
+        const wing = { Fly: flightMixer.clipAction(clip(flightModel, 'Fly')), Glide: flightMixer.clipAction(clip(flightModel, 'Glide')),
+          TakeOff: flightMixer.clipAction(clip(flightModel, 'TakeOff')) };
+        wing.TakeOff.setLoop(THREE.LoopOnce, 1);
+        wing.TakeOff.clampWhenFinished = true;
+        const first = random() < 0.5 ? perch.Peck : perch.Perch;
+        first.play();
+        first.time = random() * first.getClip().duration;
+        wing.Fly.play();
+        // Starting poses, so a reduced-motion view (no mixer updates) still shows posed birds.
+        perchedMixer.update(0);
+        flightMixer.update(0);
+        const crow: Crow = { perched, flight, perchedMixer, flightMixer, perch, wing, flock, spot, x: spot.x, y: 0, z: spot.z,
+          heading: random() * Math.PI * 2, state: 'ground', timer: 1 + random() * 4, random };
+        this.placeCrow(crow);
+        this.group.add(perched);
+        flock.crows.push(crow);
+      }
+      this.flocks.push(flock);
+    }
+  }
+
+  private placeCrow(crow: Crow, root: THREE.Object3D = crow.perched): void {
+    root.position.set(crow.x, this.terrain.height(crow.x, crow.z) + crow.y, crow.z);
+    root.rotation.y = crow.heading;
+  }
+
+  /** Shows the perched or the flying model (only one is in the scene graph), or neither. */
+  private showCrow(crow: Crow, which: 'perched' | 'flight' | null): void {
+    for (const [root, name] of [[crow.perched, 'perched'], [crow.flight, 'flight']] as const) {
+      const wanted = which === name;
+      if (wanted && root.parent !== this.group) this.group.add(root);
+      if (!wanted && root.parent) root.removeFromParent();
+      root.visible = wanted;
+    }
+  }
+
+  private perchClip(crow: Crow, name: 'Perch' | 'Peck'): void {
+    const next = crow.perch[name], current = name === 'Perch' ? crow.perch.Peck : crow.perch.Perch;
+    if (next.isRunning() && next.getEffectiveWeight() > 0.99) return;
+    next.reset();
+    next.play();
+    current.crossFadeTo(next, 0.2, false);
+  }
+
+  private wingClip(crow: Crow, name: 'Fly' | 'Glide' | 'TakeOff'): void {
+    const next = crow.wing[name];
+    if (next.isRunning() && next.getEffectiveWeight() > 0.99) return;
+    next.reset();
+    next.play();
+    for (const other of Object.values(crow.wing)) if (other !== next && other.isRunning()) other.crossFadeTo(next, 0.15, false);
+  }
+
+  private updateCrows(hero: Vec2, focus: Vec2, dt: number, reducedMotion: boolean, paused: boolean): void {
+    for (const flock of this.flocks) {
+      if (!paused && !reducedMotion) {
+        const startled = flock.crows.some(crow => crow.state === 'ground' && Math.hypot(crow.x - hero.x, crow.z - hero.z) < CROW_ALARM);
+        if (startled && !flock.alarmed) {
+          flock.alarmed = true;
+          flock.quiet = 0;
+          for (const crow of flock.crows) {
+            if (crow.state !== 'ground' && crow.state !== 'landing') continue;
+            // A ragged lift-off: each bird goes within half a second, away from the hero.
+            crow.state = 'takeoff';
+            crow.timer = -crow.random() * 0.45;
+          }
+        }
+        if (flock.alarmed && flock.crows.every(crow => crow.state === 'away')) {
+          flock.quiet = Math.hypot(flock.x - hero.x, flock.z - hero.z) > CROW_RETURN ? flock.quiet + dt : 0;
+          if (flock.quiet > 5) {
+            flock.alarmed = false;
+            for (const crow of flock.crows) {
+              const angle = crow.random() * Math.PI * 2, distance = 38 + crow.random() * 10;
+              crow.x = crow.spot.x + Math.sin(angle) * distance;
+              crow.z = crow.spot.z + Math.cos(angle) * distance;
+              crow.y = CROW_CRUISE - 6 + crow.random() * 4;
+              crow.state = 'landing';
+              this.wingClip(crow, 'Glide');
+            }
+          }
+        }
+      }
+      for (const crow of flock.crows) this.updateCrow(crow, hero, focus, dt, reducedMotion, paused);
+    }
+  }
+
+  private updateCrow(crow: Crow, hero: Vec2, focus: Vec2, dt: number, reducedMotion: boolean, paused: boolean): void {
+    if (!paused && !reducedMotion) {
+      switch (crow.state) {
+        case 'ground':
+          crow.timer -= dt;
+          if (crow.timer <= 0) {
+            this.perchClip(crow, crow.random() < 0.55 ? 'Peck' : 'Perch');
+            crow.heading += (crow.random() - 0.5) * 1.2;
+            crow.timer = 2 + crow.random() * 4;
+          }
+          break;
+        case 'takeoff':
+          crow.timer += dt;
+          if (crow.timer < 0) break;
+          if (crow.y === 0) {
+            crow.heading = Math.atan2(crow.x - hero.x, crow.z - hero.z) + (crow.random() - 0.5) * 1.2;
+            this.wingClip(crow, 'TakeOff');
+            crow.y = 0.01;
+          }
+          crow.x += Math.sin(crow.heading) * 2.5 * dt;
+          crow.z += Math.cos(crow.heading) * 2.5 * dt;
+          crow.y += 3 * dt;
+          if (crow.timer > crow.wing.TakeOff.getClip().duration) {
+            crow.state = 'flying';
+            this.wingClip(crow, 'Fly');
+          }
+          break;
+        case 'flying': {
+          crow.heading += (crow.random() - 0.5) * 0.6 * dt;
+          crow.x += Math.sin(crow.heading) * CROW_SPEED * dt;
+          crow.z += Math.cos(crow.heading) * CROW_SPEED * dt;
+          crow.y += Math.max(-1, Math.min(3, (CROW_CRUISE - crow.y) * 0.6)) * dt;
+          if (Math.hypot(crow.x - crow.spot.x, crow.z - crow.spot.z) > CROW_AWAY) {
+            crow.state = 'away';
+            crow.y = 0;
+          }
+          break;
+        }
+        case 'landing': {
+          const dx = crow.spot.x - crow.x, dz = crow.spot.z - crow.z, distance = Math.hypot(dx, dz);
+          const target = Math.min(CROW_CRUISE, distance * 0.4);
+          crow.heading = Math.atan2(dx, dz);
+          const step = Math.min(distance, Math.min(CROW_SPEED, distance * 0.9 + 1.2) * dt);
+          if (distance > 1e-3) {
+            crow.x += dx / distance * step;
+            crow.z += dz / distance * step;
+          }
+          crow.y = Math.max(0, crow.y + Math.max(-3, Math.min(1, (target - crow.y) * 1.5)) * dt);
+          // A few flaps to brake just before touching down.
+          if (distance < 3.5) this.wingClip(crow, 'Fly');
+          if (distance < 0.2 && crow.y < 0.15) {
+            crow.x = crow.spot.x;
+            crow.z = crow.spot.z;
+            crow.y = 0;
+            crow.state = 'ground';
+            crow.timer = 1 + crow.random() * 3;
+            this.perchClip(crow, 'Perch');
+          }
+          break;
+        }
+        case 'away':
+          break;
+      }
+    }
+    const far = Math.hypot(crow.x - focus.x, crow.z - focus.z);
+    const visible = crow.state !== 'away' && far < HIDE;
+    const airborne = crow.state === 'flying' || crow.state === 'landing' || (crow.state === 'takeoff' && crow.y > 0);
+    this.showCrow(crow, visible ? (airborne ? 'flight' : 'perched') : null);
+    if (!visible) return;
+    this.placeCrow(crow, airborne ? crow.flight : crow.perched);
+    if (reducedMotion || far > ANIMATE) return;
+    (airborne ? crow.flightMixer : crow.perchedMixer).update(paused ? 0 : dt);
+  }
+
+  /** Shader warm-up: the first sheep and the first crow, perched and flying, stand near (x, y, z), visible, until `restore`. */
   warm(x: number, y: number, z: number): { objects: THREE.Object3D[]; restore(): void } | undefined {
-    const sheep = this.sheep[0];
-    if (!sheep) return undefined;
-    const visible = sheep.root.visible;
-    const attached = sheep.root.parent === this.group;
-    sheep.root.position.set(x, y, z);
-    sheep.root.visible = true;
-    if (!attached) this.group.add(sheep.root);
+    const crow = this.flocks[0]?.crows[0];
+    const roots = [this.sheep[0]?.root, crow?.perched, crow?.flight].filter((root): root is THREE.Object3D => root !== undefined);
+    if (!roots.length) return undefined;
+    const saved = roots.map(root => ({ root, visible: root.visible, attached: root.parent === this.group, position: root.position.clone() }));
+    roots.forEach((root, index) => {
+      root.position.set(x + index * 1.5, y + (root === crow?.flight ? 1.5 : 0), z);
+      root.visible = true;
+      if (root.parent !== this.group) this.group.add(root);
+    });
     return {
-      objects: [sheep.root],
+      objects: roots,
       restore: () => {
-        sheep.root.visible = visible;
-        if (!attached) sheep.root.removeFromParent();
-        this.place(sheep);
+        for (const { root, visible, attached, position } of saved) {
+          root.visible = visible;
+          root.position.copy(position);
+          if (!attached) root.removeFromParent();
+        }
+        if (this.sheep[0]) this.place(this.sheep[0]);
       },
     };
   }
@@ -246,6 +512,7 @@ export class WorldFauna {
       if (reducedMotion || far > ANIMATE) continue;
       sheep.mixer.update(paused ? 0 : dt);
     }
+    this.updateCrows(hero, focus, dt, reducedMotion, paused);
   }
 
   dispose(): void {
@@ -254,6 +521,13 @@ export class WorldFauna {
       sheep.mixer.uncacheRoot(sheep.root);
     }
     this.sheep.length = 0;
+    for (const crow of this.flocks.flatMap(flock => flock.crows)) {
+      for (const [mixer, root] of [[crow.perchedMixer, crow.perched], [crow.flightMixer, crow.flight]] as const) {
+        mixer.stopAllAction();
+        mixer.uncacheRoot(root);
+      }
+    }
+    this.flocks.length = 0;
     this.group.removeFromParent();
   }
 }

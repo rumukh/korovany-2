@@ -1,0 +1,79 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-gravestone",
+  "source": {
+    "candidate": "a-s6108",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 6108,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "619eaae2c02668beb78a928214a698077719248945487ff67d3b237a8e5e0147",
+    "conceptSha256": "9d5181fd82950a020603627eb098c1154df12b2762e88fde7c7c31c4249b8611"
+  },
+  "reachMeters": 0.4,
+  "yawDegrees": 0,
+  "minComponentVertices": 30,
+  "triangleBudget": 3000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    256
+  ],
+  "material": {
+    "bakeSize": 1024,
+    "mapsSize": 256,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.06,
+    "aoSamples": 32,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.88,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "name": "grass",
+        "hue": [
+          45,
+          150
+        ],
+        "saturation": [
+          0.22,
+          1
+        ],
+        "value": [
+          0.12,
+          1
+        ],
+        "roughness": 0.97
+      },
+      {
+        "name": "stone",
+        "saturation": [
+          0,
+          0.14
+        ],
+        "value": [
+          0.22,
+          1
+        ],
+        "roughness": 0.92
+      },
+      {
+        "name": "earth",
+        "value": [
+          0,
+          1
+        ],
+        "roughness": 0.95
+      }
+    ],
+    "roughnessFromDetail": 0.5,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 6,
+    "normalMapStrength": 1.0,
+    "albedoGain": 2.0
+  },
+  "sizeNote": "reachMeters gives a 1.30 m tall prop (waist high, scaled 1.28).",
+  "albedoGainNote": "Linear gain 2.0, the W0 cap: the approved concept's foreground is 2.8-5 times brighter in mean linear luminance than the raw TRELLIS texels (about 2.1-3.9 times with W0's calibration), so the cooked albedo is still somewhat darker than the concept. Measured by luminance ratio, not calibrated in the game.",
+  "textureNote": "Under 2 m tall, so at most about 100 px tall at the closest camera: 256 px base colour, normal and ORM maps."
+}

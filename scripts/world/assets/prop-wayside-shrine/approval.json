@@ -1,0 +1,35 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-wayside-shrine",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "bcc13dfc19e42ccc5b7683cde937c32bccc625211ab2127fb20ea48ec42287e3",
+   "rationale": "Wide shingled box shrine on a post with the carved stag head, candle stubs and bowl (the Stag Shrine's lore) and a ring of fieldstones; the roof overhang gives a clear silhouette."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "0168521683423be024bf1015ccb75d856f81da53dd5c272bf2937d675d00cd0c",
+   "rationale": "Wayside shrine: a shingle-roofed box on a post with a small stag carving and candle stubs, on stones (Azure concept a, TRELLIS a-s6103). Cooked 4,432 triangles, 203,416 bytes; 2.50 m tall in a 0.57 m reach at uniform scale. Albedo 512 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "The stag carving reads as a dark shape; antlers are not legible at 18 m.",
+    "Candles are unlit.",
+    "TRELLIS invents the unseen back; it is softer than the concept view.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "0168521683423be024bf1015ccb75d856f81da53dd5c272bf2937d675d00cd0c",
+   "rationale": "In Five roadside turns at gameplay cameras (18-40 m): reads at true scale beside the troops, grounded by shadows on the relief, and stays inside its collider (radius 0.57 m or its box).",
+   "limitations": [
+    "Static: no animation, sound or interaction."
+   ]
+  }
+ ]
+}

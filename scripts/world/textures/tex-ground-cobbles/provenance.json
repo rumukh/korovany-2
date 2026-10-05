@@ -1,0 +1,85 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-ground-cobbles",
+ "layer": "cobbles",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/cobbles-albedo.webp",
+   "sha256": "1ed352dc16b35135d044ede4088857b3c35e584a073580c227f14cc6a4f32b9b",
+   "bytes": 85634
+  },
+  "height": {
+   "file": "public/world/surfaces/cobbles-height.webp",
+   "sha256": "54586e1b58615025edd6dac7537b972b134aed9a88f0c6c716b2b71a0d4bc042",
+   "bytes": 59388
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-45502.png",
+  "candidateSha256": "a7d9a81276eaf66db4b1f647f5a30bd132c9d107ac896790b4c7275f37a428e1",
+  "seed": 45502,
+  "generationSeconds": 839.9,
+  "layoutSha256": "05ef4a428d2fe8a768d5f304eaa8533f9caf92d58729dc4b5b68bbd1f5e6a8b1"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Top-down rounded field-stone cobbles about 20 cm across, set in loose rows in packed mud and grit; with the revised layout (0.26 m cells) every stone stays one stone, where candidate 45501 turned into gravel. It reads as the rough cobbled street of a borderland town.",
+  "limitations": [
+   "The stones sit apart in wide mud joints rather than tightly packed, closer to a cobbled yard than a dressed town street.",
+   "The stones are similar in size and tone; there are no setts, kerbs, gutters or worn wheel ruts.",
+   "Each stone carries a baked top-light highlight; from the low landscape camera they read slightly domed and lit from above."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 6.94,
+    "seamRatioAfter": 1.24
+   },
+   "grade": {
+    "gain": 0.6,
+    "saturation": 0.75
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   86.5,
+   80.6,
+   72.6
+  ]
+ }
+}

@@ -1,0 +1,56 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-ground-coldgrass",
+  "layer": "coldgrass",
+  "physicalSizeMetres": 4,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of cold upland tussock grass, four metres across, shot straight down from directly above as a flat orthographic photograph. The whole image is the ground surface itself, filling the frame edge to edge: no horizon, no sky and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The fine strokes become a dense mat of short, tough upland grass, grey-green with frost-browned tips, flattened by the wind, with the soil barely showing between the blades. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, flowers, clover, leaves, large plants, bare soil patches, holes, molehills, snow, stones, sheep",
+  "candidates": [
+    {
+      "seed": 45601
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 45601,
+    "noiseMetres": 0.8,
+    "colours": [
+      "#3e4232",
+      "#4a4c3a",
+      "#424636"
+    ],
+    "layers": [
+      {
+        "kind": "strokes",
+        "length": [
+          0.04,
+          0.14
+        ],
+        "width": 0.004,
+        "perSquareMetre": 3000,
+        "colours": [
+          "#5c6248",
+          "#6e7054",
+          "#7c7656",
+          "#545a42",
+          "#8a8460"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "gain": 0.65,
+    "saturation": 1.25,
+    "blendFraction": 0.4,
+    "note": "Darkened (linear gain 0.65, to a linear albedo of about 0.11, level with the meadow) and greened slightly (saturation 1.25): the candidate's blades carry a bright hoar frost; at full brightness the Salt Coast and Hollowvale would read as frozen. The frost stays as pale tips. A wide wrap band (0.4 of the tile): with the default 0.08 the cross-faded border of this fine, stochastic grass showed as a 4 m grid from the gameplay camera."
+  }
+}

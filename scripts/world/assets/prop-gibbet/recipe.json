@@ -1,0 +1,76 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-gibbet",
+  "source": {
+    "candidate": "b-s6102",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 6102,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "1b4d444ba79a1be582b68f722635fab117f0d512596c4982bf304cd00d07631c",
+    "conceptSha256": "448b395a7cc31e32d92e36c02a921db73d23e3d42bda4c1e8bdcc949e04af1a6"
+  },
+  "reachMeters": 1.72,
+  "yawDegrees": 0,
+  "minComponentVertices": 30,
+  "triangleBudget": 5000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    512
+  ],
+  "material": {
+    "bakeSize": 1024,
+    "mapsSize": 256,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.06,
+    "aoSamples": 32,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.88,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "name": "iron",
+        "value": [
+          0,
+          0.22
+        ],
+        "saturation": [
+          0,
+          0.16
+        ],
+        "roughness": 0.6,
+        "metalness": 0.45
+      },
+      {
+        "name": "stone",
+        "saturation": [
+          0,
+          0.14
+        ],
+        "value": [
+          0.22,
+          1
+        ],
+        "roughness": 0.92
+      },
+      {
+        "name": "wood",
+        "value": [
+          0,
+          1
+        ],
+        "roughness": 0.86
+      }
+    ],
+    "roughnessFromDetail": 0.5,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 6,
+    "normalMapStrength": 1.0,
+    "albedoGain": 2.0
+  },
+  "sizeNote": "reachMeters gives a 5.59 m tall prop (two and a half men tall at the heroic scale).",
+  "albedoGainNote": "Linear gain 2.0, the W0 cap: the approved concept's foreground is 2.8-5 times brighter in mean linear luminance than the raw TRELLIS texels (about 2.1-3.9 times with W0's calibration), so the cooked albedo is still somewhat darker than the concept. Measured by luminance ratio, not calibrated in the game.",
+  "textureNote": "Up to about 330 px tall at the closest camera: 512 px base colour with 256 px normal and ORM maps."
+}

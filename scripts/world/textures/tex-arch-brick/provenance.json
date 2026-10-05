@@ -1,0 +1,85 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-arch-brick",
+ "layer": "brick",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/brick-albedo.webp",
+   "sha256": "8dcab8bec6f527646dfeb706bec75348edc2b4d860e1f081fafd1685495fd0bf",
+   "bytes": 108680
+  },
+  "height": {
+   "file": "public/world/surfaces/brick-height.webp",
+   "sha256": "c9954a48d65fb54268b71dfe59bf51fd2c200bb1cd0fc76f3cc75797aca09f4e",
+   "bytes": 89934
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-44501.png",
+  "candidateSha256": "16c479ecba7215d763b948ffe64955bd8c4b942262f8c0084cb3c556df78538b",
+  "seed": 44501,
+  "generationSeconds": 859.2,
+  "layoutSha256": "defb2d3f1d9fac93a5248b8253290f818eebd43f74839922129f91d59bb33fe2"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Face-on hand-made bricks in running bond with recessed lime joints; about a third of the bricks are soot-blackened in irregular patches that do not line up, so the 2 m tile reads as one old sooty wall rather than a repeating pattern.",
+  "limitations": [
+   "The brick faces share one crackled surface texture, and the course heights are more regular than hand-made brick would be.",
+   "The candidate is very dark (linear albedo about 0.03); the cook lifts it with gain 2.4, which also lifts the noise in the soot.",
+   "No efflorescence, damp line or repairs; every course is intact."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 41.5,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 3.838,
+    "seamRatioAfter": 1.188
+   },
+   "grade": {
+    "gain": 2.4,
+    "saturation": 0.8
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   75.9,
+   65.9,
+   63.3
+  ]
+ }
+}

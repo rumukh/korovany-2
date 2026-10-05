@@ -1,0 +1,84 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-arch-tarred",
+ "layer": "tarred",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/tarred-albedo.webp",
+   "sha256": "700899b4408dc966d33de5e1cf8c79a5f405d0f3060c38a60c6e30874a19fe3e",
+   "bytes": 49640
+  },
+  "height": {
+   "file": "public/world/surfaces/tarred-height.webp",
+   "sha256": "ed15ca6fbc71e108ebc4eb7a3a4f1127a132bd8df545054c8cde12fcc07ce9c8",
+   "bytes": 63048
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-44401.png",
+  "candidateSha256": "fdc804398f3929b49989b8d6a77106983660adef58081fc361ec1e14d9f797ef",
+  "seed": 44401,
+  "generationSeconds": 830.1,
+  "layoutSha256": "5c2b0789a7b545bf46a3c0a7385ca0d2f5f318e56263aadbb9b274984e37e7fe"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Face-on vertical boards in black pine tar with butt joints at staggered heights and wood grain showing where the tar has worn; the boards differ in width and the joints never line up, so the 2 m tile does not read as a grid.",
+  "limitations": [
+   "The worn grain is a strong orange, closer to charred wood than to old tar; the cook halves its saturation.",
+   "Uniformly black from edge to edge: no salt bloom, algae or mud splash at the foot of the wall."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 2.072,
+    "seamRatioAfter": 0.761
+   },
+   "grade": {
+    "gain": 1.15,
+    "saturation": 0.5
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   32.6,
+   32.1,
+   32.6
+  ]
+ }
+}

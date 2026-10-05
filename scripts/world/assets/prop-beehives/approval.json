@@ -1,0 +1,35 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-beehives",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "b",
+   "sha256": "dc817380be8a144f4ec7b33af5ab83186f662e41181ff1023f22f5ae684a507d",
+   "rationale": "Two coiled-straw skeps with entrance holes on a braced plank bench under a shingled roof, seen from a three-quarter angle that shows the bench's depth (a and c are nearly face-on)."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "38175006b3b42b102ad6edc1f0c9b20b9bf146db6ad15a37651dc8a9c675b04b",
+   "rationale": "Two straw skeps on a bench under a small shingle roof (Azure concept b, TRELLIS b-s6118). Cooked 4,925 triangles, 163,720 bytes; 1.74 m tall in a 1.07 m reach at uniform scale. Albedo 256 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "Skeps are smooth domes without coil detail at 256 px.",
+    "In walled yards the hives can sit behind the wall from some camera angles.",
+    "TRELLIS invents the unseen back; it is softer than the concept view.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "38175006b3b42b102ad6edc1f0c9b20b9bf146db6ad15a37651dc8a9c675b04b",
+   "rationale": "In Garden yards (Greenhollow, Hollow Village) at gameplay cameras (18-40 m): reads at true scale beside the troops, grounded by shadows on the relief, and stays inside its collider (radius 1.07 m or its box).",
+   "limitations": [
+    "Static: no animation, sound or interaction."
+   ]
+  }
+ ]
+}

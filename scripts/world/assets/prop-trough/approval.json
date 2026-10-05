@@ -1,0 +1,34 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-trough",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "b",
+   "sha256": "7d170ab63c226dd7f42cef5877bc83d6c1512c528077a70151b39c008db0cd80",
+   "rationale": "Candidate c was chosen first, but TRELLIS rebuilt it twice as a cross of two troughs (c-s6110, and a-s6122 from candidate a); candidate b, the same plank trough on stone blocks with dark water, reconstructs as one long trough (b-s6121)."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "43a8ee48fcdcd85573a1c37ba8dc4cee42723be6c9138bdd241de7cba5b37f0d",
+   "rationale": "Plank water trough on stone blocks with leaves on the water (Azure concept b, TRELLIS b-s6121). Cooked 3,939 triangles, 114,116 bytes; 0.86 m tall in a 1.64 m reach at uniform scale. Albedo 256 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "The water is a dark static surface (no reflection).",
+    "TRELLIS invents the unseen back; it is softer than the concept view.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "43a8ee48fcdcd85573a1c37ba8dc4cee42723be6c9138bdd241de7cba5b37f0d",
+   "rationale": "In Smithies and stables at gameplay cameras (18-40 m): reads at true scale beside the troops, grounded by shadows on the relief, and stays inside its collider (radius 1.64 m or its box).",
+   "limitations": [
+    "Static: no animation, sound or interaction."
+   ]
+  }
+ ]
+}

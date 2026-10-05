@@ -1,0 +1,133 @@
+{
+  "schema": "korovany2-bird-recipe/1",
+  "id": "char-crow-flight",
+  "pose": "flight",
+  "source": {
+    "candidate": "c-s6112",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 6112,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "98d85df8736ea292125c85d201be599154e209582b8ab11bf022134295399565",
+    "conceptSha256": "e0da7289297048b4bd542aa2f9c74807f96b1721d03d7e4e27637c2aa9658640"
+  },
+  "yawDegrees": 0,
+  "heightMeters": 0.36,
+  "feetFraction": 1.0,
+  "triangleBudget": 2400,
+  "baseQuality": 90,
+  "ormQuality": 85,
+  "body": {
+    "bakeSize": 512,
+    "textureSize": 256,
+    "cageExtrusionMeters": 0.01,
+    "maxRayMeters": 0.02,
+    "aoSamples": 32,
+    "aoPower": 1.0,
+    "aoFloor": 0.45,
+    "reliefStrength": 3.0,
+    "roughnessFromDetail": 0.4,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0,
+    "toneGamma": 0.85,
+    "defaultRoughness": 0.55,
+    "regions": [
+      {
+        "name": "beak-and-legs",
+        "colour": {
+          "maxValue": 0.1
+        },
+        "roughness": 0.45
+      }
+    ],
+    "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved TRELLIS source mesh; there is no rear-view projection, so the far side and underside are as TRELLIS invented them from the single approved concept. Tangent normals baked from the source geometry and whiteout-blended with colour relief; AO baked from the decimated geometry; roughness lower on the darkest texels (beak and legs) and otherwise the glossy-feather default, both reduced by colour detail; no metal and no dye mask. Base colour lifted by luma power toneGamma (chroma ratios kept), set by eye in review renders. Artistic derivation, not measured PBR."
+  },
+  "landmarks": {
+    "chest": [
+      0,
+      -0.12,
+      0.2
+    ],
+    "beak": [
+      0,
+      -0.347,
+      0.18
+    ],
+    "tailBase": [
+      0,
+      0.12,
+      0.13
+    ],
+    "tailTip": [
+      0,
+      0.273,
+      0.07
+    ],
+    "shoulder": [
+      0.09,
+      -0.02,
+      0.22
+    ],
+    "elbow": [
+      0.3,
+      -0.01,
+      0.25
+    ],
+    "wingTip": [
+      0.56,
+      0.0,
+      0.31
+    ]
+  },
+  "weights": {
+    "bodyHalfWidth": 0.09,
+    "tailStart": 0.05,
+    "headMargin": 0.0,
+    "shoulderBlend": 0.06,
+    "elbowBlend": 0.06,
+    "relax": 12,
+    "falloff": 0.02,
+    "minWeight": 0.01
+  },
+  "clips": {
+    "fly": {
+      "seconds": 0.32,
+      "wingBias": -4,
+      "wingDegrees": 38,
+      "tipBias": 0,
+      "tipDegrees": 22,
+      "tipLag": 0.12,
+      "bob": 0.025,
+      "bobLag": 0.25,
+      "pitch": 0,
+      "pitchDegrees": 2,
+      "tailDegrees": 4,
+      "sweep": 6
+    },
+    "glide": {
+      "seconds": 2.4,
+      "wingBias": 6,
+      "wingDegrees": 4,
+      "tipBias": 4,
+      "tipDegrees": 3,
+      "rollDegrees": 6,
+      "pitch": 0,
+      "tailDegrees": 3
+    },
+    "takeOff": {
+      "seconds": 0.84,
+      "beatSeconds": 0.28,
+      "wingBias": 2,
+      "wingDegrees": 52,
+      "tipBias": 0,
+      "tipDegrees": 30,
+      "tipLag": 0.12,
+      "bob": 0.035,
+      "pitch": -24,
+      "tailDegrees": -12,
+      "sweep": 10
+    }
+  },
+  "note": "Crow in flight from concept candidate c and TRELLIS raw c-s6112 (already facing -Y), scaled to a 1.12 m wingspan. feetFraction 1 centres the bird on its whole outline (the lowest points are the drooping tail, not feet). Landmarks measured on the normalized mesh: wing roots at x 0.09, the wrist at x 0.3, tips at x 0.56 raised in a shallow dihedral.",
+  "textureNote": "A crow is about 20-40 px tall in play: 256 px maps, baked at 512 and downsampled."
+}

@@ -1,0 +1,34 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-crates",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "ecd95da89bc191da56d6c15c263eb3abdc47fbcb4f0c43803c4cb353bc8abb81",
+   "rationale": "Two stacked crates with iron corner straps, a small crate in front and three slumped grain sacks: clear blocky and rounded shapes."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "38db90a4e8f407e0b6f5a72a9a605d1a46639d11805fc0bb00dac3e3cc54c02e",
+   "rationale": "Stacked plank crates with a sack (Azure concept a, TRELLIS a-s6105). Cooked 4,431 triangles, 149,404 bytes; 1.71 m tall in a 1.24 m reach at uniform scale. Albedo 256 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "The TRELLIS shadow sheet under the stack was removed in the cook (groundSheet); the sack is partly fused into the crates.",
+    "TRELLIS invents the unseen back; it is softer than the concept view.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "38db90a4e8f407e0b6f5a72a9a605d1a46639d11805fc0bb00dac3e3cc54c02e",
+   "rationale": "In Settlement squares and Hollow Village at gameplay cameras (18-40 m): reads at true scale beside the troops, grounded by shadows on the relief, and stays inside its collider (radius 1.24 m or its box).",
+   "limitations": [
+    "Static: no animation, sound or interaction."
+   ]
+  }
+ ]
+}

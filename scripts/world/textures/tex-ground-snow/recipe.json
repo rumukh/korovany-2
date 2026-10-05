@@ -1,0 +1,70 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-ground-snow",
+  "layer": "snow",
+  "physicalSizeMetres": 4,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of old wind-packed snow crust, four metres across, shot straight down from directly above as a flat orthographic photograph. The whole image is the ground surface itself, filling the frame edge to edge: no horizon, no sky and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The pale grey background becomes old, wind-packed snow crust, granular and matte, with soft shallow wind ripples, the tiny light and grey specks become ice grains, and the few small dark specks become bits of grit blown onto the snow. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, footprints, tracks, ski tracks, trees, rocks, sky, people, animals, bright blue tint, glitter, sparkle",
+  "candidates": [
+    {
+      "seed": 45401
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 45401,
+    "noiseMetres": 1.0,
+    "colours": [
+      "#aeb4ba",
+      "#b9bec4",
+      "#c4c9ce"
+    ],
+    "layers": [
+      {
+        "kind": "ellipses",
+        "length": [
+          0.004,
+          0.01
+        ],
+        "aspect": [
+          0.6,
+          1.0
+        ],
+        "perSquareMetre": 600,
+        "colours": [
+          "#d2d6da",
+          "#a6acb2"
+        ]
+      },
+      {
+        "kind": "ellipses",
+        "length": [
+          0.006,
+          0.015
+        ],
+        "aspect": [
+          0.6,
+          1.0
+        ],
+        "perSquareMetre": 40,
+        "colours": [
+          "#7c7a74"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "gain": 0.9,
+    "saturation": 0.5,
+    "note": "Slightly darkened (linear gain 0.9, to a linear albedo of about 0.37, the brightest ground layer but not blown out under the overcast grade) and neutralised (saturation 0.5): the candidate's crust is a faint warm cream."
+  }
+}
