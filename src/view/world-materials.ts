@@ -61,7 +61,7 @@ export function kitMaterial(surfaces: WorldSurfaces, hero: THREE.Vector3,
   material.name = 'world-kit';
   applySightlineDither(material, hero, 1, sightline.radius, sightline.widen);
   const cutaway = material.onBeforeCompile;
-  material.customProgramCacheKey = () => 'korovany-world-kit-v1';
+  material.customProgramCacheKey = () => 'korovany-world-kit-v2';
   material.onBeforeCompile = (shader, renderer) => {
     cutaway.call(material, shader, renderer);
     shader.uniforms.surfaceAlbedo = { value: surfaces.albedo };
@@ -86,8 +86,9 @@ export function kitMaterial(surfaces: WorldSurfaces, hero: THREE.Vector3,
       .replace('#include <map_fragment>', `
         float kitLayer = floor(vKitLayer.x);
         vec4 kitData = texture(surfaceData, vec3(vKitUv, kitLayer));
-        diffuseColor.rgb *= texture(surfaceAlbedo, vec3(vKitUv, kitLayer)).rgb;`)
-      .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = roughness * kitData.b;')
+        vec4 kitAlbedo = texture(surfaceAlbedo, vec3(vKitUv, kitLayer));
+        diffuseColor.rgb *= kitAlbedo.rgb;`)
+      .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = roughness * kitAlbedo.a;')
       .replace('#include <normal_fragment_maps>', 'normal = worldSurfaceNormal(kitData, normal, -vViewPosition, vKitUv, 1.0);')
       .replace('#include <aomap_fragment>', `
         reflectedLight.indirectDiffuse *= vKitLayer.y;
@@ -122,7 +123,7 @@ export interface TerrainControl {
 export function terrainMaterial(surfaces: WorldSurfaces, control: TerrainControl): THREE.MeshStandardMaterial {
   const material = new THREE.MeshStandardMaterial({ roughness: 1, metalness: 0 });
   material.name = 'world-terrain';
-  material.customProgramCacheKey = () => 'korovany-world-terrain-v2';
+  material.customProgramCacheKey = () => 'korovany-world-terrain-v3';
   const names = ['meadow', 'forest', 'mud', 'road', 'field'] as const;
   // Layers 5 and 6 come from the fields map per texel; 7 is the cobbles.
   const layers = [...names.map(name => `${surfaceLayer(name)}.0`), 'regionalLayer', 'overlayLayer', `${surfaceLayer('cobbles')}.0`];
@@ -194,21 +195,24 @@ export function terrainMaterial(surfaces: WorldSurfaces, control: TerrainControl
         }`).join('')}
         vec3 groundColour = vec3(0.0);
         vec4 groundData = vec4(0.0);
+        float groundRoughness = 0.0;
         float total = 0.0;
         ${[0, 1, 2, 3, 4, 5, 6, 7].map(i => `
         if (heights[${i}] > best - 0.28) {
           float blend = heights[${i}] - (best - 0.28);
           groundColour += colours[${i}].rgb * blend;
+          groundRoughness += colours[${i}].a * blend;
           groundData += datas[${i}] * blend;
           total += blend;
         }`).join('')}
         groundColour /= total;
+        groundRoughness /= total;
         groundData /= total;
         groundColour = mix(groundColour, groundColour * vec3(1.05, 1.0, 0.82), field.g * control.a);
         float broad = terrainNoise(vTerrainWorld.xz * 0.021) * 0.6 + terrainNoise(vTerrainWorld.xz * 0.083) * 0.4;
         groundColour *= 0.82 + broad * 0.32;
         diffuseColor.rgb *= groundColour;`)
-      .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = roughness * groundData.b;')
+      .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = roughness * groundRoughness;')
       .replace('#include <normal_fragment_maps>', `normal = worldSurfaceNormal(groundData, normal, -vViewPosition,
         control.a > 0.5 ? fieldUv : vTerrainWorld.xz * 0.25, 0.85);`);
   };

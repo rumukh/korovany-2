@@ -1,0 +1,26 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "tree-deadbirch",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "9bbab6738e6b86596b6ac3eed055bed3bc3800124b982afb3899597704568d54",
+   "rationale": "Dead birch: a pale, leaning trunk snapped off at the top, with a few bare, broken limbs; 2 variants 10.5-12.5 m tall; at most 357 triangles near, 131 in the middle level of detail and a 6-triangle impostor; 103,004 bytes before meshopt. Parts, triangle budget and impostor checked by the world-assets suite; baked AO.",
+   "limitations": [
+    "The snapped top is a flat cut without splinters."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "9bbab6738e6b86596b6ac3eed055bed3bc3800124b982afb3899597704568d54",
+   "rationale": "In the dark forests, the Fenlands and the Ash Steppe, at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at natural scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss (trees are not scaled up), with shadows on the ground. Distance bands: near parts to 24 m (spruce, birch and oaks have a middle level there), the middle level to 58 m and impostors to 235 m; the canopy cutaway cone (3-6 m at the hero, twice that at the camera) keeps the hero visible inside the forest.",
+   "limitations": [
+    "Card foliage reads flat and dark where a tree stands beside the camera at mid-distance; the sightline cone keeps the hero and the ground round them clear.",
+    "No wind motion."
+   ]
+  }
+ ]
+}

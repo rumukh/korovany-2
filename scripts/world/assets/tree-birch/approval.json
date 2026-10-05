@@ -6,14 +6,21 @@
   {
    "gate": "model",
    "decision": "accepted",
-   "sha256": "00976911aa833c2578892837ccc198b4538ac1e3a195b30694796ad8a9775b67",
-   "rationale": "Two birch variants 13.5-15.5 m with white bark from the birch layer, 327 wood and 180 leaf-card triangles each, plus impostors."
+   "sha256": "477e41f78ebd35ae317d1119b01dad6577cb5efd78c91c14fec26108ffafd300",
+   "rationale": "Silver birch, re-cooked from W0 with a middle level of detail: a slender white trunk with dark marks and a light crown of small leaf cards; 2 variants 13.5-15.5 m tall; at most 507 triangles near, 103 in the middle level of detail and a 6-triangle impostor; 134,360 bytes before meshopt. Parts, triangle budget and impostor checked by the world-assets suite; baked AO.",
+   "limitations": [
+    "Two variants only; every birch's bark has the same tiling marks."
+   ]
   },
   {
    "gate": "in-game",
    "decision": "accepted",
-   "sha256": "00976911aa833c2578892837ccc198b4538ac1e3a195b30694796ad8a9775b67",
-   "rationale": "Birch stands at forest edges and in the fens: pale trunks give the dark forest contrast at gameplay distance."
+   "sha256": "477e41f78ebd35ae317d1119b01dad6577cb5efd78c91c14fec26108ffafd300",
+   "rationale": "In the Heartlands, Fenlands, Crownlands and Salt Coast woods and the Greenmarch, at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at natural scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss (trees are not scaled up), with shadows on the ground. Distance bands: near parts to 24 m (spruce, birch and oaks have a middle level there), the middle level to 58 m and impostors to 235 m; the canopy cutaway cone (3-6 m at the hero, twice that at the camera) keeps the hero visible inside the forest.",
+   "limitations": [
+    "Card foliage reads flat and dark where a tree stands beside the camera at mid-distance; the sightline cone keeps the hero and the ground round them clear.",
+    "No wind motion."
+   ]
   }
  ]
 }

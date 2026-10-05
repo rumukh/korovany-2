@@ -1,0 +1,25 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "wood-log",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "077a88d3936fdab2626570cb74a8b8ed3c199586d9d8f225868eacd0da175a47",
+   "rationale": "Fallen black pines (four variants, 7.5-10.5 m before scaling): bowed, sagging trunks with splintered ends, upward branch stubs and moss along the top; at most 340 triangles per variant, 98,840 bytes before meshopt; each variant normalised to its collider and checked inside it (world-v3 prop collider test).",
+   "limitations": [
+    "Scripted tubes and displaced primitives: no peeling bark, rot, hollow cores or fungus."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "077a88d3936fdab2626570cb74a8b8ed3c199586d9d8f225868eacd0da175a47",
+   "rationale": "On the dark forest floor, lying along the slope; placed before the trees so trunks never stand through them, at gameplay cameras (18-40 m, pitch 0.38-1.13): knee to chest high beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss, collides with its measured footprint and stands on the terrain (logs pitched to the slope).",
+   "limitations": [
+    "The same four variants repeat across a forest, varied only by scale and turn."
+   ]
+  }
+ ]
+}

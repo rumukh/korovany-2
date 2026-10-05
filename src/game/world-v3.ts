@@ -44,10 +44,30 @@ export const V3_BUILDINGS = {
   'kit-ruin-house': { width: 7, length: 10, height: 7 },
   /** The military posts' timber watch towers, standing on the posts' original circular footings. */
   'kit-camp-tower': { width: 3.6, length: 3.6, height: 9.5 },
+  /** W3 crags (build_nature_w3.py): fixed-size rock formations in three styles (moss, snow, bare) of four shapes, each
+   * colliding as the circle of its scree talus. They form the mountain ring at the world's edge and the massifs. */
+  'rock-crag-moss-a': { width: 18.65, length: 18.65, height: 22.85 },
+  'rock-crag-moss-b': { width: 26.15, length: 26.15, height: 15.8 },
+  'rock-crag-moss-c': { width: 28.75, length: 28.75, height: 11.3 },
+  'rock-crag-moss-d': { width: 19.4, length: 19.4, height: 29.15 },
+  'rock-crag-snow-a': { width: 18.7, length: 18.7, height: 23.4 },
+  'rock-crag-snow-b': { width: 26.95, length: 26.95, height: 15.7 },
+  'rock-crag-snow-c': { width: 29.15, length: 29.15, height: 12.2 },
+  'rock-crag-snow-d': { width: 20.2, length: 20.2, height: 29.75 },
+  'rock-crag-bare-a': { width: 17.9, length: 17.9, height: 22.45 },
+  'rock-crag-bare-b': { width: 26.5, length: 26.5, height: 15.7 },
+  'rock-crag-bare-c': { width: 28, length: 28, height: 11.55 },
+  'rock-crag-bare-d': { width: 18.55, length: 18.55, height: 27.3 },
 } as const;
 export type V3BuildingModel = keyof typeof V3_BUILDINGS;
+export type CragStyle = 'moss' | 'snow' | 'bare';
+/** The crag models of a style, in shape order (a, b: spire and broad crag; c: low ridge; d: tall spire). */
+export function crags(style: CragStyle): V3BuildingModel[] {
+  return (['a', 'b', 'c', 'd'] as const).map(shape => `rock-crag-${style}-${shape}` as V3BuildingModel);
+}
 /** Round pieces collide as the circle of diameter `width` (their models stay inside it below 3 m), not a rectangle. */
-export const V3_ROUND: ReadonlySet<string> = new Set<V3BuildingModel>(['kit-tower-round', 'kit-tower-ruin', 'kit-camp-tower']);
+export const V3_ROUND: ReadonlySet<string> = new Set<V3BuildingModel>(['kit-tower-round', 'kit-tower-ruin', 'kit-camp-tower',
+  ...crags('moss'), ...crags('snow'), ...crags('bare')]);
 /** Runs the presentation draws as a module repeated along the box's longer side: the module's length in metres. */
 export const V3_MODULES: Readonly<Record<string, number>> = { 'kit-fence': 2, 'kit-wall': 2, 'kit-curtain': 6, 'kit-curtain-ruin': 6 };
 /**
@@ -90,6 +110,11 @@ export const V3_PROPS = {
   'prop-giant-ribs': { width: 8.45, length: 13.0, height: 5.9 },
   'prop-standing-stones': { radius: 3.14, height: 5.6 },
   'prop-troll-gibbet': { width: 4.6, length: 6.15, height: 8.45 },
+  /** W3 forest floor (build_nature_w3.py, four variants each, drawn at the obstacle's scale): mossy boulders and
+   * broken stumps (circles) and fallen black pines lying along local Z. */
+  'rock-mossy': { radius: 1.3, height: 1.65 },
+  'wood-stump': { radius: 1.0, height: 1.45 },
+  'wood-log': { width: 1.6, length: 9.0, height: 1.4 },
 } as const;
 export type V3PropModel = keyof typeof V3_PROPS;
 /** Tree species: trunk collider radius and height ranges (natural sizes; nature is not scaled up). */
@@ -97,6 +122,10 @@ export const V3_TREES = {
   'tree-spruce': { variants: 3, radius: [0.4, 0.65], height: [16, 26] },
   'tree-birch': { variants: 2, radius: [0.3, 0.45], height: [12, 18] },
   'tree-deadoak': { variants: 2, radius: [0.5, 0.75], height: [9, 14] },
+  /** W3 dark forest: tall black pines, old twisted oaks on buttress roots and dead birches. */
+  'tree-blackpine': { variants: 3, radius: [0.45, 0.7], height: [18, 28] },
+  'tree-twistedoak': { variants: 2, radius: [0.95, 1.3], height: [8, 13] },
+  'tree-deadbirch': { variants: 2, radius: [0.3, 0.45], height: [9, 14] },
 } as const;
 export type V3TreeSpecies = keyof typeof V3_TREES;
 
@@ -720,18 +749,23 @@ function fields(place: Placement, location: WorldLocation, lots: { dir: Vec2; si
 
 interface Woodland { density: number; spacing: number; species: [V3TreeSpecies, number][]; scale: number }
 
-/** Forest character per region: noise above `1 - density` is woodland, at `spacing` metres between trunks. */
+/**
+ * Forest character per region: noise above `1 - density` is woodland, at `spacing` metres between trunks. Greenmarch
+ * and Hollowvale are the dark forests: black pines over twisted oaks and dead birches, packed close in their cores.
+ */
 const WOODLAND: Readonly<Record<string, Woodland>> = {
-  heartlands: { density: 0.22, spacing: 7, species: [['tree-birch', 3], ['tree-deadoak', 2], ['tree-spruce', 1]], scale: 0.012 },
-  greenmarch: { density: 0.62, spacing: 4.6, species: [['tree-spruce', 5], ['tree-birch', 3], ['tree-deadoak', 2]], scale: 0.009 },
-  fenlands: { density: 0.38, spacing: 6, species: [['tree-birch', 5], ['tree-deadoak', 3], ['tree-spruce', 2]], scale: 0.011 },
-  saltcoast: { density: 0.1, spacing: 10, species: [['tree-deadoak', 2], ['tree-birch', 1]], scale: 0.013 },
-  ashsteppe: { density: 0.08, spacing: 14, species: [['tree-deadoak', 1]], scale: 0.013 },
-  crownlands: { density: 0.2, spacing: 8, species: [['tree-birch', 2], ['tree-spruce', 2], ['tree-deadoak', 1]], scale: 0.012 },
-  frostspine: { density: 0.3, spacing: 8, species: [['tree-spruce', 4], ['tree-deadoak', 1]], scale: 0.011 },
-  hollowvale: { density: 0.66, spacing: 4.2, species: [['tree-spruce', 6], ['tree-deadoak', 2], ['tree-birch', 1]], scale: 0.009 },
+  heartlands: { density: 0.36, spacing: 7, species: [['tree-birch', 3], ['tree-deadoak', 2], ['tree-twistedoak', 2], ['tree-spruce', 1]], scale: 0.012 },
+  greenmarch: { density: 0.68, spacing: 3.9, species: [['tree-blackpine', 9], ['tree-spruce', 3], ['tree-twistedoak', 2], ['tree-deadbirch', 1],
+    ['tree-birch', 1]], scale: 0.009 },
+  fenlands: { density: 0.4, spacing: 6.5, species: [['tree-birch', 4], ['tree-deadbirch', 3], ['tree-deadoak', 2], ['tree-spruce', 1]], scale: 0.011 },
+  saltcoast: { density: 0.31, spacing: 10, species: [['tree-deadoak', 2], ['tree-birch', 1]], scale: 0.013 },
+  ashsteppe: { density: 0.31, spacing: 9, species: [['tree-deadoak', 2], ['tree-deadbirch', 1]], scale: 0.013 },
+  crownlands: { density: 0.35, spacing: 8, species: [['tree-birch', 2], ['tree-spruce', 2], ['tree-deadoak', 1], ['tree-twistedoak', 1]], scale: 0.012 },
+  frostspine: { density: 0.43, spacing: 6, species: [['tree-spruce', 3], ['tree-blackpine', 3], ['tree-deadoak', 1]], scale: 0.011 },
+  hollowvale: { density: 0.72, spacing: 3.7, species: [['tree-blackpine', 9], ['tree-twistedoak', 3], ['tree-deadbirch', 1], ['tree-spruce', 2]],
+    scale: 0.009 },
 };
-const MAX_TREES = 9000;
+const MAX_TREES = 20000;
 
 function regionAt(world: WorldBlueprint, p: Vec2): WorldRegion | undefined {
   return world.exploration!.regions.find(r => p.x >= r.bounds.minX && p.x <= r.bounds.maxX && p.z >= r.bounds.minZ && p.z <= r.bounds.maxZ);
@@ -1109,12 +1143,210 @@ function remains(place: Placement, seed: string): void {
   });
 }
 
+/** Lone trees across the open land, by region: gnarled oaks over the farms, dead birches in the fens, wind-killed oaks
+ * on the coast, dead trees on the ash, pines on the Frostspine slopes. */
+const SOLITARY: Readonly<Record<string, { count: number; species: [V3TreeSpecies, number][] }>> = {
+  heartlands: { count: 60, species: [['tree-twistedoak', 3], ['tree-deadoak', 2], ['tree-birch', 1]] },
+  crownlands: { count: 50, species: [['tree-twistedoak', 2], ['tree-deadoak', 2], ['tree-spruce', 1]] },
+  fenlands: { count: 70, species: [['tree-deadbirch', 3], ['tree-deadoak', 1], ['tree-birch', 1]] },
+  saltcoast: { count: 35, species: [['tree-deadoak', 3], ['tree-twistedoak', 1]] },
+  ashsteppe: { count: 45, species: [['tree-deadoak', 3], ['tree-deadbirch', 2]] },
+  frostspine: { count: 60, species: [['tree-blackpine', 3], ['tree-spruce', 2], ['tree-deadoak', 1]] },
+};
+
+function solitaryTrees(place: Placement, seed: string): void {
+  const world = place.world;
+  const random = stream(`korovany2:v3:${seed}:solitary`);
+  const rules: Rules = { road: 4, location: 30, site: 30, obstacle: 4, structure: 4 };
+  for (const region of world.exploration!.regions) {
+    const plan = Object.hasOwn(SOLITARY, region.id) ? SOLITARY[region.id]! : undefined;
+    if (!plan) continue;
+    let placed = 0;
+    for (let attempt = 0; attempt < plan.count * 12 && placed < plan.count; attempt++) {
+      const b = region.bounds;
+      const p = { x: random.range(b.minX + 8, b.maxX - 8), z: random.range(b.minZ + 8, b.maxZ - 8) };
+      if (insideField(world, p, 3)) continue;
+      const species = weighted(random, plan.species);
+      const spec = V3_TREES[species];
+      const t = random.next();
+      const tree: Obstacle = { id: `lone-${region.id}-${placed}`, kind: 'tree', x: p.x, z: p.z,
+        radius: spec.radius[0] + (spec.radius[1] - spec.radius[0]) * t, height: spec.height[0] + (spec.height[1] - spec.height[0]) * (0.5 + 0.5 * t),
+        variant: Math.floor(random.next() * spec.variants), model: species };
+      if (!fits(place, tree, rules)) continue;
+      place.add(tree);
+      placed++;
+    }
+  }
+}
+
+/** A W3 crag: a fixed-size rock formation colliding as the circle of its talus. */
+function crag(id: string, model: V3BuildingModel, at: Vec2, variant = 0): Obstacle {
+  const size = V3_BUILDINGS[model];
+  return { id, kind: 'rock', x: at.x, z: at.z, radius: size.width / 2, height: size.height, variant, model };
+}
+
+/** The style of the mountain ring by region; the Salt Coast stays open to the sea. */
+export const RING_STYLE: Readonly<Record<string, CragStyle>> = {
+  frostspine: 'snow', crownlands: 'snow', hollowvale: 'moss', greenmarch: 'moss', ashsteppe: 'bare', fenlands: 'moss', heartlands: 'moss',
+};
+
+/**
+ * The mountain ring that replaces the world's invisible edge: crags overlapping into a wall along every edge but the
+ * Salt Coast's, their centres a little inside the bounds (the presentation adds far mountains behind them). It keeps
+ * 10 m from the roads and 8 m from every place's radius, and leaves the river's mouth open.
+ */
+function mountainRing(place: Placement, seed: string): void {
+  const world = place.world;
+  const random = stream(`korovany2:v3:${seed}:ring`);
+  const { minX, maxX, minZ, maxZ } = world.bounds;
+  const sides = [
+    { a: { x: minX, z: maxZ }, b: { x: maxX, z: maxZ }, inward: { x: 0, z: -1 } },
+    { a: { x: maxX, z: maxZ }, b: { x: maxX, z: minZ }, inward: { x: -1, z: 0 } },
+    { a: { x: maxX, z: minZ }, b: { x: minX, z: minZ }, inward: { x: 0, z: 1 } },
+    { a: { x: minX, z: minZ }, b: { x: minX, z: maxZ }, inward: { x: 1, z: 0 } },
+  ];
+  const clear = (o: Obstacle): boolean => place.roadClearance(o) >= 10 && riverClear(world, o, 4)
+    && world.exploration!.locations.every(l => obstacleClearance(o, l) >= l.radius + 8)
+    && world.sites.every(s => obstacleClearance(o, s) >= s.radius + 8)
+    && place.near(o, o.radius + 4).every(other => other.id.startsWith('ring-') || !shapesOverlap(o, other, 2));
+  let index = 0;
+  const turns: Record<CragStyle, number> = { moss: 0, snow: 0, bare: 0 };
+  for (const side of sides) {
+    const length = distance(side.a, side.b);
+    const d = { x: (side.b.x - side.a.x) / length, z: (side.b.z - side.a.z) / length };
+    let along = random.range(0, 8);
+    while (along < length) {
+      const edge = { x: side.a.x + d.x * along, z: side.a.z + d.z * along };
+      const region = regionAt(world, { x: edge.x + side.inward.x * 5, z: edge.z + side.inward.z * 5 });
+      const style = region && Object.hasOwn(RING_STYLE, region.id) ? RING_STYLE[region.id]! : undefined;
+      if (!style) {
+        along += 10;
+        continue;
+      }
+      const shape = turns[style] % 4;
+      const model = crags(style)[shape]!;
+      const r = V3_BUILDINGS[model].width / 2;
+      let placed = false;
+      for (const inset of [random.range(0.15, 0.5), 0]) {
+        const at = { x: edge.x + side.inward.x * inset * r, z: edge.z + side.inward.z * inset * r };
+        // Ring crags may overlap each other (a continuous wall), never anything else.
+        const piece = crag(`ring-${index}`, model, at, index);
+        if (!clear(piece)) continue;
+        place.add(piece);
+        placed = true;
+        turns[style]++;
+        break;
+      }
+      index++;
+      along += placed ? r * random.range(0.65, 0.9) : 6;
+    }
+  }
+}
+
+/** Crag clusters: the Frostspine massifs, and scattered outcrops in the forests, the Ash Steppe and the north. */
+const OUTCROPS: Readonly<Record<string, { style: CragStyle; clusters: number; size: readonly [number, number] }>> = {
+  frostspine: { style: 'snow', clusters: 9, size: [3, 6] },
+  crownlands: { style: 'snow', clusters: 2, size: [1, 3] },
+  hollowvale: { style: 'moss', clusters: 4, size: [1, 3] },
+  greenmarch: { style: 'moss', clusters: 5, size: [1, 3] },
+  ashsteppe: { style: 'bare', clusters: 5, size: [1, 3] },
+  fenlands: { style: 'moss', clusters: 1, size: [1, 2] },
+};
+
+function massifs(place: Placement, seed: string): void {
+  const world = place.world;
+  const random = stream(`korovany2:v3:${seed}:massifs`);
+  const rules: Rules = { road: 14, location: 46, site: 40, obstacle: 4, structure: 6 };
+  for (const region of world.exploration!.regions) {
+    const plan = Object.hasOwn(OUTCROPS, region.id) ? OUTCROPS[region.id]! : undefined;
+    if (!plan) continue;
+    let made = 0;
+    for (let attempt = 0; attempt < 120 && made < plan.clusters; attempt++) {
+      const b = region.bounds;
+      const centre = { x: random.range(b.minX + 30, b.maxX - 30), z: random.range(b.minZ + 30, b.maxZ - 30) };
+      const count = Math.round(random.range(plan.size[0], plan.size[1]));
+      const pieces: Obstacle[] = [];
+      for (let k = 0; k < count; k++) {
+        const model = crags(plan.style)[Math.floor(random.next() * 4)]!;
+        const r = V3_BUILDINGS[model].width / 2;
+        const a = random.range(0, Math.PI * 2), reach = k === 0 ? 0 : random.range(0.6, 1.1) * (r + 8);
+        pieces.push(crag(`crag-${region.id}-${made}-${k}`, model, { x: centre.x + Math.cos(a) * reach, z: centre.z + Math.sin(a) * reach }, k));
+      }
+      // A massif's crags may overlap each other, never anything else.
+      if (!pieces.every(piece => fits(place, piece, rules))) continue;
+      for (const piece of pieces) place.add(piece);
+      made++;
+    }
+  }
+}
+
+/** How much forest floor each region's woodland cores get (fallen logs, stumps and mossy boulders). */
+const FLOOR: Readonly<Record<string, number>> = {
+  greenmarch: 1, hollowvale: 1, fenlands: 0.35, frostspine: 0.4, heartlands: 0.25, crownlands: 0.25, saltcoast: 0.1, ashsteppe: 0.15,
+};
+
+/** A forest-floor piece in a woodland core: `pick` chooses a fallen log (a box along local Z), a stump or a mossy boulder. */
+function floorPiece(id: string, p: Vec2, model: 'wood-log' | 'wood-stump' | 'rock-mossy', random: ReturnType<typeof stream>): Obstacle {
+  const s = model === 'wood-log' ? random.range(0.6, 1.0) : random.range(0.7, 1.15), variant = Math.floor(random.next() * 4);
+  if (model === 'wood-log') {
+    const spec = V3_PROPS['wood-log'];
+    return { ...box(id, p.x, p.z, spec.width / 2 * s, spec.length / 2 * s, random.range(0, Math.PI * 2), spec.height * s, model, variant), kind: 'rock' };
+  }
+  const spec = V3_PROPS[model];
+  return { id, kind: 'rock', x: p.x, z: p.z, radius: spec.radius * s, height: spec.height * s, variant, model };
+}
+
+/** Random points in woodland cores, weighted by each region's share of forest floor. */
+function* coreSpots(world: WorldBlueprint, seed: string, random: ReturnType<typeof stream>, attempts: number): Generator<Vec2> {
+  const noiseSeed = seedNumber(`korovany2:v3:${seed}:forest`);
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const p = { x: random.range(-478, 478), z: random.range(-478, 478) };
+    const region = regionAt(world, p);
+    const woods = WOODLAND[region?.id ?? 'heartlands']!;
+    const depth = (fbm(p.x * woods.scale, p.z * woods.scale, noiseSeed, 4) - (1 - woods.density)) / 0.18;
+    if (depth < 0.3 || random.next() > (FLOOR[region?.id ?? 'heartlands'] ?? 0.2)) continue;
+    if (insideField(world, p, 2)) continue;
+    yield p;
+  }
+}
+
+/** Every forest-floor piece keeps at least 1.6 m from any other solid, so the hero (1.4 m across) always passes. */
+const FLOOR_RULES: Rules = { road: 2.5, location: 26, site: 24, obstacle: 1.6, structure: 3 };
+
+/** Fallen black pines, laid in woodland cores before the trees grow round them. */
+function fallenLogs(place: Placement, seed: string): void {
+  const random = stream(`korovany2:v3:${seed}:logs`);
+  let placed = 0;
+  for (const p of coreSpots(place.world, seed, random, 6000)) {
+    if (placed >= 160) break;
+    const piece = floorPiece(`log-${placed}`, p, 'wood-log', random);
+    if (!fits(place, piece, FLOOR_RULES)) continue;
+    place.add(piece);
+    placed++;
+  }
+}
+
+/** Broken stumps and mossy boulders in the gaps between the trees of woodland cores. */
+function forestFloor(place: Placement, seed: string): void {
+  const random = stream(`korovany2:v3:${seed}:floor`);
+  let placed = 0;
+  for (const p of coreSpots(place.world, seed, random, 24000)) {
+    if (placed >= 1100) break;
+    const piece = floorPiece(`floor-${placed}`, p, random.next() < 0.6 ? 'wood-stump' : 'rock-mossy', random);
+    if (!fits(place, piece, FLOOR_RULES)) continue;
+    place.add(piece);
+    placed++;
+  }
+}
+
 /**
  * Version 3: the v2 geography, regions, locations, roads, river, bridges, sites and story stay; every place is rebuilt
  * at the heroic scale. Settlements and inns get their region's building family with yards, stalls and fields; the Reed
  * Chapel and the Star Monastery are rebuilt round chapels; the Royal Citadel and the Old Fort become castles; ruins,
  * shrines and landmarks are rebuilt round their cooked landmarks; the military posts get watch towers; remains of huge
- * creatures lie in the wilds; woodland becomes real forest, and boulders replace the upright blobs.
+ * creatures lie in the wilds; a ring of mountains closes the world (but for the coast), crags rise in massifs and
+ * outcrops, and woodland becomes real forest, dark and dense in Greenmarch and Hollowvale, over fallen trunks, stumps
+ * and mossy boulders.
  */
 export function buildWorldV3(world: WorldBlueprint): WorldBlueprint {
   const locations = world.exploration!.locations;
@@ -1147,7 +1379,12 @@ export function buildWorldV3(world: WorldBlueprint): WorldBlueprint {
   orchard(place, byId('old-orchard'), world.seed);
   roadsideProps(place, world.seed);
   remains(place, world.seed);
+  mountainRing(place, world.seed);
+  massifs(place, world.seed);
+  fallenLogs(place, world.seed);
   vegetation(place, world.seed);
+  solitaryTrees(place, world.seed);
+  forestFloor(place, world.seed);
   boulders(place, world.seed);
   let hash = 2166136261;
   for (const c of JSON.stringify(world)) hash = Math.imul(hash ^ c.charCodeAt(0), 16777619);

@@ -72,17 +72,18 @@ and budgets.
 only once `worldAssetIds(world)` and the surface layers have loaded; a failed load is thrown by `render` (there is no
 primitive fallback). Version 1 and 2 worlds request nothing from it.
 
-- **Surfaces.** Twenty-eight 512 px tiling layers (`WORLD_SURFACES`: architecture, ground, rock and bark) form two
-  `DataArrayTexture`s: sRGB albedo, and tangent normal plus roughness derived at load from each layer's grayscale
-  height map (`deriveSurface`). Kit, bark and rock meshes carry the layer index in UV1.x and baked AO in UV1.y and
+- **Surfaces.** Thirty-two 512 px tiling layers (`WORLD_SURFACES`: architecture, ground, rock and bark) form two
+  `DataArrayTexture`s: the sRGB albedo, carrying in its alpha the roughness that `deriveSurface` derives at load from
+  each layer's grayscale height map, and an RG8 array of the tangent normal's X and Y derived the same way. Kit, bark and rock meshes carry the layer index in UV1.x and baked AO in UV1.y and
   share one program (`kitMaterial`); the ground blends eight layers by 1024-texel control maps (`terrainMaterial`,
   `terrainControl`) with height-based transitions and furrows turned along each field: meadow, forest, mud, road and
   field everywhere, a regional base and overlay (`REGION_GROUND`: reed mud in the Fens, cold grass with shingle on the
-  Salt Coast, ash on the Ash Steppe, cold grass with snow in the Frostspine, cold grass in Hollowvale), cobbled
+  Salt Coast, ash on the Ash Steppe, cold grass with snow in the Frostspine, cold grass in Hollowvale), a dark needle
+  floor where the Greenmarch and Hollowvale forests stand densest (`REGION_GROUND.deep`, by local tree density), cobbled
   streets in the stone towns (`COBBLED_PLACES`) and fortress courtyards (`COURTYARDS`: cobbles in the Royal Citadel,
-  trampled ground in the Old Fort). The layers ship as WebP and upload as RGBA8; KTX2/Basis was measured
+  trampled ground in the Old Fort). The layers ship as WebP and upload as RGBA8 and RG8; KTX2/Basis was measured
   at W0 and deferred (ETC1S saved 282 KB and 15 MiB of GPU memory but needs a 585 KB transcoder). The whole v3 world
-  needs about 155 MiB of texture memory, within its 160 MiB budget; W1 and W2 props use 256 px normal and ORM maps,
+  needs about 145 MiB of texture memory, within its 160 MiB budget; W1 and W2 props use 256 px normal and ORM maps,
   the small ones a 256 px albedo, and the sheep 512 px maps.
 - **Settlements.** Each region builds its own vernacular from the scripted kit (`build_kit.py`, `build_kit_w1.py`):
   timber cottages, longhouses and barns in the Heartlands, the Greenmarch and Hollowvale, stone and brick houses,
@@ -98,18 +99,31 @@ primitive fallback). Version 1 and 2 worlds request nothing from it.
   `WorldBlueprint.decor` (drawn like the kit, never colliding; nothing of an arch comes below 6.8 m). The cooked
   landmarks kept from v2 are drawn through `legacyWall` as before but with the sightline cutaway, like the kit.
   Remains (giant skulls and ribcages, troll gibbets, standing stones) are cooked props.
+- **Wild lands.** `build_nature_w3.py` (importing build_nature.py's helpers unchanged) adds black pines, twisted oaks
+  and dead birches and re-cooks the W0 trees, all with a middle level of detail (`lod1-wood`/`lod1-leaves`, drawn from
+  24 m) before the impostors at 58 m; crags (`rock-crag-<style>-<a..d>`, overlapping convex blocks with a rubble talus,
+  drawn from their own long-range `ScatterField` to 560 m with shadows within 150 m) standing on the lowest ground under
+  their talus; and the forest floor (`rock-mossy`, `wood-log`, `wood-stump`, drawn at the obstacle's scale, logs pitched
+  to the ground between their ends). `farMountains(world)` adds the presentation-only ranges behind the ring, crags at
+  2.4 to 5.2 times their size wholly outside the bounds; `undergrowth(world)` scatters bracken and bramble clumps
+  (`plant-*`, tree layout with 128 px impostors, no shadows, whole within 30 m and gone by 70 m) round a regional share
+  of trees on walkable ground off roads, fields and clearings. Where the dark forests' trees stand close (8 m cells,
+  box-filtered), the region's overlay slot paints the `darkforest` layer (`REGION_GROUND.deep`).
 - **Terrain.** `terrainFor(world)` is a presentation-only heightfield (exactly 0 for v1/v2): level on roads, sites,
   clearings, footprints, fields and combat zones, hills elsewhere with slopes of at most about 11 degrees. Terrain
   chunks are 128 m meshes of 2 m quads. Actors, residents, pickups, effects, rings, the sun target and the camera
   focus stand on it; the river channel is carved below the water plane.
 - **Instancing.** Static models are pooled per model, variant and distance band in a `ScatterField`: each update
   submits only instances in the camera's horizontal view cone (plus everything within 36 m of the hero), with shadows
-  near the hero only and tree impostors beyond 58 m, so a kilometre of forest costs one draw per part. Impostor cards
-  dither away as they turn edge-on (`applyEdgeFade`), so a crossed or top card never shows as a line. The shader
-  warm-up draws one instance of every pool (and one sheep and crow), so no species, impostor or prop compiles on
-  first sight.
+  near the hero only and tree impostors beyond 58 m, so a kilometre of forest costs one draw per part. Whole 32 m cells
+  that no instance of theirs could pass (beyond reach, or outside the cone widened by the cell's largest instance) are
+  skipped before their instances are tested, which never changes what is drawn (`tests/scatter-culling.test.ts`).
+  Impostor cards dither away as they turn edge-on (`applyEdgeFade`), so a crossed or top card never shows as a line. The
+  shader warm-up draws one instance of every pool of both fields (and one sheep and crow), so no species, impostor,
+  crag or prop compiles on first sight.
 - **Cutaway.** Architecture dithers within 1.6-3.2 m of the camera-to-hero sightline; canopies and trunks in a cone
-  3-6 m wide at the hero and twice that at the camera (`applySightlineDither`'s radius and widening are uniforms on
+  3-6 m wide at the hero and twice that at the camera, and crags (11-30 m tall) in a cone 3.5-7 m wide at the hero
+  (`applySightlineDither`'s radius and widening are uniforms on
   the shared program). Kit walls are one-sided, so a building is not drawn while the camera is inside its bounds
   grown by 2 m (`ScatterKind.hollow`); a low camera behind a tall chapel or inn sees through it, never into it.
 - **Light.** `lightWorldV3` is an overcast late-autumn grade (cooler sky and fog, a lower sun); character light stays

@@ -1,0 +1,87 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-rock-cliff",
+  "layer": "cliff",
+  "physicalSizeMetres": 4,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of the weathered face of a dark grey schist crag, four metres across, seen exactly face-on. The whole image is a close-up of the rock surface itself, filling the frame edge to edge: no edges, no sky, no ground, no horizon and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The soft grey mottling becomes natural variation in the colour of the rock, the tiny dark specks become small pits and grains, and the tiny pale specks become grains of quartz. The rock is one continuous, rough, fractured natural face of dark grey schist with a faint, uneven grain running across it, a few fine shallow cracks and faint brown and green-grey weathering stains; matte, cold and dry. Natural bedrock: no separate stones, no slabs, no stacked plates, no masonry, no mortar and no gaps. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, slabs, stacked stones, stacked slates, slate wall, dry-stone wall, plates, layers, ledges, gaps, black joints, masonry, wall, mortar, bricks, blocks, tiles, cobbles, pebbles, moss, lichen rosettes, plants, grass, snow, ice, water, wet, glossy, sticks, wires, grid, regular pattern",
+  "candidates": [
+    {
+      "seed": 47101,
+      "note": "First recipe (long lens-shaped strata courses): Qwen built a stack of separate slate slabs with deep black joints, a dry-stone wall rather than a rock face, and its green and orange stains repeat in a plain grid once tiled."
+    },
+    {
+      "seed": 47102,
+      "note": "First recipe, as 47101 (long lens-shaped strata courses): Qwen built a stack of separate slate slabs with deep black joints, a dry-stone wall rather than a rock face, and its green and orange stains repeat in a plain grid once tiled."
+    },
+    {
+      "seed": 47103,
+      "note": "Revised recipe: a convincing continuous rock face, but two pale quartz veins cross it diagonally and repeat as stripes every 2 m once tiled."
+    },
+    {
+      "seed": 47104
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 47103,
+    "noiseMetres": 0.7,
+    "colours": [
+      "#34332f",
+      "#3d3b37",
+      "#46443f",
+      "#2f2e2b"
+    ],
+    "layers": [
+      {
+        "kind": "ellipses",
+        "length": [
+          0.006,
+          0.018
+        ],
+        "aspect": [
+          0.4,
+          0.9
+        ],
+        "perSquareMetre": 900,
+        "colours": [
+          "#26251f",
+          "#2b2a26",
+          "#302e2a"
+        ]
+      },
+      {
+        "kind": "ellipses",
+        "length": [
+          0.004,
+          0.012
+        ],
+        "aspect": [
+          0.5,
+          1.0
+        ],
+        "perSquareMetre": 400,
+        "colours": [
+          "#6b6862",
+          "#5e5b55"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "delightFraction": 0.0625,
+    "blendFraction": 0.3,
+    "evenChroma": true,
+    "gain": 1.7,
+    "note": "A narrower de-light and a 0.3 wrap band: with the defaults the tile edges showed as a faint lighter 2 m grid and the corner stains as a lattice. Gain 1.7 (linear mean 0.053 to about 0.09): at the candidate's own value the crags went near-black in game and their facets disappeared."
+  }
+}

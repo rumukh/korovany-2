@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import type { Obstacle, WorldBlueprint } from '../game/types';
-import { V3_MODULES } from '../game/world-v3';
+import type { Obstacle, Vec2, WorldBlueprint } from '../game/types';
+import { isWalkable } from '../game/world';
+import { crags, LOCATION_CLEARING, RING_STYLE, V3_BUILDINGS, V3_MODULES, V3_PROPS } from '../game/world-v3';
 import { palette } from './palette';
 import { StaticBatch } from './primitives';
 import { seededRandom, type ViewResources } from './resources';
@@ -11,6 +12,7 @@ import { apronGeometry, terrainChunks, terrainControl, TERRAIN_MARGIN } from './
 import { WorldChunks } from './world-chunks';
 import { applyEdgeFade, kitMaterial, terrainMaterial } from './world-materials';
 import { ROCK_VARIANTS, TREE_VARIANTS, WORLD_MODELS, type WorldModelId } from './world-assets';
+import { distanceToSegment } from './world';
 import { addBridge, legacyWall, makeSky, makeWater, type WorldScenery } from './world';
 import { V3_GRADE } from './atmosphere';
 
@@ -19,13 +21,24 @@ const BANDS = {
   building: { shadow: 95, far: 235 },
   prop: { shadow: 60, far: 160 },
   rock: { shadow: 60, far: 200 },
-  tree: { near: 58, far: 235 },
+  /** Trees with a middle level of detail switch to it at `lod1`; impostors take over at `near`. */
+  tree: { lod1: 24, near: 58, far: 235 },
+  /** Undergrowth: small, so it never casts shadows; whole within 30 m (beyond any gameplay camera's hero), gone by 70 m. */
+  plant: { lod1: 30, near: 45, far: 70 },
+  /** Crags are mountains: a separate long-range field, so their reach never widens the forest's. */
+  crag: { shadow: 150, far: 560 },
 } as const;
+/** Share of a region's trees that get a clump of undergrowth at their foot. */
+const UNDERGROWTH_SHARE: Readonly<Record<string, number>> = {
+  greenmarch: 0.9, hollowvale: 0.9, fenlands: 0.4, frostspine: 0.15, heartlands: 0.15, crownlands: 0.15, saltcoast: 0.05, ashsteppe: 0.05,
+};
 /**
  * Canopies and trunks dither away in a cone around the camera-to-hero sightline: 3-6 m wide at the hero, twice that at
  * the camera, so forest never hides the hero or the ground around them (the architecture cutaway is 1.6-3.2 m).
  */
 const CANOPY_CUTAWAY = { radius: [3, 6] as const, widen: 1 };
+/** Crags stand 11-30 m tall, so a crag between the camera and the hero opens a cone like a canopy's, not a keyhole. */
+const CRAG_CUTAWAY = { radius: [3.5, 7] as const, widen: 1 };
 
 function hashId(text: string): number {
   let hash = 2166136261;
@@ -63,6 +76,85 @@ function placedGeometry(resources: ViewResources, key: string, mesh: THREE.Mesh)
     geometry.computeBoundingSphere();
     return geometry;
   });
+}
+
+/**
+ * Bracken and bramble clumps at the foot of trees (presentation only, never obstacles), deterministic from the world:
+ * a regional share of trees gets one, on walkable ground clear of roads, fields, places and sites.
+ */
+export function undergrowth(world: WorldBlueprint): { id: 'plant-bracken' | 'plant-bramble'; variant: number; x: number; z: number;
+  heading: number; scale: number }[] {
+  const random = seededRandom(Math.floor(hashId(`${world.seed}:undergrowth`) * 4294967296));
+  const regions = world.exploration?.regions ?? [];
+  const node = new Map(world.roads.nodes.map(n => [n.id, n]));
+  const roads = world.roads.edges.map(edge => ({ a: node.get(edge.from)!, b: node.get(edge.to)!, half: edge.width / 2 }));
+  const places = world.exploration?.locations ?? [];
+  const inField = (p: Vec2): boolean => (world.fields ?? []).some(f => {
+    const dx = p.x - f.x, dz = p.z - f.z, c = Math.cos(f.heading), s = Math.sin(f.heading);
+    return Math.abs(dx * c - dz * s) < f.halfX + 1 && Math.abs(dx * s + dz * c) < f.halfZ + 1;
+  });
+  const result: ReturnType<typeof undergrowth> = [];
+  for (const o of world.obstacles) {
+    if (o.kind !== 'tree') continue;
+    const region = regions.find(r => o.x >= r.bounds.minX && o.x <= r.bounds.maxX && o.z >= r.bounds.minZ && o.z <= r.bounds.maxZ);
+    const share = region && Object.hasOwn(UNDERGROWTH_SHARE, region.id) ? UNDERGROWTH_SHARE[region.id]! : 0.1;
+    if (random() >= share) continue;
+    const angle = random() * Math.PI * 2, reach = o.radius + 1 + random() * 2.5;
+    const p = { x: o.x + Math.sin(angle) * reach, z: o.z + Math.cos(angle) * reach };
+    const bramble = (region?.id === 'greenmarch' || region?.id === 'hollowvale') && random() < 0.35;
+    const id = bramble ? 'plant-bramble' : 'plant-bracken';
+    const variant = Math.floor(random() * TREE_VARIANTS[id]);
+    const heading = random() * Math.PI * 2, scale = 0.8 + random() * 0.45;
+    if (!isWalkable(world, p, 0.35) || inField(p)) continue;
+    if (roads.some(road => distanceToSegment(p, road.a, road.b) < road.half + 1)) continue;
+    if (places.some(place => Math.hypot(p.x - place.x, p.z - place.z) < LOCATION_CLEARING + 2)) continue;
+    if (world.sites.some(site => Math.hypot(p.x - site.x, p.z - site.z) < site.radius + 4)) continue;
+    result.push({ id, variant, x: p.x, z: p.z, heading, scale });
+  }
+  return result;
+}
+
+/**
+ * Far mountains behind the ring (presentation only): its crags at 2.4 to 5.2 times their size in two rows wholly outside
+ * the bounds (so no drawn rock ever stands where the hero can walk), styled like the ring of the region they face; the
+ * Salt Coast's edge stays open. Deterministic from the world; only crag models the world already uses.
+ */
+export function farMountains(world: WorldBlueprint): { id: WorldModelId; x: number; z: number; heading: number; scale: number }[] {
+  const random = seededRandom(Math.floor(hashId(`${world.seed}:far-mountains`) * 4294967296));
+  const { minX, maxX, minZ, maxZ } = world.bounds;
+  const regions = world.exploration?.regions ?? [];
+  const present = new Set(world.obstacles.map(o => o.model));
+  const sides = [
+    { a: { x: minX, z: maxZ }, b: { x: maxX, z: maxZ }, inward: { x: 0, z: -1 } },
+    { a: { x: maxX, z: maxZ }, b: { x: maxX, z: minZ }, inward: { x: -1, z: 0 } },
+    { a: { x: maxX, z: minZ }, b: { x: minX, z: minZ }, inward: { x: 0, z: 1 } },
+    { a: { x: minX, z: minZ }, b: { x: minX, z: maxZ }, inward: { x: 1, z: 0 } },
+  ];
+  const result: ReturnType<typeof farMountains> = [];
+  for (const side of sides) {
+    const length = Math.hypot(side.b.x - side.a.x, side.b.z - side.a.z);
+    const d = { x: (side.b.x - side.a.x) / length, z: (side.b.z - side.a.z) / length };
+    for (const row of [0, 1]) {
+      let along = -40 + random() * 30;
+      while (along < length + 40) {
+        const edge = { x: side.a.x + d.x * along, z: side.a.z + d.z * along };
+        const probe = { x: Math.min(maxX - 1, Math.max(minX + 1, edge.x + side.inward.x * 20)), z: Math.min(maxZ - 1, Math.max(minZ + 1, edge.z + side.inward.z * 20)) };
+        const region = regions.find(r => probe.x >= r.bounds.minX && probe.x <= r.bounds.maxX && probe.z >= r.bounds.minZ && probe.z <= r.bounds.maxZ);
+        const style = region && Object.hasOwn(RING_STYLE, region.id) ? RING_STYLE[region.id]! : undefined;
+        const id = style ? crags(style)[Math.floor(random() * 4)]! : undefined;
+        if (!id || !present.has(id)) {
+          along += 30;
+          continue;
+        }
+        const scale = row === 0 ? 2.4 + random() * 1.4 : 3.4 + random() * 1.8;
+        const reach = V3_BUILDINGS[id].width / 2 * scale;
+        const out = reach + (row === 0 ? 4 + random() * 16 : 70 + random() * 50);
+        result.push({ id: id as WorldModelId, x: edge.x - side.inward.x * out, z: edge.z - side.inward.z * out, heading: random() * Math.PI * 2, scale });
+        along += reach * (0.8 + random() * 0.5);
+      }
+    }
+  }
+  return result;
 }
 
 /**
@@ -107,9 +199,12 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
 
   const kit = resources.ownMaterial('world-kit', kitMaterial(surfaces, heroPosition));
   const bark = resources.ownMaterial('world-kit-bark', kitMaterial(surfaces, heroPosition, CANOPY_CUTAWAY));
+  const cragRock = resources.ownMaterial('world-kit-crag', kitMaterial(surfaces, heroPosition, CRAG_CUTAWAY));
   const depth = resources.depthMaterial();
   const kinds: ScatterKind[] = [];
   const kindOf = new Map<string, number>();
+  const cragKinds: ScatterKind[] = [];
+  const cragKindOf = new Map<string, number>();
   const radiusOf = (geometry: THREE.BufferGeometry): number => geometry.boundingSphere!.center.length() + geometry.boundingSphere!.radius;
   const define = (key: string, parts: ScatterPart[], hollow?: THREE.Box3): number => {
     kinds.push({ parts, radius: Math.max(...parts.map(part => radiusOf(part.geometry))), hollow });
@@ -133,6 +228,19 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
       cutawayMaterials.set(source, material);
     }
     return material;
+  };
+  /** Crags draw from their own long-range field: shadows within 150 m, the whole mountain out to 560 m. */
+  const cragKind = (id: WorldModelId): number => {
+    const known = cragKindOf.get(id);
+    if (known !== undefined) return known;
+    const mesh = assets.require(id).scene.getObjectByProperty('isMesh', true) as THREE.Mesh;
+    const geometry = placedGeometry(resources, id, mesh);
+    cragKinds.push({ radius: radiusOf(geometry), parts: [
+      { name: `${id}:near`, geometry, material: cragRock, near: 0, far: BANDS.crag.shadow, castShadow: true, depthMaterial: depth },
+      { name: `${id}:far`, geometry, material: cragRock, near: BANDS.crag.shadow, far: BANDS.crag.far, castShadow: false },
+    ] });
+    cragKindOf.set(id, cragKinds.length - 1);
+    return cragKinds.length - 1;
   };
   const kindFor = (id: WorldModelId, variant = 0): number => {
     const key = `${id}:${variant}`;
@@ -167,13 +275,22 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
         }
         return { geometry: placedGeometry(resources, `${key}:${name}`, mesh), material };
       };
+      // Undergrowth uses the plant bands and casts no shadow; trees with a middle level of detail get a third band.
+      const plant = id.startsWith('plant-');
+      const t = plant ? BANDS.plant : BANDS.tree;
       const wood = part('lod0-wood'), leaves = part('lod0-leaves'), impostor = part('impostor');
-      const t = BANDS.tree;
-      return define(key, [
-        { name: `${key}:wood`, ...wood, near: 0, far: t.near, castShadow: true, depthMaterial: depth },
-        { name: `${key}:leaves`, ...leaves, near: 0, far: t.near, castShadow: true },
-        { name: `${key}:impostor`, ...impostor, near: t.near, far: t.far, castShadow: false },
-      ]);
+      const middle = model.scene.getObjectByName(`lod1-wood-${variant}`) instanceof THREE.Mesh;
+      const split = middle ? t.lod1 : t.near;
+      const parts: ScatterPart[] = [
+        { name: `${key}:wood`, ...wood, near: 0, far: split, castShadow: !plant, depthMaterial: depth },
+        { name: `${key}:leaves`, ...leaves, near: 0, far: split, castShadow: !plant },
+      ];
+      if (middle) {
+        parts.push({ name: `${key}:wood1`, ...part('lod1-wood'), near: split, far: t.near, castShadow: !plant, depthMaterial: depth },
+          { name: `${key}:leaves1`, ...part('lod1-leaves'), near: split, far: t.near, castShadow: !plant });
+      }
+      parts.push({ name: `${key}:impostor`, ...impostor, near: t.near, far: t.far, castShadow: false });
+      return define(key, parts);
     }
     throw new Error(`World model ${id} is not scenery.`);
   };
@@ -181,6 +298,7 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
   const legacy = new WorldChunks(resources, 'world-structures');
   const fortMaterials = new Map<THREE.Material, THREE.Material>();
   const placements: { kind: number; matrix: THREE.Matrix4 }[] = [];
+  const cragPlacements: { kind: number; matrix: THREE.Matrix4 }[] = [];
   const matrix = (x: number, y: number, z: number, heading: number, sx = 1, sy = sx, sz = sx): THREE.Matrix4 =>
     new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), heading),
       new THREE.Vector3(sx, sy, sz));
@@ -205,11 +323,38 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
       }
       return;
     }
-    if (kind === 'kit') {
+    if (kind === 'kit' && id.startsWith('rock-crag-')) {
+      // A crag stands on the lowest ground under its talus (its flat foot sinks into higher ground), turned by its id.
+      let low = y;
+      for (const [reach, count] of [[o.radius * 0.5, 6], [o.radius * 0.95, 12]] as const) {
+        for (let index = 0; index < count; index++) {
+          const angle = index / count * Math.PI * 2;
+          low = Math.min(low, terrain.height(o.x + Math.sin(angle) * reach, o.z + Math.cos(angle) * reach));
+        }
+      }
+      cragPlacements.push({ kind: cragKind(id), matrix: matrix(o.x, low - 0.35, o.z, hashId(o.id) * Math.PI * 2) });
+    } else if (kind === 'kit') {
       // Round towers are circles: they turn by a stable hash of their id.
       placements.push({ kind: kindFor(id), matrix: matrix(o.x, y, o.z, o.shape ? o.shape.heading : hashId(o.id) * Math.PI * 2) });
     } else if (kind === 'prop') {
       placements.push({ kind: kindFor(id), matrix: matrix(o.x, y, o.z, o.shape ? o.shape.heading : hashId(o.id) * Math.PI * 2) });
+    } else if (kind === 'rock' && id !== 'rock-boulder') {
+      // W3 forest floor at the obstacle's scale: logs (boxes along local Z) pitched to the ground between their ends.
+      const k = kindFor(id, o.variant % ROCK_VARIANTS);
+      const spec = V3_PROPS[id as 'rock-mossy' | 'wood-stump' | 'wood-log'];
+      if (o.shape && 'length' in spec) {
+        const scale = o.shape.halfZ * 2 / spec.length, h = o.shape.heading;
+        const reach = o.shape.halfZ * 0.8, ax = Math.sin(h) * reach, az = Math.cos(h) * reach;
+        const y0 = terrain.height(o.x - ax, o.z - az), y1 = terrain.height(o.x + ax, o.z + az);
+        const turn = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), h)
+          .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.atan2(y1 - y0, reach * 2)));
+        placements.push({ kind: k, matrix: new THREE.Matrix4().compose(new THREE.Vector3(o.x, (y0 + y1) / 2 - 0.06 * scale, o.z), turn,
+          new THREE.Vector3(scale, scale, scale)) });
+      } else if ('radius' in spec) {
+        const scale = o.radius / spec.radius;
+        const sink = id === 'rock-mossy' ? 0.22 * o.height : 0.03;
+        placements.push({ kind: k, matrix: matrix(o.x, y - sink, o.z, hashId(o.id) * Math.PI * 2, scale) });
+      }
     } else if (kind === 'rock') {
       const variant = o.variant % ROCK_VARIANTS;
       const k = kindFor(id, variant);
@@ -246,9 +391,18 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
   for (const decor of world.decor ?? []) {
     placements.push({ kind: kindFor(decor.model as WorldModelId), matrix: matrix(decor.x, terrain.height(decor.x, decor.z), decor.z, decor.heading) });
   }
+  for (const peak of farMountains(world)) {
+    cragPlacements.push({ kind: cragKind(peak.id), matrix: matrix(peak.x, terrain.height(peak.x, peak.z) - 1.5 * peak.scale, peak.z, peak.heading, peak.scale) });
+  }
+  for (const plant of undergrowth(world)) {
+    placements.push({ kind: kindFor(plant.id, plant.variant), matrix: matrix(plant.x, terrain.height(plant.x, plant.z) - 0.05, plant.z, plant.heading, plant.scale) });
+  }
   const scatter = new ScatterField(group, kinds, 'world-scatter');
   for (const { kind, matrix: m } of placements) scatter.add(kind, m);
   const pools = scatter.finish();
+  const mountains = new ScatterField(group, cragKinds, 'world-crags');
+  for (const { kind, matrix: m } of cragPlacements) mountains.add(kind, m);
+  mountains.finish();
 
   for (const site of world.sites) {
     structures.add('zone-ring', site.kind === 'home' ? palette.brass : palette.earth,
@@ -260,7 +414,7 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
     structures.add('box', palette.bark, [x, pole / 2, z], [0.12, pole, 0.12]);
     flagAnchors.set(site.id, new THREE.Vector3(x + 0.46, pole - 0.4, z));
   }
-  // The horizon beyond the drawn ground: low, dark hills in the fog (mountain ranges come with W3).
+  // The horizon beyond the far mountains: low, dark hills in the fog.
   const { minX, minZ, maxX, maxZ } = world.bounds;
   const width = maxX - minX, depthZ = maxZ - minZ;
   const centerX = (minX + maxX) / 2, centerZ = (minZ + maxZ) / 2;
@@ -285,17 +439,23 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
       sky.position.set(heroPosition.x, 0, heroPosition.z);
       legacy.update(heroPosition);
       scatter.update(heroPosition, camera);
+      mountains.update(heroPosition, camera);
     },
     setQuality(low): void {
       if (low === lowQuality) return;
       lowQuality = low;
       scatter.setDistanceScale(low ? 0.72 : 1);
+      mountains.setDistanceScale(low ? 0.72 : 1);
     },
-    warm: (x, y, z) => scatter.warm(x, y, z),
+    warm(x, y, z) {
+      const near = scatter.warm(x, y, z), far = mountains.warm(x, y, z);
+      return { objects: [...near.objects, ...far.objects], restore: () => { near.restore(); far.restore(); } };
+    },
     dispose(): void {
       for (const mesh of staticMeshes) mesh.dispose();
       for (const mesh of terrainMeshes) mesh.geometry.dispose();
       scatter.dispose();
+      mountains.dispose();
       group.removeFromParent();
     },
   };

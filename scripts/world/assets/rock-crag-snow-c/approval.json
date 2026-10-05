@@ -1,0 +1,25 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "rock-crag-snow-c",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "a89336f48442bd634ae5351e08221cc0e53fed9f2464693c603c72ad0ca7aefa",
+   "rationale": "Crag (snow, shape c): a low, wide ridge, built from overlapping convex blocks with snow on its upward facets and a talus of granite rubble blocks; 27.3 x 21.7 m and 12.2 m tall, 1,119 triangles, one flat-shaded kit mesh with baked AO; inside its round collider below 3 m and within 0.8 m above it (world-v3 circle footprint test).",
+   "limitations": [
+    "Faceted low-poly blocks with sharp edges: no overhangs, caves, gullies or erosion detail."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "a89336f48442bd634ae5351e08221cc0e53fed9f2464693c603c72ad0ca7aefa",
+   "rationale": "In the Frostspine massifs, the Crownlands outcrops and the mountain ring along the Frostspine and Crownlands, at gameplay cameras (18-40 m, pitch 0.38-1.13): 12 m of rock dwarfs the soldier, captain and boss and closes the world's edge as a mountain ring with a far backdrop beyond it. A crag between the camera and the hero opens a 3.5-7 m cutaway cone (the hero fully visible behind a Frostspine crag in the wilds browser suite).",
+   "limitations": [
+    "Seen through the cutaway, a crag shows its open inside faces; the ring's rock is a wall of crags, not climbable or walkable."
+   ]
+  }
+ ]
+}

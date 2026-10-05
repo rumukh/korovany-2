@@ -6,14 +6,21 @@
   {
    "gate": "model",
    "decision": "accepted",
-   "sha256": "e4910b84feb229a9039d64fd04d4a80198e26ee5a44e12bd3a81c45b05cd3015",
-   "rationale": "Two dead oaks 9.5-11 m with a few withered leaf clusters, about 1,970 wood triangles each, plus impostors."
+   "sha256": "7d1d6327473e6fbbdfd4b57434daa9b8c872813d43f14d3fb791d7205e1dd6d0",
+   "rationale": "Dead oak, re-cooked from W0 with a middle level of detail: a thick forked bole and a leafless crown of bare branches with a few dead leaves; 2 variants 9.5-11.0 m tall; at most 2,091 triangles near, 469 in the middle level of detail and a 6-triangle impostor; 405,380 bytes before meshopt. Parts, triangle budget and impostor checked by the world-assets suite; baked AO.",
+   "limitations": [
+    "Its bark is the spruce layer; there is no oak bark."
+   ]
   },
   {
    "gate": "in-game",
    "decision": "accepted",
-   "sha256": "e4910b84feb229a9039d64fd04d4a80198e26ee5a44e12bd3a81c45b05cd3015",
-   "rationale": "Scattered in heartlands, fens and saltcoast: bare silhouettes carry the dark-fantasy mood without hiding the hero."
+   "sha256": "7d1d6327473e6fbbdfd4b57434daa9b8c872813d43f14d3fb791d7205e1dd6d0",
+   "rationale": "In open woods and lone trees across the Heartlands, Fenlands, Salt Coast, Ash Steppe, Crownlands and Frostspine, and the Old Orchard, at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at natural scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss (trees are not scaled up), with shadows on the ground. Distance bands: near parts to 24 m (spruce, birch and oaks have a middle level there), the middle level to 58 m and impostors to 235 m; the canopy cutaway cone (3-6 m at the hero, twice that at the camera) keeps the hero visible inside the forest.",
+   "limitations": [
+    "Card foliage reads flat and dark where a tree stands beside the camera at mid-distance; the sightline cone keeps the hero and the ground round them clear.",
+    "No wind motion."
+   ]
   }
  ]
 }

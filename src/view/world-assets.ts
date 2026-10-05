@@ -71,7 +71,28 @@ export const WORLD_MODELS = {
   'tree-spruce': { kind: 'tree' },
   'tree-birch': { kind: 'tree' },
   'tree-deadoak': { kind: 'tree' },
+  'tree-blackpine': { kind: 'tree' },
+  'tree-twistedoak': { kind: 'tree' },
+  'tree-deadbirch': { kind: 'tree' },
+  /** Undergrowth, drawn in the tree layout (stems, cards and a small impostor) but only as presentation near the hero. */
+  'plant-bracken': { kind: 'tree' },
+  'plant-bramble': { kind: 'tree' },
   'rock-boulder': { kind: 'rock' },
+  'rock-mossy': { kind: 'rock' },
+  'wood-log': { kind: 'rock' },
+  'wood-stump': { kind: 'rock' },
+  'rock-crag-moss-a': { kind: 'kit' },
+  'rock-crag-moss-b': { kind: 'kit' },
+  'rock-crag-moss-c': { kind: 'kit' },
+  'rock-crag-moss-d': { kind: 'kit' },
+  'rock-crag-snow-a': { kind: 'kit' },
+  'rock-crag-snow-b': { kind: 'kit' },
+  'rock-crag-snow-c': { kind: 'kit' },
+  'rock-crag-snow-d': { kind: 'kit' },
+  'rock-crag-bare-a': { kind: 'kit' },
+  'rock-crag-bare-b': { kind: 'kit' },
+  'rock-crag-bare-c': { kind: 'kit' },
+  'rock-crag-bare-d': { kind: 'kit' },
   'char-sheep': { kind: 'fauna' },
   'char-crow': { kind: 'fauna' },
   'char-crow-flight': { kind: 'fauna' },
@@ -85,7 +106,8 @@ export const WORLD_MODEL_IDS = Object.keys(WORLD_MODELS) as WorldModelId[];
  */
 export const WORLD_SURFACES = ['daub', 'timber', 'thatch', 'shingle', 'rubble', 'planks', 'dark',
   'meadow', 'forest', 'mud', 'road', 'field', 'granite', 'bark-spruce', 'bark-birch',
-  'ashlar', 'slate', 'lime', 'tarred', 'brick', 'reedmud', 'pebbles', 'ash', 'snow', 'cobbles', 'coldgrass', 'castle', 'mossruin'] as const;
+  'ashlar', 'slate', 'lime', 'tarred', 'brick', 'reedmud', 'pebbles', 'ash', 'snow', 'cobbles', 'coldgrass', 'castle', 'mossruin',
+  'darkforest', 'cliff', 'bark-pine', 'moss'] as const;
 export type WorldSurface = typeof WORLD_SURFACES[number];
 /** Every surface layer is a square tiling image of this many pixels. */
 export const SURFACE_SIZE = 512;
@@ -94,7 +116,7 @@ export const SURFACE_METRES: Readonly<Record<WorldSurface, number>> = {
   daub: 2, timber: 1, thatch: 2, shingle: 2, rubble: 2, planks: 2, dark: 1,
   meadow: 4, forest: 4, mud: 4, road: 4, field: 4, granite: 2, 'bark-spruce': 1, 'bark-birch': 1,
   ashlar: 2, slate: 2, lime: 2, tarred: 2, brick: 2, reedmud: 4, pebbles: 4, ash: 4, snow: 4, cobbles: 4, coldgrass: 4,
-  castle: 3, mossruin: 2,
+  castle: 3, mossruin: 2, darkforest: 4, cliff: 4, 'bark-pine': 1, moss: 2,
 };
 /**
  * How each layer's grayscale height map becomes its surface data at load: tangent normals from the height gradient
@@ -111,6 +133,8 @@ export const SURFACE_FINISH: Readonly<Record<WorldSurface, { relief: number; rou
   pebbles: { relief: 5, roughness: 0.86 }, ash: { relief: 2, roughness: 0.97 }, snow: { relief: 2, roughness: 0.74 },
   cobbles: { relief: 5, roughness: 0.86 }, coldgrass: { relief: 3, roughness: 0.96 },
   castle: { relief: 4.5, roughness: 0.91 }, mossruin: { relief: 4, roughness: 0.94 },
+  darkforest: { relief: 3, roughness: 0.97 }, cliff: { relief: 4.5, roughness: 0.92 },
+  'bark-pine': { relief: 5, roughness: 0.93 }, moss: { relief: 2.5, roughness: 0.97 },
 };
 /** The sheep's animation clips. */
 export const FAUNA_CLIPS = ['Idle', 'Graze', 'Walk', 'Run', 'Startle'] as const;
@@ -121,9 +145,15 @@ export const CROW_CLIPS = { 'char-crow': ['Perch', 'Peck'], 'char-crow-flight': 
  * alpha-tested leaf cards for the near band, and a three-card impostor (two crossed side views and a top view) beyond it.
  */
 export const TREE_PARTS = ['lod0-wood', 'lod0-leaves', 'impostor'] as const;
-export const TREE_VARIANTS: Readonly<Record<'tree-spruce' | 'tree-birch' | 'tree-deadoak', number>> = {
-  'tree-spruce': 3, 'tree-birch': 2, 'tree-deadoak': 2,
+/** The middle band's parts, which W3 species (and the W0 trees from their W3 re-cook) carry as well. */
+export const TREE_LOD1_PARTS = ['lod1-wood', 'lod1-leaves'] as const;
+export const TREE_VARIANTS: Readonly<Record<'tree-spruce' | 'tree-birch' | 'tree-deadoak' | 'tree-blackpine' | 'tree-twistedoak'
+  | 'tree-deadbirch' | 'plant-bracken' | 'plant-bramble', number>> = {
+  'tree-spruce': 3, 'tree-birch': 2, 'tree-deadoak': 2, 'tree-blackpine': 3, 'tree-twistedoak': 2, 'tree-deadbirch': 2,
+  'plant-bracken': 3, 'plant-bramble': 2,
 };
+/** Undergrowth the presentation scatters round forest trees (never obstacles). */
+export const UNDERGROWTH = ['plant-bracken', 'plant-bramble'] as const;
 export const ROCK_VARIANTS = 4;
 
 export function worldModelUrl(id: WorldModelId): string {
@@ -176,9 +206,9 @@ export interface WorldModel {
 }
 
 export interface WorldSurfaces {
-  /** sRGB colour, one layer per WORLD_SURFACES entry. */
+  /** sRGB colour with the layer's roughness in alpha (an sRGB texture's alpha stays linear), one layer per WORLD_SURFACES entry. */
   readonly albedo: THREE.DataArrayTexture;
-  /** Linear data: tangent-space normal X and Y (0.5 = flat), roughness, and 255. */
+  /** RG8 linear data: tangent-space normal X and Y (0.5 = flat). */
   readonly surface: THREE.DataArrayTexture;
 }
 
@@ -253,11 +283,12 @@ function validate(id: WorldModelId, scene: THREE.Object3D, clips: ReadonlyMap<st
 
 /**
  * Every world model a world can present: all of a v3 world's obstacle and decor models, its sheep when it has
- * pastures, and the crows, which every v3 world has (they gather on fields, graveyards and gibbets).
+ * pastures, the crows, which every v3 world has (they gather on fields, graveyards and gibbets), and the undergrowth
+ * scattered round its trees.
  */
 export function worldAssetIds(world: Pick<WorldBlueprint, 'version' | 'obstacles' | 'fields' | 'decor'>): WorldModelId[] {
   if (world.version !== 3) return [];
-  const ids = new Set<string>(['char-crow', 'char-crow-flight']);
+  const ids = new Set<string>(['char-crow', 'char-crow-flight', ...UNDERGROWTH]);
   // Flocks graze on stubble fields (fauna.ts flockHomes).
   if (world.fields?.some(field => field.crop === 'stubble')) ids.add('char-sheep');
   for (const obstacle of world.obstacles) if (obstacle.model) ids.add(obstacle.model);
@@ -352,8 +383,16 @@ export class WorldAssetLibrary {
       for (let i = 0; i < size * size; i++) heights[i] = pixels.data[i * 4]! / 255;
       deriveSurface(heights, size, SURFACE_FINISH[name], surface, index * layer);
     })));
-    const array = (data: Uint8Array<ArrayBuffer>, colorSpace: THREE.ColorSpace): THREE.DataArrayTexture => {
+    // Roughness rides in the albedo's alpha and the data array keeps only the normal's X and Y: two bytes a texel, not four.
+    const normals = new Uint8Array(size * size * 2 * WORLD_SURFACES.length);
+    for (let i = 0, texels = size * size * WORLD_SURFACES.length; i < texels; i++) {
+      albedo[i * 4 + 3] = surface[i * 4 + 2]!;
+      normals[i * 2] = surface[i * 4]!;
+      normals[i * 2 + 1] = surface[i * 4 + 1]!;
+    }
+    const array = (data: Uint8Array<ArrayBuffer>, colorSpace: THREE.ColorSpace, format: THREE.PixelFormat = THREE.RGBAFormat): THREE.DataArrayTexture => {
       const texture = new THREE.DataArrayTexture(data, size, size, WORLD_SURFACES.length);
+      texture.format = format;
       texture.colorSpace = colorSpace;
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
       texture.magFilter = THREE.LinearFilter;
@@ -363,7 +402,7 @@ export class WorldAssetLibrary {
       texture.needsUpdate = true;
       return texture;
     };
-    const arrays = { albedo: array(albedo, THREE.SRGBColorSpace), surface: array(surface, THREE.NoColorSpace) };
+    const arrays = { albedo: array(albedo, THREE.SRGBColorSpace), surface: array(normals, THREE.NoColorSpace, THREE.RGFormat) };
     if (this.disposed) {
       arrays.albedo.dispose();
       arrays.surface.dispose();

@@ -1,0 +1,25 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "plant-bramble",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "3957c1474f0feb9f0580d65a220e60f2f8a5548f5787cc5178e2f55e2e092ed8",
+   "rationale": "Bramble: arching dark red canes with pale thorns and a few purple-brown leaves over a low dome (two sizes); 1.3-1.5 m tall; at most 90 triangles near, half the cards in the middle level and a 128 px impostor; 31,604 bytes before meshopt.",
+   "limitations": [
+    "Alpha-tested cards on a few stems; the colours were brightened after the first in-game review so the clumps read on the dark floor."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "3957c1474f0feb9f0580d65a220e60f2f8a5548f5787cc5178e2f55e2e092ed8",
+   "rationale": "At the foot of trees in under the dark forests' trees, with the bracken, at gameplay cameras (18-40 m, pitch 0.38-1.13): knee to waist height beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss; presentation only (it does not collide), drawn to 70 m with a middle level from 30 m and casting no shadow.",
+   "limitations": [
+    "The hero walks through it without bending it."
+   ]
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "tree-twistedoak",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "de397d569dcaef58e73cab4b1e824bfc122432e21c5d5b3e117c91c1f6ad49c2",
+   "rationale": "Old twisted oak: a short, thick, leaning bole on buttress roots with wide, wandering limbs and a few dead leaves; 2 variants 10.0-12.0 m tall; at most 2,574 triangles near, 469 in the middle level of detail and a 6-triangle impostor; 417,792 bytes before meshopt. Parts, triangle budget and impostor checked by the world-assets suite; baked AO.",
+   "limitations": [
+    "Its bark is the pine layer; there is no oak bark."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "de397d569dcaef58e73cab4b1e824bfc122432e21c5d5b3e117c91c1f6ad49c2",
+   "rationale": "In the dark forests and the Heartlands and Crownlands woods, and alone in open country, at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at natural scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss (trees are not scaled up), with shadows on the ground. Distance bands: near parts to 24 m (spruce, birch and oaks have a middle level there), the middle level to 58 m and impostors to 235 m; the canopy cutaway cone (3-6 m at the hero, twice that at the camera) keeps the hero visible inside the forest.",
+   "limitations": [
+    "Card foliage reads flat and dark where a tree stands beside the camera at mid-distance; the sightline cone keeps the hero and the ground round them clear.",
+    "No wind motion."
+   ]
+  }
+ ]
+}

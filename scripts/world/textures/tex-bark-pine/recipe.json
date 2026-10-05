@@ -1,0 +1,90 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-bark-pine",
+  "layer": "bark-pine",
+  "physicalSizeMetres": 1,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of the bark of an old black pine, a flat panel of bark one metre across seen exactly face-on and filling the frame edge to edge. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. Each grey shape becomes one thick, rough, irregular flat plate of bark with crumbling edges and faint silver-grey weathering on its surface, and the near-black gaps and thin dark lines become deep, narrow fissures and cracks between and across the plates. The bark is very dark grey to black, matte and dry. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge: the top, middle and bottom of the frame are equally bright. The surface is flat, with no curvature, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, planks, boards, wood grain, sawn wood, bricks, tiles, regular pattern, grid, moss, lichen tufts, resin drops, mushrooms, reddish bark, orange bark, sticks, wires, log, cylinder, curved trunk, rounded surface, shading gradient, dark lower half, bright upper half, wet, glossy, shiny, fish scales, masonry, stone wall",
+  "candidates": [
+    {
+      "seed": 47501,
+      "note": "First recipe (trunk lying horizontally, thin brick-like courses): Qwen painted a lit cylinder, bright along the top and near-black along the bottom, so each tile carries a dark band the cook's de-light clamp cannot lift, and the thin regular courses read as a brick wall once tiled."
+    },
+    {
+      "seed": 47502,
+      "note": "First recipe (trunk lying horizontally, thin brick-like courses): Qwen painted a lit cylinder, bright along the top and near-black along the bottom, so each tile carries a dark band the cook's de-light clamp cannot lift, and the thin regular courses read as a brick wall once tiled. Its plates are also glossy, rounded fish scales."
+    },
+    {
+      "seed": 47503,
+      "note": "Revised recipe: the plates became separate slabs or shingles on vertically grained boards, a shingled wall rather than bark."
+    },
+    {
+      "seed": 47504
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 47503,
+    "noiseMetres": 0.2,
+    "colours": [
+      "#121110",
+      "#1a1816",
+      "#201d1a"
+    ],
+    "layers": [
+      {
+        "kind": "courses",
+        "height": [
+          0.05,
+          0.14
+        ],
+        "width": [
+          0.2,
+          0.7
+        ],
+        "joint": 0.012,
+        "squareness": 2.8,
+        "colours": [
+          "#3a3733",
+          "#45413c",
+          "#33302c",
+          "#4d4943",
+          "#2e2b28"
+        ]
+      },
+      {
+        "kind": "strokes",
+        "perSquareMetre": 30,
+        "length": [
+          0.08,
+          0.25
+        ],
+        "width": 0.006,
+        "orientation": 0,
+        "spread": 6,
+        "colours": [
+          "#141210",
+          "#1a1816"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "saturation": 0.45,
+    "gain": 1.4,
+    "highlights": {
+      "knee": 0.06,
+      "ceiling": 0.12
+    },
+    "note": "The candidate spans p10 0.0003 to p99 0.72 linear: its silver plates would stripe every trunk. The roll-off compresses them to dark grey plates, the gain lifts the black fissures a little and the low saturation takes out the candidate's blue cast."
+  }
+}

@@ -52,6 +52,15 @@ centre (the villain's fortress arena) and the Old Fort keeps 16.5 m open, with a
 gate over each road. Kept v2 landmark buildings (`<place>-building-<n>` without a
 `model`) keep their ids and centres and may grow to their place's standard radius
 where the road allows.
+W3 adds the wild lands to v3: crags (`rock-crag-<moss|snow|bare>-<a..d>`, kind
+`rock`) collide as circles of their `V3_BUILDINGS` width and form a ring along
+every edge of the bounds except the Salt Coast's, plus massifs in the Frostspine
+and outcrops elsewhere, always at least 10 m from a road and 8 m beyond any
+place or site; the forest floor (`wood-log` boxes along local Z, `wood-stump` and
+`rock-mossy` circles, kind `rock`) keeps at least 1.6 m from every other solid;
+lone trees (`lone-<region>-<n>`) stand in the open lands. Undergrowth and the far
+mountains behind the ring are presentation only and never appear in the
+blueprint.
 Default `generateWorld`/`createCampaign` versions stay 2; the browser shell passes `worldVersion: 3` for new
 campaigns. The v3 layout still grows between releases, so restoring a v3 save whose `worldId` no longer matches
 its regenerated world throws `OutdatedWorldError` (the shell explains that the campaign belongs to an earlier
