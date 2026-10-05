@@ -60,22 +60,43 @@ try {
     home: { x: base.player.x, z: base.player.z }, greenhollow: place('greenhollow'), village: place('hollow-village'),
     crownbridge: place('crownbridge'), forest: { x: -230, z: -372 }, road: { x: 0, z: -110 },
   };
-  state.renderAt = (x, z, quality) => {
-    view.setQuality(quality);
-    for (let i = 0; i < 2; i++) view.render(frame(x, z), 1 / 60);
-    counters.calls = 0;
-    counters.triangles = 0;
-    view.render(frame(x, z), 1 / 60);
-    const pixels = new Uint8Array(64 * 64 * 4);
-    gl.readPixels(${WIDTH / 2} - 32, ${HEIGHT / 2} - 32, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-    let brightness = 0;
-    for (let i = 0; i < pixels.length; i += 4) brightness += pixels[i] + pixels[i + 1] + pixels[i + 2];
-    return { calls: counters.calls, triangles: Math.round(counters.triangles), programs: renderer.info.programs.length,
-      brightness, contextLost: gl.isContextLost(), warmup: view.warmup };
+  // One render job at a time. Each frame is its own task, ended by a 1-pixel read that waits for the GPU, so the page answers
+  // DevTools between frames: under CI software GL a single frame of the forest at high quality takes seconds, and three in one
+  // task outlasted the 30 s DevTools command deadline.
+  const settle = () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+  const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
+  state.job = null;
+  state.startRender = (x, z, quality) => {
+    const job = { done: false, result: null, error: null };
+    state.job = job;
+    (async () => {
+      try {
+        view.setQuality(quality);
+        for (let i = 0; i < 2; i++) {
+          view.render(frame(x, z), 1 / 60);
+          settle();
+          await nextTask();
+        }
+        counters.calls = 0;
+        counters.triangles = 0;
+        view.render(frame(x, z), 1 / 60);
+        const pixels = new Uint8Array(64 * 64 * 4);
+        gl.readPixels(${WIDTH / 2} - 32, ${HEIGHT / 2} - 32, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        let brightness = 0;
+        for (let i = 0; i < pixels.length; i += 4) brightness += pixels[i] + pixels[i + 1] + pixels[i + 2];
+        job.result = { calls: counters.calls, triangles: Math.round(counters.triangles), programs: renderer.info.programs.length,
+          brightness, contextLost: gl.isContextLost(), warmup: view.warmup };
+      } catch (error) {
+        job.error = String(error?.stack ?? error);
+      }
+      job.done = true;
+    })();
+    return true;
   };
 
-  // The camera-to-hero cutaway through a v3 house, measured on a separate Presentation with plain rendering.
-  state.cutaway = () => {
+  // The camera-to-hero cutaway through a v3 house, measured on a separate Presentation with plain rendering. It runs as a job
+  // that yields between its five reads (each a full render and read-back), like the place renders above.
+  const cutaway = async () => {
     const cutCanvas = document.createElement('canvas');
     cutCanvas.width = 720; cutCanvas.height = 500;
     const cutRenderer = new THREE.WebGLRenderer({ canvas: cutCanvas, antialias: false, preserveDrawingBuffer: true });
@@ -104,10 +125,12 @@ try {
       const kitPools = [];
       presentation.scene.traverse(object => { if (object.isInstancedMesh && object.material.name === 'world-kit') kitPools.push(object); });
       const withCutaway = read();
+      await nextTask();
       const plain = new Map(kitPools.map(pool => [pool, pool.material]));
       const opaque = kitPools[0].material.clone();
       for (const pool of kitPools) pool.material = opaque;
       const withoutCutaway = read();
+      await nextTask();
       for (const [pool, material] of plain) pool.material = material;
       // Hero pixels: the hero alone over black, unlit white.
       const heroRoot = presentation.scene.children.find(child => child.isGroup && child.getObjectByProperty('isSkinnedMesh', true)
@@ -121,6 +144,7 @@ try {
       presentation.scene.background = new THREE.Color('#000000');
       presentation.scene.fog = null;
       const alone = read();
+      await nextTask();
       presentation.scene.overrideMaterial = new THREE.MeshBasicMaterial({ color: '#ffffff' });
       cutRenderer.toneMapping = THREE.NoToneMapping;
       const mask = read();
@@ -141,6 +165,14 @@ try {
       presentation.dispose();
       cutRenderer.dispose();
     }
+  };
+  state.cutawayJob = null;
+  state.startCutaway = () => {
+    const job = { done: false, result: null, error: null };
+    state.cutawayJob = job;
+    cutaway().then(result => { job.result = result; }, error => { job.error = String(error?.stack ?? error); })
+      .finally(() => { job.done = true; });
+    return true;
   };
 
   // A missing world model stops the view with an explicit asset error; there is no primitive fallback.
@@ -228,8 +260,10 @@ describe.runIf(process.env.KOROVANY_WORLD_BROWSER === '1')('version 3 world WebG
     for (const quality of ['high', 'low'] as const) {
       const metrics: (Render & { place: string })[] = [];
       for (const place of places) {
-        const stats = await evaluate<Render>(cdp,
-          `(() => { const p = window.v3.places[${JSON.stringify(place)}]; return window.v3.renderAt(p.x, p.z, '${quality}'); })()`);
+        await evaluate(cdp, `(() => { const p = window.v3.places[${JSON.stringify(place)}]; return window.v3.startRender(p.x, p.z, '${quality}'); })()`);
+        const job = await until<{ done: boolean; result: Render | null; error: string | null }>(cdp, 'window.v3.job', job => job.done, 240_000);
+        if (job.error !== null || job.result === null) throw new Error(`${quality} ${place}: ${job.error}`);
+        const stats = job.result;
         expect(stats.contextLost).toBe(false);
         expect(stats.brightness, place).toBeGreaterThan(64 * 64 * 3 * 12);
         metrics.push({ place, ...stats });
@@ -249,7 +283,11 @@ describe.runIf(process.env.KOROVANY_WORLD_BROWSER === '1')('version 3 world WebG
 
   test('the camera-to-hero cutaway reveals the hero through a v3 house that hides it without the cutaway', async () => {
     if (!cdp) throw new Error('World v3 browser was not initialized');
-    const result = await evaluate<{ heroPixels: number; visibleWith: number; visibleWithout: number }>(cdp, 'window.v3.cutaway()');
+    await evaluate(cdp, 'window.v3.startCutaway()');
+    const job = await until<{ done: boolean; result: { heroPixels: number; visibleWith: number; visibleWithout: number } | null; error: string | null }>(
+      cdp, 'window.v3.cutawayJob', job => job.done, 100_000);
+    if (job.error !== null || job.result === null) throw new Error(`cutaway: ${job.error}`);
+    const result = job.result;
     console.info('World v3 cutaway', JSON.stringify(result));
     expect(result.heroPixels).toBeGreaterThan(300);
     expect(result.visibleWithout).toBeLessThan(0.3);
