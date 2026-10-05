@@ -1,0 +1,235 @@
+{
+ "schema": "korovany2-world-asset/1",
+ "id": "prop-lantern-post",
+ "kind": "prop",
+ "output": {
+  "file": "public/world/prop-lantern-post/prop-lantern-post.glb",
+  "sha256": "bd8382fea7b1370990d06a9ebae6196c2c0cb529d51ee410fa2e1516355b3a76",
+  "bytes": 169452
+ },
+ "license": "Derived from TRELLIS-image-large output. TRELLIS's textured GLB export depends on components licensed for research and evaluation only (Gaussian export, diffoctreerast); no commercial clearance is established. The owner acknowledged publishing TRELLIS-derived assets on the public Korovany II site on 2026-09-26.",
+ "tools": [
+  {
+   "name": "Azure OpenAI gpt-image-2.5-sunburst",
+   "runtime": "Azure OpenAI image generation (cloud)",
+   "role": "concept art",
+   "approval": "Owner approved cloud concept generation for in-game objects on 2026-10-04."
+  },
+  {
+   "name": "TRELLIS-image-large",
+   "model": "microsoft/TRELLIS-image-large",
+   "modelRevision": "25e0d31ffbebe4b5a97464dd851910efc3002d96",
+   "offline": true,
+   "licensing": {
+    "wholeToolchainMit": false,
+    "commercialClearanceEstablished": false
+   },
+   "seed": 6115,
+   "inferenceSeconds": 59.8,
+   "output": {
+    "sha256": "1005d68109af8cbd9ab85b5eb76dd6257ca9a085d689d5248dfbbcaa9e7e54c8",
+    "bytes": 1438896
+   }
+  },
+  {
+   "name": "Blender 5.2.2 LTS",
+   "build": "d13f752e3b9c",
+   "role": "generation, cooking, rigging and bakes (CPU Cycles)"
+  },
+  {
+   "name": "meshoptimizer 0.22.0 (npm)",
+   "role": "lossless EXT_meshopt_compression"
+  }
+ ],
+ "source": {
+  "concept": {
+   "candidate": "a",
+   "sha256": "b93426dbbf4cb9f15e0ff7ccb9f3651db6d04c97749555e241ab1f715f19f9bb",
+   "note": "Pixels of the accepted Azure candidate, re-encoded without metadata."
+  },
+  "trellis": {
+   "candidate": "a-s6115",
+   "sha256": "1005d68109af8cbd9ab85b5eb76dd6257ca9a085d689d5248dfbbcaa9e7e54c8"
+  }
+ },
+ "limitations": [
+  "Single-view TRELLIS reconstruction from one approved concept: the far side, back and underside are TRELLIS's invention.",
+  "Roughness and metalness come from colour classes and Cycles bakes, not measured PBR.",
+  "The lantern is unlit (no emissive or light); it only reads as a lantern by shape.",
+  "TRELLIS invents the unseen back; it is softer than the concept view.",
+  "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+ ],
+ "cook": {
+  "scripts": {
+   "models/pipeline/cook_landmark.py": "6a73d5aefd446b6ca69eff7d9ffce5b69e4b8c156bd3ce7239a0b48a16b6feb7",
+   "models/pipeline/k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
+   "models/pipeline/k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
+   "models/pipeline/k2sheet.py": "0141e81990f6318c974fa018c895e02aa71b9c8ba5e23dbdd741e4881e6f177c",
+   "models/pipeline/repair_tangents.py": "be1ff6e6aa829a639644a8f7b6960b424c5bcaba0b137fe4ffc5f3da338cb952",
+   "models/pipeline/quantize_prop_glb.py": "4fceea5247a9da87d455879dd049eeba1426a67202a5e502e321731f8813378f",
+   "models/pipeline/meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+  },
+  "scriptsNote": "SHA-256 of each script with LF line endings, equal to its committed copy.",
+  "normalization": {
+   "uniformScale": 3.4413403377339966,
+   "sourceReach": 0.18016236092715215,
+   "reachMeters": 0.62,
+   "yawDegrees": 0,
+   "heightMeters": 3.4247701168060303,
+   "baseCentre": [
+    -0.0002353861927986145,
+    0.04357125610113144,
+    -0.4971080720424652
+   ],
+   "footprintMeters": [
+    0.993565022945404,
+    1.2387489080429077
+   ],
+   "axes": "glTF +Y up/+Z forward -> Blender import -> glTF export_yup; no extra axis rotation"
+  },
+  "topology": {
+   "vertices": 1861,
+   "faces": 3734,
+   "triangles": 3734,
+   "boundaryEdges": 0,
+   "nonManifoldEdges": 3,
+   "components": 1,
+   "componentVertexCounts": [
+    1861
+   ],
+   "degenerateFaces": 0,
+   "inconsistentWindingEdges": 0
+  },
+  "decimation": {
+   "applied": false,
+   "triangles": 3734
+  },
+  "materials": {
+   "bakeSize": 1024,
+   "mapsSize": 256,
+   "albedoSizes": [
+    512
+   ],
+   "albedoGain": 2,
+   "cageExtrusionMeters": 0.02,
+   "maxRayMeters": 0.06,
+   "atlasCoverage": 0.60528564453125,
+   "metalFractionOfSurface": 0,
+   "classFractions": {
+    "horn": 0.07348492487647475,
+    "iron": 0.06289704547746294,
+    "stone": 0.06067863265100333,
+    "wood": 0.802939396995059
+   },
+   "unclassifiedFraction": 0,
+   "roughnessMean": 0.8170626759529114,
+   "metalnessMean": 0.028380809351801872,
+   "aoMean": 0.896820068359375,
+   "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active, supersampled) from the approved TRELLIS source mesh, then any declared colour repairs the recipe lists (matchBoxes, retint, facingBalance); tangent normals baked from the approved source mesh and whiteout-blended with relief derived from colour; AO baked from the decimated geometry; roughness and metalness from recipe colour classes. Artistic derivation, not measured PBR."
+  },
+  "geometryCompression": {
+   "extension": "EXT_meshopt_compression",
+   "encoder": "meshoptimizer 0.22.0 (npm)",
+   "script": "meshopt_glb.mjs",
+   "scriptSha256": "9f5914236e6aac82b541e0685ab34f839a1287d50c41b8322724ddf420597ec8",
+   "filters": "none",
+   "reorder": {
+    "method": "meshoptimizer reorderMesh: vertex-cache triangle order, then vertex-fetch vertex order",
+    "primitives": 1,
+    "kept": 0,
+    "vertices": 3373,
+    "triangles": 3734,
+    "check": "a permutation: every vertex keeps its exact attribute bytes, and the triangles are the same, with the same winding, in another order"
+   },
+   "check": "every view decoded again: attribute views byte-identical to the reordered data; triangle index views hold the same triangles in the same order and winding (only the first vertex may rotate)",
+   "views": {
+    "attributes": {
+     "views": 4,
+     "raw": 67460,
+     "packed": 47473
+    },
+    "triangles": {
+     "views": 1,
+     "raw": 22404,
+     "packed": 3986,
+     "rotatedTriangles": 2372
+    },
+    "indices": {
+     "views": 0,
+     "raw": 0,
+     "packed": 0
+    },
+    "stored": 114914
+   },
+   "inputSha256": "814e54e20f3d1b927a2a41434b85ea0ce06c71a82a59e9234bbf5c518d9ea983",
+   "bytesBefore": 207032,
+   "bytesAfter": 169452
+  },
+  "staticQuantization": {
+   "script": "quantize_prop_glb.py",
+   "scriptSha256": "6b79b80c0c1ae58fc21cf8cd2b23ac6a0f13462e48530110f5247a5fb312d6fe",
+   "extension": "KHR_mesh_quantization",
+   "settings": {
+    "POSITION": "SHORT normalized about the bounding-box centre with one uniform scale; the scale and centre folded into the root node",
+    "NORMAL": "BYTE normalized",
+    "TANGENT": "BYTE normalized",
+    "TEXCOORD": "UNSIGNED_SHORT normalized where the UVs lie in [0, 1]"
+   },
+   "nodes": [
+    {
+     "node": "prop-lantern-post",
+     "scale": 1.712387,
+     "translation": [
+      0,
+      1.712385,
+      0
+     ]
+    }
+   ],
+   "positions": [
+    {
+     "mesh": "geometry_0",
+     "centre": [
+      0,
+      1.712385,
+      0
+     ],
+     "scale": 1.712387,
+     "stepMm": 0.05226,
+     "boundMm": 0.1,
+     "maxErrorMm": 0.02613,
+     "extentMeters": 3.4248,
+     "maxErrorOfExtent": 7.63e-06
+    }
+   ],
+   "floatUvs": [],
+   "maxErrors": {
+    "positionMm": 0.02613,
+    "normalDegrees": 0.3682,
+    "tangentDegrees": 0.3451,
+    "uvTexels2048": 0.01562
+   },
+   "bounds": {
+    "positionMm": 0.1,
+    "positionHalfSteps": 0.51,
+    "normalDegrees": 0.8,
+    "tangentDegrees": 0.8,
+    "uvTexels2048": 0.05
+   },
+   "inputSha256": "dd9a03d6a9c15ac54f942b92e1f888fa21f9e5c5ace960e77d43af9196d63fec",
+   "bytesBefore": 301276,
+   "bytesAfter": 207032
+  },
+  "tangentRepair": {
+   "script": "repair_tangents.py",
+   "scriptSha256": "80b1b0f84dfc08f2a5d50e3651065d987627fdba731468981d273f7920c8e17d",
+   "why": "three.js normalizes vertex tangents in the vertex shader; a zero-length tangent becomes NaN and the bloom spreads it.",
+   "normalsChecked": 3373,
+   "tangentsChecked": 3373,
+   "repaired": [],
+   "inputSha256": "dd9a03d6a9c15ac54f942b92e1f888fa21f9e5c5ace960e77d43af9196d63fec",
+   "bytesChanged": 0
+  },
+  "seconds": 4.089689300046302
+ }
+}

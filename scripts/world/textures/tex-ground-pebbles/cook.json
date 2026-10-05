@@ -1,0 +1,53 @@
+{
+ "schema": "korovany2-surface-cook/1",
+ "layer": "pebbles",
+ "recipe": "tex-ground-pebbles",
+ "recipeSha256": "6e46e5acbb0f455f98d83f0eb63750fc437d24b61df9e41657a1e7b3ecc45f8f",
+ "candidate": "candidate-45201.png",
+ "candidateSha256": "e99192ff9a4cb6e3ef36b56df7e1ad1f572de5c1c98c4e542e1cd56479c12a5b",
+ "script": "scripts/world/pipeline/cook_surface.py",
+ "scriptSha256": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+ "size": 512,
+ "steps": {
+  "delight": {
+   "sigmaPixels": 166.0,
+   "clamp": [
+    0.6,
+    1.7
+   ]
+  },
+  "wrapBlend": {
+   "bandFraction": 0.08,
+   "mode": "variance-preserving",
+   "seamRatioBefore": 4.068,
+   "seamRatioAfter": 0.976
+  },
+  "grade": {
+   "gain": 1.25,
+   "saturation": 1.0
+  },
+  "height": {
+   "blurPixels": 0.8,
+   "percentiles": [
+    1,
+    99
+   ],
+   "inverted": false
+  }
+ },
+ "albedoMeanSrgb": [
+  74.3,
+  69.5,
+  67.4
+ ],
+ "outputs": {
+  "pebbles-albedo.webp": {
+   "bytes": 137404,
+   "sha256": "44051b9e5e57bd04654d112b8f246ded52f3c2322bf13eeaa265bef06b48993b"
+  },
+  "pebbles-height.webp": {
+   "bytes": 107366,
+   "sha256": "3d65d1f8fc3031faf89575104c71897254f42468eb159dbd945d834f97b1e1dd"
+  }
+ }
+}

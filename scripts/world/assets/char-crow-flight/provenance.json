@@ -1,0 +1,290 @@
+{
+ "schema": "korovany2-world-asset/1",
+ "id": "char-crow-flight",
+ "kind": "fauna",
+ "output": {
+  "file": "public/world/char-crow-flight/char-crow-flight.glb",
+  "sha256": "d2f18f6e963a41a0079398d870bcf27c736f361ef2defca7bbfb7d1875b1b5d7",
+  "bytes": 86812
+ },
+ "license": "Derived from TRELLIS-image-large output. TRELLIS's textured GLB export depends on components licensed for research and evaluation only (Gaussian export, diffoctreerast); no commercial clearance is established. The owner acknowledged publishing TRELLIS-derived assets on the public Korovany II site on 2026-09-26.",
+ "tools": [
+  {
+   "name": "Azure OpenAI gpt-image-2.5-sunburst",
+   "runtime": "Azure OpenAI image generation (cloud)",
+   "role": "concept art",
+   "approval": "Owner approved cloud concept generation for in-game objects on 2026-10-04."
+  },
+  {
+   "name": "TRELLIS-image-large",
+   "model": "microsoft/TRELLIS-image-large",
+   "modelRevision": "25e0d31ffbebe4b5a97464dd851910efc3002d96",
+   "offline": true,
+   "licensing": {
+    "wholeToolchainMit": false,
+    "commercialClearanceEstablished": false
+   },
+   "seed": 6112,
+   "inferenceSeconds": 58.6,
+   "output": {
+    "sha256": "98d85df8736ea292125c85d201be599154e209582b8ab11bf022134295399565",
+    "bytes": 1300348
+   }
+  },
+  {
+   "name": "Blender 5.2.2 LTS",
+   "build": "d13f752e3b9c",
+   "role": "generation, cooking, rigging and bakes (CPU Cycles)"
+  },
+  {
+   "name": "meshoptimizer 0.22.0 (npm)",
+   "role": "lossless EXT_meshopt_compression"
+  }
+ ],
+ "source": {
+  "concept": {
+   "candidate": "c",
+   "sha256": "de7e84824d71a64857873641553a9b9f2019ea200e5ec5033eafc25ba7fef552",
+   "note": "Pixels of the accepted Azure candidate, re-encoded without metadata."
+  },
+  "trellis": {
+   "candidate": "c-s6112",
+   "sha256": "98d85df8736ea292125c85d201be599154e209582b8ab11bf022134295399565"
+  }
+ },
+ "limitations": [
+  "Single-view TRELLIS reconstruction from one approved concept: the far side, back and underside are TRELLIS's invention.",
+  "Roughness and metalness come from colour classes and Cycles bakes, not measured PBR.",
+  "Clips are procedural oscillators on a small rig (body, head, tail; arms and hands of each wing), not motion capture.",
+  "TRELLIS fused the perched crow's folded wings into its body and the flying crow's feathers into flat sheets; the view swaps the perched and flying models at take-off and landing instead of folding the wings.",
+  "Wing beats bend the whole wing as one surface; no primary feather separation.",
+  "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+ ],
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_crow.py": "0992b761deecf185849ffdba0a0233b9fc77fc3c4bf3e2ba4da3237c8be18f78",
+   "models/pipeline/k2rig.py": "acacf7ff3039f58271b996b289ecca657d30bc99e195d7b7013e577003a0fc3c",
+   "models/pipeline/k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
+   "models/pipeline/k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
+   "models/pipeline/k2sheet.py": "0141e81990f6318c974fa018c895e02aa71b9c8ba5e23dbdd741e4881e6f177c",
+   "models/pipeline/webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
+   "models/pipeline/quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f",
+   "models/pipeline/meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+  },
+  "scriptsNote": "SHA-256 of each script with LF line endings, equal to its committed copy.",
+  "normalization": {
+   "uniformScale": 1.1188166080549526,
+   "sourceHeight": 0.32176855206489563,
+   "feetCentre": [
+    0.00017395615577697754,
+    0.028461562421324926,
+    -0.15636858344078064
+   ],
+   "yawDegrees": 0,
+   "targetHeightMeters": 0.36,
+   "axes": "glTF +Y up/+Z forward -> Blender import -> glTF export_yup; no extra axis rotation"
+  },
+  "topology": {
+   "vertices": 1184,
+   "faces": 2364,
+   "triangles": 2364,
+   "boundaryEdges": 0,
+   "nonManifoldEdges": 0,
+   "components": 1,
+   "componentVertexCounts": [
+    1184
+   ],
+   "degenerateFaces": 0,
+   "inconsistentWindingEdges": 0
+  },
+  "decimation": {
+   "applied": true,
+   "before": 4602,
+   "triangles": 2364,
+   "ratio": 0.5136897001303781
+  },
+  "materials": {
+   "bakeSize": 512,
+   "textureSize": 256,
+   "atlasCoverage": 0.5762481689453125,
+   "dyeFractionOfSurface": 0,
+   "metalFractionOfSurface": 0,
+   "regionFractions": {
+    "beak-and-legs": 0.5621342512908778
+   },
+   "dyeFills": {},
+   "toneMatch": [],
+   "roughnessMean": 0.49631717801094055,
+   "aoMean": 0.9348042607307434,
+   "albedoGain": 1,
+   "reliefStrength": 3,
+   "aoSamples": 32,
+   "toneGamma": 0.85,
+   "toneCalibration": null,
+   "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved TRELLIS source mesh; there is no rear-view projection, so the far side and underside are as TRELLIS invented them from the single approved concept. Tangent normals baked from the source geometry and whiteout-blended with colour relief; AO baked from the decimated geometry; roughness lower on the darkest texels (beak and legs) and otherwise the glossy-feather default, both reduced by colour detail; no metal and no dye mask. Base colour lifted by luma power toneGamma (chroma ratios kept), set by eye in review renders. Artistic derivation, not measured PBR."
+  },
+  "clips": [
+   {
+    "name": "Fly",
+    "frames": 19,
+    "seconds": 0.31666666666666665,
+    "beatsPerSecond": 3.125
+   },
+   {
+    "name": "Glide",
+    "frames": 144,
+    "seconds": 2.4
+   },
+   {
+    "name": "TakeOff",
+    "frames": 50,
+    "seconds": 0.8333333333333334,
+    "beatsPerSecond": 3.571
+   }
+  ],
+  "rig": {
+   "joints": 8,
+   "names": [
+    "root",
+    "body",
+    "head",
+    "tail",
+    "wing_l",
+    "tip_l",
+    "wing_r",
+    "tip_r"
+   ]
+  },
+  "weights": {
+   "joints": 7,
+   "maxInfluences": 4,
+   "relaxationIterations": 12,
+   "lockedVertices": 0,
+   "falloffMeters": 0.02,
+   "power": 4,
+   "regions": {
+    "head": 110,
+    "tail": 42,
+    "body": 432,
+    "wing_l": 306,
+    "wing_r": 294
+   },
+   "pruning": {
+    "minWeight": 0.01,
+    "influencesPruned": 70
+   }
+  },
+  "geometryCompression": {
+   "extension": "EXT_meshopt_compression",
+   "encoder": "meshoptimizer 0.22.0 (npm)",
+   "script": "meshopt_glb.mjs",
+   "scriptSha256": "9f5914236e6aac82b541e0685ab34f839a1287d50c41b8322724ddf420597ec8",
+   "filters": "none",
+   "reorder": {
+    "method": "meshoptimizer reorderMesh: vertex-cache triangle order, then vertex-fetch vertex order",
+    "primitives": 1,
+    "kept": 0,
+    "vertices": 1834,
+    "triangles": 2364,
+    "check": "a permutation: every vertex keeps its exact attribute bytes, and the triangles are the same, with the same winding, in another order"
+   },
+   "check": "every view decoded again: attribute views byte-identical to the reordered data; triangle index views hold the same triangles in the same order and winding (only the first vertex may rotate)",
+   "views": {
+    "attributes": {
+     "views": 31,
+     "raw": 64356,
+     "packed": 38993
+    },
+    "triangles": {
+     "views": 1,
+     "raw": 14184,
+     "packed": 2601,
+     "rotatedTriangles": 1543
+    },
+    "indices": {
+     "views": 0,
+     "raw": 0,
+     "packed": 0
+    },
+    "stored": 30854
+   },
+   "inputSha256": "1f9d3b7568e235a8ce602df8175fd0930d85290c7bdb1d13419c31f7deaedd13",
+   "bytesBefore": 119216,
+   "bytesAfter": 86812
+  },
+  "quantization": {
+   "script": "quantize_glb.py",
+   "scriptSha256": "46911d96d3deaba53622cbe20ba3ca1d20dea63bdf08af95658332dcdd2f4303",
+   "extension": "KHR_mesh_quantization",
+   "settings": {
+    "POSITION": "SHORT normalized; uniform scale and offset folded into the inverse bind matrices",
+    "NORMAL": "BYTE normalized",
+    "TANGENT": "BYTE normalized",
+    "TEXCOORD_0": "UNSIGNED_SHORT normalized",
+    "WEIGHTS_0": "UNSIGNED_BYTE normalized, largest-remainder rounding to 255",
+    "rotation": "SHORT normalized"
+   },
+   "dequantization": {
+    "scaleMeters": 0.560021,
+    "offsetMeters": [
+     -3.8e-05,
+     0.18024,
+     0.036542
+    ]
+   },
+   "maxErrors": {
+    "positionMm": 0.00855,
+    "normalDegrees": 0.34907,
+    "tangentDegrees": 0.36233,
+    "uvTexels2048": 0.01562,
+    "weight": 0.00196,
+    "rotationDegrees": 0.00283
+   },
+   "bounds": {
+    "positionMm": 0.1,
+    "normalDegrees": 0.8,
+    "tangentDegrees": 0.8,
+    "uvTexels2048": 0.05,
+    "weight": 0.004,
+    "rotationDegrees": 0.01
+   },
+   "inputSha256": "f736931626e45a36a5afd5167030699830955f27f4a7d382a4cce8b24eb9450e",
+   "bytesBefore": 202936,
+   "bytesAfter": 119216
+  },
+  "baseEncoding": {
+   "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+   "script": "webp_exact.py",
+   "scriptSha256": "87f340d373c6807260f3704dff4f5b42bda80e47ff6030022d166def26c2773d",
+   "settings": {
+    "quality": 90,
+    "method": 6,
+    "exact": true,
+    "alpha": "lossless"
+   },
+   "reason": "Base-colour alpha is the dye mask; libwebp's default lossy mode discards RGB under alpha 0.",
+   "images": [
+    {
+     "image": "body-base",
+     "size": [
+      256,
+      256
+     ],
+     "bytes": 11108,
+     "sha256": "caefcaf4d94320176189fddb1ab4440507b1d41e9a2fefee745ed5cc81c99512",
+     "bytesBefore": 516,
+     "meanAbsRgbError": {
+      "dyed": null,
+      "undyed": 1.684
+     },
+     "meanAbsRgbErrorBefore": {
+      "dyed": null,
+      "undyed": 27.022
+     },
+     "undyedFraction": 1
+    }
+   ]
+  },
+  "seconds": 2.2025738999946043
+ }
+}

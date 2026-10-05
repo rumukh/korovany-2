@@ -63,20 +63,32 @@ when the world mirror is disposed.
 
 A version 3 blueprint (`generateWorld(seed, 3)`, `CampaignOptions.worldVersion: 3`) is drawn by
 `createWorldSceneryV3` (`scenery-v3.ts`) instead of `createWorldScenery`; versions 1 and 2 are drawn exactly as before.
-Every v3 obstacle names a `model` from the world asset registry (`world-assets.ts`: buildings, fences, farm props,
-trees, boulders and the sheep), which is separate from the cooked characters and story props in `models.ts`: own
-files (`public/world/<id>/<id>.glb`, `public/world/surfaces`), provenance (`scripts/world`) and budgets.
+Every v3 obstacle names a `model` from the world asset registry (`world-assets.ts`: buildings, walls, fences, farm and
+village props, trees, boulders, the sheep and the crows), which is separate from the cooked characters and story
+props in `models.ts`: own files (`public/world/<id>/<id>.glb`, `public/world/surfaces`), provenance (`scripts/world`)
+and budgets.
 `createGameView` needs a page-lifetime `WorldAssetLibrary` in `GameViewOptions.worldAssets` and presents a v3 world
 only once `worldAssetIds(world)` and the surface layers have loaded; a failed load is thrown by `render` (there is no
 primitive fallback). Version 1 and 2 worlds request nothing from it.
 
-- **Surfaces.** Fifteen 512 px tiling layers (`WORLD_SURFACES`: architecture, ground, rock and bark) form two
+- **Surfaces.** Twenty-six 512 px tiling layers (`WORLD_SURFACES`: architecture, ground, rock and bark) form two
   `DataArrayTexture`s: sRGB albedo, and tangent normal plus roughness derived at load from each layer's grayscale
   height map (`deriveSurface`). Kit, bark and rock meshes carry the layer index in UV1.x and baked AO in UV1.y and
-  share one program (`kitMaterial`); the ground blends five layers by a 1024-texel control map (`terrainMaterial`,
-  `terrainControl`) with height-based transitions and furrows turned along each field. The layers ship as WebP and
-  upload as RGBA8; KTX2/Basis was measured and deferred (ETC1S saves 282 KB and 15 MiB of GPU memory but needs a
-  585 KB transcoder; the whole v3 world needs about 97 MiB of texture memory, within its 160 MiB budget).
+  share one program (`kitMaterial`); the ground blends eight layers by 1024-texel control maps (`terrainMaterial`,
+  `terrainControl`) with height-based transitions and furrows turned along each field: meadow, forest, mud, road and
+  field everywhere, a regional base and overlay (`REGION_GROUND`: reed mud in the Fens, cold grass with shingle on the
+  Salt Coast, ash on the Ash Steppe, cold grass with snow in the Frostspine, cold grass in Hollowvale) and cobbled
+  streets in the stone towns (`COBBLED_PLACES`). The layers ship as WebP and upload as RGBA8; KTX2/Basis was measured
+  at W0 and deferred (ETC1S saved 282 KB and 15 MiB of GPU memory but needs a 585 KB transcoder). The whole v3 world
+  needs about 154 MiB of texture memory, within its 160 MiB budget; W1 props use 256 px normal and ORM maps, and the
+  small ones a 256 px albedo.
+- **Settlements.** Each region builds its own vernacular from the scripted kit (`build_kit.py`, `build_kit_w1.py`):
+  timber cottages, longhouses and barns in the Heartlands, the Greenmarch and Hollowvale, stone and brick houses,
+  jettied townhouses with cobbles in Crownbridge, stilt huts and a reed-roofed chapel in the Fens, salt sheds and
+  upturned-hull shelters on the coast, a glass kiln at Cinderwell; inns with stables and walled courtyards, smithies,
+  watchtowers, market stalls, and dry-stone or fenced yards. Cooked props dress them (bell posts, stocks, handcarts,
+  crates, troughs, anvils, lantern posts, net racks, beehives, graveyards with warded graves) and the roads
+  (signposts at junctions, wayside shrines and gibbets at turns).
 - **Terrain.** `terrainFor(world)` is a presentation-only heightfield (exactly 0 for v1/v2): level on roads, sites,
   clearings, footprints, fields and combat zones, hills elsewhere with slopes of at most about 11 degrees. Terrain
   chunks are 128 m meshes of 2 m quads. Actors, residents, pickups, effects, rings, the sun target and the camera
@@ -85,16 +97,20 @@ primitive fallback). Version 1 and 2 worlds request nothing from it.
   submits only instances in the camera's horizontal view cone (plus everything within 36 m of the hero), with shadows
   near the hero only and tree impostors beyond 58 m, so a kilometre of forest costs one draw per part. Impostor cards
   dither away as they turn edge-on (`applyEdgeFade`), so a crossed or top card never shows as a line. The shader
-  warm-up draws one instance of every pool (and one sheep), so no species, impostor or prop compiles on first sight.
+  warm-up draws one instance of every pool (and one sheep and crow), so no species, impostor or prop compiles on
+  first sight.
 - **Cutaway.** Architecture dithers within 1.6-3.2 m of the camera-to-hero sightline; canopies and trunks in a cone
   3-6 m wide at the hero and twice that at the camera (`applySightlineDither`'s radius and widening are uniforms on
-  the shared program).
+  the shared program). Kit walls are one-sided, so a building is not drawn while the camera is inside its bounds
+  grown by 2 m (`ScatterKind.hollow`); a low camera behind a tall chapel or inn sees through it, never into it.
 - **Light.** `lightWorldV3` is an overcast late-autumn grade (cooler sky and fog, a lower sun); character light stays
   within 10 percent of the v1/v2 calibration (measured 0.96 on the line soldier).
 - **Animals.** `WorldFauna` grazes sheep flocks on settlement pastures (deterministic from the seed; each flock's
   home is the first walkable point of its stubble field, since haystacks may stand anywhere in it). They flee the
   hero within 9 m, move with the world's own `isWalkable`, stop animating beyond 60 m, hide beyond 120 m and freeze
-  in reduced motion. They are never in snapshots, saves or rules.
+  in reduced motion. Crow flocks (`crowHomes`) peck on the other stubble fields, at chapels, gibbets and the Echo
+  Well; they take off when the hero comes within 10 m, fly off and land again once the hero is 34 m away (the
+  perched and flying models swap at take-off and landing). Animals are never in snapshots, saves or rules.
 
 Seven generated surface families use shared color, normal and roughness maps
 from `public/textures/frontier`. Albedo is sRGB; normal/roughness data is linear.

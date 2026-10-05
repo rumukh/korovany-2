@@ -1,0 +1,35 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-grave-ward",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "b",
+   "sha256": "d5d963c7738ed80959353709bd9084d5700f847e6622a87a644214a1a8b7255d",
+   "rationale": "Candidate a was chosen first, but its reconstructions (a-s6107, a-s6120) turned the bell post into a short stump; candidate b keeps a slim post with its bracket and bell on the kerbed, salt-ringed mound (b-s6119)."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "5e5f4d09c9b5f8e767343109c6327f0a7c0d8307e192cecc4c4b6c51668d3999",
+   "rationale": "Warded grave: a long mound ringed by a salt line with a marker post (the lore's burial ward) (Azure concept b, TRELLIS b-s6119). Cooked 4,431 triangles, 172,260 bytes; 1.18 m tall in a 1.65 m reach at uniform scale. Albedo 256 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "The hand bell on the marker post is not legible; the post reads as a thin dark stick.",
+    "The salt line reads as a white rim and the mound as a mossy rug from above.",
+    "TRELLIS invents the unseen back; it is softer than the concept view.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "5e5f4d09c9b5f8e767343109c6327f0a7c0d8307e192cecc4c4b6c51668d3999",
+   "rationale": "In Chapel graveyards and the three drivers' graves at the Echo Well at gameplay cameras (18-40 m): reads at true scale beside the troops, grounded by shadows on the relief, and stays inside its collider (radius 1.65 m or its box).",
+   "limitations": [
+    "Static: no animation, sound or interaction."
+   ]
+  }
+ ]
+}

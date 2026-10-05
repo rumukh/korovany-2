@@ -1,0 +1,73 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-ground-ash",
+  "layer": "ash",
+  "physicalSizeMetres": 4,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of dry grey ash and cinder ground, four metres across, shot straight down from directly above as a flat orthographic photograph. The whole image is the ground surface itself, filling the frame edge to edge: no horizon, no sky and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The grey background becomes fine, dry grey wood ash and dust, the dark specks become small black cinders and charcoal fragments, and the pale specks become flakes of white ash. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, fire, glowing embers, flames, smoke, logs, footprints, plants, grass, stones, puddles",
+  "candidates": [
+    {
+      "seed": 45301
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 45301,
+    "noiseMetres": 0.6,
+    "colours": [
+      "#2f2d2b",
+      "#3a3836",
+      "#45423e"
+    ],
+    "layers": [
+      {
+        "kind": "ellipses",
+        "length": [
+          0.008,
+          0.03
+        ],
+        "aspect": [
+          0.5,
+          0.9
+        ],
+        "perSquareMetre": 800,
+        "colours": [
+          "#1c1b1a",
+          "#262422",
+          "#302c28"
+        ]
+      },
+      {
+        "kind": "ellipses",
+        "length": [
+          0.005,
+          0.015
+        ],
+        "aspect": [
+          0.6,
+          1.0
+        ],
+        "perSquareMetre": 300,
+        "colours": [
+          "#6e6a64",
+          "#7a756d"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "gain": 0.55,
+    "saturation": 0.35,
+    "blendFraction": 0.4,
+    "note": "Darkened (linear gain 0.55, to a linear albedo of about 0.136, a step paler than the meadow) and neutralised (saturation 0.35): the candidate is a bright blue-grey (linear albedo about 0.25); wood ash under the overcast grade should read pale and colourless, not blue. A wide wrap band (0.4 of the tile): with the default 0.08 the cross-faded border of the fine speckle showed as a 4 m grid of dark lines."
+  }
+}

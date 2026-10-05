@@ -1,0 +1,28 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-stonehouse",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "bfe4c4e4c62570302c8e86682efd355a5ddc46ecc3e977dfef7d27742ecf2f5d",
+   "rationale": "Rubble-stone house, 7 x 10 m, eaves 4.1 m, slate roof at 48 degrees to a 9.3 m chimney, one 1.3 x 2.8 m plank door (the 2.25 m soldier clears it by 0.55 m), shuttered windows and a gable window; 498 triangles, 43,504 bytes before meshopt. Walls stay inside the oriented-box collider below 3 m and eaves overhang at most 0.78 m above it (check-kit: OK); baked AO at 48 samples.",
+   "limitations": [
+    "Walls are one flat rubble layer: no quoins, sills or lintels proud of the face, so the silhouette is a clean box.",
+    "The slate roof is a single plane per side with no ridge tiles or moss build-up.",
+    "Surfaces are tiled 2 m layers shared by the whole kit; there is no unique wear, grime gradient or decals per building."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "bfe4c4e4c62570302c8e86682efd355a5ddc46ecc3e977dfef7d27742ecf2f5d",
+   "rationale": "In Saltmarket, Wreckers' Rest, Cinderwell, Crownbridge, High Pass and Star Monastery at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at true scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss; shadows ground it on the relief; the 1.6-3.2 m architecture cutaway keeps the hero visible behind it, and a camera inside its bounds (plus 2 m) hides it instead of showing the hollow inside.",
+   "limitations": [
+    "Not enterable: interiors are not modelled.",
+    "Lighting is the overcast day grade only; windows never light up."
+   ]
+  }
+ ]
+}

@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import * as THREE from 'three';
 import { createCampaign } from '../src/game';
-import { Presentation } from '../src/view';
+import { CORPSE_SLOPE, Presentation } from '../src/view';
 import { V3_GRADE } from '../src/view/atmosphere';
-import { flockHomes } from '../src/view/fauna';
+import { crowHomes, flockHomes } from '../src/view/fauna';
 import { ViewResources } from '../src/view/resources';
 import { terrainFor } from '../src/view/terrain';
 import { SURFACE_SIZE, WorldAssetLibrary, worldAssetIds, type WorldAssetSource, type WorldModelId } from '../src/view/world-assets';
@@ -75,14 +75,42 @@ describe('version 3 presentation (DOM-free)', () => {
     expect(view.sun.target.position.y).toBeCloseTo(raised.height, 6);
     expect(view.scenery.heroPosition.y).toBeCloseTo(raised.height + 1.15, 6);
 
+    // A corpse on a slope lies along it: its up axis is the terrain normal (refinement 3); a living soldier stays upright.
+    let sloped = { x: 0, z: 0, slope: 0 };
+    for (let z = -400; z <= 400 && sloped.slope < CORPSE_SLOPE * 2; z += 3) {
+      for (let x = -400; x <= 400 && sloped.slope < CORPSE_SLOPE * 2; x += 3) {
+        const slope = terrain.slope(x, z);
+        if (slope > sloped.slope) sloped = { x, z, slope };
+      }
+    }
+    expect(sloped.slope).toBeGreaterThan(CORPSE_SLOPE * 2);
+    const up = (object: THREE.Object3D) => new THREE.Vector3(0, 1, 0).applyQuaternion(object.quaternion);
+    const pose = (state: 'idle' | 'dead') => {
+      const next = structuredClone(frame);
+      const body = next.actors.find(candidate => candidate.id === soldier.id)!;
+      Object.assign(body, { x: sloped.x, z: sloped.z, heading: 0.7, state, hp: state === 'dead' ? 0 : body.maxHp });
+      next.tick += 1;
+      view.update(next, 1 / 60, camera, true);
+      return up(view.scene.getObjectByName(`actor:${soldier.id}`)!);
+    };
+    const normal = terrain.normal(sloped.x, sloped.z);
+    expect(pose('idle').toArray().map(v => +v.toFixed(6))).toEqual([0, 1, 0]);
+    const lying = pose('dead');
+    expect(lying.angleTo(new THREE.Vector3(normal.x, normal.y, normal.z))).toBeLessThan(1e-5);
+    // The heading still points the body the same way across the slope.
+    const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(view.scene.getObjectByName(`actor:${soldier.id}`)!.quaternion);
+    expect(Math.atan2(forward.x, forward.z)).toBeCloseTo(0.7, 1);
+
     // Flocks out of sight leave the scene graph (three walks every attached node's matrices each frame) and return
-    // whole when the hero comes near; none is lost.
+    // whole when the hero comes near; none is lost. Crows count as flocks too.
     const flock = view.scene.getObjectByName('world-fauna')!;
     const homes = flockHomes(snapshot.world);
+    const crows = crowHomes(snapshot.world);
+    expect(view.fauna!.crowCount).toBe(crows.reduce((sum, home) => sum + home.count, 0));
     let away: { x: number; z: number } | undefined;
     for (let z = -440; z <= 440 && !away; z += 20) {
       for (let x = -440; x <= 440 && !away; x += 20) {
-        if (homes.every(home => Math.hypot(home.x - x, home.z - z) > 160)) away = { x, z };
+        if ([...homes, ...crows].every(home => Math.hypot(home.x - x, home.z - z) > 160)) away = { x, z };
       }
     }
     expect(away).toBeDefined();

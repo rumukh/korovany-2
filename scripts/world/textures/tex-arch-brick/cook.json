@@ -1,0 +1,53 @@
+{
+ "schema": "korovany2-surface-cook/1",
+ "layer": "brick",
+ "recipe": "tex-arch-brick",
+ "recipeSha256": "fdbba6695ea7ebf8aec71f71a25194e34c79fad1f82288817510bd7ff3085cec",
+ "candidate": "candidate-44501.png",
+ "candidateSha256": "16c479ecba7215d763b948ffe64955bd8c4b942262f8c0084cb3c556df78538b",
+ "script": "scripts/world/pipeline/cook_surface.py",
+ "scriptSha256": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+ "size": 512,
+ "steps": {
+  "delight": {
+   "sigmaPixels": 41.5,
+   "clamp": [
+    0.6,
+    1.7
+   ]
+  },
+  "wrapBlend": {
+   "bandFraction": 0.08,
+   "mode": "variance-preserving",
+   "seamRatioBefore": 3.838,
+   "seamRatioAfter": 1.188
+  },
+  "grade": {
+   "gain": 2.4,
+   "saturation": 0.8
+  },
+  "height": {
+   "blurPixels": 0.8,
+   "percentiles": [
+    1,
+    99
+   ],
+   "inverted": false
+  }
+ },
+ "albedoMeanSrgb": [
+  75.9,
+  65.9,
+  63.3
+ ],
+ "outputs": {
+  "brick-albedo.webp": {
+   "bytes": 108680,
+   "sha256": "8dcab8bec6f527646dfeb706bec75348edc2b4d860e1f081fafd1685495fd0bf"
+  },
+  "brick-height.webp": {
+   "bytes": 89934,
+   "sha256": "c9954a48d65fb54268b71dfe59bf51fd2c200bb1cd0fc76f3cc75797aca09f4e"
+  }
+ }
+}

@@ -20,6 +20,13 @@ export type { GroundPoint, MovementBasis } from './camera';
 export type { ModelStatus } from './models';
 export type ViewQuality = 'low' | 'high';
 
+/** Corpses on ground steeper than this lie along the slope (plan refinement 3). */
+export const CORPSE_SLOPE = THREE.MathUtils.degToRad(2);
+const UP = new THREE.Vector3(0, 1, 0);
+const NORMAL = new THREE.Vector3();
+const TILT = new THREE.Quaternion();
+const YAW = new THREE.Quaternion();
+
 /** Result of compiling the cooked-model programs before gameplay. */
 export interface ModelWarmup {
   programsBefore: number;
@@ -218,6 +225,23 @@ export class Presentation {
   /** Height of an actor's root: just above the presentation ground (0.08 m on flat v1/v2 worlds). */
   private lift(x: number, z: number): number {
     return 0.08 + this.terrain.height(x, z);
+  }
+
+  /**
+   * Faces a body root along `heading`. A lying body (a corpse) on ground steeper than CORPSE_SLOPE also tilts its up axis
+   * to the terrain normal, so it lies along the slope instead of floating over the downhill side. Never on flat v1/v2 ground.
+   */
+  private orient(root: THREE.Object3D, x: number, z: number, heading: number, lying: boolean): void {
+    if (lying && this.terrain.slope(x, z) > CORPSE_SLOPE) {
+      const normal = this.terrain.normal(x, z);
+      TILT.setFromUnitVectors(UP, NORMAL.set(normal.x, normal.y, normal.z));
+      YAW.setFromAxisAngle(UP, heading);
+      root.quaternion.multiplyQuaternions(TILT, YAW);
+      root.userData.tilted = true;
+    } else if (root.userData.tilted) {
+      root.rotation.set(0, heading, 0);
+      root.userData.tilted = false;
+    } else root.rotation.y = heading;
   }
 
   setQuality(low: boolean): void {
@@ -482,7 +506,7 @@ export class Presentation {
     const paused = storyOpen || snapshot.phase !== 'playing' || this.sinceTick > 0.1;
     const heroRoot = this.hero.root;
     heroRoot.position.set(snapshot.player.x, this.lift(snapshot.player.x, snapshot.player.z), snapshot.player.z);
-    heroRoot.rotation.y = snapshot.player.heading;
+    this.orient(heroRoot, snapshot.player.x, snapshot.player.z, snapshot.player.heading, snapshot.player.state === 'dead');
     if (this.hero.character) {
       let attack = false;
       let ability = false;
@@ -588,7 +612,9 @@ export class Presentation {
       if (dead) corpses += 1;
       visual.root.visible = !dead || corpses <= 8;
       visual.root.position.set(actor.x, this.lift(actor.x, actor.z), actor.z);
-      visual.root.rotation.y = actor.heading;
+      // Wagons keep their own tilt (wagon.update sets it); only bodies lie along the slope.
+      if (visual.wagon) visual.root.rotation.y = actor.heading;
+      else this.orient(visual.root, actor.x, actor.z, actor.heading, dead);
       let moved = 0;
       if (tickChanged) {
         moved = Math.hypot(actor.x - visual.lastX, actor.z - visual.lastZ);

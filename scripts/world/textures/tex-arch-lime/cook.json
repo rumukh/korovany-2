@@ -1,0 +1,53 @@
+{
+ "schema": "korovany2-surface-cook/1",
+ "layer": "lime",
+ "recipe": "tex-arch-lime",
+ "recipeSha256": "b728cb47c96a1b5214ef2d218b5e22472b6da16ff316341065dd0798eebeb282",
+ "candidate": "candidate-44301.png",
+ "candidateSha256": "7bc9c24e7e2b05b608bb08aa16fa7e8c25dc7cea5a2dde187312bb4b820576b1",
+ "script": "scripts/world/pipeline/cook_surface.py",
+ "scriptSha256": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+ "size": 512,
+ "steps": {
+  "delight": {
+   "sigmaPixels": 166.0,
+   "clamp": [
+    0.6,
+    1.7
+   ]
+  },
+  "wrapBlend": {
+   "bandFraction": 0.08,
+   "mode": "variance-preserving",
+   "seamRatioBefore": 2.114,
+   "seamRatioAfter": 1.042
+  },
+  "grade": {
+   "gain": 0.72,
+   "saturation": 1.0
+  },
+  "height": {
+   "blurPixels": 0.8,
+   "percentiles": [
+    1,
+    99
+   ],
+   "inverted": false
+  }
+ },
+ "albedoMeanSrgb": [
+  166.1,
+  162.7,
+  153.7
+ ],
+ "outputs": {
+  "lime-albedo.webp": {
+   "bytes": 66572,
+   "sha256": "b5e3203d082a7a12364a9ecf742d8c8ad1767a8d6d09465f08f8484af3d33191"
+  },
+  "lime-height.webp": {
+   "bytes": 114056,
+   "sha256": "6051eb81dae99e002b8b46f39fbe1ce228a1427459c9986e6041889f61349f2e"
+  }
+ }
+}

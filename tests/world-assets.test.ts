@@ -5,9 +5,9 @@ import * as THREE from 'three';
 import { createCampaign } from '../src/game';
 import { generateWorld, isWalkable } from '../src/game/world';
 import { V3_BUILDINGS, V3_FENCE, V3_PROPS } from '../src/game/world-v3';
-import { flockHomes } from '../src/view/fauna';
+import { crowHomes, flockHomes } from '../src/view/fauna';
 import {
-  deriveSurface, FAUNA_CLIPS, ROCK_VARIANTS, SURFACE_FINISH, SURFACE_METRES, SURFACE_SIZE, TREE_PARTS, TREE_VARIANTS,
+  CROW_CLIPS, deriveSurface, FAUNA_CLIPS, ROCK_VARIANTS, SURFACE_FINISH, SURFACE_METRES, SURFACE_SIZE, TREE_PARTS, TREE_VARIANTS,
   WORLD_MODEL_IDS, WORLD_MODELS, WORLD_SURFACES, WorldAssetLibrary, worldAssetIds, type WorldAssetSource, type WorldModelId,
 } from '../src/view/world-assets';
 import { imageSize, parseGlbWithoutTextures, readGlb } from './glb';
@@ -159,7 +159,9 @@ describe('version 3 world assets', () => {
     }
     if (kind === 'fauna') {
       expect(meshes[0]).toBeInstanceOf(THREE.SkinnedMesh);
-      expect(animations.map(clip => clip.name).sort()).toEqual([...FAUNA_CLIPS].sort());
+      const clips = id === 'char-sheep' ? FAUNA_CLIPS : CROW_CLIPS[id as keyof typeof CROW_CLIPS];
+      expect(clips, id).toBeDefined();
+      expect(animations.map(clip => clip.name).sort()).toEqual([...clips].sort());
     }
   });
 
@@ -328,5 +330,22 @@ describe('version 3 world assets', () => {
       expect(isWalkable(world, home, 0.45), home.id).toBe(true);
     }
     expect(flockHomes(generateWorld('flocks', 2))).toEqual([]);
+  });
+
+  test('crow flocks are deterministic and gather on fields, at chapels and under gibbets, on walkable ground', () => {
+    const world = generateWorld('crows', 3);
+    const homes = crowHomes(world);
+    expect(homes).toEqual(crowHomes(generateWorld('crows', 3)));
+    const sheep = new Set(flockHomes(world).map(home => home.id));
+    expect(homes.filter(home => /-field-\d+$/.test(home.id)).length).toBeGreaterThan(3);
+    expect(homes.some(home => world.obstacles.some(o => o.id === home.id && o.model === 'prop-gibbet'))).toBe(true);
+    expect(homes.some(home => world.obstacles.some(o => o.id === home.id && o.model?.startsWith('kit-chapel')))).toBe(true);
+    for (const home of homes) {
+      expect(sheep.has(home.id), home.id).toBe(false);
+      expect(home.count).toBeGreaterThanOrEqual(3);
+      expect(home.count).toBeLessThanOrEqual(6);
+    }
+    expect(crowHomes(generateWorld('crows', 2))).toEqual([]);
+    expect(worldAssetIds(world)).toEqual(expect.arrayContaining(['char-crow', 'char-crow-flight']));
   });
 });

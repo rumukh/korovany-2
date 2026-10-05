@@ -1,0 +1,28 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-inn",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "687f8fa354de4323e10c605a72cf273c8213dd3dd8a3cead3b78b6bd3b476a4d",
+   "rationale": "Two-storey inn, 10 x 20 m, rubble ground floor and daub upper storey on a 0.4 m plinth, a 2.2 x 2.9 m double door under a hood, a hanging sign, two chimneys, shingle roof to 14.9 m; 1,642 triangles, 140,244 bytes before meshopt. Walls stay inside the oriented-box collider below 3 m and eaves overhang at most 0.78 m above it (check-kit: OK); baked AO at 48 samples.",
+   "limitations": [
+    "The hanging sign is a blank board; no painted emblem.",
+    "1,642 triangles, the largest kit asset; still a single draw per instance pool.",
+    "Surfaces are tiled 2 m layers shared by the whole kit; there is no unique wear, grime gradient or decals per building."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "687f8fa354de4323e10c605a72cf273c8213dd3dd8a3cead3b78b6bd3b476a4d",
+   "rationale": "In Roadward and Lantern Ferry inns (with a walled courtyard and stable at Roadward) at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at true scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss; shadows ground it on the relief; the 1.6-3.2 m architecture cutaway keeps the hero visible behind it, and a camera inside its bounds (plus 2 m) hides it instead of showing the hollow inside.",
+   "limitations": [
+    "Not enterable: interiors are not modelled.",
+    "Lighting is the overcast day grade only; windows never light up."
+   ]
+  }
+ ]
+}

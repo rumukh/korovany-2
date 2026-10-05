@@ -1,0 +1,84 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-arch-ashlar",
+ "layer": "ashlar",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/ashlar-albedo.webp",
+   "sha256": "a2fffedff0bb4f315812071ef8a0ce5db0b19b5a9e0bda8095149f2ec9ba8380",
+   "bytes": 98338
+  },
+  "height": {
+   "file": "public/world/surfaces/ashlar-height.webp",
+   "sha256": "ad68fa936465e46cd0afad9a25b4d7b2b9065e0968aeefe4ae1bcf4030343552",
+   "bytes": 78662
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-44101.png",
+  "candidateSha256": "0ad623d15e335d8927e2c9fb0c259982462b3e4d06128111e5926ca93e98fbde",
+  "seed": 44101,
+  "generationSeconds": 845.9,
+  "layoutSha256": "c4a071cb0a6b90c5d7cac977c3d2c79ffc6d9c1168241d7c9cd39914f62cb545"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Face-on rock-faced ashlar in even courses with thin dark joints at the 2 m tile scale; blocks vary in length and none repeats as a feature. In game it reads as dressed grey stone on the townhouse ground floors and the chapel.",
+  "limitations": [
+   "The candidate is near-white limestone: the cook darkens (gain 0.6) and desaturates (0.62) it, so the blocks are even in tone and slightly flat.",
+   "Every block has the same pitched rock face; there is no weathering, soot or moss, so walls read clean at close range."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 3.247,
+    "seamRatioAfter": 1.09
+   },
+   "grade": {
+    "gain": 0.6,
+    "saturation": 0.62
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   113.5,
+   112.4,
+   108.9
+  ]
+ }
+}

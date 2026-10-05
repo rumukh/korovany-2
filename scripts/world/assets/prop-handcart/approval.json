@@ -1,0 +1,35 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-handcart",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "269b2828fc32de8a229f5cc18817212ebabbb1b00be8bf9f4a3c7035b998acda",
+   "rationale": "Two-wheeled handcart with solid plank wheels, handles resting on the ground and three tied grain sacks; one compact solid."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "1a0f6005a551c18cbc679728d9796050f353227c158eee59927402dcd751000e",
+   "rationale": "Two-wheeled handcart with sacks (Azure concept a, TRELLIS a-s6104). Cooked 4,925 triangles, 168,312 bytes; 1.24 m tall in a 1.67 m reach at uniform scale. Albedo 256 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "Wheels are solid and static.",
+    "Sacks are fused to the bed.",
+    "TRELLIS invents the unseen back; it is softer than the concept view.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "1a0f6005a551c18cbc679728d9796050f353227c158eee59927402dcd751000e",
+   "rationale": "In Settlement squares and Hollow Village at gameplay cameras (18-40 m): reads at true scale beside the troops, grounded by shadows on the relief, and stays inside its collider (radius 1.67 m or its box).",
+   "limitations": [
+    "Static: no animation, sound or interaction."
+   ]
+  }
+ ]
+}

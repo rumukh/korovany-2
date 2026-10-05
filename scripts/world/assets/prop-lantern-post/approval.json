@@ -1,0 +1,34 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-lantern-post",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "b93426dbbf4cb9f15e0ff7ccb9f3651db6d04c97749555e241ab1f715f19f9bb",
+   "rationale": "Weathered post on a broad fieldstone base with a scrolled bracket and an unlit horn-paned lantern; the widest base of the three."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "bd8382fea7b1370990d06a9ebae6196c2c0cb529d51ee410fa2e1516355b3a76",
+   "rationale": "Lantern post: a hooked iron arm with a glazed lantern on a timber post (Azure concept a, TRELLIS a-s6115). Cooked 3,734 triangles, 169,452 bytes; 3.42 m tall in a 0.62 m reach at uniform scale. Albedo 512 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "The lantern is unlit (no emissive or light); it only reads as a lantern by shape.",
+    "TRELLIS invents the unseen back; it is softer than the concept view.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "bd8382fea7b1370990d06a9ebae6196c2c0cb529d51ee410fa2e1516355b3a76",
+   "rationale": "In Roadward, Mirecross and Lantern Ferry at gameplay cameras (18-40 m): reads at true scale beside the troops, grounded by shadows on the relief, and stays inside its collider (radius 0.62 m or its box).",
+   "limitations": [
+    "Static: no animation, sound or interaction."
+   ]
+  }
+ ]
+}

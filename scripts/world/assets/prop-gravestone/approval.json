@@ -1,0 +1,34 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-gravestone",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "658aebf919e97823801cdce73be62062356face2edbc7549a7e81f9ae898ebe7",
+   "rationale": "Single thick round-topped slab with a carved border, yellow lichen and moss on a small earth base; the most even silhouette."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "c14f96f2ecf55217a53cf533baa39d11d39fa8ce258b5c372849f691f9c474ac",
+   "rationale": "Single round-topped headstone (Azure concept a, TRELLIS a-s6108). Cooked 2,955 triangles, 94,556 bytes; 1.30 m tall in a 0.40 m reach at uniform scale. Albedo 256 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "No inscription; the face is pale and lichen-spotted.",
+    "TRELLIS invents the unseen back; it is softer than the concept view.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "c14f96f2ecf55217a53cf533baa39d11d39fa8ce258b5c372849f691f9c474ac",
+   "rationale": "In Chapel graveyards at gameplay cameras (18-40 m): reads at true scale beside the troops, grounded by shadows on the relief, and stays inside its collider (radius 0.40 m or its box).",
+   "limitations": [
+    "Static: no animation, sound or interaction."
+   ]
+  }
+ ]
+}

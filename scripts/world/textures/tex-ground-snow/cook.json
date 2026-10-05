@@ -1,0 +1,53 @@
+{
+ "schema": "korovany2-surface-cook/1",
+ "layer": "snow",
+ "recipe": "tex-ground-snow",
+ "recipeSha256": "324590449f67362ce000fe072f179a039d7416a52193540a43e311b0210293ea",
+ "candidate": "candidate-45401.png",
+ "candidateSha256": "607a14aaec87606d6ca7a6a8be19fa7d9b5880b5f6ed79ce9e32eae54f3af877",
+ "script": "scripts/world/pipeline/cook_surface.py",
+ "scriptSha256": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+ "size": 512,
+ "steps": {
+  "delight": {
+   "sigmaPixels": 166.0,
+   "clamp": [
+    0.6,
+    1.7
+   ]
+  },
+  "wrapBlend": {
+   "bandFraction": 0.08,
+   "mode": "variance-preserving",
+   "seamRatioBefore": 4.851,
+   "seamRatioAfter": 1.119
+  },
+  "grade": {
+   "gain": 0.9,
+   "saturation": 0.5
+  },
+  "height": {
+   "blurPixels": 0.8,
+   "percentiles": [
+    1,
+    99
+   ],
+   "inverted": false
+  }
+ },
+ "albedoMeanSrgb": [
+  164.9,
+  163.0,
+  159.8
+ ],
+ "outputs": {
+  "snow-albedo.webp": {
+   "bytes": 69506,
+   "sha256": "d21e580bd70fde8e7c469dfe6829f87fc37a89e6d869dfa78e51fa558ca99366"
+  },
+  "snow-height.webp": {
+   "bytes": 80788,
+   "sha256": "dc610a818677d848d890a5113070a0b7c3e573296d05f1a09a549d7ef4ab7ae0"
+  }
+ }
+}

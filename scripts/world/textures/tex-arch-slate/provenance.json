@@ -1,0 +1,84 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-arch-slate",
+ "layer": "slate",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/slate-albedo.webp",
+   "sha256": "a99edcd2bca51704f265cc9e183684731782c154142064f2c569e8b407b4f586",
+   "bytes": 59442
+  },
+  "height": {
+   "file": "public/world/surfaces/slate-height.webp",
+   "sha256": "de82b5d823fe79958d3d8d53b9c628aaed3a311a2b5538e9dfcb60a8f0cc74c3",
+   "bytes": 65570
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-44201.png",
+  "candidateSha256": "be6ff34cf44a3bfb3898bfc06c5387390c06e917246123740bb2f98e47276860",
+  "seed": 44201,
+  "generationSeconds": 820.9,
+  "layoutSha256": "e0be86e5df48025098ec718160c200cb002b40251df858718595450a7d37e958"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Even courses of split natural slates with dark shadow lines and a few small lichen spots, face-on with no roof edges; the slates differ in width so the courses do not repeat visibly.",
+  "limitations": [
+   "The candidate is strongly blue; the cook halves its saturation, which leaves a cold blue-grey that is still bluer than most real slate.",
+   "Courses are perfectly horizontal and evenly lit, with no moss in the laps or ridge wear."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 3.247,
+    "seamRatioAfter": 1.285
+   },
+   "grade": {
+    "gain": 0.9,
+    "saturation": 0.5
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   76.5,
+   84.9,
+   93.7
+  ]
+ }
+}

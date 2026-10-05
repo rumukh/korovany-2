@@ -1,0 +1,28 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-stall",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "ee279e3163647b0a33a650f88e8838ecc591d0800bbe51b804b2e3de4128ca46",
+   "rationale": "Market stall, 2.6 x 4 m, four posts, a plank counter with boxed goods and a back board under a sloping plank roof, front 2.6 m, back 3.2 m; 152 triangles, 14,380 bytes before meshopt. Walls stay inside the oriented-box collider below 3 m and eaves overhang at most 0.78 m above it (check-kit: OK); baked AO at 48 samples.",
+   "limitations": [
+    "Goods are plain boxes in the kit layers; no cloth, produce or awnings.",
+    "Every stall is the same model; only the placement varies.",
+    "Surfaces are tiled 2 m layers shared by the whole kit; there is no unique wear, grime gradient or decals per building."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "ee279e3163647b0a33a650f88e8838ecc591d0800bbe51b804b2e3de4128ca46",
+   "rationale": "In Settlement squares (two or three per market) at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at true scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss; shadows ground it on the relief; the 1.6-3.2 m architecture cutaway keeps the hero visible behind it, and a camera inside its bounds (plus 2 m) hides it instead of showing the hollow inside.",
+   "limitations": [
+    "Not enterable: interiors are not modelled.",
+    "Lighting is the overcast day grade only; windows never light up."
+   ]
+  }
+ ]
+}

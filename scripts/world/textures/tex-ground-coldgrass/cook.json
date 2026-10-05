@@ -1,0 +1,53 @@
+{
+ "schema": "korovany2-surface-cook/1",
+ "layer": "coldgrass",
+ "recipe": "tex-ground-coldgrass",
+ "recipeSha256": "1c78b148910bbd2a652926880f356afddc648c5cad1594c03ae22227dc65ab98",
+ "candidate": "candidate-45601.png",
+ "candidateSha256": "a4e33bcae870724be2abf1276cb96962b4e9a56327b8797d1d084f8924822205",
+ "script": "scripts/world/pipeline/cook_surface.py",
+ "scriptSha256": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+ "size": 512,
+ "steps": {
+  "delight": {
+   "sigmaPixels": 166.0,
+   "clamp": [
+    0.6,
+    1.7
+   ]
+  },
+  "wrapBlend": {
+   "bandFraction": 0.4,
+   "mode": "variance-preserving",
+   "seamRatioBefore": 2.08,
+   "seamRatioAfter": 1.063
+  },
+  "grade": {
+   "gain": 0.65,
+   "saturation": 1.25
+  },
+  "height": {
+   "blurPixels": 0.8,
+   "percentiles": [
+    1,
+    99
+   ],
+   "inverted": false
+  }
+ },
+ "albedoMeanSrgb": [
+  82.1,
+  87.1,
+  83.7
+ ],
+ "outputs": {
+  "coldgrass-albedo.webp": {
+   "bytes": 134268,
+   "sha256": "b4314ec705f02bb26907f0ddfc687b20540b22fbea3e43a93a768400d7317442"
+  },
+  "coldgrass-height.webp": {
+   "bytes": 126528,
+   "sha256": "e9d1b3a6c87b3558eceda06c07d2afc89ad99377e56b80117668280f6e1dca62"
+  }
+ }
+}

@@ -18,16 +18,49 @@ export const WORLD_MODELS = {
   'kit-barn': { kind: 'kit' },
   'kit-shed': { kind: 'kit' },
   'kit-fence': { kind: 'kit' },
+  'kit-stonehouse': { kind: 'kit' },
+  'kit-brickhouse': { kind: 'kit' },
+  'kit-townhouse-a': { kind: 'kit' },
+  'kit-townhouse-b': { kind: 'kit' },
+  'kit-inn': { kind: 'kit' },
+  'kit-stable': { kind: 'kit' },
+  'kit-chapel': { kind: 'kit' },
+  'kit-chapel-fen': { kind: 'kit' },
+  'kit-smithy': { kind: 'kit' },
+  'kit-watchtower': { kind: 'kit' },
+  'kit-stall': { kind: 'kit' },
+  'kit-stilthut': { kind: 'kit' },
+  'kit-saltshed': { kind: 'kit' },
+  'kit-boathut': { kind: 'kit' },
+  'kit-kiln': { kind: 'kit' },
+  'kit-wall': { kind: 'kit' },
   'prop-haystack': { kind: 'prop' },
   'prop-woodpile': { kind: 'prop' },
   'prop-barrels': { kind: 'prop' },
   'prop-scarecrow': { kind: 'prop' },
   'prop-hay-cart': { kind: 'prop' },
+  'prop-bellpost': { kind: 'prop' },
+  'prop-gibbet': { kind: 'prop' },
+  'prop-wayside-shrine': { kind: 'prop' },
+  'prop-handcart': { kind: 'prop' },
+  'prop-crates': { kind: 'prop' },
+  'prop-gravestones': { kind: 'prop' },
+  'prop-gravestone': { kind: 'prop' },
+  'prop-grave-ward': { kind: 'prop' },
+  'prop-signpost': { kind: 'prop' },
+  'prop-trough': { kind: 'prop' },
+  'prop-anvil': { kind: 'prop' },
+  'prop-lantern-post': { kind: 'prop' },
+  'prop-net-rack': { kind: 'prop' },
+  'prop-stocks': { kind: 'prop' },
+  'prop-beehives': { kind: 'prop' },
   'tree-spruce': { kind: 'tree' },
   'tree-birch': { kind: 'tree' },
   'tree-deadoak': { kind: 'tree' },
   'rock-boulder': { kind: 'rock' },
   'char-sheep': { kind: 'fauna' },
+  'char-crow': { kind: 'fauna' },
+  'char-crow-flight': { kind: 'fauna' },
 } as const satisfies Record<string, { kind: WorldModelKind }>;
 export type WorldModelId = keyof typeof WORLD_MODELS;
 export const WORLD_MODEL_IDS = Object.keys(WORLD_MODELS) as WorldModelId[];
@@ -37,7 +70,8 @@ export const WORLD_MODEL_IDS = Object.keys(WORLD_MODELS) as WorldModelId[];
  * plus 0.5 in UV1.x (the Blender generators share this order; build_kit.py's LAYERS are the first seven).
  */
 export const WORLD_SURFACES = ['daub', 'timber', 'thatch', 'shingle', 'rubble', 'planks', 'dark',
-  'meadow', 'forest', 'mud', 'road', 'field', 'granite', 'bark-spruce', 'bark-birch'] as const;
+  'meadow', 'forest', 'mud', 'road', 'field', 'granite', 'bark-spruce', 'bark-birch',
+  'ashlar', 'slate', 'lime', 'tarred', 'brick', 'reedmud', 'pebbles', 'ash', 'snow', 'cobbles', 'coldgrass'] as const;
 export type WorldSurface = typeof WORLD_SURFACES[number];
 /** Every surface layer is a square tiling image of this many pixels. */
 export const SURFACE_SIZE = 512;
@@ -45,6 +79,7 @@ export const SURFACE_SIZE = 512;
 export const SURFACE_METRES: Readonly<Record<WorldSurface, number>> = {
   daub: 2, timber: 1, thatch: 2, shingle: 2, rubble: 2, planks: 2, dark: 1,
   meadow: 4, forest: 4, mud: 4, road: 4, field: 4, granite: 2, 'bark-spruce': 1, 'bark-birch': 1,
+  ashlar: 2, slate: 2, lime: 2, tarred: 2, brick: 2, reedmud: 4, pebbles: 4, ash: 4, snow: 4, cobbles: 4, coldgrass: 4,
 };
 /**
  * How each layer's grayscale height map becomes its surface data at load: tangent normals from the height gradient
@@ -56,9 +91,15 @@ export const SURFACE_FINISH: Readonly<Record<WorldSurface, { relief: number; rou
   dark: { relief: 1, roughness: 0.95 }, meadow: { relief: 2.5, roughness: 0.96 }, forest: { relief: 3, roughness: 0.97 },
   mud: { relief: 2, roughness: 0.72 }, road: { relief: 3, roughness: 0.9 }, field: { relief: 4, roughness: 0.95 },
   granite: { relief: 4, roughness: 0.93 }, 'bark-spruce': { relief: 5, roughness: 0.92 }, 'bark-birch': { relief: 4, roughness: 0.9 },
+  ashlar: { relief: 4, roughness: 0.9 }, slate: { relief: 3, roughness: 0.78 }, lime: { relief: 2, roughness: 0.93 },
+  tarred: { relief: 3, roughness: 0.8 }, brick: { relief: 4, roughness: 0.9 }, reedmud: { relief: 2.5, roughness: 0.76 },
+  pebbles: { relief: 5, roughness: 0.86 }, ash: { relief: 2, roughness: 0.97 }, snow: { relief: 2, roughness: 0.74 },
+  cobbles: { relief: 5, roughness: 0.86 }, coldgrass: { relief: 3, roughness: 0.96 },
 };
 /** The sheep's animation clips. */
 export const FAUNA_CLIPS = ['Idle', 'Graze', 'Walk', 'Run', 'Startle'] as const;
+/** The crows' clips: the perched model's and the flying model's (the view swaps the two at take-off and landing). */
+export const CROW_CLIPS = { 'char-crow': ['Perch', 'Peck'], 'char-crow-flight': ['Fly', 'Glide', 'TakeOff'] } as const;
 /**
  * A tree species file holds one group per variant (`variant-0` ...), each with named meshes: bark-layered wood and
  * alpha-tested leaf cards for the near band, and a three-card impostor (two crossed side views and a top view) beyond it.
@@ -188,15 +229,19 @@ function validate(id: WorldModelId, scene: THREE.Object3D, clips: ReadonlyMap<st
   } else {
     const bodies = parts.filter(mesh => mesh instanceof THREE.SkinnedMesh);
     if (bodies.length !== 1 || parts.length !== 1) throw new Error(`expected one skinned body, found ${bodies.length} of ${parts.length}`);
-    for (const clip of FAUNA_CLIPS) if (!clips.has(clip)) throw new Error(`missing animation clip ${clip}`);
+    const expected: readonly string[] = id === 'char-crow' || id === 'char-crow-flight' ? CROW_CLIPS[id] : FAUNA_CLIPS;
+    for (const clip of expected) if (!clips.has(clip)) throw new Error(`missing animation clip ${clip}`);
   }
   for (const mesh of parts) if (!mesh.geometry.getAttribute('normal')) throw new Error(`mesh ${mesh.name} has no cooked normals`);
 }
 
-/** Every world model a world can present: all of a v3 world's obstacle models, and its sheep when it has pastures. */
+/**
+ * Every world model a world can present: all of a v3 world's obstacle models, its sheep when it has pastures, and the
+ * crows, which every v3 world has (they gather on fields, graveyards and gibbets).
+ */
 export function worldAssetIds(world: Pick<WorldBlueprint, 'version' | 'obstacles' | 'fields'>): WorldModelId[] {
   if (world.version !== 3) return [];
-  const ids = new Set<string>();
+  const ids = new Set<string>(['char-crow', 'char-crow-flight']);
   // Flocks graze on stubble fields (fauna.ts flockHomes).
   if (world.fields?.some(field => field.crop === 'stubble')) ids.add('char-sheep');
   for (const obstacle of world.obstacles) if (obstacle.model) ids.add(obstacle.model);

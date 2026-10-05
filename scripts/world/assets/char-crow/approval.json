@@ -1,0 +1,34 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "char-crow",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "b",
+   "sha256": "71e23b704c3a179436da30b87153671af5502cbbdedd5f8c29744f38d7fdd618",
+   "rationale": "Standing carrion crow, wings folded, head turned slightly to the viewer; both legs and the heavy beak are separate and readable."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "fdd1105405e835f1af986f3dc12e52962f14e22a976d1dc9303d25681ac683dd",
+   "rationale": "Perched crow, 0.46 m tall, 2,364 triangles on a small rig with Perch and Peck clips (Azure concept b, TRELLIS b-s6111). Cooked with cook_crow.py: a distance-weighted rig, 256 px textures, 99,112 bytes. Clip strips reviewed frame by frame (anim-review2).",
+   "limitations": [
+    "Feathers are a baked TRELLIS texture at 256 px; no separate feather cards.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "fdd1105405e835f1af986f3dc12e52962f14e22a976d1dc9303d25681ac683dd",
+   "rationale": "Presentation-only crow flocks on stubble fields, chapels, gibbets and the Echo Well: they peck and perch, take off when the hero comes within 10 m, fly off and land again once the hero is 34 m away; perched and flight models swap at take-off and landing. Never in snapshots, saves or rules.",
+   "limitations": [
+    "At 18-40 m a crow is 10-20 px; it reads as a black bird, not a detailed one.",
+    "No calls or wing sounds."
+   ]
+  }
+ ]
+}

@@ -1,0 +1,132 @@
+{
+  "schema": "korovany2-bird-recipe/1",
+  "id": "char-crow",
+  "pose": "perched",
+  "source": {
+    "candidate": "b-s6111",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 6111,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "68a2a2d4bfe39d4086d8cad5361e1fa49a522178fcb69a02f6c40b3fe778590e",
+    "conceptSha256": "f3c8146ff1bcb69268c8875506bb7a5cdcf4f88ab5126ca0e31440afb5a46d82"
+  },
+  "yawDegrees": -90,
+  "heightMeters": 0.46,
+  "feetFraction": 0.035,
+  "triangleBudget": 2400,
+  "baseQuality": 90,
+  "ormQuality": 85,
+  "body": {
+    "bakeSize": 512,
+    "textureSize": 256,
+    "cageExtrusionMeters": 0.01,
+    "maxRayMeters": 0.02,
+    "aoSamples": 32,
+    "aoPower": 1.0,
+    "aoFloor": 0.45,
+    "reliefStrength": 3.0,
+    "roughnessFromDetail": 0.4,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0,
+    "toneGamma": 0.85,
+    "defaultRoughness": 0.55,
+    "regions": [
+      {
+        "name": "beak-and-legs",
+        "colour": {
+          "maxValue": 0.1
+        },
+        "roughness": 0.45
+      }
+    ],
+    "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved TRELLIS source mesh; there is no rear-view projection, so the far side and underside are as TRELLIS invented them from the single approved concept. Tangent normals baked from the source geometry and whiteout-blended with colour relief; AO baked from the decimated geometry; roughness lower on the darkest texels (beak and legs) and otherwise the glossy-feather default, both reduced by colour detail; no metal and no dye mask. Base colour lifted by luma power toneGamma (chroma ratios kept), set by eye in review renders. Artistic derivation, not measured PBR."
+  },
+  "landmarks": {
+    "feet": [
+      0,
+      0.02,
+      0.0
+    ],
+    "hip": [
+      0,
+      0.03,
+      0.12
+    ],
+    "chest": [
+      0,
+      -0.07,
+      0.3
+    ],
+    "poll": [
+      0,
+      -0.1,
+      0.4
+    ],
+    "beak": [
+      0,
+      -0.223,
+      0.37
+    ],
+    "tailBase": [
+      0,
+      0.13,
+      0.2
+    ],
+    "tailTip": [
+      0,
+      0.41,
+      0.14
+    ]
+  },
+  "weights": {
+    "legsBelowHip": 0.04,
+    "headMargin": 0.02,
+    "headDrop": 0.04,
+    "tailMargin": 0.0,
+    "relax": 12,
+    "falloff": 0.02,
+    "minWeight": 0.01
+  },
+  "clips": {
+    "perch": {
+      "seconds": 4.0,
+      "breathDegrees": 1.5,
+      "bob": 0.002,
+      "neckDegrees": 4,
+      "headDegrees": 6,
+      "lookAt": [
+        0.6,
+        2.2
+      ],
+      "lookDegrees": [
+        32,
+        -26
+      ],
+      "lookSeconds": 0.9,
+      "flickAt": [
+        1.4,
+        3.3
+      ],
+      "flickSeconds": 0.25,
+      "flickDegrees": 18
+    },
+    "peck": {
+      "seconds": 1.6,
+      "bodyDegrees": 32,
+      "neckDegrees": 24,
+      "headDegrees": 22,
+      "strikesAt": [
+        0.3,
+        0.55
+      ],
+      "strikeLength": 0.12,
+      "strikeNeck": 12,
+      "strikeHead": 16,
+      "tailDegrees": 14,
+      "lookDegrees": 6
+    }
+  },
+  "note": "Perched crow from concept candidate b and TRELLIS raw b-s6111, turned -90 degrees so the beak faces -Y. Landmarks measured on the normalized mesh (session slices): beak tip at y -0.22, tail tip at y +0.41, feet at z 0 and the legs up to z 0.1.",
+  "textureNote": "A crow is about 20-40 px tall in play: 256 px maps, baked at 512 and downsampled."
+}

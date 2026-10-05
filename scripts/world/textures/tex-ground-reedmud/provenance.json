@@ -1,0 +1,86 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-ground-reedmud",
+ "layer": "reedmud",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/reedmud-albedo.webp",
+   "sha256": "3f1338f9705aebad4979e2632011e2030bbcaf3b1c23f26664213716bd72bb60",
+   "bytes": 128266
+  },
+  "height": {
+   "file": "public/world/surfaces/reedmud-height.webp",
+   "sha256": "4def4bf231900e237cf995c9c0f16ec8acc923655bd8831ed0d5969f8eed9943",
+   "bytes": 91426
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-45101.png",
+  "candidateSha256": "0df6350e5a50cf22657ad984ebaa42d3d5272095bbaf888f98129e1fcfcd5fc8",
+  "seed": 45101,
+  "generationSeconds": 844.9,
+  "layoutSha256": "0ec7577ceebb8a428002ed545f99e2b8695fab9cfb14ef03554e58e618eeb2e3"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Top-down black peaty mud littered with broken, flattened reed stems in every direction and thicker drifts in places, with no stones, water or footprints; at 4 m the drifts break the tile without a grid.",
+  "limitations": [
+   "The stems are thin and straight, closer to pine needles than to flattened reed blades.",
+   "The mud carries a faint baked wet sheen in broad patches; the cook evens their chroma but their brightness remains.",
+   "Near-neutral grey; the cook warms it toward peat brown."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 2.919,
+    "seamRatioAfter": 1.071
+   },
+   "grade": {
+    "gain": 1.15,
+    "saturation": 1.25,
+    "evenChroma": true
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   64.4,
+   60.2,
+   60.0
+  ]
+ }
+}

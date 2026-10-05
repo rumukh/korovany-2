@@ -1,0 +1,35 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-gravestones",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "e1d713725f280f1b7ce9c1a706e2fdeabea7bce60bfd2f0d69f533319512eb54",
+   "rationale": "Three weathered round-topped slabs on a low grassy mound, one leaning: the low burial stones of the orchard and chapel lore, no letters or crosses."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "0150dba48d2ab44f64c193bb1d865b35e1f66958f0ec69c96005f8070b98f59c",
+   "rationale": "Three low headstones on a mossy mound (Azure concept a, TRELLIS a-s6106). Cooked 4,431 triangles, 142,896 bytes; 1.35 m tall in a 1.10 m reach at uniform scale. Albedo 256 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "Stones carry no inscriptions.",
+    "The mound's moss is a strong yellow-green at 256 px.",
+    "TRELLIS invents the unseen back; it is softer than the concept view.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "0150dba48d2ab44f64c193bb1d865b35e1f66958f0ec69c96005f8070b98f59c",
+   "rationale": "In Chapel graveyards (Reed Chapel, Star Monastery) at gameplay cameras (18-40 m): reads at true scale beside the troops, grounded by shadows on the relief, and stays inside its collider (radius 1.10 m or its box).",
+   "limitations": [
+    "Static: no animation, sound or interaction."
+   ]
+  }
+ ]
+}

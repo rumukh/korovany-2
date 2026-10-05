@@ -1,18 +1,19 @@
 #Requires -Version 7.0
 <#
 .SYNOPSIS
-Cooks the scripted world kit (build_kit.py) and nature kit (build_nature.py) in Blender 5.2.2 LTS, compresses each GLB's
+Cooks the scripted world kits (build_kit.py for W0, build_kit_w1.py for the W1 settlements) and nature kit (build_nature.py) in
+Blender 5.2.2 LTS, compresses each GLB's
 geometry with the shipped meshopt_glb.mjs (unchanged; byte-identical to scripts/models/pipeline/meshopt_glb.mjs) and
 copies the results to public/world/<id>/<id>.glb. Authoring output stays under <authoring>\<kit>\cook; the authoring root
 (-Authoring or $env:K2_AUTHORING) also holds the _pipeline folder with meshopt_glb.mjs and its node_modules. Blender is
 -Blender or $env:K2_BLENDER.
 
-    cook-world.ps1 -Revision r1 [-Samples 48] [-Kits kit-w0,nature-w0] [-Publish]
+    cook-world.ps1 -Revision r1 [-Samples 48] [-Kits kit-w0,kit-w1,nature-w0] [-Publish]
 #>
 param(
     [Parameter(Mandatory)][string]$Revision,
     [int]$Samples = 48,
-    [string[]]$Kits = @('kit-w0', 'nature-w0'),
+    [string[]]$Kits = @('kit-w0', 'kit-w1', 'nature-w0'),
     [string]$Authoring = $env:K2_AUTHORING,
     [string]$Blender = $env:K2_BLENDER,
     [switch]$Publish
@@ -26,6 +27,7 @@ $meshopt = "$pipeline\meshopt_glb.mjs"
 if ((Get-FileHash $meshopt).Hash -ne (Get-FileHash "$repo\scripts\models\pipeline\meshopt_glb.mjs").Hash) { throw 'meshopt_glb.mjs copies differ' }
 $jobs = @(
     @{ kit = 'kit-w0'; script = 'build_kit.py' },
+    @{ kit = 'kit-w1'; script = 'build_kit_w1.py' },
     @{ kit = 'nature-w0'; script = 'build_nature.py' }
 ) | Where-Object { $Kits -contains $_.kit }
 if (-not $jobs) { throw "no kit selected from $($Kits -join ', ')" }

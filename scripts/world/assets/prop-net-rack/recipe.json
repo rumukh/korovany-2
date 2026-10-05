@@ -1,0 +1,59 @@
+{
+  "schema": "korovany2-landmark-recipe/1",
+  "id": "prop-net-rack",
+  "source": {
+    "candidate": "a-s6116",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 6116,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "ab2063f896810a29392575437773c9b18fc9460ebe62e512d8619d15e0bcd3db",
+    "conceptSha256": "fd04909f8094fcbb56f45311b7cfe67a10cb0b137dab24dcc7ae180c16946a6e"
+  },
+  "reachMeters": 1.96,
+  "yawDegrees": 90,
+  "minComponentVertices": 30,
+  "triangleBudget": 6000,
+  "smoothAngle": 40,
+  "albedoSizes": [
+    512
+  ],
+  "material": {
+    "bakeSize": 1024,
+    "mapsSize": 256,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.06,
+    "aoSamples": 32,
+    "aoPower": 1.0,
+    "aoFloor": 0.35,
+    "roughness": 0.88,
+    "metalness": 0.0,
+    "classes": [
+      {
+        "name": "net",
+        "value": [
+          0,
+          0.5
+        ],
+        "roughness": 0.95
+      },
+      {
+        "name": "wood",
+        "value": [
+          0,
+          1
+        ],
+        "roughness": 0.86
+      }
+    ],
+    "roughnessFromDetail": 0.5,
+    "roughnessMin": 0.35,
+    "roughnessMax": 0.97,
+    "reliefStrength": 6,
+    "normalMapStrength": 1.0,
+    "albedoGain": 2.0
+  },
+  "sizeNote": "reachMeters gives a 2.16 m tall prop (3 m wide, scaled 1.28).",
+  "albedoGainNote": "Linear gain 2.0, the W0 cap: the approved concept's foreground is 2.8-5 times brighter in mean linear luminance than the raw TRELLIS texels (about 2.1-3.9 times with W0's calibration), so the cooked albedo is still somewhat darker than the concept. Measured by luminance ratio, not calibrated in the game.",
+  "textureNote": "Up to about 330 px tall at the closest camera: 512 px base colour with 256 px normal and ORM maps."
+}

@@ -1,0 +1,54 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-arch-tarred",
+  "layer": "tarred",
+  "physicalSizeMetres": 2,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of a wall of old tarred vertical wooden boards, two metres across. The whole image is a close-up of the flat surface itself, filling the frame edge to edge, seen exactly face-on: no edges, no corners, no roof, no ground, no sky, no horizon and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. Each vertical strip becomes one weathered wooden board coated in old black pine tar, matte, with faint wood grain showing through where the tar has worn thin to dark brown; the thin black gaps stay as the joints between boards. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, paint, bright wood, large knots, holes, sticks, protruding objects, windows, doors, metal sheets, horizontal boards",
+  "candidates": [
+    {
+      "seed": 44401
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 44401,
+    "noiseMetres": 0.3,
+    "colours": [
+      "#0b0a09",
+      "#100e0c"
+    ],
+    "layers": [
+      {
+        "kind": "rows",
+        "vertical": true,
+        "row": 0.22,
+        "length": [
+          0.8,
+          2.0
+        ],
+        "gap": 0.012,
+        "colours": [
+          "#1f1b18",
+          "#26211d",
+          "#1b1816",
+          "#2b2520"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "gain": 1.15,
+    "saturation": 0.5,
+    "note": "Desaturated (0.5) so the worn orange grain reads as old tarred pine rather than charred wood, and lifted slightly (linear gain 1.15) so the boards do not fall to black under the overcast sky."
+  }
+}

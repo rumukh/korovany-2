@@ -1,0 +1,34 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "prop-anvil",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "5476407d271c0bc52cf146ec92672a28bf0b87839f45135f3fd70131b548d5f7",
+   "rationale": "Horned anvil on an iron-banded stump with a quench bucket and tongs set slightly apart: a dark anvil on pale wood that reads at distance."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "b0b1143496409d976ead48ef0c9ebccc3267f126957e3f429919d7d4693ae6e3",
+   "rationale": "Anvil on an iron-banded stump with a quench bucket (Azure concept a, TRELLIS a-s6114). Cooked 4,431 triangles, 141,348 bytes; 1.25 m tall in a 0.79 m reach at uniform scale. Albedo 256 px with 256 px normal and ORM maps (texture memory budget), albedoGain 2.0 against TRELLIS's darkened bake. Reviewed in four views beside the 2.25 m soldier.",
+   "limitations": [
+    "Steel reads dark; no worn bright face on the anvil top.",
+    "TRELLIS invents the unseen back; it is softer than the concept view.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "b0b1143496409d976ead48ef0c9ebccc3267f126957e3f429919d7d4693ae6e3",
+   "rationale": "In Smithies at gameplay cameras (18-40 m): reads at true scale beside the troops, grounded by shadows on the relief, and stays inside its collider (radius 0.79 m or its box).",
+   "limitations": [
+    "Static: no animation, sound or interaction."
+   ]
+  }
+ ]
+}

@@ -1,0 +1,55 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-ground-reedmud",
+  "layer": "reedmud",
+  "physicalSizeMetres": 4,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of soft black peaty fen mud strewn with flattened dead reeds, four metres across, shot straight down from directly above as a flat orthographic photograph. The whole image is the ground surface itself, filling the frame edge to edge: no horizon, no sky and no surroundings. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The dark brown background becomes soft, wet, matte black peaty mud, and the long pale strokes become broken, flattened reed stems and dead rushes lying on the mud. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, puddles, standing water, reflections, footprints, boot prints, green grass, stones, logs, sticks standing up",
+  "candidates": [
+    {
+      "seed": 45101
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 45101,
+    "noiseMetres": 0.8,
+    "colours": [
+      "#25221d",
+      "#2a2620",
+      "#33302a"
+    ],
+    "layers": [
+      {
+        "kind": "strokes",
+        "length": [
+          0.15,
+          0.5
+        ],
+        "width": 0.01,
+        "perSquareMetre": 60,
+        "colours": [
+          "#7a6e4a",
+          "#6a6440",
+          "#857852",
+          "#5a5a38"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "gain": 1.15,
+    "saturation": 1.25,
+    "evenChroma": true,
+    "note": "Lifted slightly (linear gain 1.15) and warmed back toward peat (saturation 1.25): the candidate's mud is a near-neutral grey (linear albedo about 0.056); this sits it just under the W0 mud layer. Low-frequency chroma evened so the wet-sheen patches do not repeat as a grid."
+  }
+}
