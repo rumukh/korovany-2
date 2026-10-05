@@ -52,7 +52,11 @@ centre (the villain's fortress arena) and the Old Fort keeps 16.5 m open, with a
 gate over each road. Kept v2 landmark buildings (`<place>-building-<n>` without a
 `model`) keep their ids and centres and may grow to their place's standard radius
 where the road allows.
-Default `generateWorld`/`createCampaign` versions stay 2.
+Default `generateWorld`/`createCampaign` versions stay 2; the browser shell passes `worldVersion: 3` for new
+campaigns. The v3 layout still grows between releases, so restoring a v3 save whose `worldId` no longer matches
+its regenerated world throws `OutdatedWorldError` (the shell explains that the campaign belongs to an earlier
+version of the world; the message still begins with the ordinary mismatch text); any other world mismatch throws
+an ordinary error.
 
 Renderer sees player, actors (including the enemy caravan), convoy, collision
 obstacles, road graph, water/bridges, pickups, effects, projectiles, faction colors,
@@ -78,7 +82,8 @@ further repair is continuous. Home and captured posts heal the hero while
 interacting if there are no nearby enemies. A post takes three held seconds to
 capture after its three defenders are dead; partial uncontested progress persists.
 
-New campaigns default to world version 2. `CampaignOptions.worldVersion: 1`
+`createCampaign` defaults to world version 2 (the browser shell starts new campaigns in version 3, see above).
+`CampaignOptions.worldVersion: 1`
 explicitly creates the original military-only campaign. Saves use the blueprint
 version and restore that exact generator, preserving v1 geometry and hashes.
 `GameSnapshot.version` remains the presentation protocol version 1, not the

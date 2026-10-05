@@ -219,6 +219,15 @@ export function createCampaign(options: CampaignOptions): GameSession {
   return session(world, blueprint);
 }
 
+/** A version 3 save whose world no longer matches the generator: version 3 grows between releases, so such a
+ * campaign belongs to an earlier build of the world and cannot be continued. */
+export class OutdatedWorldError extends Error {
+  constructor() {
+    super('Saved world does not match the seed/version: it belongs to an earlier version of the world');
+    this.name = 'OutdatedWorldError';
+  }
+}
+
 export function restoreCampaign(save: unknown): GameSession {
   assertRecord(save, 'Campaign save');
   if (save.namespace !== 'korovany2:campaign' || (save.version !== 1 && save.version !== 2 && save.version !== 3)) {
@@ -235,7 +244,10 @@ export function restoreCampaign(save: unknown): GameSession {
     if (narrative.version !== 3) throw new Error('Unsupported story version. Start a new faction campaign; older narrative journals cannot be migrated.');
   }
   const blueprint = configureFactionWorld(generateWorld(save.seed, save.version), save.faction);
-  if (save.worldId !== blueprint.id) throw new Error('Saved world does not match the seed/version');
+  if (save.worldId !== blueprint.id) {
+    if (save.version === 3 && typeof save.worldId === 'string' && save.worldId.startsWith('k2-v3-')) throw new OutdatedWorldError();
+    throw new Error('Saved world does not match the seed/version');
+  }
   const template = initialState({ seed: save.seed, faction: save.faction, runId: save.runId }, blueprint);
   const world = createWorld({ seed: `korovany2:simulation:${save.seed}` });
   populateActors(world, template, blueprint);

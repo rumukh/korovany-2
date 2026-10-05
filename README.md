@@ -164,18 +164,17 @@ with an explicit asset error if any fails to load.
 textured export depends on components restricted to research and evaluation.
 No commercial clearance exists for these forty-eight models; the project owner
 acknowledged publishing them here. Concepts, recipes, provenance, approvals and
-the cooking scripts are in `scripts/models`. The rest of the world (houses,
-walls, trees, rocks, roads and the remaining props) is still procedural, so the models
-currently read as more realistic than their surroundings. They are not AAA
+the cooking scripts are in `scripts/models`. In version 1 and 2 worlds the rest of
+the world (houses, walls, trees, rocks, roads and the remaining props) is still procedural, so the models
+read as more realistic than their surroundings there. They are not AAA
 assets: see each `provenance.json` for measured limitations.
 
-### The next world (preview)
+### World version 3
 
-A rebuilt, darker world is in progress as **world version 3**. Open the game with
-`?world=next` (for example `https://rumukh.github.io/korovany-2/?world=next`) to
-start new campaigns in it; without the parameter new campaigns still use the
-current world, and every existing save loads exactly as before. It keeps the
-version 2 geography, regions, roads, river, places and story, and changes:
+New campaigns start in a rebuilt, darker world: **world version 3**. Saved
+campaigns from earlier releases keep loading in their own version 1 or 2 world,
+exactly as before. Version 3 keeps the version 2 geography, regions, roads,
+river, places and story, and changes:
 
 - **Scale.** Buildings follow a heroic scale standard for the 2.25 m soldiers:
   1.3 x 2.8 m doors, 3.8-4.6 m eaves (3.2 m on sheds), 8-10 m ridges, 6.5 x 10 m cottages, an
@@ -535,12 +534,12 @@ play The Hollow Road. This replaces the campaign record but retains the separate
 profile, permanent upgrades and settings. Damaged or unsupported records produce
 a visible storage warning rather than silently loading a different campaign.
 Explicit `worldVersion: 1` simulation runs retain the original military-only
-rules and saves; they do not acquire a faction story on restoration. Campaigns
-started in the `?world=next` preview save as world version 3 and load with or
-without the parameter. The version 3 world is still being built: when a later
-release changes its layout, a version 3 save from an earlier release no longer
-matches its world and is reported as unsupported rather than loaded into a
-different world.
+rules and saves; they do not acquire a faction story on restoration. New
+campaigns save as world version 3. The version 3 world is still being built:
+when a later release changes its layout, a version 3 save from an earlier release
+no longer matches its world. The title then says, in Russian and English, that
+the campaign belongs to an earlier version of the world; the save is neither
+loaded into a different world nor deleted.
 
 ## Architecture
 
@@ -575,8 +574,8 @@ Aegis packages declare MIT; Three.js is MIT. Runtime notices are included in
 the production build. The engine remains pinned with its upstream provenance.
 The sequel uses newly authored procedural visuals, forty-two locally generated and
 cooked 3D models (research/evaluation-only TRELLIS export, see "Cooked 3D
-models" above), the version 3 preview's world assets (script-generated buildings,
+models" above), the version 3 world's assets (script-generated buildings,
 castles, trees and rocks, locally generated surfaces, and TRELLIS-derived props,
-remains, sheep and crows under the same restriction, see "The next world" above) and original audio
+remains, sheep and crows under the same restriction, see "World version 3" above) and original audio
 rather than copying the original game's implementation or asset library. No
 project-wide redistribution license is assigned here.
