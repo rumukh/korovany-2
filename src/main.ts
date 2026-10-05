@@ -1,5 +1,5 @@
 import {
-  createCampaign, restoreCampaign, createProfile, restoreProfile, claimRewards,
+  createCampaign, restoreCampaign, createProfile, restoreProfile, claimRewards, OutdatedWorldError,
   purchaseMetaUpgrade, metaUpgradeCost, MAX_UPGRADE_LEVEL,
   type GameSession, type GameSnapshot, type GameInput as CampaignInput, type MetaProfile, type RunRewards, type UpgradeId, type Vec2,
 } from "./game";
@@ -21,8 +21,13 @@ const root = document.getElementById("app");
 if (!root) throw new Error("Game root is missing.");
 const pendingWarnings = new Set<string>();
 let shell: GameShell | null = null;
-const storage = new BrowserStorage((issue) => {
-  const key = `storage.${issue}`;
+// Set while restoring a campaign whose version 3 world was rebuilt by a later release, so the title explains why
+// it cannot be continued instead of calling it damaged.
+let outdatedWorld = false;
+const storage = new BrowserStorage((issue, storageKey) => {
+  const outdated = issue === "corrupt" && storageKey === storageKeys.campaign && outdatedWorld;
+  outdatedWorld = false;
+  const key = outdated ? "storage.outdatedWorld" : `storage.${issue}`;
   if (shell) shell.warn(key);
   else pendingWarnings.add(key);
 });
@@ -40,9 +45,20 @@ function restored<T>(restore: (value: unknown) => T): (value: unknown) => T | nu
   };
 }
 
+function restoredCampaign(value: unknown): GameSession | null {
+  outdatedWorld = false;
+  try {
+    return restoreCampaign(value);
+  } catch (error) {
+    outdatedWorld = error instanceof OutdatedWorldError;
+    console.warn("Korovany II rejected invalid saved data.", error);
+    return null;
+  }
+}
+
 const storedProfile = storage.read(storageKeys.profile, restored(restoreProfile));
 let profile: MetaProfile = storedProfile.status === "ok" ? storedProfile.value : createProfile();
-const storedCampaign = storage.read(storageKeys.campaign, restored(restoreCampaign));
+const storedCampaign = storage.read(storageKeys.campaign, restoredCampaign);
 let campaign: GameSession | null = storedCampaign.status === "ok" ? storedCampaign.value : null;
 let snapshot: GameSnapshot | null = campaign?.snapshot() ?? null;
 let selectedFaction = snapshot?.faction ?? "elf";
@@ -74,8 +90,8 @@ const lifecycle = new AbortController();
 const models = new ModelLibrary(gltfModelSource(), []);
 // Version 3 worlds also load their world assets (buildings, props, trees, rocks, animals and surfaces) first.
 const worldAssets = new WorldAssetLibrary(gltfWorldSource());
-// Until W2, new campaigns use the version 3 world only in the `?world=next` preview; saved v3 campaigns always restore.
-const worldVersion = new URLSearchParams(location.search).get("world") === "next" ? 3 as const : undefined;
+// New campaigns start in world version 3; saved version 1 and 2 campaigns keep restoring in their own worlds.
+const worldVersion = 3 as const;
 const assetsReady = (): boolean => models.isReady && worldAssets.isReady;
 // One renderer for the page, so model uploads and shader programs survive the title, faction and run changes
 // that replace the world mirror.
@@ -263,7 +279,7 @@ function begin(sameSeed?: boolean, confirmed = false): void {
   }
   freeze();
   // An explicit new campaign may replace the latest record, not a stale tab's baseline.
-  storage.read(storageKeys.campaign, restored(restoreCampaign));
+  storage.read(storageKeys.campaign, restoredCampaign);
   storage.read(storageKeys.atlas, parseChart);
   reconcileProfile();
   campaign = createCampaign({
@@ -309,7 +325,7 @@ function continueLatest(confirmed = false): void {
     confirmAction("loadLatest", () => continueLatest(true));
     return;
   }
-  const latest = storage.read(storageKeys.campaign, restored(restoreCampaign));
+  const latest = storage.read(storageKeys.campaign, restoredCampaign);
   if (latest.status === "error") return;
   campaign = latest.status === "ok" ? latest.value : null;
   snapshot = campaign?.snapshot() ?? null;

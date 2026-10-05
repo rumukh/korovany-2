@@ -59,8 +59,9 @@ Geometry and materials are shared across cells. Low quality removes the entire
 dressing layer, not the authoritative landmarks. Instance buffers are released
 when the world mirror is disposed.
 
-## Version 3 worlds (`?world=next` preview)
+## Version 3 worlds (new campaigns)
 
+The browser shell starts new campaigns in version 3; saved version 1 and 2 campaigns keep their own worlds.
 A version 3 blueprint (`generateWorld(seed, 3)`, `CampaignOptions.worldVersion: 3`) is drawn by
 `createWorldSceneryV3` (`scenery-v3.ts`) instead of `createWorldScenery`; versions 1 and 2 are drawn exactly as before.
 Every v3 obstacle names a `model` from the world asset registry (`world-assets.ts`: buildings, walls, fences, farm and
