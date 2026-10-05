@@ -1,0 +1,26 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "tree-blackpine",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "64f1dfe55d0a5eb25acba62cdc555bd2ea1bb21462bd624a299ade20a1f23b14",
+   "rationale": "Black pine: a tall, straight dark trunk bare of all but dead stubs below an irregular, flat-layered crown of needle clumps (each clump one tilted and two upright crossed cards), on the plated bark-pine layer; 3 variants 21.0-26.5 m tall; at most 1,726 triangles near, 223 in the middle level of detail and a 6-triangle impostor; 475,004 bytes before meshopt. Parts, triangle budget and impostor checked by the world-assets suite; baked AO.",
+   "limitations": [
+    "Crown clumps are cards, not modelled shoots: from a low camera they show as layered flat shelves."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "64f1dfe55d0a5eb25acba62cdc555bd2ea1bb21462bd624a299ade20a1f23b14",
+   "rationale": "In the dark forests of the Greenmarch and Hollowvale, where it leads the stand, and the Frostspine, at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at natural scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss (trees are not scaled up), with shadows on the ground. Distance bands: near parts to 24 m (spruce, birch and oaks have a middle level there), the middle level to 58 m and impostors to 235 m; the canopy cutaway cone (3-6 m at the hero, twice that at the camera) keeps the hero visible inside the forest.",
+   "limitations": [
+    "Card foliage reads flat and dark where a tree stands beside the camera at mid-distance; the sightline cone keeps the hero and the ground round them clear.",
+    "No wind motion."
+   ]
+  }
+ ]
+}

@@ -1,0 +1,79 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-rock-moss",
+  "layer": "moss",
+  "physicalSizeMetres": 2,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a close-up texture photograph of a continuous carpet of short, dense, dark green feather moss two metres across, seen straight down from directly above. The whole image is the moss itself, filling the frame edge to edge: no edges, no stones, no ground and no sky. Keep the composition exactly: every tiny stroke becomes one small moss frond lying where it is drawn, and the soft variations in colour stay where they are, as slightly darker and slightly lighter areas of the same moss. The texture is the same everywhere in the frame, with no centre and no larger shapes. The moss is even and flat, made of countless tiny fronds, with no clumps, cushions or tufts. Flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, tufts, clumps, cushions, mounds, popcorn, pale moss, yellow moss, bright green, lichen, flowers, grass blades, leaves, stones, pebbles, soil, bark, wet, glossy, grid, regular pattern, radial pattern, concentric rings, centred subject, rosette, vortex, spiral, fur, long fronds",
+  "candidates": [
+    {
+      "seed": 47401,
+      "note": "First recipe (plain colour noise layout): with nothing to follow, Qwen centred one radial cushion of long, grass-like fronds in the frame, which repeats as a rosette grid once tiled; it reads as fur or grass, not moss."
+    },
+    {
+      "seed": 47402,
+      "note": "First recipe: finer moss with sporophytes, but again one radial cushion centred in the frame, so every tile repeats as a concentric rosette."
+    },
+    {
+      "seed": 47403
+    },
+    {
+      "seed": 47404,
+      "note": "Revised recipe: even fronds, but the layout's darker patches survived as hard-edged blotches that repeat like camouflage once tiled."
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 47403,
+    "noiseMetres": 0.15,
+    "colours": [
+      "#212c18",
+      "#25311b",
+      "#283520",
+      "#232e19"
+    ],
+    "layers": [
+      {
+        "kind": "blobs",
+        "perSquareMetre": 4,
+        "radius": [
+          0.1,
+          0.25
+        ],
+        "lumpy": 0.5,
+        "colours": [
+          "#1f2a17",
+          "#2a3620"
+        ]
+      },
+      {
+        "kind": "strokes",
+        "perSquareMetre": 12000,
+        "length": [
+          0.008,
+          0.02
+        ],
+        "width": 0.002,
+        "colours": [
+          "#344429",
+          "#2d3b23",
+          "#3b4b2f",
+          "#222d19"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "gain": 2.3,
+    "note": "Gain 2.3 (linear mean 0.017 to about 0.039): at the candidate's own value the moss on boulders, logs and crags read as black-green; it stays darker than the grass layers."
+  }
+}

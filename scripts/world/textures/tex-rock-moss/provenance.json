@@ -1,0 +1,84 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-rock-moss",
+ "layer": "moss",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/moss-albedo.webp",
+   "sha256": "3e7ae4e5c9522303a6337a3ce1cf63eaee7662bff8e9cd7674898e748815a376",
+   "bytes": 78624
+  },
+  "height": {
+   "file": "public/world/surfaces/moss-height.webp",
+   "sha256": "fdebc8d94cedb362263c429d706d4baeaca921b54232a64417f62d25e0b9b4e5",
+   "bytes": 122682
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-47403.png",
+  "candidateSha256": "d54a443e187acb0c36cf38cbfc7f612a3059da6c880d61acd4516e567030b81f",
+  "seed": 47403,
+  "generationSeconds": 856.2,
+  "layoutSha256": "b8349c3bbb3eceaf6680e8bbc7a9c8a8fa048737c7a618f823920ad1b99391dd"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Revised recipe: an even, dark green carpet of fine fronds with no centre, cushions or larger shapes, so it tiles without a visible repeat. Cooked with gain 2.3 (linear mean 0.017 to about 0.039); in game it reads as moss on the boulders' tops, along the fallen logs and on the moss crags' upward facets, darker than the grass layers.",
+  "limitations": [
+   "At full resolution the fronds are thin pale strokes on a flat green, closer to felt than to feather moss; only its colour and fine noise survive at gameplay distance.",
+   "No cushions, sporophytes or dry patches: every mossy surface is the same even green."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 1.291,
+    "seamRatioAfter": 0.97
+   },
+   "grade": {
+    "gain": 2.3,
+    "saturation": 1.0
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   41.5,
+   58.8,
+   30.6
+  ]
+ }
+}

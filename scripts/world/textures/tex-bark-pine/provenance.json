@@ -1,0 +1,88 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-bark-pine",
+ "layer": "bark-pine",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/bark-pine-albedo.webp",
+   "sha256": "e3e0a2e909e5a51fc57b595819fb593911b24fe5f5a5ddd43ce24dcf424bbf83",
+   "bytes": 55362
+  },
+  "height": {
+   "file": "public/world/surfaces/bark-pine-height.webp",
+   "sha256": "2350188e146fd3c02120e7adc0cfff1a6de5b33770d8a7f9c3aea5c031889337",
+   "bytes": 58454
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-47504.png",
+  "candidateSha256": "93b8d5a33d93ad9875beea8503f037f582f50a0c9041f0ea6961c1a53cf99ad7",
+  "seed": 47504,
+  "generationSeconds": 795.9,
+  "layoutSha256": "49ccb5773b718ff7d129c73c3bcc23b5c04583ca1a4b6c015e8312701d8eb79a"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Revised recipe: dark, deeply fissured bark with long, flaky plates weathered silver-grey, close to old black pine. The cook rolls the plates' highlights off (linear knee 0.06, ceiling 0.12), lifts the black fissures (gain 1.4) and takes out the blue cast (saturation 0.45); in game the black pine and twisted oak trunks read as dark plated bark along the trunk, distinct from the spruce and birch.",
+  "limitations": [
+   "The plates sit in fairly regular rows: along a trunk they repeat every metre and at the closest zoom read slightly like snake skin.",
+   "Compressed highlights flatten the plates' weathered edges; no lichen, resin or moss on the bark itself (moss on logs comes from the moss layer)."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 166.0,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.08,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 5.18,
+    "seamRatioAfter": 1.393
+   },
+   "grade": {
+    "gain": 1.4,
+    "saturation": 0.45,
+    "highlights": {
+     "knee": 0.06,
+     "ceiling": 0.12
+    }
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   49.5,
+   50.1,
+   52.5
+  ]
+ }
+}

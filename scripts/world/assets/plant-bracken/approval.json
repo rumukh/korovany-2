@@ -1,0 +1,25 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "plant-bracken",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "0350578790da80119504917e232bd4abd11f5be6be0c1e144fa596bf3dfb160f",
+   "rationale": "Dead bracken: a ring of curved rust and dun fronds of paired pinnae on short stems (three sizes); 0.9-1.3 m tall; at most 108 triangles near, half the cards in the middle level and a 128 px impostor; 54,704 bytes before meshopt.",
+   "limitations": [
+    "Alpha-tested cards on a few stems; the colours were brightened after the first in-game review so the clumps read on the dark floor."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "0350578790da80119504917e232bd4abd11f5be6be0c1e144fa596bf3dfb160f",
+   "rationale": "At the foot of trees in under 90% of the dark forests' trees and thinly elsewhere, at gameplay cameras (18-40 m, pitch 0.38-1.13): knee to waist height beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss; presentation only (it does not collide), drawn to 70 m with a middle level from 30 m and casting no shadow.",
+   "limitations": [
+    "The hero walks through it without bending it."
+   ]
+  }
+ ]
+}

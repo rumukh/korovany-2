@@ -1,0 +1,57 @@
+{
+ "schema": "korovany2-surface-cook/1",
+ "layer": "bark-pine",
+ "recipe": "tex-bark-pine",
+ "recipeSha256": "c943759ded3c190962130df1a1c80b5e1a59c47b84fca111fc3dc29600318f01",
+ "candidate": "candidate-47504.png",
+ "candidateSha256": "93b8d5a33d93ad9875beea8503f037f582f50a0c9041f0ea6961c1a53cf99ad7",
+ "script": "scripts/world/pipeline/cook_surface.py",
+ "scriptSha256": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+ "size": 512,
+ "steps": {
+  "delight": {
+   "sigmaPixels": 166.0,
+   "clamp": [
+    0.6,
+    1.7
+   ]
+  },
+  "wrapBlend": {
+   "bandFraction": 0.08,
+   "mode": "variance-preserving",
+   "seamRatioBefore": 5.18,
+   "seamRatioAfter": 1.393
+  },
+  "grade": {
+   "gain": 1.4,
+   "saturation": 0.45,
+   "highlights": {
+    "knee": 0.06,
+    "ceiling": 0.12
+   }
+  },
+  "height": {
+   "blurPixels": 0.8,
+   "percentiles": [
+    1,
+    99
+   ],
+   "inverted": false
+  }
+ },
+ "albedoMeanSrgb": [
+  49.5,
+  50.1,
+  52.5
+ ],
+ "outputs": {
+  "bark-pine-albedo.webp": {
+   "bytes": 55362,
+   "sha256": "e3e0a2e909e5a51fc57b595819fb593911b24fe5f5a5ddd43ce24dcf424bbf83"
+  },
+  "bark-pine-height.webp": {
+   "bytes": 58454,
+   "sha256": "2350188e146fd3c02120e7adc0cfff1a6de5b33770d8a7f9c3aea5c031889337"
+  }
+ }
+}

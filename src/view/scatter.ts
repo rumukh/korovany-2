@@ -33,6 +33,7 @@ interface Item {
 }
 
 const CELL = 32;
+const HALF_DIAGONAL = CELL * Math.SQRT1_2;
 /** Metres around a hollow instance's bounds that hide it from a camera inside; more than the 1.5 m resubmit step. */
 export const CAMERA_CLEARANCE = 2;
 /** Instances this close to the hero are always submitted (they may shade the hero's ground). */
@@ -47,7 +48,8 @@ const HALF_ANGLE = THREE.MathUtils.degToRad(62);
  */
 export class ScatterField {
   private readonly items: Item[] = [];
-  private readonly grid = new Map<number, number[]>();
+  /** Instances by 32 m cell, with the largest instance radius in each (for the whole-cell test). */
+  private readonly grid = new Map<number, { items: number[]; radius: number }>();
   private pools: THREE.InstancedMesh[][] = [];
   private readonly group = new THREE.Group();
   private readonly lastCamera = new THREE.Vector3(Infinity, 0, 0);
@@ -58,7 +60,12 @@ export class ScatterField {
   private lastHero: THREE.Vector3 | undefined;
   private lastView: THREE.Camera | undefined;
 
-  constructor(parent: THREE.Object3D, private readonly kinds: readonly ScatterKind[], name: string) {
+  /**
+   * `cellCulling` rejects whole cells that no instance in them could pass (beyond reach, or outside the view cone widened
+   * by the cell's largest instance, away from the hero) before testing their instances; it never changes what is drawn.
+   */
+  constructor(parent: THREE.Object3D, private readonly kinds: readonly ScatterKind[], name: string,
+    private readonly options: { cellCulling?: boolean } = {}) {
     this.group.name = name;
     parent.add(this.group);
   }
@@ -71,8 +78,9 @@ export class ScatterField {
     if (this.kinds[kind]!.hollow) item.inverse = matrix.clone().invert();
     const key = this.key(Math.floor(item.x / CELL), Math.floor(item.z / CELL));
     let cell = this.grid.get(key);
-    if (!cell) this.grid.set(key, cell = []);
-    cell.push(this.items.length);
+    if (!cell) this.grid.set(key, cell = { items: [], radius: 0 });
+    cell.items.push(this.items.length);
+    cell.radius = Math.max(cell.radius, item.radius);
     this.items.push(item);
   }
 
@@ -152,6 +160,7 @@ export class ScatterField {
     this.lastYaw = yaw;
     const cosHalf = Math.cos(HALF_ANGLE);
     const reach = this.reach * this.scale;
+    const cellCulling = this.options.cellCulling ?? true;
     const counts = this.pools.map(parts => parts.map(() => 0));
     const c0 = Math.floor((eye.x - reach) / CELL), c1 = Math.floor((eye.x + reach) / CELL);
     const r0 = Math.floor((eye.z - reach) / CELL), r1 = Math.floor((eye.z + reach) / CELL);
@@ -159,7 +168,8 @@ export class ScatterField {
       for (let cx = c0; cx <= c1; cx++) {
         const cell = this.grid.get(this.key(cx, cz));
         if (!cell) continue;
-        for (const index of cell) {
+        if (cellCulling && this.outside(cx, cz, cell.radius, eye, hero, forward, reach, cosHalf)) continue;
+        for (const index of cell.items) {
           const item = this.items[index]!;
           const dx = item.x - eye.x, dz = item.z - eye.z;
           const distance = Math.hypot(dx, dz);
@@ -191,6 +201,24 @@ export class ScatterField {
         pool.instanceMatrix.needsUpdate = true;
       }
     }));
+  }
+
+  /**
+   * Whether no instance of a cell can pass the instance tests: every instance centre lies inside the cell square, so it
+   * is at least `cd - HALF_DIAGONAL` away and at most asin(HALF_DIAGONAL / cd) off the direction of the cell centre, and
+   * its radius is at most `radius`.
+   */
+  private outside(cx: number, cz: number, radius: number, eye: THREE.Vector3, hero: THREE.Vector3, forward: THREE.Vector3,
+    reach: number, cosHalf: number): boolean {
+    const x = (cx + 0.5) * CELL, z = (cz + 0.5) * CELL;
+    const dx = x - eye.x, dz = z - eye.z, cd = Math.hypot(dx, dz);
+    if (cd - HALF_DIAGONAL - radius > reach) return true;
+    if (Math.hypot(x - hero.x, z - hero.z) <= ALWAYS + radius + HALF_DIAGONAL) return false;
+    if (cd <= 2 * HALF_DIAGONAL + radius) return false;
+    const widest = cosHalf - radius / (cd - HALF_DIAGONAL);
+    if (widest <= -1) return false;
+    const off = Math.acos(Math.max(-1, Math.min(1, (dx * forward.x + dz * forward.z) / cd)));
+    return off - Math.asin(HALF_DIAGONAL / cd) > Math.acos(Math.min(1, widest));
   }
 
   /** Whether the eye is inside the item's hollow bounds grown by the clearance (in instance units; kits are unscaled). */

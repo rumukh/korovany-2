@@ -1,0 +1,53 @@
+{
+ "schema": "korovany2-surface-cook/1",
+ "layer": "moss",
+ "recipe": "tex-rock-moss",
+ "recipeSha256": "f64f633b14726020500e275a6fedbf72b3eadc5db37b34aee982b38c8921da99",
+ "candidate": "candidate-47403.png",
+ "candidateSha256": "d54a443e187acb0c36cf38cbfc7f612a3059da6c880d61acd4516e567030b81f",
+ "script": "scripts/world/pipeline/cook_surface.py",
+ "scriptSha256": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+ "size": 512,
+ "steps": {
+  "delight": {
+   "sigmaPixels": 166.0,
+   "clamp": [
+    0.6,
+    1.7
+   ]
+  },
+  "wrapBlend": {
+   "bandFraction": 0.08,
+   "mode": "variance-preserving",
+   "seamRatioBefore": 1.291,
+   "seamRatioAfter": 0.97
+  },
+  "grade": {
+   "gain": 2.3,
+   "saturation": 1.0
+  },
+  "height": {
+   "blurPixels": 0.8,
+   "percentiles": [
+    1,
+    99
+   ],
+   "inverted": false
+  }
+ },
+ "albedoMeanSrgb": [
+  41.5,
+  58.8,
+  30.6
+ ],
+ "outputs": {
+  "moss-albedo.webp": {
+   "bytes": 78624,
+   "sha256": "3e7ae4e5c9522303a6337a3ce1cf63eaee7662bff8e9cd7674898e748815a376"
+  },
+  "moss-height.webp": {
+   "bytes": 122682,
+   "sha256": "fdebc8d94cedb362263c429d706d4baeaca921b54232a64417f62d25e0b9b4e5"
+  }
+ }
+}

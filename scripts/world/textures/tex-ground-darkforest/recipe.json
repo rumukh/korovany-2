@@ -1,0 +1,79 @@
+{
+  "schema": "korovany2-surface-recipe/2",
+  "id": "tex-ground-darkforest",
+  "layer": "darkforest",
+  "physicalSizeMetres": 4,
+  "tool": {
+    "name": "Qwen Image Edit Plus 2511 (WanGP, local)",
+    "helper": "wangp-reference-image generate-reference-image.ps1",
+    "referenceMode": "Scene",
+    "resolution": "1328x1328",
+    "steps": 50,
+    "guidance": 4.0,
+    "rawPrompt": true
+  },
+  "prompt": "Turn this flat diagram into a photograph of the floor of an old, dark pine forest under a dense canopy, four metres across. Keep the composition exactly: every shape stays where it is, at the same size and in the same colour family. The fine strokes become fallen rust-brown and grey-brown pine needles lying criss-cross in a thick, even mat, and the darker background becomes damp needle litter and black humus between them. Only needles: no moss, no plants, no seedlings, no leaves, no twigs, no cones and no stones. The mat is the same everywhere in the frame, with no centre and no larger shapes. Shot straight down from directly above as a flat orthographic photograph: flat overcast diffuse daylight, no cast shadows, no specular highlights, uniform exposure from edge to edge, no horizon, no perspective, no vignette, sharp focus everywhere. Photorealistic, high detail, natural muted colours of a cold, damp late-autumn borderland.",
+  "negativePrompt": "perspective, horizon, sky, vignette, cast shadows, sun glare, specular highlights, depth of field, blur, people, animals, tools, text, watermark, logo, frame, border, cartoon, illustration, vector art, flat colours, diagram, oversaturated colours, bright leaves, yellow leaves, orange leaves, flowers, mushrooms, grass, stones, pebbles, snow, water, puddles, glossy, leaves, dead leaves, twigs, sticks, branches, cones, pine cones, acorns, feathers, moss cushions, moss balls, moss, green, plants, seedlings, sprigs, ferns, clover, round leaves, patches, blobs, radial pattern, centred subject",
+  "candidates": [
+    {
+      "seed": 47301,
+      "note": "First recipe (needles, moss, dead leaves and twigs): an even dark litter, but its largest pale leaves and twigs repeat in a plain 4 m grid at the closest gameplay zoom, even with their highlights rolled off."
+    },
+    {
+      "seed": 47302,
+      "note": "First recipe: bright, raised moss cushions and many pale leaves on black needles; the cushions repeat in an obvious grid every 4 m once tiled."
+    },
+    {
+      "seed": 47303,
+      "note": "Second recipe (needles with a little moss): good dense needle litter, but the moss blobs became flat, round green leaves, and the whole candidate is near-black (linear median 0.005)."
+    },
+    {
+      "seed": 47304,
+      "note": "Second recipe: brown needles with the moss blobs as flat painted discs and bright green fern sprigs that repeat as a grid of light stars once tiled."
+    },
+    {
+      "seed": 47305
+    },
+    {
+      "seed": 47306,
+      "note": "Third recipe: chunky raised humus clumps that tile as a polka-dot of dark blobs."
+    }
+  ],
+  "swatch": {
+    "generator": "scripts/world/pipeline/make_surface_swatch.py",
+    "seed": 47305,
+    "noiseMetres": 0.6,
+    "colours": [
+      "#1f1812",
+      "#2a2119",
+      "#33281e",
+      "#251d16"
+    ],
+    "layers": [
+      {
+        "kind": "strokes",
+        "length": [
+          0.02,
+          0.05
+        ],
+        "width": 0.003,
+        "perSquareMetre": 4200,
+        "colours": [
+          "#4a3826",
+          "#3c2d1f",
+          "#5a4430",
+          "#614a33",
+          "#4f4537"
+        ]
+      }
+    ]
+  },
+  "cook": {
+    "delightFraction": 0.04,
+    "blendFraction": 0.3,
+    "evenChroma": true,
+    "saturation": 0.55,
+    "gain": 0.8,
+    "note": "A narrow de-light (1/25), a 0.3 wrap band and chroma evening: with the defaults the black humus patches repeated as diagonal blotches every 4 m; lower saturation takes the rust-red needles into the cold palette."
+  }
+}

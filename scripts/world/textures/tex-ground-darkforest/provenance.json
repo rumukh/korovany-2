@@ -1,0 +1,85 @@
+{
+ "schema": "korovany2-world-surface/1",
+ "id": "tex-ground-darkforest",
+ "layer": "darkforest",
+ "outputs": {
+  "albedo": {
+   "file": "public/world/surfaces/darkforest-albedo.webp",
+   "sha256": "a195c5b2b0e9fbed1f4ecd0ed0df890d5b6899fabf019f612724df4fe1742b03",
+   "bytes": 117524
+  },
+  "height": {
+   "file": "public/world/surfaces/darkforest-height.webp",
+   "sha256": "6d1c160def0b16976d0206528374c013fed141038b46cddf5bcf6da2704f365e",
+   "bytes": 119400
+  }
+ },
+ "license": "Generated locally for Korovany II with Qwen Image Edit Plus 2511 (WanGP) from an original scripted layout swatch; no photograph or third-party texture.",
+ "tools": [
+  {
+   "name": "Qwen Image Edit Plus 2511",
+   "runtime": "WanGP (local, CLI)",
+   "checkpoint": "qwen_image_edit_plus2_20B_quanto_bf16_int8",
+   "steps": 50,
+   "guidanceScale": 4.0,
+   "role": "surface texture from a scripted layout swatch"
+  }
+ ],
+ "source": {
+  "recipe": "recipe.json",
+  "candidate": "candidate-47305.png",
+  "candidateSha256": "5a93fe80a1fcecf110dd6b3f08c6bcf110dbd812504d127ca9b3a633e7506ed2",
+  "seed": 47305,
+  "generationSeconds": 829.3,
+  "layoutSha256": "2e322b99582cc30faa104476e54b15e7f694f0a5ab683008ea25aaabcc82af24"
+ },
+ "approval": {
+  "gate": "candidate",
+  "decision": "accepted",
+  "rationale": "Third recipe (needles only): a criss-cross mat of fallen pine needles over black humus, with no moss, plants or leaves of any size. Cooked with a narrow de-light (1/25), a 0.3 wrap band, chroma evening, saturation 0.55 and gain 0.8 (linear median 0.023): the humus patches no longer repeat as blotches and the rust-red needles sit in the cold palette. In game it darkens the floor under the densest Greenmarch and Hollowvale stands and blends into the forest layer.",
+  "limitations": [
+   "A small stone, a pine cone and a dead leaf in the tile still repeat every 4 m at the closest zoom.",
+   "The narrow de-light and wide wrap band flatten the needle mat's own light and shade; it reads flatter than real litter."
+  ],
+  "delegation": "_reviews/delegation-2026-10-04-world.json"
+ },
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_surface.py": "83af06d7dd856012850c4c5337ef4a91d251cd96cb603d2085ba8e94d0a6857a",
+   "world/pipeline/make_surface_swatch.py": "5ec3957f52824d5a8a2c737dd93d8cdb55a7827c602559a2af40882ba3fa0b31"
+  },
+  "steps": {
+   "delight": {
+    "sigmaPixels": 53.120000000000005,
+    "clamp": [
+     0.6,
+     1.7
+    ]
+   },
+   "wrapBlend": {
+    "bandFraction": 0.3,
+    "mode": "variance-preserving",
+    "seamRatioBefore": 0.971,
+    "seamRatioAfter": 1.158
+   },
+   "grade": {
+    "gain": 0.8,
+    "saturation": 0.55,
+    "evenChroma": true
+   },
+   "height": {
+    "blurPixels": 0.8,
+    "percentiles": [
+     1,
+     99
+    ],
+    "inverted": false
+   }
+  },
+  "albedoMeanSrgb": [
+   48.6,
+   42.8,
+   42.7
+  ]
+ }
+}

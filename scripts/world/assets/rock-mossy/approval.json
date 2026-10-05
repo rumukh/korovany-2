@@ -1,0 +1,25 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "rock-mossy",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "fbb771a8e87ac5a4d96dafeed578563c525107796257e659a4527c5063026a0f",
+   "rationale": "Mossy boulders (four variants): displaced, flattened stones with moss over their upper faces; at most 320 triangles per variant, 118,828 bytes before meshopt; each variant normalised to its collider and checked inside it (world-v3 prop collider test).",
+   "limitations": [
+    "Scripted tubes and displaced primitives: no peeling bark, rot, hollow cores or fungus."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "fbb771a8e87ac5a4d96dafeed578563c525107796257e659a4527c5063026a0f",
+   "rationale": "On the dark forest floor, between the trees, at gameplay cameras (18-40 m, pitch 0.38-1.13): knee to chest high beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss, collides with its measured footprint and stands on the terrain (logs pitched to the slope).",
+   "limitations": [
+    "The same four variants repeat across a forest, varied only by scale and turn."
+   ]
+  }
+ ]
+}

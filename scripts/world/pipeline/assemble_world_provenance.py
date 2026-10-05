@@ -1,6 +1,6 @@
 """Assemble portable provenance and approval records for Korovany II version 3 world assets.
 
-    python assemble_world_provenance.py <asset-id> [...]          (models: W0 and W1 kits, nature, props, sheep)
+    python assemble_world_provenance.py <asset-id> [...]          (models: W0-W2 kits, W0 and W3 nature, props, sheep, crows)
     python assemble_world_provenance.py --surfaces                  (every surface layer)
 
 Reads the authoring folders under the authoring root, $K2_AUTHORING (cook receipts, generation receipts, review records),
@@ -146,13 +146,14 @@ def gate_limits(record) -> dict:
     return {"limitations": record["limitations"]} if record.get("limitations") else {}
 
 
-def generated_asset(asset: str, kind: str, kit: str, revision: str, script: str, limitations, scripts=None):
+def generated_asset(asset: str, kind: str, kit: str, revision: str, script: str, limitations, scripts=None,
+                    barks=("bark-spruce", "bark-birch")):
     cook_dir = AUTHORING / kit / "cook" / revision / asset
     source = {"generator": f"world/pipeline/{script}"}
-    if kind == "tree":
+    if kind == "tree" and barks:
         # The impostor cards are rendered from the shipped bark layers; record the exact images the cook read.
         surfaces = REPO / "public" / "world" / "surfaces"
-        source["impostorBarkAlbedo"] = {name: sha_bytes((surfaces / f"{name}-albedo.webp").read_bytes()) for name in ("bark-spruce", "bark-birch")}
+        source["impostorBarkAlbedo"] = {name: sha_bytes((surfaces / f"{name}-albedo.webp").read_bytes()) for name in barks}
     gates = {gate: review(kit, f"{asset}-{gate}") for gate in ("model", "in-game")}
     for gate, record in gates.items():
         if not record:
@@ -234,6 +235,28 @@ W1_KIT_REVISION = "r1"
 W2_KIT = {"kit-curtain", "kit-curtain-ruin", "kit-tower-round", "kit-tower-square", "kit-tower-ruin", "kit-keep", "kit-gate-arch",
           "kit-ruin-chapel", "kit-ruin-house", "kit-camp-tower"}
 W2_KIT_REVISION = "r1"
+# W3a: build_nature_w3.py (which imports build_nature.py's helpers unchanged) cooks the dark-forest species, re-cooks the W0
+# trees with a middle level of detail, and builds the undergrowth, the crags and the forest floor.
+W3_TREES = {"tree-spruce", "tree-birch", "tree-deadoak", "tree-blackpine", "tree-twistedoak", "tree-deadbirch"}
+W3_PLANTS = {"plant-bracken", "plant-bramble"}
+W3_CRAGS = {f"rock-crag-{style}-{shape}" for style in ("moss", "snow", "bare") for shape in "abcd"}
+W3_FLOOR = {"rock-mossy", "wood-log", "wood-stump"}
+W3_NATURE = W3_TREES | W3_PLANTS | W3_CRAGS | W3_FLOOR
+W3_NATURE_REVISION = "r1"
+W3_TREE_LIMITS = ["Scripted trees with alpha-tested cards: no wind motion, no subsurface or translucency; a middle level of detail "
+                  "(fewer rings, sides and cards) from 24 m and crossed-card impostors beyond 58 m.",
+                  "Black pine crowns are clumps of needle cards, not modelled shoots; twisted and dead oaks carry only a few dead "
+                  "leaves; oaks use the pine or spruce bark layer, there is no oak bark."]
+W3_LIMITS = {
+    "plant": ["Undergrowth is alpha-tested cards on a few stems with a 128 px impostor: no wind motion, and it is presentation "
+              "only (the hero walks through it)."],
+    "crag": ["Crags are overlapping convex blocks with flat facets and sharp edges: no overhangs, caves, gullies or eroded "
+             "detail; grain and weathering are in the cliff surface layer.",
+             "Snow and moss lie on whole upward facets, so their edges follow the facets; the talus is a ring of granite rubble "
+             "blocks, not loose scree."],
+    "floor": ["Fallen logs and stumps are scripted tubes with splintered ends: no peeling bark, rot or hollow cores; boulders "
+              "are displaced primitives with moss on their upper faces."],
+}
 
 
 if __name__ == "__main__":
@@ -264,6 +287,13 @@ if __name__ == "__main__":
                           PROP_LIMITS + ["Clips are procedural oscillators on a small rig (body, head, tail; arms and hands of each wing), not motion capture.",
                                          "TRELLIS fused the perched crow's folded wings into its body and the flying crow's feathers into flat sheets; "
                                          "the view swaps the perched and flying models at take-off and landing instead of folding the wings."])
+        elif asset in W3_NATURE:
+            kind = "tree" if asset in W3_TREES | W3_PLANTS else "kit" if asset in W3_CRAGS else "rock"
+            limits = (W3_TREE_LIMITS if asset in W3_TREES else W3_LIMITS["plant"] if asset in W3_PLANTS
+                      else W3_LIMITS["crag"] if asset in W3_CRAGS else W3_LIMITS["floor"])
+            generated_asset(asset, kind, "nature-w3", W3_NATURE_REVISION, "build_nature_w3.py", limits,
+                            scripts=["build_nature_w3.py", "build_nature.py", "meshopt_glb.mjs"],
+                            barks=("bark-spruce", "bark-birch", "bark-pine") if asset in W3_TREES else ())
         elif asset in W2_KIT:
             # build_kit_w2.py imports the W0 and W1 kits' builders, frustums, roofs, bake and export unchanged: all three
             # scripts made these bytes.

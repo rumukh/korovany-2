@@ -14,15 +14,56 @@ export const TERRAIN_MARGIN = 128;
 export const CONTROL_SIZE = 1024;
 /**
  * Regional ground: a base layer that replaces the meadow inside a region (meeting the meadow again at the borders it
- * shares with other regions) and an overlay in noise patches above `patches`; meadow survives in a few patches too.
+ * shares with other regions) and an overlay in noise patches above `patches`; meadow survives in a few patches too. A
+ * `deep` layer is the overlay instead, wherever the region's trees stand close (the dark forests' floor).
  */
-export const REGION_GROUND: Readonly<Record<string, { base: WorldSurface; overlay?: WorldSurface; patches?: number }>> = {
+export const REGION_GROUND: Readonly<Record<string, { base?: WorldSurface; overlay?: WorldSurface; patches?: number; deep?: WorldSurface }>> = {
   fenlands: { base: 'reedmud' },
   saltcoast: { base: 'coldgrass', overlay: 'pebbles', patches: 0.6 },
   ashsteppe: { base: 'ash' },
   frostspine: { base: 'coldgrass', overlay: 'snow', patches: 0.53 },
-  hollowvale: { base: 'coldgrass' },
+  hollowvale: { base: 'coldgrass', deep: 'darkforest' },
+  greenmarch: { deep: 'darkforest' },
 };
+/** Trees per 8 m cell (box-filtered) where a dark forest's floor starts and where it is complete. */
+const DEEP_FOREST: readonly [number, number] = [1.5, 2.6];
+const DEEP_CELL = 8;
+
+/** Box-filtered tree counts per DEEP_CELL square, sampled bilinearly: how close the trees stand round a point. */
+function treeDensity(world: WorldBlueprint): (x: number, z: number) => number {
+  const { minX, minZ, maxX, maxZ } = world.bounds;
+  const columns = Math.ceil((maxX - minX) / DEEP_CELL) + 1, rows = Math.ceil((maxZ - minZ) / DEEP_CELL) + 1;
+  let counts = new Float32Array(columns * rows);
+  for (const o of world.obstacles) {
+    if (o.kind !== 'tree') continue;
+    const c = Math.floor((o.x - minX) / DEEP_CELL), r = Math.floor((o.z - minZ) / DEEP_CELL);
+    if (c >= 0 && c < columns && r >= 0 && r < rows) counts[r * columns + c]! += 1;
+  }
+  for (let pass = 0; pass < 2; pass++) {
+    const next = new Float32Array(columns * rows);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < columns; c++) {
+        let sum = 0, n = 0;
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+          const rr = r + dr, cc = c + dc;
+          if (rr < 0 || rr >= rows || cc < 0 || cc >= columns) continue;
+          sum += counts[rr * columns + cc]!;
+          n++;
+        }
+        next[r * columns + c] = sum / n;
+      }
+    }
+    counts = next;
+  }
+  return (x, z) => {
+    const fx = Math.min(columns - 1.0001, Math.max(0, (x - minX) / DEEP_CELL - 0.5));
+    const fz = Math.min(rows - 1.0001, Math.max(0, (z - minZ) / DEEP_CELL - 0.5));
+    const c = Math.floor(fx), r = Math.floor(fz), tx = fx - c, tz = fz - r;
+    const at = (rr: number, cc: number) => counts[rr * columns + cc]!;
+    const top = at(r, c) + (at(r, c + 1) - at(r, c)) * tx, bottom = at(r + 1, c) + (at(r + 1, c + 1) - at(r + 1, c)) * tx;
+    return top + (bottom - top) * tz;
+  };
+}
 /** Stone towns whose squares and streets are cobbled (the mud and road layers turn to cobbles near the centre). */
 export const COBBLED_PLACES: ReadonlySet<string> = new Set(['crownbridge', 'saltmarket', 'cinderwell']);
 /** Fortress courtyards out to `radius` metres: trampled ground, which the Royal Citadel's cobbles pave. */
@@ -330,6 +371,7 @@ function regionalGround(world: WorldBlueprint, size: number, cell: number):
     return top + (bottom - top) * tr;
   };
   const layer = (name: WorldSurface): number => WORLD_SURFACES.indexOf(name);
+  const density = treeDensity(world);
   for (const region of regions) {
     const rule = Object.hasOwn(REGION_GROUND, region.id) ? REGION_GROUND[region.id]! : undefined;
     if (!rule) continue;
@@ -347,10 +389,15 @@ function regionalGround(world: WorldBlueprint, size: number, cell: number):
           z - b.minZ + open(b.minZ, minZ), b.maxZ - z + open(b.maxZ, maxZ));
         const fade = smoothstep(5, 28, inside);
         const i = r * size + c;
-        const base = fade * (1 - 0.75 * smoothstep(0.66, 0.74, sample(meadowNoise, r, c)));
-        weights[i * 4] = Math.round(base * 255);
-        baseLayer[i] = layer(rule.base);
-        if (rule.overlay) {
+        if (rule.base) {
+          const base = fade * (1 - 0.75 * smoothstep(0.66, 0.74, sample(meadowNoise, r, c)));
+          weights[i * 4] = Math.round(base * 255);
+          baseLayer[i] = layer(rule.base);
+        }
+        if (rule.deep) {
+          weights[i * 4 + 1] = Math.round(fade * smoothstep(DEEP_FOREST[0], DEEP_FOREST[1], density(x, z)) * 255);
+          overlayLayer[i] = layer(rule.deep);
+        } else if (rule.overlay) {
           const patch = smoothstep(rule.patches! - 0.04, rule.patches! + 0.04, sample(patchNoise, r, c));
           weights[i * 4 + 1] = Math.round(fade * patch * 255);
           overlayLayer[i] = layer(rule.overlay);

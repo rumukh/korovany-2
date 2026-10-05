@@ -1,0 +1,25 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "rock-crag-bare-c",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "ba9198e6e619127784c5b6c896ccd863628083e0237b4f9e0110ccfc6ff6efa9",
+   "rationale": "Crag (bare, shape c): a low, wide ridge, built from overlapping convex blocks with bare weathered rock and a talus of granite rubble blocks; 27.6 x 21.0 m and 11.6 m tall, 1,112 triangles, one flat-shaded kit mesh with baked AO; inside its round collider below 3 m and within 0.8 m above it (world-v3 circle footprint test).",
+   "limitations": [
+    "Faceted low-poly blocks with sharp edges: no overhangs, caves, gullies or erosion detail."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "ba9198e6e619127784c5b6c896ccd863628083e0237b4f9e0110ccfc6ff6efa9",
+   "rationale": "In the Ash Steppe outcrops and the mountain ring along the Ash Steppe, at gameplay cameras (18-40 m, pitch 0.38-1.13): 12 m of rock dwarfs the soldier, captain and boss and closes the world's edge as a mountain ring with a far backdrop beyond it. A crag between the camera and the hero opens a 3.5-7 m cutaway cone (the hero fully visible behind a Frostspine crag in the wilds browser suite).",
+   "limitations": [
+    "Seen through the cutaway, a crag shows its open inside faces; the ring's rock is a wall of crags, not climbable or walkable."
+   ]
+  }
+ ]
+}

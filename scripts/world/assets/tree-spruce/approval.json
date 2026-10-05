@@ -6,14 +6,21 @@
   {
    "gate": "model",
    "decision": "accepted",
-   "sha256": "2f3931edd77a6f19268faddd02e15db5a56d37d9a84c713775f0c8ed88df212a",
-   "rationale": "Three spruce variants 18-22.5 m (natural size), lod0 trunk and branch wood 680-864 triangles plus 1,826-2,196 triangles of alpha-tested needle cards, and a 6-triangle crossed-card impostor each; darker palette after the dev review."
+   "sha256": "92232975c2922d70a8e0b416f8b6586067a7987e05a856cc798f2cca9f077127",
+   "rationale": "Norway spruce, re-cooked from W0 with a middle level of detail: a tapering trunk with whorls of drooping needle-card branches from 2.2-3.4 m up; 3 variants 18.0-22.5 m tall; at most 3,060 triangles near, 221 in the middle level of detail and a 6-triangle impostor; 640,608 bytes before meshopt. Parts, triangle budget and impostor checked by the world-assets suite; baked AO.",
+   "limitations": [
+    "The same three variants as W0; at 18 m the crown cards read as flat planes."
+   ]
   },
   {
    "gate": "in-game",
    "decision": "accepted",
-   "sha256": "2f3931edd77a6f19268faddd02e15db5a56d37d9a84c713775f0c8ed88df212a",
-   "rationale": "Dense dark Greenmarch and Hollowvale forest at 18-40 m cameras: the canopy cone cutaway keeps the hero and the ground around them visible; impostors from 58 m fade as their cards turn edge-on (no horizontal-card lines)."
+   "sha256": "92232975c2922d70a8e0b416f8b6586067a7987e05a856cc798f2cca9f077127",
+   "rationale": "In the dark forests beside the black pines, the Frostspine and the Crownlands, Heartlands and Fenlands woods, at gameplay cameras (18-40 m, pitch 0.38-1.13): reads at natural scale beside the 2.25 m soldier, the 2.7 m captain and the 3.9 m boss (trees are not scaled up), with shadows on the ground. Distance bands: near parts to 24 m (spruce, birch and oaks have a middle level there), the middle level to 58 m and impostors to 235 m; the canopy cutaway cone (3-6 m at the hero, twice that at the camera) keeps the hero visible inside the forest.",
+   "limitations": [
+    "Card foliage reads flat and dark where a tree stands beside the camera at mid-distance; the sightline cone keeps the hero and the ground round them clear.",
+    "No wind motion."
+   ]
   }
  ]
 }
