@@ -65,7 +65,7 @@ The browser shell starts new campaigns in version 3; saved version 1 and 2 campa
 A version 3 blueprint (`generateWorld(seed, 3)`, `CampaignOptions.worldVersion: 3`) is drawn by
 `createWorldSceneryV3` (`scenery-v3.ts`) instead of `createWorldScenery`; versions 1 and 2 are drawn exactly as before.
 Every v3 obstacle names a `model` from the world asset registry (`world-assets.ts`: buildings, walls, fences, farm and
-village props, trees, boulders, the sheep and the crows), which is separate from the cooked characters and story
+village props, trees, boulders, the reeds, and the sheep, crows, deer and goats), which is separate from the cooked characters and story
 props in `models.ts`: own files (`public/world/<id>/<id>.glb`, `public/world/surfaces`), provenance (`scripts/world`)
 and budgets.
 `createGameView` needs a page-lifetime `WorldAssetLibrary` in `GameViewOptions.worldAssets` and presents a v3 world
@@ -83,8 +83,8 @@ primitive fallback). Version 1 and 2 worlds request nothing from it.
   streets in the stone towns (`COBBLED_PLACES`) and fortress courtyards (`COURTYARDS`: cobbles in the Royal Citadel,
   trampled ground in the Old Fort). The layers ship as WebP and upload as RGBA8 and RG8; KTX2/Basis was measured
   at W0 and deferred (ETC1S saved 282 KB and 15 MiB of GPU memory but needs a 585 KB transcoder). The whole v3 world
-  needs about 145 MiB of texture memory, within its 160 MiB budget; W1 and W2 props use 256 px normal and ORM maps,
-  the small ones a 256 px albedo, and the sheep 512 px maps.
+  needs about 153 MiB of texture memory, within its 160 MiB budget; W1 and W2 props use 256 px normal and ORM maps,
+  the small ones a 256 px albedo, and the sheep, deer and goats 512 px maps.
 - **Settlements.** Each region builds its own vernacular from the scripted kit (`build_kit.py`, `build_kit_w1.py`):
   timber cottages, longhouses and barns in the Heartlands, the Greenmarch and Hollowvale, stone and brick houses,
   jettied townhouses with cobbles in Crownbridge, stilt huts and a reed-roofed chapel in the Fens, salt sheds and
@@ -109,18 +109,29 @@ primitive fallback). Version 1 and 2 worlds request nothing from it.
   (`plant-*`, tree layout with 128 px impostors, no shadows, whole within 30 m and gone by 70 m) round a regional share
   of trees on walkable ground off roads, fields and clearings. Where the dark forests' trees stand close (8 m cells,
   box-filtered), the region's overlay slot paints the `darkforest` layer (`REGION_GROUND.deep`).
+- **Water.** `makeWaters` (`waters.ts`) draws the river (ending at the coast), every lake and the sea in one mesh on one
+  program (`korovany-water-v3`; v3 no longer draws the v1/v2 river plane). Each vertex carries its water's tint (the
+  river and the Fen meres peat-dark, forest pools black, tarns slate, steppe pools a bitter grey-green, the sea grey) and
+  a shore band: silt in the shallows, ripples from four directions faded with distance (no stripes on far water), faint
+  wind slicks, a swell and uneven surf lines on the sea; a small polygon offset keeps the open sea, which runs 400 m
+  beyond the bounds into the fog, above the far apron. Beds are carved below the water plane (`LAKE_BEDS`, `waterDepth`);
+  the relief lies level within `LAKE_BANK` (6 m) of every shore, banks are muddy (`terrainControl`), and the Salt Coast
+  gets a shingle beach, wet for its last two metres. `shoreDressing(world)` (`shores.ts`, presentation only) stands reed
+  beds (`plant-reeds`, `build_nature_w3b.py`) along the shores in runs, two deep, mostly in the shallows (densest on the
+  Fen meres, sparse rushes on the tarns), drowned dead trees and stumps in the meres and pools, and boulders in the surf
+  at rocky points on the coast.
 - **Terrain.** `terrainFor(world)` is a presentation-only heightfield (exactly 0 for v1/v2): level on roads, sites,
-  clearings, footprints, fields and combat zones, hills elsewhere with slopes of at most about 11 degrees. Terrain
+  clearings, footprints, fields, shores and combat zones, hills elsewhere with slopes of at most about 11 degrees. Terrain
   chunks are 128 m meshes of 2 m quads. Actors, residents, pickups, effects, rings, the sun target and the camera
-  focus stand on it; the river channel is carved below the water plane.
+  focus stand on it; the river channel and the lake and sea beds are carved below the water plane.
 - **Instancing.** Static models are pooled per model, variant and distance band in a `ScatterField`: each update
   submits only instances in the camera's horizontal view cone (plus everything within 36 m of the hero), with shadows
   near the hero only and tree impostors beyond 58 m, so a kilometre of forest costs one draw per part. Whole 32 m cells
   that no instance of theirs could pass (beyond reach, or outside the cone widened by the cell's largest instance) are
   skipped before their instances are tested, which never changes what is drawn (`tests/scatter-culling.test.ts`).
   Impostor cards dither away as they turn edge-on (`applyEdgeFade`), so a crossed or top card never shows as a line. The
-  shader warm-up draws one instance of every pool of both fields (and one sheep and crow), so no species, impostor,
-  crag or prop compiles on first sight.
+  shader warm-up draws one instance of every pool of both fields (and one sheep, crow, deer and goat), so no species,
+  impostor, crag, reed or prop compiles on first sight.
 - **Cutaway.** Architecture dithers within 1.6-3.2 m of the camera-to-hero sightline; canopies and trunks in a cone
   3-6 m wide at the hero and twice that at the camera, and crags (11-30 m tall) in a cone 3.5-7 m wide at the hero
   (`applySightlineDither`'s radius and widening are uniforms on
@@ -134,7 +145,11 @@ primitive fallback). Version 1 and 2 worlds request nothing from it.
   in reduced motion. Crow flocks (`crowHomes`) peck on the other stubble fields, at chapels, gibbets, the giant
   remains and the Echo
   Well; they take off when the hero comes within 10 m, fly off and land again once the hero is 34 m away (the
-  perched and flying models swap at take-off and landing). Animals are never in snapshots, saves or rules.
+  perched and flying models swap at take-off and landing). `WorldHerds` (`herds.ts`) keeps herds of red deer hinds in
+  forest glades (at least six trees within 20 m) and bands of feral goats at the feet of crags (`herdHomes`, 13-14 herds
+  and about 70 animals a world, 45 m from people and 14 m from roads); a herd startles together when the hero comes
+  within 18 m (deer) or 11 m (goats), bounds away swerving round solids and water, and settles again once clear.
+  Animals are never in snapshots, saves or rules.
 
 Seven generated surface families use shared color, normal and roughness maps
 from `public/textures/frontier`. Albedo is sRGB; normal/roughness data is linear.

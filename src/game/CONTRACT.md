@@ -61,6 +61,19 @@ place or site; the forest floor (`wood-log` boxes along local Z, `wood-stump` an
 lone trees (`lone-<region>-<n>`) stand in the open lands. Undergrowth and the far
 mountains behind the ring are presentation only and never appear in the
 blueprint.
+W3b adds water to v3: `WorldBlueprint.lakes` (`WorldLake { id, kind: 'mere' |
+'pool' | 'tarn' | 'sea', x, z, shore }`, absent in v1/v2) is solid like the
+river, so `isWalkable` and `moveWithCollision` refuse any body that reaches a
+shore polygon (`lakeClearance` is the signed distance to it, negative in the
+water); projectiles cross water as they cross the river. Meres lie in the Fens,
+pools in the forests' glades, the Crownlands, the Heartlands and the Ash Steppe,
+tarns in the Frostspine, each at least 12 m from road surfaces, 20 m beyond any
+place, 8 m beyond a site's combat yard, 6 m from fields and earlier solids, 24 m
+from other lakes and 20 m from the river; every later solid keeps at least 2 m
+from the water. The sea closes the Salt Coast: its shore runs inside the east
+bounds along the whole coast (never closer than 2 m to them) and turns out past
+them in the 12 m beyond the coast's ends, where only the mountain ring may stand
+in it. Reeds, drowned trees and the boulders in the surf are presentation only.
 Default `generateWorld`/`createCampaign` versions stay 2; the browser shell passes `worldVersion: 3` for new
 campaigns. The v3 layout still grows between releases, so restoring a v3 save whose `worldId` no longer matches
 its regenerated world throws `OutdatedWorldError` (the shell explains that the campaign belongs to an earlier

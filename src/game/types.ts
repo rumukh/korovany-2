@@ -176,6 +176,12 @@ export interface Obstacle extends Vec2 {
 /** Version 3 only: a non-colliding field strip for presentation (crops and stubble). */
 export interface WorldField extends Vec2 { id: string; halfX: number; halfZ: number; heading: number; crop: 'stubble' | 'furrow' }
 /**
+ * Version 3 only: standing water, solid like the river (nothing crosses it). `shore` is a simple polygon and (x, z) a
+ * point inside it; the sea's polygon closes just beyond the world's bounds. `kind` is the water's character: Fen meres,
+ * forest and steppe pools, mountain tarns and the sea off the Salt Coast.
+ */
+export interface WorldLake extends Vec2 { id: string; kind: 'mere' | 'pool' | 'tarn' | 'sea'; shore: Vec2[] }
+/**
  * Version 3 only: a presentation-only structure piece with no collision, such as a gate arch spanning a road between
  * two gate towers. `heading` uses the box convention (local +Z along (sin h, cos h)).
  */
@@ -208,6 +214,8 @@ export interface WorldBlueprint {
   fields?: WorldField[];
   /** Version 3 only: presentation-only structure pieces (gate arches); never collision. */
   decor?: WorldDecor[];
+  /** Version 3 only: lakes and the sea, solid like the river. */
+  lakes?: WorldLake[];
 }
 
 export interface ObjectiveSnapshot {

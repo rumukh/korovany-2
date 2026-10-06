@@ -13,8 +13,10 @@ import { WorldChunks } from './world-chunks';
 import { applyEdgeFade, kitMaterial, terrainMaterial } from './world-materials';
 import { ROCK_VARIANTS, TREE_VARIANTS, WORLD_MODELS, type WorldModelId } from './world-assets';
 import { distanceToSegment } from './world';
-import { addBridge, legacyWall, makeSky, makeWater, type WorldScenery } from './world';
+import { addBridge, legacyWall, makeSky, type WorldScenery } from './world';
 import { V3_GRADE } from './atmosphere';
+import { makeWaters } from './waters';
+import { shoreDressing } from './shores';
 
 /** Distance bands, in metres from the camera. Shadows are cast only by what can shade the hero's surroundings. */
 const BANDS = {
@@ -192,7 +194,8 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
   ground.add(apron);
   group.add(ground);
 
-  const water = makeWater(resources, world.river);
+  // The river, the lakes and the sea: one mesh and one water program (the v1/v2 river plane is not drawn here).
+  const water = makeWaters(resources, world);
   group.add(water.mesh);
   const structures = new StaticBatch(resources);
   for (const bridge of world.bridges) addBridge(bridge, world, structures);
@@ -396,6 +399,24 @@ export function createWorldSceneryV3(resources: ViewResources, world: WorldBluep
   }
   for (const plant of undergrowth(world)) {
     placements.push({ kind: kindFor(plant.id, plant.variant), matrix: matrix(plant.x, terrain.height(plant.x, plant.z) - 0.05, plant.z, plant.heading, plant.scale) });
+  }
+  // Shores: reed beds, drowned trees and stumps in the water, boulders in the surf (presentation only).
+  for (const piece of shoreDressing(world)) {
+    const y = terrain.height(piece.x, piece.z) - piece.sink;
+    const k = kindFor(piece.id, piece.id === 'plant-reeds' || piece.id.startsWith('tree-') ? piece.variant : piece.variant % ROCK_VARIANTS);
+    const geometry = kinds[k]!.parts[0]!.geometry;
+    if (!geometry.boundingBox) geometry.computeBoundingBox();
+    const box = geometry.boundingBox!;
+    if (piece.id === 'rock-boulder') {
+      const across = Math.max(box.max.x - box.min.x, box.max.z - box.min.z) / 2;
+      placements.push({ kind: k, matrix: matrix(piece.x, y, piece.z, piece.heading, piece.scale / across, piece.scale * 1.1 / box.max.y, piece.scale / across) });
+    } else if (piece.id.startsWith('tree-')) {
+      const leaves = kinds[k]!.parts[1]!.geometry;
+      if (!leaves.boundingBox) leaves.computeBoundingBox();
+      placements.push({ kind: k, matrix: matrix(piece.x, y, piece.z, piece.heading, piece.scale / Math.max(box.max.y, leaves.boundingBox!.max.y)) });
+    } else {
+      placements.push({ kind: k, matrix: matrix(piece.x, y, piece.z, piece.heading, piece.scale) });
+    }
   }
   const scatter = new ScatterField(group, kinds, 'world-scatter');
   for (const { kind, matrix: m } of placements) scatter.add(kind, m);

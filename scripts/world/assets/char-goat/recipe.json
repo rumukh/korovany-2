@@ -1,0 +1,492 @@
+{
+  "schema": "korovany2-quadruped-recipe/1",
+  "id": "char-goat",
+  "source": {
+    "candidate": "a-s7202",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 7202,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "89320fb7175a176d5e049a99e87e63ecfc12c5b931a466a34376b7d09193d6ac",
+    "conceptSha256": "d9d78d560471d64f6448548247d9942cd31e2eb0a0c6456dd3c6ffd2cb93e83e"
+  },
+  "yawDegrees": 0,
+  "heightMeters": 1.55,
+  "feetFraction": 0.035,
+  "triangleBudget": 6000,
+  "baseQuality": 90,
+  "ormQuality": 85,
+  "minEdgeMeters": 0.008,
+  "note": "Feral goat cooked from the delegated-gate concept candidate a and TRELLIS raw a-s7202 (symmetric forelegs). Landmarks placed on the normalized mesh from session profiles; the horns sweep back over the neck and are bound rigidly to the head (weights.horns, the line between their lower edge and the neck's top). Height 1.55 m to the horn tops (about 1.15 m at the withers).",
+  "landmarks": {
+    "hipCentre": [
+      0,
+      0.4,
+      0.98
+    ],
+    "lumbar": [
+      0,
+      0.15,
+      1.02
+    ],
+    "back": [
+      0,
+      -0.1,
+      1.03
+    ],
+    "withers": [
+      0,
+      -0.4,
+      1.08
+    ],
+    "neckBase": [
+      0,
+      -0.55,
+      1.0
+    ],
+    "neckMid": [
+      0,
+      -0.66,
+      1.18
+    ],
+    "poll": [
+      0,
+      -0.76,
+      1.36
+    ],
+    "muzzle": [
+      0,
+      -1.06,
+      1.1
+    ],
+    "tailRoot": [
+      0,
+      0.7,
+      1.0
+    ],
+    "tailTip": [
+      0,
+      0.82,
+      1.06
+    ],
+    "ear": [
+      0.17,
+      -0.8,
+      1.35
+    ],
+    "earTip": [
+      0.33,
+      -0.84,
+      1.38
+    ],
+    "legs": {
+      "LF": {
+        "scapulaTop": [
+          0.08,
+          -0.4,
+          1.08
+        ],
+        "shoulder": [
+          0.15,
+          -0.58,
+          0.85
+        ],
+        "elbow": [
+          0.13,
+          -0.44,
+          0.56
+        ],
+        "carpus": [
+          0.13,
+          -0.41,
+          0.3
+        ],
+        "fetlock": [
+          0.13,
+          -0.44,
+          0.11
+        ],
+        "toe": [
+          0.14,
+          -0.55,
+          0.0
+        ]
+      },
+      "RF": {
+        "scapulaTop": [
+          -0.08,
+          -0.4,
+          1.08
+        ],
+        "shoulder": [
+          -0.15,
+          -0.58,
+          0.85
+        ],
+        "elbow": [
+          -0.12,
+          -0.44,
+          0.56
+        ],
+        "carpus": [
+          -0.12,
+          -0.41,
+          0.3
+        ],
+        "fetlock": [
+          -0.13,
+          -0.44,
+          0.11
+        ],
+        "toe": [
+          -0.14,
+          -0.55,
+          0.0
+        ]
+      },
+      "LH": {
+        "hip": [
+          0.12,
+          0.38,
+          0.96
+        ],
+        "stifle": [
+          0.16,
+          0.26,
+          0.62
+        ],
+        "hock": [
+          0.16,
+          0.55,
+          0.34
+        ],
+        "fetlock": [
+          0.17,
+          0.49,
+          0.11
+        ],
+        "toe": [
+          0.19,
+          0.35,
+          0.0
+        ]
+      },
+      "RH": {
+        "hip": [
+          -0.12,
+          0.38,
+          0.96
+        ],
+        "stifle": [
+          -0.16,
+          0.3,
+          0.62
+        ],
+        "hock": [
+          -0.16,
+          0.62,
+          0.34
+        ],
+        "fetlock": [
+          -0.17,
+          0.62,
+          0.11
+        ],
+        "toe": [
+          -0.19,
+          0.48,
+          0.0
+        ]
+      }
+    }
+  },
+  "weights": {
+    "legHalfWidth": 0.1,
+    "legHalfDepth": 0.14,
+    "legTopMargin": -0.04,
+    "midlineGap": 0.02,
+    "tailHalfWidth": 0.08,
+    "tailLead": 0.03,
+    "headMargin": 0.02,
+    "neckMargin": -0.02,
+    "shoulderRadius": 0.24,
+    "thighRadius": 0.24,
+    "legBlend": 0.08,
+    "hoofLockHeight": 0.045,
+    "dewlapZ": 0.85,
+    "humerusAbove": 0.04,
+    "humerusMinX": 0.1,
+    "relax": 10,
+    "finalRelax": 4,
+    "minWeight": 0.01,
+    "earRadius": 0.2,
+    "groundLegHeight": 0.2,
+    "horns": {
+      "from": [
+        -0.74,
+        1.43
+      ],
+      "to": [
+        -0.32,
+        1.27
+      ],
+      "behindY": -0.28
+    }
+  },
+  "gaits": {
+    "Walk": {
+      "speed": 1.0,
+      "duty": 0.65,
+      "sweep": 0.3,
+      "offsets": {
+        "LH": 0.0,
+        "LF": 0.25,
+        "RH": 0.5,
+        "RF": 0.75
+      },
+      "lift": {
+        "F": 0.06,
+        "H": 0.05
+      },
+      "flex_F": 50,
+      "flex_H": 25,
+      "fetlockFlex": 25,
+      "heelLift": 8,
+      "rollFraction": 0.25,
+      "liftPeak": {
+        "F": 0.45,
+        "H": 0.5
+      },
+      "flexPeak": {
+        "F": 0.45,
+        "H": 0.5
+      },
+      "bob": [
+        0.01,
+        2,
+        0.1
+      ],
+      "pitch": [
+        1.0,
+        2,
+        0.35
+      ],
+      "roll": [
+        1.5,
+        1,
+        0.1
+      ],
+      "yaw": [
+        1.0,
+        1,
+        0.35
+      ],
+      "sway": [
+        0.006,
+        1,
+        0.1
+      ],
+      "nod": [
+        4.0,
+        2,
+        0.15
+      ],
+      "counter": 0.3,
+      "scapula": 5,
+      "tail": [
+        6,
+        1,
+        0.3
+      ],
+      "tailLag": 0.06,
+      "drop": -0.03
+    },
+    "Run": {
+      "speed": 4.6,
+      "duty": 0.34,
+      "sweep": 0.34,
+      "offsets": {
+        "LH": 0.0,
+        "RH": 0.12,
+        "LF": 0.45,
+        "RF": 0.57
+      },
+      "lift": {
+        "F": 0.12,
+        "H": 0.1
+      },
+      "flex_F": 75,
+      "flex_H": 38,
+      "fetlockFlex": 45,
+      "heelLift": 8,
+      "rollFraction": 0.35,
+      "liftPeak": {
+        "F": 0.42,
+        "H": 0.5
+      },
+      "flexPeak": {
+        "F": 0.4,
+        "H": 0.5
+      },
+      "bob": [
+        0.04,
+        1,
+        0.9
+      ],
+      "pitch": [
+        4.0,
+        1,
+        0.65
+      ],
+      "flex": [
+        5,
+        1,
+        0.65
+      ],
+      "nod": [
+        5,
+        1,
+        0.6
+      ],
+      "counter": 0.6,
+      "scapula": 7,
+      "tail": [
+        5,
+        1,
+        0.3
+      ],
+      "tailLag": 0.05,
+      "drop": -0.05,
+      "tailLift": 15
+    }
+  },
+  "idle": {
+    "seconds": 4.0,
+    "breath": [
+      1,
+      2,
+      0
+    ],
+    "breathRise": 0.004,
+    "breathPitch": 0.6,
+    "sway": [
+      0.004,
+      1,
+      0.1
+    ],
+    "nod": [
+      4,
+      1,
+      0.2
+    ],
+    "look": [
+      10,
+      1,
+      0.55
+    ],
+    "tailSwishAt": [
+      1.0
+    ],
+    "tailSwishSeconds": 0.8,
+    "tailSwishDegrees": 18,
+    "earFlickAt": [
+      [
+        2.6
+      ],
+      [
+        2.9
+      ]
+    ],
+    "earFlickSeconds": 0.3,
+    "earFlickDegrees": 20
+  },
+  "graze": {
+    "seconds": 4.0,
+    "neck": [
+      30,
+      10,
+      10
+    ],
+    "pitch": 5.0,
+    "drop": -0.02,
+    "shiftForward": 0.0,
+    "chew": [
+      4,
+      6,
+      0
+    ],
+    "sweep": [
+      6,
+      1,
+      0.25
+    ],
+    "look": [
+      10,
+      1,
+      0.1
+    ],
+    "breath": [
+      1,
+      2,
+      0
+    ],
+    "tail": [
+      5,
+      1,
+      0.4
+    ],
+    "earFlickAt": [
+      [
+        1.4
+      ],
+      [
+        3.1
+      ]
+    ],
+    "earFlickSeconds": 0.3,
+    "earFlickDegrees": 20,
+    "note": "Browsing at knee height (heather and scrub on the crags): the long horns sweep back over the neck, so a head lowered past vertical would hook them forward under the chest."
+  },
+  "startle": {
+    "seconds": 0.7,
+    "back": 0.05,
+    "sink": 0.05,
+    "pitch": -6,
+    "roll": 3,
+    "neck": -18,
+    "headYaw": 14,
+    "ears": 25,
+    "tailLift": 12
+  },
+  "body": {
+    "bakeSize": 1024,
+    "textureSize": 512,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.05,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.4,
+    "reliefStrength": 4.0,
+    "roughnessFromDetail": 0.5,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0,
+    "toneGamma": 1.0,
+    "defaultRoughness": 0.95,
+    "regions": [
+      {
+        "name": "hooves",
+        "zMax": 0.05,
+        "roughness": 0.5
+      },
+      {
+        "name": "horns",
+        "zMin": 1.3,
+        "yMin": -0.8,
+        "yMax": -0.28,
+        "roughness": 0.6
+      }
+    ],
+    "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved TRELLIS source mesh; there is no rear-view projection, so the back, far side and underside are as TRELLIS invented them from the single approved concept. Tangent normals baked from the source geometry and whiteout-blended with colour relief; AO baked from the decimated geometry; roughness set inside declared regions (the horns and hooves by position) and otherwise the default, both reduced by colour detail; no metal and no dye mask (the goat is never dyed). Base colour kept at the TRELLIS bake's own tone (toneGamma 1): the first cook's lift (0.8) washed the dark coat of the approved concept out to a pale grey in game. Artistic derivation, not measured PBR."
+  },
+  "textureNote": "Baked at 1024 and stored at 512 px, as the sheep; a goat is at most about 100 px tall at the closest camera."
+}

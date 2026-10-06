@@ -1,0 +1,36 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "char-deer",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "1d4b42f2e16fc233ec74346c98889a0bdd666cefdb9c6759b645938c4bf6f086",
+   "rationale": "Red deer hind (no antlers) standing square in a side three-quarter view: of the three, the clearest separation of all four legs (the far legs stand well apart from the near ones), which the quadruped rig needs; dull grey-brown winter coat, pale rump and large ears read at gameplay distance. A hind avoids thin antlers that TRELLIS would fuse."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "992a64e5d4751f3afe21fba08d8fc17e84ee483eb8a1cf6707e39c8553c42bae",
+   "rationale": "Red deer hind from TRELLIS raw a-s7102 (a-s7101 rejected: it stood mid-stride, with the right legs 0.15 m and 0.3 m ahead of the left), cooked with the new cook_quadruped.py: 5,880 triangles in one closed, manifold skinned mesh on a 31-joint quadruped rig; 2.25 m to the ear tips (about 1.55 m at the withers); base colour, normal and ORM baked at 1024 and stored at 512 px; 263,964 bytes. Five clips: Idle, Graze (muzzle to the ground), Walk at 1.4 m/s, a bounding Run at 7.0 m/s and Startle (head and tail up). r1 rejected: its Run swept the forefeet up to 4.6 cm beyond their reach, so they slid; r2 shortens the stance sweep (0.47 m, cycle 0.27 s) and the shortfall is at most 1.3 cm. Reviewed as a sheet of all five clips and beside the soldier in game.",
+   "limitations": [
+    "Single-view TRELLIS reconstruction: the far flank and the underside are TRELLIS's invention.",
+    "Clips are procedural (IK gaits, oscillators), not motion capture; the Run's forefeet still fall up to 1.3 cm short of their planted path.",
+    "No antlers (a hind), fur shading or ear and tail secondary motion beyond scripted flicks; 512 px coat detail softens at the closest camera.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "992a64e5d4751f3afe21fba08d8fc17e84ee483eb8a1cf6707e39c8553c42bae",
+   "rationale": "Herds of 3-6 hinds browse in forest glades of the Greenmarch, Hollowvale, Heartlands and Crownlands (8 ranges, at least six trees within 20 m of each home, 45 m from people and 14 m from roads); the herd startles together at 18 m from the hero and bounds away, swerving round trees and rocks, until 45 m clear. At the default camera a hind stands about shoulder high to the soldier and reads as a deer by silhouette and the pale rump; presentation only, so saves, collision and gameplay are unchanged.",
+   "limitations": [
+    "Herds steer round obstacles but do not path-find; a fleeing deer can stop against a crag face.",
+    "No blending between grazing and walking; animals snap between clips with a short cross-fade."
+   ]
+  }
+ ]
+}

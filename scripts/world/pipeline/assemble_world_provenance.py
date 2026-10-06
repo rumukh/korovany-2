@@ -1,6 +1,6 @@
 """Assemble portable provenance and approval records for Korovany II version 3 world assets.
 
-    python assemble_world_provenance.py <asset-id> [...]          (models: W0-W2 kits, W0 and W3 nature, props, sheep, crows)
+    python assemble_world_provenance.py <asset-id> [...]          (models: W0-W2 kits, W0 and W3 nature, W3b reeds, props, sheep, crows, deer, goats)
     python assemble_world_provenance.py --surfaces                  (every surface layer)
 
 Reads the authoring folders under the authoring root, $K2_AUTHORING (cook receipts, generation receipts, review records),
@@ -257,6 +257,11 @@ W3_LIMITS = {
     "floor": ["Fallen logs and stumps are scripted tubes with splintered ends: no peeling bark, rot or hollow cores; boulders "
               "are displaced primitives with moss on their upper faces."],
 }
+# W3b: build_nature_w3b.py (which imports build_nature_w3.py and build_nature.py unchanged) cooks the reed beds.
+W3B_PLANTS = {"plant-reeds"}
+W3B_NATURE_REVISION = "r1"
+W3B_LIMITS = ["Reed beds are alpha-tested cards with a 128 px impostor: no wind motion, no reflection in the water, and they are "
+              "presentation only (the hero walks through them on the bank)."]
 
 
 if __name__ == "__main__":
@@ -281,12 +286,20 @@ if __name__ == "__main__":
             trellis_asset(asset, "fauna", shipped_cook(asset, "char-sheep.glb"), "char-sheep.glb",
                           ["cook_sheep.py", "k2rig.py", "k2cook.py", "k2materials.py", "k2sheet.py", "webp_exact.py", "quantize_glb.py", "meshopt_glb.mjs"],
                           PROP_LIMITS + ["Clips are procedural (IK gaits, oscillators), not motion capture; there is no blending of grazing into walking."])
+        elif asset in ("char-deer", "char-goat"):
+            # W3b: cook_quadruped.py generalises cook_sheep.py (unchanged, as the shipped sheep names it) with a rigid horn region.
+            trellis_asset(asset, "fauna", shipped_cook(asset, f"{asset}.glb"), f"{asset}.glb",
+                          ["cook_quadruped.py", "k2rig.py", "k2cook.py", "k2materials.py", "k2sheet.py", "webp_exact.py", "quantize_glb.py", "meshopt_glb.mjs"],
+                          PROP_LIMITS + ["Clips are procedural (IK gaits, oscillators), not motion capture; there is no blending of grazing into walking."])
         elif asset in ("char-crow", "char-crow-flight"):
             trellis_asset(asset, "fauna", shipped_cook(asset, f"{asset}.glb"), f"{asset}.glb",
                           ["cook_crow.py", "k2rig.py", "k2cook.py", "k2materials.py", "k2sheet.py", "webp_exact.py", "quantize_glb.py", "meshopt_glb.mjs"],
                           PROP_LIMITS + ["Clips are procedural oscillators on a small rig (body, head, tail; arms and hands of each wing), not motion capture.",
                                          "TRELLIS fused the perched crow's folded wings into its body and the flying crow's feathers into flat sheets; "
                                          "the view swaps the perched and flying models at take-off and landing instead of folding the wings."])
+        elif asset in W3B_PLANTS:
+            generated_asset(asset, "tree", "nature-w3b", W3B_NATURE_REVISION, "build_nature_w3b.py", W3B_LIMITS,
+                            scripts=["build_nature_w3b.py", "build_nature_w3.py", "build_nature.py", "meshopt_glb.mjs"], barks=())
         elif asset in W3_NATURE:
             kind = "tree" if asset in W3_TREES | W3_PLANTS else "kit" if asset in W3_CRAGS else "rock"
             limits = (W3_TREE_LIMITS if asset in W3_TREES else W3_LIMITS["plant"] if asset in W3_PLANTS

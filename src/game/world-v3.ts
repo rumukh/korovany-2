@@ -1,6 +1,6 @@
 import type { WorldLocation, WorldRegion } from './narrative-types';
-import type { BoxShape, Obstacle, Vec2, WorldBlueprint, WorldField } from './types';
-import { distance, obstacleClearance, segmentClearance } from './world';
+import type { BoxShape, Obstacle, Vec2, WorldBlueprint, WorldField, WorldLake } from './types';
+import { distance, lakeBounds, lakeClearance, obstacleClearance, projectSegment, segmentClearance } from './world';
 
 /**
  * Version 3 footprints at the heroic scale standard (a 2.25 m soldier is about 1.28 times a 1.75 m human): `width` is the
@@ -281,6 +281,12 @@ const COMBAT_LOCATIONS = new Set(['palace-citadel']);
 function fits(place: Placement, o: Obstacle, rules: Rules, own?: WorldLocation): boolean {
   const world = place.world;
   if (!insideBounds(world, o, 6) || !riverClear(world, o, 3)) return false;
+  // Lakes come before the wild lands: every later solid keeps its obstacle gap (at least 2 m) from the water.
+  for (const lake of world.lakes ?? []) {
+    const box = lakeBounds(lake), reach = o.radius + Math.max(2, rules.obstacle);
+    if (o.x < box.minX - reach || o.x > box.maxX + reach || o.z < box.minZ - reach || o.z > box.maxZ + reach) continue;
+    if (lakeClearance(lake, o) < reach) return false;
+  }
   if (place.roadClearance(o) < rules.road) return false;
   for (const location of world.exploration!.locations) {
     const clearing = location === own ? rules.own ?? LOCATION_CLEARING : Math.max(LOCATION_CLEARING, rules.location,
@@ -1143,6 +1149,176 @@ function remains(place: Placement, seed: string): void {
   });
 }
 
+/**
+ * Lakes by region, largest first (radii in metres before their bays): a great mere and lesser meres in the Fens, black
+ * pools in the dark forests and the Crownlands, tarns among the Frostspine crags, bitter pools on the Ash Steppe and a
+ * pond in the Heartlands.
+ */
+export const LAKES: Readonly<Record<string, readonly { kind: 'mere' | 'pool' | 'tarn'; count: number; radius: readonly [number, number] }[]>> = {
+  fenlands: [{ kind: 'mere', count: 1, radius: [32, 42] }, { kind: 'mere', count: 5, radius: [11, 20] }],
+  hollowvale: [{ kind: 'pool', count: 2, radius: [20, 30] }],
+  greenmarch: [{ kind: 'pool', count: 2, radius: [18, 28] }],
+  frostspine: [{ kind: 'tarn', count: 2, radius: [15, 24] }],
+  crownlands: [{ kind: 'pool', count: 1, radius: [15, 22] }],
+  heartlands: [{ kind: 'pool', count: 1, radius: [11, 15] }],
+  ashsteppe: [{ kind: 'pool', count: 2, radius: [10, 15] }],
+};
+/** Clearances in metres from a lake's shore: road surfaces, place and site edges (sites beyond their combat yard),
+ * solids already standing (the mountain ring and crags included), fields, other lakes, the river's banks and the bounds. */
+export const LAKE_RULES = { road: 12, location: 20, site: 8, obstacle: 6, field: 6, lake: 24, river: 20, bounds: 24 } as const;
+const LAKE_SIDES = 48;
+
+const round2 = (v: number): number => Math.round(v * 100) / 100;
+
+/** A lake's shore: a star-shaped polygon round `centre`, stretched and turned, with irregular bays and points. */
+function lakeShore(random: ReturnType<typeof stream>, centre: Vec2, radius: number): Vec2[] {
+  const stretch = random.range(0.62, 0.95), turn = random.range(0, Math.PI);
+  const waves = ([[2, 0.06, 0.16], [3, 0.04, 0.12], [5, 0.02, 0.06], [8, 0.01, 0.03]] as const)
+    .map(([m, a0, a1]) => ({ m, a: random.range(a0, a1), phase: random.range(0, Math.PI * 2) }));
+  const c = Math.cos(turn), s = Math.sin(turn);
+  return Array.from({ length: LAKE_SIDES }, (_, k) => {
+    const a = k / LAKE_SIDES * Math.PI * 2;
+    const r = radius * (1 + waves.reduce((sum, w) => sum + w.a * Math.sin(w.m * a + w.phase), 0));
+    const lx = Math.cos(a) * r, lz = Math.sin(a) * r * stretch;
+    return { x: round2(centre.x + lx * c - lz * s), z: round2(centre.z + lx * s + lz * c) };
+  });
+}
+
+/** Points along a lake's shore at most `step` metres apart. */
+function shoreSamples(lake: WorldLake, step: number): Vec2[] {
+  const out: Vec2[] = [];
+  lake.shore.forEach((a, i) => {
+    const b = lake.shore[(i + 1) % lake.shore.length]!;
+    const n = Math.max(1, Math.ceil(distance(a, b) / step));
+    for (let k = 0; k < n; k++) out.push({ x: a.x + (b.x - a.x) * k / n, z: a.z + (b.z - a.z) * k / n });
+  });
+  return out;
+}
+
+function fieldCorners(f: WorldField): Vec2[] {
+  const c = Math.cos(f.heading), s = Math.sin(f.heading);
+  return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => ({
+    x: f.x + u! * f.halfX * c + v! * f.halfZ * s, z: f.z - u! * f.halfX * s + v! * f.halfZ * c }));
+}
+
+/** True when a lake keeps LAKE_RULES from everything already in the world. */
+function lakeFits(place: Placement, lake: WorldLake): boolean {
+  const world = place.world, box = lakeBounds(lake), rules = LAKE_RULES;
+  const b = world.bounds;
+  if (box.minX < b.minX + rules.bounds || box.maxX > b.maxX - rules.bounds || box.minZ < b.minZ + rules.bounds || box.maxZ > b.maxZ - rules.bounds) return false;
+  if (box.maxZ > world.river.minZ - rules.river && box.minZ < world.river.maxZ + rules.river) return false;
+  for (const location of world.exploration!.locations) if (lakeClearance(lake, location) < location.radius + rules.location) return false;
+  for (const site of world.sites) if (lakeClearance(lake, site) < site.radius + COMBAT_YARD + rules.site) return false;
+  for (const node of world.roads.nodes) if (lakeClearance(lake, node) < 0) return false;
+  const samples = shoreSamples(lake, 2);
+  const span = Math.max(...lake.shore.map(p => distance(p, lake)));
+  for (const road of place.roads) {
+    if (distance(lake, projectSegment(lake, road.a, road.b)) > span + road.half + rules.road) continue;
+    for (const p of samples) if (distance(p, projectSegment(p, road.a, road.b)) < road.half + rules.road) return false;
+  }
+  if (insideField(world, lake, rules.field)) return false;
+  for (const field of world.fields ?? []) {
+    if (Math.hypot(field.x - lake.x, field.z - lake.z) > Math.hypot(field.halfX, field.halfZ) + span + rules.field) continue;
+    if (fieldCorners(field).some(p => lakeClearance(lake, p) < rules.field)) return false;
+    const c = Math.cos(field.heading), s = Math.sin(field.heading);
+    if (samples.some(p => {
+      const dx = p.x - field.x, dz = p.z - field.z;
+      return Math.abs(dx * c - dz * s) < field.halfX + rules.field && Math.abs(dx * s + dz * c) < field.halfZ + rules.field;
+    })) return false;
+  }
+  for (const o of place.near(lake, span + rules.obstacle + 2)) if (lakeClearance(lake, o) < o.radius + rules.obstacle) return false;
+  for (const other of world.lakes ?? []) {
+    if (lakeClearance(lake, other) < 0 || samples.some(p => lakeClearance(other, p) < rules.lake)) return false;
+  }
+  return true;
+}
+
+/** Lakes and meres, placed after every settlement, castle, remain and crag and before the forests and forest floor; in
+ * the dark forests a pool lies in a glade (low woodland noise), so the dense cores stay whole. */
+function lakes(place: Placement, seed: string): void {
+  const world = place.world;
+  const random = stream(`korovany2:v3:${seed}:lakes`);
+  const noiseSeed = seedNumber(`korovany2:v3:${seed}:forest`);
+  for (const region of world.exploration!.regions) {
+    const plans = Object.hasOwn(LAKES, region.id) ? LAKES[region.id]! : [];
+    const woods = WOODLAND[region.id];
+    const rb = region.bounds;
+    // Dark forests: candidate centres come from the region's glades, scanned on a 10 m grid.
+    const glades: Vec2[] = [];
+    if (plans.length && woods && woods.density >= 0.6) {
+      for (let z = rb.minZ + 5; z < rb.maxZ; z += 10) for (let x = rb.minX + 5; x < rb.maxX; x += 10) {
+        if (fbm(x * woods.scale, z * woods.scale, noiseSeed, 4) <= 1 - woods.density + 0.08) glades.push({ x, z });
+      }
+      if (!glades.length) continue;
+    }
+    let made = 0;
+    for (const plan of plans) {
+      let placed = 0;
+      for (let attempt = 0; attempt < 160 && placed < plan.count; attempt++) {
+        const radius = random.range(plan.radius[0], plan.radius[1]);
+        const glade = glades.length ? glades[Math.floor(random.next() * glades.length)]! : undefined;
+        const centre = glade ? { x: round2(glade.x + random.range(-5, 5)), z: round2(glade.z + random.range(-5, 5)) }
+          : { x: round2(random.range(rb.minX + radius, rb.maxX - radius)), z: round2(random.range(rb.minZ + radius, rb.maxZ - radius)) };
+        const lake: WorldLake = { id: `lake-${region.id}-${made}`, kind: plan.kind, x: centre.x, z: centre.z, shore: lakeShore(random, centre, radius) };
+        if (!lakeFits(place, lake)) continue;
+        world.lakes!.push(lake);
+        placed++;
+        made++;
+      }
+    }
+  }
+}
+
+/**
+ * The sea off the Salt Coast: east of a shore of shingle bays and low points 20-40 m inside the bounds (never closer than
+ * 2 m to them along the coast), its ends turning out past the bounds in the 12 m beyond the coast, where the mountain
+ * ring takes over. Places, sites, roads, fields and every solid stay on dry land: the shore swings seaward round them.
+ * The polygon closes along a line 12 m beyond the bounds.
+ */
+export const SEA = { inside: 30, beyond: 12, ends: 12, reach: { location: 18, site: 8, road: 10, obstacle: 6, field: 6 } } as const;
+
+function sea(place: Placement, seed: string): void {
+  const world = place.world;
+  const region = world.exploration!.regions.find(r => r.id === 'saltcoast');
+  if (!region) return;
+  const random = stream(`korovany2:v3:${seed}:sea`);
+  const edge = world.bounds.maxX, out = edge + SEA.beyond;
+  const coast = region.bounds, z0 = coast.minZ - SEA.ends, z1 = coast.maxZ + SEA.ends;
+  // Dry land: everything within reach of the shore's band must stay west of it.
+  const keep: { x: number; z: number; reach: number }[] = [];
+  const band = (p: Vec2): boolean => p.x > edge - 140 && p.z > z0 - 60 && p.z < z1 + 60;
+  for (const l of world.exploration!.locations) if (band(l)) keep.push({ x: l.x, z: l.z, reach: l.radius + SEA.reach.location });
+  for (const s of world.sites) if (band(s)) keep.push({ x: s.x, z: s.z, reach: s.radius + COMBAT_YARD + SEA.reach.site });
+  for (const o of world.obstacles) if (band(o)) keep.push({ x: o.x, z: o.z, reach: o.radius + SEA.reach.obstacle });
+  for (const road of place.roads) {
+    const n = Math.ceil(distance(road.a, road.b) / 2);
+    for (let k = 0; k <= n; k++) {
+      const p = { x: road.a.x + (road.b.x - road.a.x) * k / n, z: road.a.z + (road.b.z - road.a.z) * k / n };
+      if (band(p)) keep.push({ x: p.x, z: p.z, reach: road.half + SEA.reach.road });
+    }
+  }
+  for (const f of world.fields ?? []) for (const p of fieldCorners(f)) if (band(p)) keep.push({ x: p.x, z: p.z, reach: SEA.reach.field });
+  const phase = [random.range(0, Math.PI * 2), random.range(0, Math.PI * 2), random.range(0, Math.PI * 2)];
+  const zs: number[] = [];
+  for (let z = z0; z < z1; z += 3) zs.push(z);
+  zs.push(z1);
+  const smooth = (t: number): number => t * t * (3 - 2 * t);
+  const shore = zs.map(z => {
+    let x = edge - SEA.inside + 8 * Math.sin(z / 41 + phase[0]!) + 4.5 * Math.sin(z / 17 + phase[1]!) + 2 * Math.sin(z / 6.5 + phase[2]!);
+    // Headlands round whatever must stay dry, sloping back to the shore line at about 30 degrees.
+    for (const k of keep) {
+      const dz = Math.abs(z - k.z);
+      if (dz < k.reach) x = Math.max(x, k.x + Math.sqrt(k.reach * k.reach - dz * dz));
+      x = Math.max(x, k.x + k.reach - 0.6 * Math.max(0, dz - k.reach * 0.5));
+    }
+    const end = Math.max(smooth(Math.min(1, Math.max(0, (z - coast.maxZ) / SEA.ends))), smooth(Math.min(1, Math.max(0, (coast.minZ - z) / SEA.ends))));
+    x = Math.min(z >= coast.minZ && z <= coast.maxZ ? edge - 2 : out - 1, x + (out - x) * end);
+    return { x: round2(z === z0 || z === z1 ? out : x), z: round2(z) };
+  });
+  const middle = shore[Math.floor(shore.length / 2)]!;
+  world.lakes!.push({ id: 'sea', kind: 'sea', x: round2((middle.x + out) / 2), z: middle.z, shore });
+}
+
 /** Lone trees across the open land, by region: gnarled oaks over the farms, dead birches in the fens, wind-killed oaks
  * on the coast, dead trees on the ash, pines on the Frostspine slopes. */
 const SOLITARY: Readonly<Record<string, { count: number; species: [V3TreeSpecies, number][] }>> = {
@@ -1357,6 +1533,7 @@ export function buildWorldV3(world: WorldBlueprint): WorldBlueprint {
   world.id = '';
   world.fields = [];
   world.decor = [];
+  world.lakes = [];
   world.obstacles = world.obstacles.filter(o => {
     if (o.kind !== 'wall') return false;
     // The original home's walls have no home in story worlds (homes move to each faction's location), and the Old
@@ -1379,8 +1556,10 @@ export function buildWorldV3(world: WorldBlueprint): WorldBlueprint {
   orchard(place, byId('old-orchard'), world.seed);
   roadsideProps(place, world.seed);
   remains(place, world.seed);
+  sea(place, world.seed);
   mountainRing(place, world.seed);
   massifs(place, world.seed);
+  lakes(place, world.seed);
   fallenLogs(place, world.seed);
   vegetation(place, world.seed);
   solitaryTrees(place, world.seed);

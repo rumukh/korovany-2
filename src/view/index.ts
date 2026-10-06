@@ -12,6 +12,7 @@ import { createWorldSceneryV3 } from './scenery-v3';
 import { terrainFor, type Terrain } from './terrain';
 import type { WorldAssetLibrary } from './world-assets';
 import { WorldFauna } from './fauna';
+import { WorldHerds } from './herds';
 import { lightWorld, lightWorldV3, positionSun, positionSunV3, skyEnvironment, V3_GRADE } from './atmosphere';
 import { WorldPostprocessing } from './postprocessing';
 import { DRAFT_OX, gltfModelSource, HEROES, LANDMARK_IDS, ModelLibrary, PICKUP_IDS, propInstance, troopModelFor, WAGONS, type CharacterInstance, type HeroInstance, type ModelStatus, type TroopModelId, type WagonModelId } from './models';
@@ -157,6 +158,8 @@ export class Presentation {
   readonly terrain: Terrain;
   /** Presentation-only animals of a version 3 world. */
   readonly fauna: WorldFauna | undefined;
+  /** Version 3: the deer and goat herds of the wilds (presentation only). */
+  readonly herds: WorldHerds | undefined;
   readonly sun: THREE.DirectionalLight;
   readonly effects: WorldEffects;
   readonly residents: WorldResidents;
@@ -194,6 +197,8 @@ export class Presentation {
     if (world.version === 3 && this.resources.world) {
       this.fauna = new WorldFauna(world, this.resources.world, this.terrain);
       this.scene.add(this.fauna.group);
+      this.herds = new WorldHerds(world, this.resources.world, this.terrain);
+      this.scene.add(this.herds.group);
     }
     this.scene.environment = environment ?? null;
     this.scene.environmentIntensity = world.version === 3 ? V3_GRADE.environment : 0.55;
@@ -332,9 +337,9 @@ export class Presentation {
     for (const mesh of props) mesh.frustumCulled = false;
     this.scene.add(group);
     // Version 3: one instance of every pooled scenery part (trees and impostors of every species, every building and prop)
-    // and one sheep, so none of them compiles on first appearance.
+    // and one sheep, crow, deer and goat, so none of them compiles on first appearance.
     const ground = this.terrain.height(x, z);
-    const worldWarm = [this.scenery.warm?.(x - 4, ground, z - 4), this.fauna?.warm(x + 4, ground, z - 4)];
+    const worldWarm = [this.scenery.warm?.(x - 4, ground, z - 4), this.fauna?.warm(x + 4, ground, z - 4), this.herds?.warm(x + 4, ground, z + 4)];
     const warming = new Set<THREE.Object3D>();
     // The hero, when already built, shares the soldier's programs; drawing it here also uploads its own textures.
     for (const root of [group, visual.root, visual.bar.root, visual.tell, this.hero?.root]) root?.traverse(object => warming.add(object));
@@ -555,6 +560,7 @@ export class Presentation {
     this.scenery.heroPosition.set(snapshot.player.x, 1.15 + this.terrain.height(snapshot.player.x, snapshot.player.z), snapshot.player.z);
     this.scenery.update(this.cosmeticTime, reducedMotion, camera);
     this.fauna?.update(snapshot.player, snapshot.player, dt, reducedMotion, paused);
+    this.herds?.update(snapshot.player, snapshot.player, dt, reducedMotion, paused);
     const fortress = snapshot.world.sites.find((site) => site.kind === 'fortress');
     const legacyFortressColor = snapshot.fortress.bossDefeated ? palette.teal : snapshot.fortress.unlocked ? palette.brass : palette.villain;
     const fortressColor = snapshot.campaign && fortress
@@ -705,6 +711,7 @@ export class Presentation {
     this.effects.dispose();
     this.residents.dispose();
     this.fauna?.dispose();
+    this.herds?.dispose();
     this.scenery.dispose();
     this.sun.shadow.dispose();
     this.scene.clear();

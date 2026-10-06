@@ -1,4 +1,5 @@
 import type { Vec2, WorldBlueprint } from '../game/types';
+import { lakeBounds, lakeClearance } from '../game/world';
 import { fbm } from '../game/world-v3';
 
 /**
@@ -6,9 +7,10 @@ import { fbm } from '../game/world-v3';
  * lifts what is drawn. Version 1 and 2 worlds are exactly flat (height 0 everywhere), so their rendering is unchanged.
  *
  * Relief is regional value-noise hills, limited by a 10 degree cone that rises from the ground that must stay level:
- * road corridors and their shoulders, the river banks, location clearings, every v3 footprint and field, and the combat
- * zones (military sites and homes, the villain's citadel arena). Roads, sites, the bridge decks and every fight stand on
- * level ground; elsewhere the walkable slope stays at most about 12 degrees.
+ * road corridors and their shoulders, the river banks, lakes and the sea with a 6 m bank, location clearings, every v3
+ * footprint and field, and the combat zones (military sites and homes, the villain's citadel arena). Roads, sites, the
+ * bridge decks, every shore and every fight stand on level ground; elsewhere the walkable slope stays at most about 12
+ * degrees.
  */
 const CELL = 4;
 /** Peak hill amplitude in metres per region. With NOISE_SCALE this bounds the relief's own slope to about 9 degrees. */
@@ -26,6 +28,8 @@ const RELIEF: Readonly<Record<string, { amplitude: number }>> = {
 const NOISE_SCALE = 1 / 190;
 /** Combat zones: no relief within this distance of a military site's edge, a home or the citadel arena. */
 export const COMBAT_FLAT = 30;
+/** Level ground round every lake and the sea, in metres beyond the shore. */
+export const LAKE_BANK = 6;
 /** Relief rises from level ground no faster than this (a cone limit), so ramps never exceed the walkable slope. */
 const MAX_RISE = Math.tan(10 * Math.PI / 180);
 /** Distances beyond this do not matter: the highest hill is lower than MAX_RISE * FAR. */
@@ -62,7 +66,8 @@ function seedNumber(text: string): number {
 
 /**
  * Distance in metres from every CELL-metre grid point to the nearest ground that must stay level (0 inside it), capped
- * at FAR: road corridors with 3 m shoulders, river banks, location clearings, combat zones, footprints and fields.
+ * at FAR: road corridors with 3 m shoulders, river banks, lakes with their banks, location clearings, combat zones,
+ * footprints and fields.
  */
 function levelDistance(world: WorldBlueprint): { grid: Float32Array; columns: number; rows: number } {
   const { minX, minZ, maxX, maxZ } = world.bounds;
@@ -97,6 +102,11 @@ function levelDistance(world: WorldBlueprint): { grid: Float32Array; columns: nu
   }
   for (const o of world.obstacles) if (o.kind === 'wall') around(o.x, o.z, o.radius + 3);
   for (const field of world.fields ?? []) around(field.x, field.z, Math.hypot(field.halfX, field.halfZ));
+  for (const lake of world.lakes ?? []) {
+    // Water lies level, with a level bank round it; the drawn ground carves the bed below the water plane.
+    const box = lakeBounds(lake), reach = LAKE_BANK + FAR;
+    apply(box.minX - reach, box.minZ - reach, box.maxX + reach, box.maxZ + reach, p => Math.max(0, lakeClearance(lake, p) - LAKE_BANK));
+  }
   return { grid, columns, rows };
 }
 
