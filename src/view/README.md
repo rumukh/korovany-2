@@ -31,7 +31,12 @@ global input handlers or additional animation loops. The initial camera looks
 toward positive Z, into the campaign from the southern home. Normal disposal does
 not force a context loss, so the shell can reuse its canvas. Keeping one view and
 passing a new run's snapshot also safely rebuilds scenery without recreating the
-WebGL renderer.
+WebGL renderer. A new run on the same world (a campaign begun or continued from
+its title preview, or a restored save) keeps the world's presentation, its
+terrain, scenery, sites and animals, and `Presentation.resetRun()` releases only
+the run's visuals (hero, banner, convoy, troops, monsters, residents, effects),
+so starting a run no longer rebuilds the whole world (measured under SwiftShader:
+1.8 s to 0.08 s for a version 3 world).
 
 Road widths, water and bridge rectangles, site positions and solid scenery come
 from `WorldBlueprint`. `generateWorld(seed, 1)` preserves the original 140-metre

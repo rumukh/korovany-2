@@ -1,6 +1,6 @@
 import type { WorldLocation, WorldRegion } from './narrative-types';
 import type { BoxShape, MonsterSpecies, Obstacle, Vec2, WorldBlueprint, WorldField, WorldLair, WorldLake } from './types';
-import { distance, lakeBounds, lakeClearance, monsterLairs, obstacleClearance, projectSegment, segmentClearance } from './world';
+import { distance, lakeBounds, lakeClearance, lakeWithin, monsterLairs, obstacleClearance, projectSegment, segmentClearance } from './world';
 
 /**
  * Version 3 footprints at the heroic scale standard (a 2.25 m soldier is about 1.28 times a 1.75 m human): `width` is the
@@ -198,9 +198,21 @@ function corners(o: Obstacle): Vec2[] {
 
 /** True when two solid shapes come closer than `margin` (exact for circles; separating axes for two rectangles). */
 function shapesOverlap(a: Obstacle, b: Obstacle, margin: number): boolean {
-  if (!a.shape && !b.shape) return distance(a, b) < a.radius + b.radius + margin;
-  if (!a.shape) return obstacleClearance(b, a) < a.radius + margin;
-  if (!b.shape) return obstacleClearance(a, b) < b.radius + margin;
+  if (!a.shape && !b.shape) {
+    // An axis gap of the full reach already keeps the circles apart (the distance is never less than either gap).
+    const reach = a.radius + b.radius + margin;
+    if (Math.abs(a.x - b.x) >= reach + 1e-6 || Math.abs(a.z - b.z) >= reach + 1e-6) return false;
+    return distance(a, b) < reach;
+  }
+  // A box lies within its radius of its centre: a circle more than a metre beyond that cannot come within the margin.
+  const gap = Math.max(Math.abs(a.x - b.x), Math.abs(a.z - b.z));
+  if (!a.shape || !b.shape) {
+    if (gap >= a.radius + b.radius + margin + 1) return false;
+    return !a.shape ? obstacleClearance(b, a) < a.radius + margin : obstacleClearance(a, b) < b.radius + margin;
+  }
+  // Two boxes pass the axis test below on both of a's own (orthogonal) axes only while their centres are closer than
+  // sqrt(2) times the reach.
+  if (gap >= Math.SQRT2 * (a.radius + b.radius + margin) + 1) return false;
   const axes = [a.shape.heading, b.shape.heading].flatMap(h => [{ x: Math.cos(h), z: -Math.sin(h) }, { x: Math.sin(h), z: Math.cos(h) }]);
   const ca = corners(a), cb = corners(b);
   for (const axis of axes) {
@@ -215,19 +227,37 @@ function shapesOverlap(a: Obstacle, b: Obstacle, margin: number): boolean {
   return true;
 }
 
+/** A cell key for the generation hashes (cell indices stay far inside +/-32768). */
+const cellKey = (x: number, z: number): number => x * 65536 + z;
+/** Road cells are coarse: a road is long, and a query only gathers candidates for the exact test. */
+const ROAD_CELL = 32;
+
 /** Spatial hash used only while generating (the runtime broadphase is world.ts's grid). */
 class Placement {
-  private readonly cells = new Map<string, Obstacle[]>();
-  constructor(readonly world: WorldBlueprint, readonly roads: Segment[], private readonly cell = 12) {
+  private readonly cells = new Map<number, Obstacle[]>();
+  private readonly roadCells = new Map<number, number[]>();
+  private readonly roadStamps: number[];
+  private roadQuery = 0;
+  private readonly widestRoad: number;
+  constructor(readonly world: WorldBlueprint, readonly roads: readonly Segment[], private readonly cell = 12) {
     for (const o of world.obstacles) this.index(o);
+    roads.forEach((road, index) => {
+      for (let x = Math.floor(Math.min(road.a.x, road.b.x) / ROAD_CELL); x <= Math.floor(Math.max(road.a.x, road.b.x) / ROAD_CELL); x++) {
+        for (let z = Math.floor(Math.min(road.a.z, road.b.z) / ROAD_CELL); z <= Math.floor(Math.max(road.a.z, road.b.z) / ROAD_CELL); z++) {
+          const list = this.roadCells.get(cellKey(x, z));
+          if (list) list.push(index); else this.roadCells.set(cellKey(x, z), [index]);
+        }
+      }
+    });
+    this.roadStamps = roads.map(() => 0);
+    this.widestRoad = Math.max(0, ...roads.map(road => road.half));
   }
   private index(o: Obstacle): void {
     const r = o.radius;
     for (let x = Math.floor((o.x - r) / this.cell); x <= Math.floor((o.x + r) / this.cell); x++) {
       for (let z = Math.floor((o.z - r) / this.cell); z <= Math.floor((o.z + r) / this.cell); z++) {
-        const key = `${x}:${z}`;
-        const list = this.cells.get(key);
-        if (list) list.push(o); else this.cells.set(key, [o]);
+        const list = this.cells.get(cellKey(x, z));
+        if (list) list.push(o); else this.cells.set(cellKey(x, z), [o]);
       }
     }
   }
@@ -235,7 +265,7 @@ class Placement {
     const found = new Set<Obstacle>();
     for (let x = Math.floor((p.x - reach) / this.cell); x <= Math.floor((p.x + reach) / this.cell); x++) {
       for (let z = Math.floor((p.z - reach) / this.cell); z <= Math.floor((p.z + reach) / this.cell); z++) {
-        for (const o of this.cells.get(`${x}:${z}`) ?? []) found.add(o);
+        for (const o of this.cells.get(cellKey(x, z)) ?? []) found.add(o);
       }
     }
     return [...found];
@@ -248,10 +278,7 @@ class Placement {
   readonly yards: WorldField[] = [];
   keepOut(o: Obstacle, margin: number): boolean {
     if (margin <= 0) return false;
-    return this.yards.some(f => {
-      const dx = o.x - f.x, dz = o.z - f.z, c = Math.cos(f.heading), s = Math.sin(f.heading);
-      return Math.abs(dx * c - dz * s) < f.halfX + o.radius + 1 && Math.abs(dx * s + dz * c) < f.halfZ + o.radius + 1;
-    });
+    return this.yards.some(f => inRectangle(f, o.x - f.x, o.z - f.z, f.halfX + o.radius + 1, f.halfZ + o.radius + 1));
   }
   /** Distance from an obstacle's solid shape to the nearest road surface (centreline minus half width). */
   roadClearance(o: Obstacle): number {
@@ -259,6 +286,40 @@ class Placement {
     for (const road of this.roads) best = Math.min(best, segmentClearance(o, road.a, road.b) - road.half);
     return best;
   }
+  /**
+   * Whether a road surface comes closer to `o` than `gap`: exactly `roadClearance(o) < gap`, testing only the roads
+   * whose extent reaches the obstacle's neighbourhood. Every other road is farther than the obstacle's radius, `gap`,
+   * the widest half width and a metre more, so it cannot be the one that comes too close.
+   */
+  roadWithin(o: Obstacle, gap: number): boolean {
+    const reach = o.radius + gap + this.widestRoad + 1, query = ++this.roadQuery;
+    for (let x = Math.floor((o.x - reach) / ROAD_CELL); x <= Math.floor((o.x + reach) / ROAD_CELL); x++) {
+      for (let z = Math.floor((o.z - reach) / ROAD_CELL); z <= Math.floor((o.z + reach) / ROAD_CELL); z++) {
+        for (const index of this.roadCells.get(cellKey(x, z)) ?? []) {
+          if (this.roadStamps[index] === query) continue;
+          this.roadStamps[index] = query;
+          const road = this.roads[index]!;
+          if (segmentClearance(o, road.a, road.b) - road.half < gap) return true;
+        }
+      }
+    }
+    return false;
+  }
+}
+
+/** Cosine and sine of each field's heading, computed once (the same values every call computes). */
+const fieldTurns = new WeakMap<WorldField, { c: number; s: number }>();
+
+/**
+ * Whether the offset (dx, dz) from a field's centre lies inside its rectangle of half sizes `hx` by `hz` (computed by the
+ * caller exactly as before). An offset beyond that rectangle's circumscribed circle, with a square metre to spare against
+ * rounding, is outside without turning it into the field's frame.
+ */
+function inRectangle(f: WorldField, dx: number, dz: number, hx: number, hz: number): boolean {
+  if (dx * dx + dz * dz > hx * hx + hz * hz + 1) return false;
+  let turn = fieldTurns.get(f);
+  if (!turn) fieldTurns.set(f, turn = { c: Math.cos(f.heading), s: Math.sin(f.heading) });
+  return Math.abs(dx * turn.c - dz * turn.s) < hx && Math.abs(dx * turn.s + dz * turn.c) < hz;
 }
 
 function riverClear(world: WorldBlueprint, o: Obstacle, margin: number): boolean {
@@ -291,15 +352,19 @@ function fits(place: Placement, o: Obstacle, rules: Rules, own?: WorldLocation):
   }
   // Lairs and haunts too: their clearings stay open.
   for (const lair of monsterLairs(world)) if (obstacleClearance(o, lair) < lair.radius) return false;
-  if (place.roadClearance(o) < rules.road) return false;
+  if (place.roadWithin(o, rules.road)) return false;
+  // An obstacle's solid lies within its radius of its centre, so it clears a place by at least the larger axis gap less
+  // that radius; places clear by a metre more than they need are passed without the exact test.
   for (const location of world.exploration!.locations) {
     const clearing = location === own ? rules.own ?? LOCATION_CLEARING : Math.max(LOCATION_CLEARING, rules.location,
       COMBAT_LOCATIONS.has(location.id) ? COMBAT_YARD : 0);
+    if (Math.max(Math.abs(o.x - location.x), Math.abs(o.z - location.z)) - o.radius >= clearing + 1) continue;
     if (obstacleClearance(o, location) < clearing) return false;
   }
   if (place.keepOut(o, rules.structure ?? 0)) return false;
   for (const site of world.sites) {
     if (site.kind === 'home') continue;
+    if (Math.max(Math.abs(o.x - site.x), Math.abs(o.z - site.z)) - o.radius >= site.radius + rules.site + 1) continue;
     if (obstacleClearance(o, site) < site.radius + rules.site) return false;
   }
   for (const other of place.near(o, o.radius + rules.obstacle + (rules.structure ?? 0) + 8)) {
@@ -782,10 +847,7 @@ function regionAt(world: WorldBlueprint, p: Vec2): WorldRegion | undefined {
 }
 
 function insideField(world: WorldBlueprint, p: Vec2, margin: number): boolean {
-  return world.fields!.some(f => {
-    const dx = p.x - f.x, dz = p.z - f.z, c = Math.cos(f.heading), s = Math.sin(f.heading);
-    return Math.abs(dx * c - dz * s) < f.halfX + margin && Math.abs(dx * s + dz * c) < f.halfZ + margin;
-  });
+  return world.fields!.some(f => inRectangle(f, p.x - f.x, p.z - f.z, f.halfX + margin, f.halfZ + margin));
 }
 
 /** Jittered-grid woodland: dense dark forest where regional noise is high, open woodland elsewhere. */
@@ -1211,9 +1273,9 @@ function lakeFits(place: Placement, lake: WorldLake): boolean {
   const b = world.bounds;
   if (box.minX < b.minX + rules.bounds || box.maxX > b.maxX - rules.bounds || box.minZ < b.minZ + rules.bounds || box.maxZ > b.maxZ - rules.bounds) return false;
   if (box.maxZ > world.river.minZ - rules.river && box.minZ < world.river.maxZ + rules.river) return false;
-  for (const location of world.exploration!.locations) if (lakeClearance(lake, location) < location.radius + rules.location) return false;
-  for (const site of world.sites) if (lakeClearance(lake, site) < site.radius + COMBAT_YARD + rules.site) return false;
-  for (const node of world.roads.nodes) if (lakeClearance(lake, node) < 0) return false;
+  for (const location of world.exploration!.locations) if (lakeWithin(lake, location, location.radius + rules.location)) return false;
+  for (const site of world.sites) if (lakeWithin(lake, site, site.radius + COMBAT_YARD + rules.site)) return false;
+  for (const node of world.roads.nodes) if (lakeWithin(lake, node, 0)) return false;
   const samples = shoreSamples(lake, 2);
   const span = Math.max(...lake.shore.map(p => distance(p, lake)));
   for (const road of place.roads) {
@@ -1223,16 +1285,16 @@ function lakeFits(place: Placement, lake: WorldLake): boolean {
   if (insideField(world, lake, rules.field)) return false;
   for (const field of world.fields ?? []) {
     if (Math.hypot(field.x - lake.x, field.z - lake.z) > Math.hypot(field.halfX, field.halfZ) + span + rules.field) continue;
-    if (fieldCorners(field).some(p => lakeClearance(lake, p) < rules.field)) return false;
+    if (fieldCorners(field).some(p => lakeWithin(lake, p, rules.field))) return false;
     const c = Math.cos(field.heading), s = Math.sin(field.heading);
     if (samples.some(p => {
       const dx = p.x - field.x, dz = p.z - field.z;
       return Math.abs(dx * c - dz * s) < field.halfX + rules.field && Math.abs(dx * s + dz * c) < field.halfZ + rules.field;
     })) return false;
   }
-  for (const o of place.near(lake, span + rules.obstacle + 2)) if (lakeClearance(lake, o) < o.radius + rules.obstacle) return false;
+  for (const o of place.near(lake, span + rules.obstacle + 2)) if (lakeWithin(lake, o, o.radius + rules.obstacle)) return false;
   for (const other of world.lakes ?? []) {
-    if (lakeClearance(lake, other) < 0 || samples.some(p => lakeClearance(other, p) < rules.lake)) return false;
+    if (lakeWithin(lake, other, 0) || samples.some(p => lakeWithin(other, p, rules.lake))) return false;
   }
   return true;
 }
@@ -1346,7 +1408,7 @@ function lairFits(place: Placement, lair: WorldLair): boolean {
   }
   for (const site of world.sites) if (distance(lair, site) - site.radius < rules.site) return false;
   for (const road of place.roads) if (distance(lair, projectSegment(lair, road.a, road.b)) - road.half < rules.road) return false;
-  for (const lake of world.lakes ?? []) if (lakeClearance(lake, lair) < rules.lake) return false;
+  for (const lake of world.lakes ?? []) if (lakeWithin(lake, lair, rules.lake)) return false;
   for (const other of monsterLairs(world)) if (distance(lair, other) < rules.lair) return false;
   if (insideField(world, lair, lair.radius + 4)) return false;
   for (const o of place.near(lair, lair.radius + 12)) if (obstacleClearance(o, lair) < lair.radius + 2) return false;

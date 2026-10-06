@@ -64,6 +64,18 @@ export function lakeBounds(lake: WorldLake): Bounds {
 }
 
 /**
+ * Whether `p` comes closer to a lake's shore than `gap` (in the water counts as closer): exactly
+ * `lakeClearance(lake, p) < gap`. A point outside the shore's bounding box is at least that box's distance from the
+ * shore, so one a metre or more beyond `gap` from the box is answered without walking the shore.
+ */
+export function lakeWithin(lake: WorldLake, p: Vec2, gap: number): boolean {
+  const box = lakeBounds(lake);
+  const outside = Math.max(box.minX - p.x, p.x - box.maxX, box.minZ - p.z, p.z - box.maxZ);
+  if (outside > 0 && outside >= gap + 1) return false;
+  return lakeClearance(lake, p) < gap;
+}
+
+/**
  * Signed distance from `p` to a lake's shore, negative in the water: exact for the shore polygon (the nearest edge, and a
  * crossing-number test for the side).
  */

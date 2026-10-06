@@ -173,6 +173,8 @@ export class Presentation {
   private readonly postVisuals = new Map<string, PostVisual>();
   /** The cooked hero; the procedural one only without a model library (DOM-free and cutaway tests). */
   private hero: { root: THREE.Group; actor?: ActorModel; character?: HeroInstance } | undefined;
+  /** The home banner, raised with the hero in the run's faction colour. */
+  private homeFlag: THREE.Mesh | undefined;
   private convoy: WagonVisual | undefined;
   private convoyBar: HealthBar | undefined;
   private lastConvoyHp = 0;
@@ -259,6 +261,48 @@ export class Presentation {
     this.scenery.setQuality(low);
     this.effects.setQuality(low);
     this.sun.castShadow = !low;
+  }
+
+  /**
+   * Starts a new run on this presentation's world: a campaign begun or continued from its title preview, or a restored
+   * save. Every run-specific visual (the hero and its home banner, the convoy, troops, monsters, residents and effects)
+   * is released and every tracker returns to a new presentation's first-frame state, while the world itself (terrain,
+   * scenery, sites and animals, the costly part to build) stays. The next `update` raises the run's visuals.
+   */
+  resetRun(): void {
+    for (const [id, visual] of [...this.actorVisuals, ...this.monsterVisuals]) this.removeActor(id, visual);
+    if (this.hero) {
+      this.hero.character?.dispose();
+      this.hero.root.removeFromParent();
+      this.hero = undefined;
+    }
+    this.homeFlag?.removeFromParent();
+    this.homeFlag = undefined;
+    if (this.convoy) {
+      this.convoy.dispose();
+      this.convoy.root.removeFromParent();
+      this.convoy = undefined;
+    }
+    this.convoyBar = undefined;
+    this.residents.dispose();
+    this.effects.reset();
+    this.lastConvoyHp = 0;
+    this.lastTick = -1;
+    this.lastPlayerX = 0;
+    this.lastPlayerZ = 0;
+    this.playerSpeed = 0;
+    this.playerVelocityX = 0;
+    this.playerVelocityZ = 0;
+    this.lastPlayerHp = 0;
+    this.lastHeroEvent = 0;
+    this.lastInteraction = null;
+    this.workingUntil = -1;
+    this.lastConvoyX = 0;
+    this.lastConvoyZ = 0;
+    this.convoyDistance = 0;
+    this.convoySpeed = 0;
+    this.cosmeticTime = 0;
+    this.sinceTick = 0;
   }
 
   /**
@@ -524,6 +568,7 @@ export class Presentation {
           flag.position.copy(anchor);
           flag.scale.set(1.4, 0.93, 1);
           this.scene.add(flag);
+          this.homeFlag = flag;
         }
       }
     }
@@ -940,9 +985,13 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
         return;
       }
       let current = presentation;
-      if (!current || snapshot.world.id !== current.world.id
-        || (runId !== undefined && (runId !== snapshot.runId || faction !== snapshot.faction || snapshot.tick < lastTick))) {
-        current = present(snapshot.world);
+      if (!current || snapshot.world.id !== current.world.id) current = present(snapshot.world);
+      else if (runId !== undefined && (runId !== snapshot.runId || faction !== snapshot.faction || snapshot.tick < lastTick)) {
+        // A new run on the same world (begun or continued from its title preview, or a restored save) keeps the world's
+        // presentation and releases only the run's visuals; the warm-up compiles any model the run added.
+        current.resetRun();
+        camera.reset();
+        needsWarmup = true;
       }
       runId = snapshot.runId;
       faction = snapshot.faction;
