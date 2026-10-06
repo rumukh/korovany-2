@@ -1,0 +1,37 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "char-goat",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "09e2f8607b02ac58e573f098645374f29345feb58189251b4739e066c18214a3",
+   "rationale": "Shaggy dark feral goat with long swept horns in a side view: all four legs stand apart under the coat (b and c hang the hair lower and nearly join the legs), the horns are thick enough for TRELLIS to keep solid, and its dark, ragged coat suits the Frostspine and Crownlands crags."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "fcdc0932d0c4bef6777bd7befebade0f0ad40cd3373acfe7c3c2aa0743456f15",
+   "rationale": "Feral goat from TRELLIS raw a-s7202 (a-s7201 rejected: right foreleg tucked under the chest), cooked with cook_quadruped.py: 5,898 triangles in one skinned mesh on the 31-joint quadruped rig, horns bound rigidly to the head; 1.55 m to the horn tops (about 1.15 m at the withers); 512 px maps baked at 1024; 422,728 bytes. Five clips: Idle, Graze, Walk at 1.0 m/s, Run at 4.6 m/s and Startle. r1 rejected: tone gamma 0.8 washed out the dark coat; r2 rejected: its Graze lowered the head past vertical and swung the swept-back horns forward over the face; r3 browses at knee height with the horns clear. Reviewed as a sheet of all five clips and beside the soldier in game.",
+   "limitations": [
+    "Single-view TRELLIS reconstruction: the far flank and the underside are TRELLIS's invention.",
+    "Graze is a knee-high browse, not grazing at the ground: lowering the head further hooks the horns forward.",
+    "The raw's shaggy coat leaves 10 open boundary edges and 20 non-manifold edges after cleanup; 797 of 2,928 vertices take inverse-distance fallback weights within their body region (no tearing seen in the clip sheet).",
+    "Clips are procedural (IK gaits, oscillators), not motion capture; 512 px coat detail softens at the closest camera.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "fcdc0932d0c4bef6777bd7befebade0f0ad40cd3373acfe7c3c2aa0743456f15",
+   "rationale": "Bands of 4-7 goats browse at the feet of crags (homes within 22 m of a crag's talus) in the Frostspine, Crownlands and Ash Steppe (6 ranges); they startle at 11 m from the hero and scramble 24 m clear. Dark and compact against the scree, about waist high to the soldier; presentation only, so saves, collision and gameplay are unchanged.",
+   "limitations": [
+    "Goats stay on the flat ground at the crag foot: the crags are blockers, not climbable terrain.",
+    "No blending between grazing and walking."
+   ]
+  }
+ ]
+}

@@ -77,6 +77,8 @@ export const WORLD_MODELS = {
   /** Undergrowth, drawn in the tree layout (stems, cards and a small impostor) but only as presentation near the hero. */
   'plant-bracken': { kind: 'tree' },
   'plant-bramble': { kind: 'tree' },
+  /** W3b reed beds along the lakes' shores, in the same layout (build_nature_w3b.py). */
+  'plant-reeds': { kind: 'tree' },
   'rock-boulder': { kind: 'rock' },
   'rock-mossy': { kind: 'rock' },
   'wood-log': { kind: 'rock' },
@@ -96,6 +98,9 @@ export const WORLD_MODELS = {
   'char-sheep': { kind: 'fauna' },
   'char-crow': { kind: 'fauna' },
   'char-crow-flight': { kind: 'fauna' },
+  /** W3b herds in the wilds: red deer hinds in the forests, feral goats on the crags (cook_quadruped.py). */
+  'char-deer': { kind: 'fauna' },
+  'char-goat': { kind: 'fauna' },
 } as const satisfies Record<string, { kind: WorldModelKind }>;
 export type WorldModelId = keyof typeof WORLD_MODELS;
 export const WORLD_MODEL_IDS = Object.keys(WORLD_MODELS) as WorldModelId[];
@@ -136,10 +141,16 @@ export const SURFACE_FINISH: Readonly<Record<WorldSurface, { relief: number; rou
   darkforest: { relief: 3, roughness: 0.97 }, cliff: { relief: 4.5, roughness: 0.92 },
   'bark-pine': { relief: 5, roughness: 0.93 }, moss: { relief: 2.5, roughness: 0.97 },
 };
-/** The sheep's animation clips. */
+/** The grazing animals' clips: the sheep's, which the deer and goat share. */
 export const FAUNA_CLIPS = ['Idle', 'Graze', 'Walk', 'Run', 'Startle'] as const;
-/** The crows' clips: the perched model's and the flying model's (the view swaps the two at take-off and landing). */
-export const CROW_CLIPS = { 'char-crow': ['Perch', 'Peck'], 'char-crow-flight': ['Fly', 'Glide', 'TakeOff'] } as const;
+/**
+ * The clips of every fauna model other than the sheep. The crows were the first (the perched model's and the flying
+ * model's: the view swaps the two at take-off and landing); the name stays for the world-asset suite, which reads the
+ * clip set of each non-sheep fauna model from here.
+ */
+export const CROW_CLIPS = {
+  'char-crow': ['Perch', 'Peck'], 'char-crow-flight': ['Fly', 'Glide', 'TakeOff'], 'char-deer': FAUNA_CLIPS, 'char-goat': FAUNA_CLIPS,
+} as const;
 /**
  * A tree species file holds one group per variant (`variant-0` ...), each with named meshes: bark-layered wood and
  * alpha-tested leaf cards for the near band, and a three-card impostor (two crossed side views and a top view) beyond it.
@@ -148,12 +159,17 @@ export const TREE_PARTS = ['lod0-wood', 'lod0-leaves', 'impostor'] as const;
 /** The middle band's parts, which W3 species (and the W0 trees from their W3 re-cook) carry as well. */
 export const TREE_LOD1_PARTS = ['lod1-wood', 'lod1-leaves'] as const;
 export const TREE_VARIANTS: Readonly<Record<'tree-spruce' | 'tree-birch' | 'tree-deadoak' | 'tree-blackpine' | 'tree-twistedoak'
-  | 'tree-deadbirch' | 'plant-bracken' | 'plant-bramble', number>> = {
+  | 'tree-deadbirch' | 'plant-bracken' | 'plant-bramble' | 'plant-reeds', number>> = {
   'tree-spruce': 3, 'tree-birch': 2, 'tree-deadoak': 2, 'tree-blackpine': 3, 'tree-twistedoak': 2, 'tree-deadbirch': 2,
-  'plant-bracken': 3, 'plant-bramble': 2,
+  'plant-bracken': 3, 'plant-bramble': 2, 'plant-reeds': 3,
 };
 /** Undergrowth the presentation scatters round forest trees (never obstacles). */
 export const UNDERGROWTH = ['plant-bracken', 'plant-bramble'] as const;
+/**
+ * What the presentation stands along every v3 world's water (shores.ts, never obstacles): reed beds, drowned dead trees
+ * and stumps, and boulders in the surf.
+ */
+export const SHORE_MODELS = ['plant-reeds', 'tree-deadoak', 'tree-deadbirch', 'wood-stump', 'rock-boulder'] as const;
 export const ROCK_VARIANTS = 4;
 
 export function worldModelUrl(id: WorldModelId): string {
@@ -275,7 +291,7 @@ function validate(id: WorldModelId, scene: THREE.Object3D, clips: ReadonlyMap<st
   } else {
     const bodies = parts.filter(mesh => mesh instanceof THREE.SkinnedMesh);
     if (bodies.length !== 1 || parts.length !== 1) throw new Error(`expected one skinned body, found ${bodies.length} of ${parts.length}`);
-    const expected: readonly string[] = id === 'char-crow' || id === 'char-crow-flight' ? CROW_CLIPS[id] : FAUNA_CLIPS;
+    const expected: readonly string[] = id in CROW_CLIPS ? CROW_CLIPS[id as keyof typeof CROW_CLIPS] : FAUNA_CLIPS;
     for (const clip of expected) if (!clips.has(clip)) throw new Error(`missing animation clip ${clip}`);
   }
   for (const mesh of parts) if (!mesh.geometry.getAttribute('normal')) throw new Error(`mesh ${mesh.name} has no cooked normals`);
@@ -283,12 +299,13 @@ function validate(id: WorldModelId, scene: THREE.Object3D, clips: ReadonlyMap<st
 
 /**
  * Every world model a world can present: all of a v3 world's obstacle and decor models, its sheep when it has
- * pastures, the crows, which every v3 world has (they gather on fields, graveyards and gibbets), and the undergrowth
- * scattered round its trees.
+ * pastures, the crows, deer and goats, which every v3 world has (crows gather on fields, graveyards and gibbets; deer
+ * herds keep to the forests and goats to the crags), the undergrowth scattered round its trees and what stands along its
+ * shores.
  */
 export function worldAssetIds(world: Pick<WorldBlueprint, 'version' | 'obstacles' | 'fields' | 'decor'>): WorldModelId[] {
   if (world.version !== 3) return [];
-  const ids = new Set<string>(['char-crow', 'char-crow-flight', ...UNDERGROWTH]);
+  const ids = new Set<string>(['char-crow', 'char-crow-flight', 'char-deer', 'char-goat', ...UNDERGROWTH, ...SHORE_MODELS]);
   // Flocks graze on stubble fields (fauna.ts flockHomes).
   if (world.fields?.some(field => field.crop === 'stubble')) ids.add('char-sheep');
   for (const obstacle of world.obstacles) if (obstacle.model) ids.add(obstacle.model);

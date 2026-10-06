@@ -1,5 +1,5 @@
 import { createPrng } from '@aegis/core';
-import type { Bounds, Obstacle, RoadNode, Vec2, WorldBlueprint, WorldVersion } from './types';
+import type { Bounds, Obstacle, RoadNode, Vec2, WorldBlueprint, WorldLake, WorldVersion } from './types';
 import { expandWorld } from './world-expansion';
 import { buildWorldV3 } from './world-v3';
 
@@ -36,8 +36,54 @@ export function isWalkable(world: WorldBlueprint, p: Vec2, radius = 0.65): boole
       p.x + radius > water.minX && p.x - radius < water.maxX &&
       !world.bridges.some(b => p.x >= b.minX + radius && p.x <= b.maxX - radius &&
         p.z >= b.minZ - radius && p.z <= b.maxZ + radius)) return false;
+  // Lakes are water like the river (only version 3 worlds have any).
+  if (world.lakes && inLake(world, p, radius)) return false;
   if (world.version === 3) return !blockedV3(world, p, radius);
   return !world.obstacles.some(o => distance(p, o) < radius + o.radius);
+}
+
+const lakeBoxes = new WeakMap<WorldLake, Bounds>();
+
+/** A lake's shore bounding box, cached per (immutable) lake. */
+export function lakeBounds(lake: WorldLake): Bounds {
+  let box = lakeBoxes.get(lake);
+  if (!box) {
+    box = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity };
+    for (const p of lake.shore) {
+      box.minX = Math.min(box.minX, p.x); box.maxX = Math.max(box.maxX, p.x);
+      box.minZ = Math.min(box.minZ, p.z); box.maxZ = Math.max(box.maxZ, p.z);
+    }
+    lakeBoxes.set(lake, box);
+  }
+  return box;
+}
+
+/**
+ * Signed distance from `p` to a lake's shore, negative in the water: exact for the shore polygon (the nearest edge, and a
+ * crossing-number test for the side).
+ */
+export function lakeClearance(lake: WorldLake, p: Vec2): number {
+  const shore = lake.shore;
+  let wet = false, best = Infinity;
+  for (let i = 0, j = shore.length - 1; i < shore.length; j = i++) {
+    const a = shore[i]!, b = shore[j]!;
+    if ((a.z > p.z) !== (b.z > p.z) && p.x < (b.x - a.x) * (p.z - a.z) / (b.z - a.z) + a.x) wet = !wet;
+    const dx = b.x - a.x, dz = b.z - a.z;
+    const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / (dx * dx + dz * dz || 1)));
+    const ex = p.x - a.x - dx * t, ez = p.z - a.z - dz * t;
+    best = Math.min(best, ex * ex + ez * ez);
+  }
+  return wet ? -Math.sqrt(best) : Math.sqrt(best);
+}
+
+/** True when a body of `radius` at `p` would reach into a lake. */
+function inLake(world: WorldBlueprint, p: Vec2, radius: number): boolean {
+  for (const lake of world.lakes ?? []) {
+    const box = lakeBounds(lake);
+    if (p.x < box.minX - radius || p.x > box.maxX + radius || p.z < box.minZ - radius || p.z > box.maxZ + radius) continue;
+    if (lakeClearance(lake, p) < radius) return true;
+  }
+  return false;
 }
 
 /**

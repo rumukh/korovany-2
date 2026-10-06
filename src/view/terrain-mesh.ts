@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import type { Obstacle, WorldBlueprint } from '../game/types';
+import type { Obstacle, WorldBlueprint, WorldLake } from '../game/types';
+import { lakeBounds, lakeClearance } from '../game/world';
 import { fbm } from '../game/world-v3';
 import type { Terrain } from './terrain';
 import { WORLD_SURFACES, type WorldSurface } from './world-assets';
@@ -74,20 +75,61 @@ export const COURTYARDS: Readonly<Record<string, { radius: number; paved: boolea
 /** Depth of the river channel below the water plane, reached this far inside its banks. */
 const RIVER_DEPTH = 1.6;
 const RIVER_SHELF = 4;
+/** Lake and sea beds: depth below the water plane, reached this far inside the shore. */
+export const LAKE_BEDS: Readonly<Record<WorldLake['kind'], { depth: number; shelf: number }>> = {
+  mere: { depth: 1.4, shelf: 3 }, pool: { depth: 2.2, shelf: 4 }, tarn: { depth: 3, shelf: 5 }, sea: { depth: 3.5, shelf: 18 },
+};
+/** The drawn sea reaches this far beyond the bounds (the fog is total long before). */
+export const SEA_REACH = 400;
 
 function smoothstep(edge0: number, edge1: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
   return t * t * (3 - 2 * t);
 }
 
-/** Drawn ground height: the presentation relief, with the river channel carved below its water plane. */
+/** Distance to the sea's coast: its shore polyline without the closing edge beyond the bounds. */
+export function coastDistance(sea: WorldLake, x: number, z: number): number {
+  let best = Infinity;
+  for (let i = 0; i + 1 < sea.shore.length; i++) {
+    const a = sea.shore[i]!, b = sea.shore[i + 1]!;
+    const dx = b.x - a.x, dz = b.z - a.z;
+    const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz || 1)));
+    best = Math.min(best, (x - a.x - dx * t) ** 2 + (z - a.z - dz * t) ** 2);
+  }
+  return Math.sqrt(best);
+}
+
+/**
+ * How deep the drawn bed lies under a lake or the sea at a point (0 on dry ground). The sea goes on as open water beyond
+ * its closing line, out to SEA_REACH, fading to its ends.
+ */
+export function waterDepth(world: WorldBlueprint, x: number, z: number): number {
+  let depth = 0;
+  for (const lake of world.lakes ?? []) {
+    const bed = LAKE_BEDS[lake.kind];
+    const box = lakeBounds(lake);
+    const first = lake.shore[0]!, last = lake.shore[lake.shore.length - 1]!;
+    if (lake.kind === 'sea' && x >= box.maxX && z > first.z && z < last.z) {
+      depth = Math.max(depth, bed.depth * smoothstep(0, bed.shelf, coastDistance(lake, x, z)) * smoothstep(0, 15, Math.min(z - first.z, last.z - z)));
+      continue;
+    }
+    if (x < box.minX || x > box.maxX || z < box.minZ || z > box.maxZ) continue;
+    const inside = -lakeClearance(lake, { x, z });
+    if (inside <= 0) continue;
+    depth = Math.max(depth, bed.depth * smoothstep(0, bed.shelf, lake.kind === 'sea' ? coastDistance(lake, x, z) : inside));
+  }
+  return depth;
+}
+
+/** Drawn ground height: the presentation relief, with the river channel and lake and sea beds carved below the water. */
 export function drawnHeight(world: WorldBlueprint, terrain: Terrain, x: number, z: number): number {
   const river = world.river;
   const inside = Math.min(x - river.minX, river.maxX - x, z - river.minZ, river.maxZ - z);
+  const lake = world.lakes ? waterDepth(world, x, z) : 0;
   if (inside > 0 && !world.bridges.some(b => x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ)) {
-    return -RIVER_DEPTH * smoothstep(0, RIVER_SHELF, inside);
+    return Math.min(-lake, -RIVER_DEPTH * smoothstep(0, RIVER_SHELF, inside));
   }
-  return terrain.height(x, z);
+  return lake > 0 ? -lake : terrain.height(x, z);
 }
 
 /** The square the terrain chunks cover: the bounds plus the margin, rounded out to whole chunks. */
@@ -277,6 +319,22 @@ export function terrainControl(world: WorldBlueprint): TerrainControl {
     const outside = Math.max(river.minX - x, x - river.maxX, river.minZ - z, z - river.maxZ);
     return 0.9 * (1 - smoothstep(0.5, 3.5, outside));
   });
+  let shoreSeed = 2166136261;
+  for (const c of `korovany2:v3:${world.seed}:shore`) shoreSeed = Math.imul(shoreSeed ^ c.charCodeAt(0), 16777619);
+  for (const lake of world.lakes ?? []) {
+    // Muddy banks of uneven width round inland water; the sea gets a shingle beach in the regional ground instead, wet
+    // and dark for the last two metres above the waterline.
+    if (lake.kind === 'sea') {
+      const box = lakeBounds(lake);
+      paint(mud, box.minX - 4, box.minZ, box.maxX, box.maxZ, (x, z) => 0.55 * (1 - smoothstep(0.3, 2.4, lakeClearance(lake, { x, z }))));
+      continue;
+    }
+    const box = lakeBounds(lake);
+    paint(mud, box.minX - 6, box.minZ - 6, box.maxX + 6, box.maxZ + 6, (x, z) => {
+      const reach = 1.2 + 3.6 * fbm(x * 0.09, z * 0.09, shoreSeed, 2);
+      return 0.8 * (1 - smoothstep(0.2, reach, lakeClearance(lake, { x, z })));
+    });
+  }
   const node = (id: string) => world.roads.nodes.find(n => n.id === id)!;
   for (const edge of world.roads.edges) {
     const a = node(edge.from), b = node(edge.to), half = edge.width / 2, reach = half + 1.5;
@@ -417,6 +475,25 @@ function regionalGround(world: WorldBlueprint, size: number, cell: number):
         const d = Math.hypot(minX + (c + 0.5) * cell - place.x, minZ + (r + 0.5) * cell - place.z);
         const i = r * size + c;
         weights[i * 4 + 2] = Math.max(weights[i * 4 + 2]!, Math.round((1 - smoothstep(inner, reach, d)) * 255));
+      }
+    }
+  }
+  const sea = world.lakes?.find(lake => lake.kind === 'sea');
+  const coast = regions.find(region => region.id === 'saltcoast');
+  const beach = coast && Object.hasOwn(REGION_GROUND, coast.id) ? REGION_GROUND[coast.id]!.overlay : undefined;
+  if (sea && coast && beach) {
+    // A shingle beach along the sea: the coast's overlay (its own pebble layer) fills in 10-20 m above the waterline.
+    const box = lakeBounds(sea), b = coast.bounds;
+    const c0 = Math.max(0, Math.floor((Math.max(b.minX, box.minX - 22) - minX) / cell)), c1 = Math.min(size - 1, Math.floor((b.maxX - minX) / cell));
+    const r0 = Math.max(0, Math.floor((b.minZ - minZ) / cell)), r1 = Math.min(size - 1, Math.floor((b.maxZ - minZ) / cell));
+    for (let r = r0; r <= r1; r++) {
+      const z = minZ + (r + 0.5) * cell;
+      for (let c = c0; c <= c1; c++) {
+        const x = minX + (c + 0.5) * cell;
+        if (x < b.minX || x > b.maxX || z < b.minZ || z > b.maxZ || overlayLayer[r * size + c] !== layer(beach)) continue;
+        const shingle = lakeClearance(sea, { x, z }) < 0 ? 1 : 1 - smoothstep(10, 20, coastDistance(sea, x, z));
+        const i = r * size + c;
+        weights[i * 4 + 1] = Math.max(weights[i * 4 + 1]!, Math.round(shingle * 255));
       }
     }
   }

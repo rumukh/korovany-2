@@ -1,0 +1,27 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "plant-reeds",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "0d4efdf11bc50ed7af79dea3bacb6ebb2536d9bc2165f39d7f809775b0c5f09b",
+   "rationale": "Late-autumn reed beds: straw stems with arching strap leaves, nodding dark plumes and a few bulrush heads on near-upright cards in loose clumps (three sizes: tall common reed about 2.7 m, medium about 2.1 m, low rushes about 1.2 m); at most 114 triangles near, half the cards in the middle level and a 128 px impostor; one 256 px card; 64,256 bytes before meshopt. Dev cooks d1-d3 reviewed: d1 straw too pale and clumps too narrow (darkened, widened); d2 impostors cropped the tallest cards into flat-topped slabs (the impostor now frames the tallest tip).",
+   "limitations": [
+    "Alpha-tested cards on a single stem stub: no individual stems in 3D, no wind motion and no reflection in the water.",
+    "One card texture for all three sizes, so the low rushes are short reeds rather than a different plant."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "0d4efdf11bc50ed7af79dea3bacb6ebb2536d9bc2165f39d7f809775b0c5f09b",
+   "rationale": "In beds along 70% of every Fen mere's shore, 40% of forest pools', 30% of steppe pools' and in sparse rushes round the tarns, two deep, mostly standing in the shallows with a few on the bank; at gameplay cameras (18-40 m, pitch 0.38-1.13) the tall reeds stand above the 2.25 m soldier's head and hide the hard edge where water meets the bank; presentation only (it does not collide), drawn to 70 m with a middle level from 30 m and casting no shadow.",
+   "limitations": [
+    "The hero walks through the reeds on the bank without bending them.",
+    "At 45-70 m the crossed-card impostors of neighbouring clumps can read as a low wall of reeds."
+   ]
+  }
+ ]
+}

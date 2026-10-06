@@ -1,0 +1,417 @@
+{
+ "schema": "korovany2-world-asset/1",
+ "id": "char-goat",
+ "kind": "fauna",
+ "output": {
+  "file": "public/world/char-goat/char-goat.glb",
+  "sha256": "fcdc0932d0c4bef6777bd7befebade0f0ad40cd3373acfe7c3c2aa0743456f15",
+  "bytes": 422728
+ },
+ "license": "Derived from TRELLIS-image-large output. TRELLIS's textured GLB export depends on components licensed for research and evaluation only (Gaussian export, diffoctreerast); no commercial clearance is established. The owner acknowledged publishing TRELLIS-derived assets on the public Korovany II site on 2026-09-26.",
+ "tools": [
+  {
+   "name": "Azure OpenAI gpt-image-2.5-sunburst",
+   "runtime": "Azure OpenAI image generation (cloud)",
+   "role": "concept art",
+   "approval": "Owner approved cloud concept generation for in-game objects on 2026-10-04."
+  },
+  {
+   "name": "TRELLIS-image-large",
+   "model": "microsoft/TRELLIS-image-large",
+   "modelRevision": "25e0d31ffbebe4b5a97464dd851910efc3002d96",
+   "offline": true,
+   "licensing": {
+    "wholeToolchainMit": false,
+    "commercialClearanceEstablished": false
+   },
+   "seed": 7202,
+   "inferenceSeconds": 65.9,
+   "output": {
+    "sha256": "89320fb7175a176d5e049a99e87e63ecfc12c5b931a466a34376b7d09193d6ac",
+    "bytes": 1900160
+   }
+  },
+  {
+   "name": "Blender 5.2.2 LTS",
+   "build": "d13f752e3b9c",
+   "role": "generation, cooking, rigging and bakes (CPU Cycles)"
+  },
+  {
+   "name": "meshoptimizer 0.22.0 (npm)",
+   "role": "lossless EXT_meshopt_compression"
+  }
+ ],
+ "source": {
+  "concept": {
+   "candidate": "a",
+   "sha256": "09e2f8607b02ac58e573f098645374f29345feb58189251b4739e066c18214a3",
+   "note": "Pixels of the accepted Azure candidate, re-encoded without metadata."
+  },
+  "trellis": {
+   "candidate": "a-s7202",
+   "sha256": "89320fb7175a176d5e049a99e87e63ecfc12c5b931a466a34376b7d09193d6ac"
+  }
+ },
+ "limitations": [
+  "Single-view TRELLIS reconstruction from one approved concept: the far side, back and underside are TRELLIS's invention.",
+  "Roughness and metalness come from colour classes and Cycles bakes, not measured PBR.",
+  "Clips are procedural (IK gaits, oscillators), not motion capture; there is no blending of grazing into walking.",
+  "Single-view TRELLIS reconstruction: the far flank and the underside are TRELLIS's invention.",
+  "Graze is a knee-high browse, not grazing at the ground: lowering the head further hooks the horns forward.",
+  "The raw's shaggy coat leaves 10 open boundary edges and 20 non-manifold edges after cleanup; 797 of 2,928 vertices take inverse-distance fallback weights within their body region (no tearing seen in the clip sheet).",
+  "Clips are procedural (IK gaits, oscillators), not motion capture; 512 px coat detail softens at the closest camera.",
+  "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+ ],
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_quadruped.py": "381192891350e3a11604acc6b24a30dee7806939ebe3991aea0b4a42150adca3",
+   "models/pipeline/k2rig.py": "acacf7ff3039f58271b996b289ecca657d30bc99e195d7b7013e577003a0fc3c",
+   "models/pipeline/k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
+   "models/pipeline/k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
+   "models/pipeline/k2sheet.py": "0141e81990f6318c974fa018c895e02aa71b9c8ba5e23dbdd741e4881e6f177c",
+   "models/pipeline/webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
+   "models/pipeline/quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f",
+   "models/pipeline/meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+  },
+  "scriptsNote": "SHA-256 of each script with LF line endings, equal to its committed copy.",
+  "normalization": {
+   "uniformScale": 1.909366778238036,
+   "sourceHeight": 0.8117874562740326,
+   "feetCentre": [
+    0.0005940347909927368,
+    0.06271058936272898,
+    -0.4058499038219452
+   ],
+   "yawDegrees": 0,
+   "targetHeightMeters": 1.55,
+   "axes": "glTF +Y up/+Z forward -> Blender import -> glTF export_yup; no extra axis rotation"
+  },
+  "topology": {
+   "vertices": 2928,
+   "faces": 5898,
+   "triangles": 5898,
+   "boundaryEdges": 10,
+   "nonManifoldEdges": 20,
+   "components": 1,
+   "componentVertexCounts": [
+    2928
+   ],
+   "degenerateFaces": 0,
+   "inconsistentWindingEdges": 0
+  },
+  "decimation": {
+   "applied": true,
+   "before": 17816,
+   "triangles": 5910,
+   "ratio": 0.3317242927705433
+  },
+  "materials": {
+   "bakeSize": 1024,
+   "textureSize": 512,
+   "atlasCoverage": 0.5607490539550781,
+   "dyeFractionOfSurface": 0,
+   "metalFractionOfSurface": 0,
+   "regionFractions": {
+    "hooves": 0.023150132315625488,
+    "horns": 0.06266114274440975
+   },
+   "dyeFills": {},
+   "toneMatch": [],
+   "roughnessMean": 0.9196502566337585,
+   "aoMean": 0.8275372982025146,
+   "albedoGain": 1,
+   "reliefStrength": 4,
+   "aoSamples": 64,
+   "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved TRELLIS source mesh; there is no rear-view projection, so the back, far side and underside are as TRELLIS invented them from the single approved concept. Tangent normals baked from the source geometry and whiteout-blended with colour relief; AO baked from the decimated geometry; roughness set inside declared regions (the horns and hooves by position) and otherwise the default, both reduced by colour detail; no metal and no dye mask (the goat is never dyed). Base colour kept at the TRELLIS bake's own tone (toneGamma 1): the first cook's lift (0.8) washed the dark coat of the approved concept out to a pale grey in game. Artistic derivation, not measured PBR."
+  },
+  "clips": [
+   {
+    "name": "Idle",
+    "frames": 240,
+    "seconds": 4
+   },
+   {
+    "name": "Graze",
+    "frames": 240,
+    "seconds": 4
+   },
+   {
+    "name": "Walk",
+    "frames": 28,
+    "seconds": 0.4666666666666667,
+    "speed": 1,
+    "duty": 0.65,
+    "strideMeters": 0.4667,
+    "stanceSweepMeters": 0.3033,
+    "cycleHz": 2.143,
+    "offsets": {
+     "LH": 0,
+     "LF": 0.25,
+     "RH": 0.5,
+     "RF": 0.75
+    },
+    "reachableSweepMeters": {
+     "LF": 0.3042,
+     "RF": 0.3349,
+     "LH": 0.4762,
+     "RH": 0.5983
+    },
+    "maxReachShortfallMeters": {
+     "LF": 0,
+     "RF": 0,
+     "LH": 0,
+     "RH": 0
+    },
+    "minSwingToeHeight": {
+     "LF": 0.002,
+     "RF": 0.001,
+     "LH": 0.0092,
+     "RH": 0.0119
+    }
+   },
+   {
+    "name": "Run",
+    "frames": 13,
+    "seconds": 0.21666666666666667,
+    "speed": 4.6,
+    "duty": 0.34,
+    "strideMeters": 0.9967,
+    "stanceSweepMeters": 0.3389,
+    "cycleHz": 4.615,
+    "offsets": {
+     "LH": 0,
+     "RH": 0.12,
+     "LF": 0.45,
+     "RF": 0.57
+    },
+    "reachableSweepMeters": {
+     "LF": 0.4986,
+     "RF": 0.5282,
+     "LH": 0.6489,
+     "RH": 0.751
+    },
+    "maxReachShortfallMeters": {
+     "LF": 0,
+     "RF": 0,
+     "LH": 0,
+     "RH": 0
+    },
+    "minSwingToeHeight": {
+     "LF": 0.0285,
+     "RF": 0.0161,
+     "LH": 0.0146,
+     "RH": 0.0021
+    }
+   },
+   {
+    "name": "Startle",
+    "frames": 42,
+    "seconds": 0.7
+   }
+  ],
+  "rig": {
+   "joints": 32,
+   "names": [
+    "root",
+    "pelvis",
+    "spine1",
+    "spine2",
+    "chest",
+    "neck1",
+    "neck2",
+    "head",
+    "tail1",
+    "tail2",
+    "tail3",
+    "tail4",
+    "ear_l",
+    "scapula_l",
+    "humerus_l",
+    "forearm_l",
+    "cannon_f_l",
+    "hoof_f_l",
+    "femur_l",
+    "tibia_l",
+    "cannon_h_l",
+    "hoof_h_l",
+    "ear_r",
+    "scapula_r",
+    "humerus_r",
+    "forearm_r",
+    "cannon_f_r",
+    "hoof_f_r",
+    "femur_r",
+    "tibia_r",
+    "cannon_h_r",
+    "hoof_h_r"
+   ],
+   "solePivots": {
+    "LF": [
+     0.137,
+     -0.5597,
+     0.001
+    ],
+    "RF": [
+     -0.133,
+     -0.5466,
+     0.001
+    ],
+    "LH": [
+     0.1779,
+     0.3407,
+     0.0006
+    ],
+    "RH": [
+     -0.2032,
+     0.4673,
+     0.0014
+    ]
+   },
+   "pairAlignment": {
+    "LF": 0.0066,
+    "RF": -0.0066,
+    "LH": 0.0633,
+    "RH": -0.0633
+   }
+  },
+  "weights": {
+   "method": "bone-heat",
+   "joints": 31,
+   "maxInfluences": 4,
+   "relaxationIterations": 10,
+   "finalRelaxation": 4,
+   "lockedVertices": 51,
+   "heatEmptyVertices": 0,
+   "fallbackVertices": 797,
+   "blends": [],
+   "regions": {
+    "trunk": 1605,
+    "tail": 83,
+    "horns": 52,
+    "leg_RF": 144,
+    "neck": 256,
+    "leg_LH": 130,
+    "leg_LF": 141,
+    "head": 376,
+    "leg_RH": 141,
+    "lockedHoofVertices": 51
+   },
+   "pruning": {
+    "minWeight": 0.01,
+    "influencesPruned": 1132
+   }
+  },
+  "geometryCompression": {
+   "extension": "EXT_meshopt_compression",
+   "encoder": "meshoptimizer 0.22.0 (npm)",
+   "script": "meshopt_glb.mjs",
+   "scriptSha256": "9f5914236e6aac82b541e0685ab34f839a1287d50c41b8322724ddf420597ec8",
+   "filters": "none",
+   "reorder": {
+    "method": "meshoptimizer reorderMesh: vertex-cache triangle order, then vertex-fetch vertex order",
+    "primitives": 1,
+    "kept": 0,
+    "vertices": 6825,
+    "triangles": 5898,
+    "check": "a permutation: every vertex keeps its exact attribute bytes, and the triangles are the same, with the same winding, in another order"
+   },
+   "check": "every view decoded again: attribute views byte-identical to the reordered data; triangle index views hold the same triangles in the same order and winding (only the first vertex may rotate)",
+   "views": {
+    "attributes": {
+     "views": 149,
+     "raw": 319808,
+     "packed": 179946
+    },
+    "triangles": {
+     "views": 1,
+     "raw": 35388,
+     "packed": 6120,
+     "rotatedTriangles": 3234
+    },
+    "indices": {
+     "views": 0,
+     "raw": 0,
+     "packed": 0
+    },
+    "stored": 171958
+   },
+   "inputSha256": "44430d576d6699d17714d2a436e3eab3f5246867905f6237d404d17449445656",
+   "bytesBefore": 570856,
+   "bytesAfter": 422728
+  },
+  "quantization": {
+   "script": "quantize_glb.py",
+   "scriptSha256": "46911d96d3deaba53622cbe20ba3ca1d20dea63bdf08af95658332dcdd2f4303",
+   "extension": "KHR_mesh_quantization",
+   "settings": {
+    "POSITION": "SHORT normalized; uniform scale and offset folded into the inverse bind matrices",
+    "NORMAL": "BYTE normalized",
+    "TANGENT": "BYTE normalized",
+    "TEXCOORD_0": "UNSIGNED_SHORT normalized",
+    "WEIGHTS_0": "UNSIGNED_BYTE normalized, largest-remainder rounding to 255",
+    "rotation": "SHORT normalized"
+   },
+   "dequantization": {
+    "scaleMeters": 0.955922,
+    "offsetMeters": [
+     0.003077,
+     0.775323,
+     0.120445
+    ]
+   },
+   "maxErrors": {
+    "positionMm": 0.01458,
+    "normalDegrees": 0.35014,
+    "tangentDegrees": 0.36668,
+    "uvTexels2048": 0.01562,
+    "weight": 0.00285,
+    "rotationDegrees": 0.00325
+   },
+   "bounds": {
+    "positionMm": 0.1,
+    "normalDegrees": 0.8,
+    "tangentDegrees": 0.8,
+    "uvTexels2048": 0.05,
+    "weight": 0.004,
+    "rotationDegrees": 0.01
+   },
+   "inputSha256": "ed95f5b84898c891a37330f5cf41ef0387fa9998af1a0e2f94da90346186a402",
+   "bytesBefore": 959764,
+   "bytesAfter": 570856
+  },
+  "baseEncoding": {
+   "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+   "script": "webp_exact.py",
+   "scriptSha256": "87f340d373c6807260f3704dff4f5b42bda80e47ff6030022d166def26c2773d",
+   "settings": {
+    "quality": 90,
+    "method": 6,
+    "exact": true,
+    "alpha": "lossless"
+   },
+   "reason": "Base-colour alpha is the dye mask; libwebp's default lossy mode discards RGB under alpha 0.",
+   "images": [
+    {
+     "image": "body-base",
+     "size": [
+      512,
+      512
+     ],
+     "bytes": 49304,
+     "sha256": "90764115dab8f77f5ae561dbd72c7d08beb5394d263531a3f336d4b34b75d3b5",
+     "bytesBefore": 1738,
+     "meanAbsRgbError": {
+      "dyed": null,
+      "undyed": 1.812
+     },
+     "meanAbsRgbErrorBefore": {
+      "dyed": null,
+      "undyed": 26.082
+     },
+     "undyedFraction": 1
+    }
+   ]
+  },
+  "seconds": 7.432459099916741
+ }
+}
