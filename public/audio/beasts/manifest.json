@@ -48,6 +48,72 @@
       "src": "audio/beasts/beast-wolf-death.ogg",
       "duration": 1.76,
       "loop": false
+    },
+    {
+      "id": "beast-ghoul-howl",
+      "src": "audio/beasts/beast-ghoul-howl.ogg",
+      "duration": 2.073,
+      "loop": false
+    },
+    {
+      "id": "beast-ghoul-howl-2",
+      "src": "audio/beasts/beast-ghoul-howl-2.ogg",
+      "duration": 2.336,
+      "loop": false
+    },
+    {
+      "id": "beast-ghoul-snarl",
+      "src": "audio/beasts/beast-ghoul-snarl.ogg",
+      "duration": 0.828,
+      "loop": false
+    },
+    {
+      "id": "beast-ghoul-snarl-2",
+      "src": "audio/beasts/beast-ghoul-snarl-2.ogg",
+      "duration": 0.915,
+      "loop": false
+    },
+    {
+      "id": "beast-ghoul-yelp",
+      "src": "audio/beasts/beast-ghoul-yelp.ogg",
+      "duration": 0.626,
+      "loop": false
+    },
+    {
+      "id": "beast-ghoul-death",
+      "src": "audio/beasts/beast-ghoul-death.ogg",
+      "duration": 1.636,
+      "loop": false
+    },
+    {
+      "id": "beast-troll-howl",
+      "src": "audio/beasts/beast-troll-howl.ogg",
+      "duration": 3.051,
+      "loop": false
+    },
+    {
+      "id": "beast-troll-snarl",
+      "src": "audio/beasts/beast-troll-snarl.ogg",
+      "duration": 1.469,
+      "loop": false
+    },
+    {
+      "id": "beast-troll-snarl-2",
+      "src": "audio/beasts/beast-troll-snarl-2.ogg",
+      "duration": 1.613,
+      "loop": false
+    },
+    {
+      "id": "beast-troll-yelp",
+      "src": "audio/beasts/beast-troll-yelp.ogg",
+      "duration": 0.883,
+      "loop": false
+    },
+    {
+      "id": "beast-troll-death",
+      "src": "audio/beasts/beast-troll-death.ogg",
+      "duration": 2.978,
+      "loop": false
     }
   ]
 }

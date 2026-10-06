@@ -1,5 +1,5 @@
 import { createPrng } from '@aegis/core';
-import type { Bounds, Obstacle, RoadNode, Vec2, WorldBlueprint, WorldLake, WorldVersion } from './types';
+import type { Bounds, Obstacle, RoadNode, Vec2, WorldBlueprint, WorldLair, WorldLake, WorldVersion } from './types';
 import { expandWorld } from './world-expansion';
 import { buildWorldV3 } from './world-v3';
 
@@ -15,6 +15,11 @@ export function normalizeSeed(seed: string | number): string {
 
 export function distance(a: Vec2, b: Vec2): number {
   return Math.hypot(a.x - b.x, a.z - b.z);
+}
+
+/** Every place a version 3 pack appears: the grave wolves' lairs first, then the other beasts' haunts. */
+export function monsterLairs(world: Pick<WorldBlueprint, 'lairs' | 'haunts'>): WorldLair[] {
+  return [...world.lairs ?? [], ...world.haunts ?? []];
 }
 
 export function projectSegment(p: Vec2, a: Vec2, b: Vec2): Vec2 {

@@ -13,14 +13,14 @@
   {
    "gate": "model",
    "decision": "accepted",
-   "sha256": "49c90cbe795f1b8339d3aa97b4ef6a1220f2a9d9e30cf33308b9bcec8906cebc",
-   "rationale": "Cooked 5,416 triangles, 369 KB; 1.84 m tall in a 2.3 x 3.85 m box. Wheels, shafts and load read; albedoGain 1.85."
+   "sha256": "d0445477009df87af694d683aba7cb3437563ed713581f392380dbc31c88b9ff",
+   "rationale": "W4b recook of the accepted r2 for texture memory: the same raw, geometry (5416 triangles), 512 px base colour and albedo gain, with normal and ORM maps baked at 1024 and stored at 256 px instead of 512 (the W1 prop standard); 255260 bytes. Side by side with r2 in the close review view the renders differ by under 1/255 per channel on average, with the same mean luma."
   },
   {
    "gate": "in-game",
    "decision": "accepted",
-   "sha256": "49c90cbe795f1b8339d3aa97b4ef6a1220f2a9d9e30cf33308b9bcec8906cebc",
-   "rationale": "In settlement yards beside the 2.25 m soldier: right size, shafts on the ground. Limitation: wheels are not round up close and do not turn (static prop)."
+   "sha256": "d0445477009df87af694d683aba7cb3437563ed713581f392380dbc31c88b9ff",
+   "rationale": "Unchanged in game at the closest camera (18 m) beside a soldier: shading and relief read as before. The world's texture memory falls by 10 MiB (4 to 2 MiB per prop)."
   }
  ]
 }

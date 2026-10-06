@@ -1,0 +1,23 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "kit-barrow",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "5193adcf7bcd16443a6e5bfcf21379812dcc7cafebe595fc47151ea87fc053e0",
+   "rationale": "An old long barrow at the heroic scale: a 2.95 m turf mound about 13.5 x 7.6 m inside its 14 x 8 m collider, ringed by granite kerb stones, with a stone-lined passage under a lintel at its front (a dark doorway the soldier could stoop into), two leaning facade stones, a fallen stone, and the raw earth and rubble of a breach dug into one flank. 1,176 triangles, smooth-shaded turf on the coldgrass, ash and mud layers, flat-shaded stone on granite and rubble; nothing below ground or outside the footprint (dev1 sank the foot and kerbs 8-20 cm; r1 still let breach rubble reach 10 cm below ground; r2 keeps everything at or above it).",
+   "limitations": [
+    "Box-modelled stones and a smooth mound: no grass cards, no carved stones, no soil slump; detail comes from the surface layers.",
+    "The passage is a closed doorway, not an enterable tomb."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "5193adcf7bcd16443a6e5bfcf21379812dcc7cafebe595fc47151ea87fc053e0",
+   "rationale": "On the Ash Steppe at 18-30 m cameras: the mound, kerb and dark doorway read at once as a burial, the breach and a warded grave and headstones on the clearing's rim tie it to the lore (graves opened for bone ash), and ghouls gather before it. The collider is its 14 x 8 m footprint, so ghouls and the hero walk round it."
+  }
+ ]
+}

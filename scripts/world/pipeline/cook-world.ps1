@@ -2,14 +2,14 @@
 <#
 .SYNOPSIS
 Cooks the scripted world kits (build_kit.py for W0, build_kit_w1.py for the W1 settlements, build_kit_w2.py for the W2 castles
-and ruins) and nature kits (build_nature.py for W0; build_nature_w3.py for the W3 forests, crags and forest floor;
+and ruins, build_kit_w4.py for the W4b barrow) and nature kits (build_nature.py for W0; build_nature_w3.py for the W3 forests, crags and forest floor;
 build_nature_w3b.py for the W3b reed beds) in Blender 5.2.2 LTS, compresses each GLB's
 geometry with the shipped meshopt_glb.mjs (unchanged; byte-identical to scripts/models/pipeline/meshopt_glb.mjs) and
 copies the results to public/world/<id>/<id>.glb. Authoring output stays under <authoring>\<kit>\cook; the authoring root
 (-Authoring or $env:K2_AUTHORING) also holds the _pipeline folder with meshopt_glb.mjs and its node_modules. Blender is
 -Blender or $env:K2_BLENDER.
 
-    cook-world.ps1 -Revision r1 [-Samples 48] [-Kits kit-w0,kit-w1,kit-w2,nature-w0,nature-w3,nature-w3b] [-Publish]
+    cook-world.ps1 -Revision r1 [-Samples 48] [-Kits kit-w0,kit-w1,kit-w2,kit-w4,nature-w0,nature-w3,nature-w3b] [-Publish]
 #>
 param(
     [Parameter(Mandatory)][string]$Revision,
@@ -30,6 +30,7 @@ $jobs = @(
     @{ kit = 'kit-w0'; script = 'build_kit.py' },
     @{ kit = 'kit-w1'; script = 'build_kit_w1.py' },
     @{ kit = 'kit-w2'; script = 'build_kit_w2.py' },
+    @{ kit = 'kit-w4'; script = 'build_kit_w4.py' },
     @{ kit = 'nature-w0'; script = 'build_nature.py' },
     @{ kit = 'nature-w3'; script = 'build_nature_w3.py' },
     @{ kit = 'nature-w3b'; script = 'build_nature_w3b.py' }

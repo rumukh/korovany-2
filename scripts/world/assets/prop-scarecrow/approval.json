@@ -13,14 +13,14 @@
   {
    "gate": "model",
    "decision": "accepted",
-   "sha256": "75dde9ca94c801204faed8590b35f97b252b0f95cc4e755cfd709a4fc796d026",
-   "rationale": "Cooked 3,447 triangles, 278 KB; 2.79 m tall (heroic scale), 1.02 m reach. Ragged silhouette and hat read; albedoGain 1.9."
+   "sha256": "d3a9a3185ab41b34f22407b159f6c99ffb8dab81c16a943f17662b56b30bf0ba",
+   "rationale": "W4b recook of the accepted r2 for texture memory: the same raw, geometry (3447 triangles), 512 px base colour and albedo gain, with normal and ORM maps baked at 1024 and stored at 256 px instead of 512 (the W1 prop standard); 191540 bytes. Side by side with r2 in the close review view the renders differ by under 1/255 per channel on average, with the same mean luma."
   },
   {
    "gate": "in-game",
    "decision": "accepted",
-   "sha256": "75dde9ca94c801204faed8590b35f97b252b0f95cc4e755cfd709a4fc796d026",
-   "rationale": "In furrowed fields: a sinister readable silhouette at 26 m, casts a long shadow. Limitation: cloth is rigid (no wind)."
+   "sha256": "d3a9a3185ab41b34f22407b159f6c99ffb8dab81c16a943f17662b56b30bf0ba",
+   "rationale": "Unchanged in game at the closest camera (18 m) beside a soldier: shading and relief read as before. The world's texture memory falls by 10 MiB (4 to 2 MiB per prop)."
   }
  ]
 }

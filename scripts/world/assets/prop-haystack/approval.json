@@ -13,14 +13,14 @@
   {
    "gate": "model",
    "decision": "accepted",
-   "sha256": "d0e83bdf287ad6a8486c12eb4c417aa08c2d66643330a973a2c91f6e9db1e2e1",
-   "rationale": "Cooked 4,924 triangles, 265 KB; 3.19 m tall in a 1.78 m reach at uniform scale. Reads as a pole-dried haystack beside the 2.25 m soldier in four views. r1 albedo was about 1.9x darker than the concept; r2 applies albedoGain 1.9."
+   "sha256": "2f11d92dbd376c848f6c8b49a2ed974bd0c63df2146c20eb94b3dffcdadc5c0a",
+   "rationale": "W4b recook of the accepted r2 for texture memory: the same raw, geometry (4924 triangles), 512 px base colour and albedo gain, with normal and ORM maps baked at 1024 and stored at 256 px instead of 512 (the W1 prop standard); 184628 bytes. Side by side with r2 in the close review view the renders differ by under 1/255 per channel on average, with the same mean luma."
   },
   {
    "gate": "in-game",
    "decision": "accepted",
-   "sha256": "d0e83bdf287ad6a8486c12eb4c417aa08c2d66643330a973a2c91f6e9db1e2e1",
-   "rationale": "In Greenhollow pastures at 18-40 m cameras: a big readable stack, shadows ground it, no clipping with sheep (collider r 1.78 m). Limitation: the far side and the pole tops are TRELLIS's invention and slightly blobby up close."
+   "sha256": "2f11d92dbd376c848f6c8b49a2ed974bd0c63df2146c20eb94b3dffcdadc5c0a",
+   "rationale": "Unchanged in game at the closest camera (18 m) beside a soldier: shading and relief read as before. The world's texture memory falls by 10 MiB (4 to 2 MiB per prop)."
   }
  ]
 }

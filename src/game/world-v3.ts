@@ -1,6 +1,6 @@
 import type { WorldLocation, WorldRegion } from './narrative-types';
 import type { BoxShape, MonsterSpecies, Obstacle, Vec2, WorldBlueprint, WorldField, WorldLair, WorldLake } from './types';
-import { distance, lakeBounds, lakeClearance, obstacleClearance, projectSegment, segmentClearance } from './world';
+import { distance, lakeBounds, lakeClearance, monsterLairs, obstacleClearance, projectSegment, segmentClearance } from './world';
 
 /**
  * Version 3 footprints at the heroic scale standard (a 2.25 m soldier is about 1.28 times a 1.75 m human): `width` is the
@@ -44,6 +44,8 @@ export const V3_BUILDINGS = {
   'kit-ruin-house': { width: 7, length: 10, height: 7 },
   /** The military posts' timber watch towers, standing on the posts' original circular footings. */
   'kit-camp-tower': { width: 3.6, length: 3.6, height: 9.5 },
+  /** W4b: an old long barrow, its passage at the front (local +X), dug open on one flank; the barrow ghouls' haunt. */
+  'kit-barrow': { width: 14, length: 8, height: 3.2 },
   /** W3 crags (build_nature_w3.py): fixed-size rock formations in three styles (moss, snow, bare) of four shapes, each
    * colliding as the circle of its scree talus. They form the mountain ring at the world's edge and the massifs. */
   'rock-crag-moss-a': { width: 18.65, length: 18.65, height: 22.85 },
@@ -287,8 +289,8 @@ function fits(place: Placement, o: Obstacle, rules: Rules, own?: WorldLocation):
     if (o.x < box.minX - reach || o.x > box.maxX + reach || o.z < box.minZ - reach || o.z > box.maxZ + reach) continue;
     if (lakeClearance(lake, o) < reach) return false;
   }
-  // Lairs too: their clearings stay open.
-  for (const lair of world.lairs ?? []) if (obstacleClearance(o, lair) < lair.radius) return false;
+  // Lairs and haunts too: their clearings stay open.
+  for (const lair of monsterLairs(world)) if (obstacleClearance(o, lair) < lair.radius) return false;
   if (place.roadClearance(o) < rules.road) return false;
   for (const location of world.exploration!.locations) {
     const clearing = location === own ? rules.own ?? LOCATION_CLEARING : Math.max(LOCATION_CLEARING, rules.location,
@@ -1345,7 +1347,7 @@ function lairFits(place: Placement, lair: WorldLair): boolean {
   for (const site of world.sites) if (distance(lair, site) - site.radius < rules.site) return false;
   for (const road of place.roads) if (distance(lair, projectSegment(lair, road.a, road.b)) - road.half < rules.road) return false;
   for (const lake of world.lakes ?? []) if (lakeClearance(lake, lair) < rules.lake) return false;
-  for (const other of world.lairs ?? []) if (distance(lair, other) < rules.lair) return false;
+  for (const other of monsterLairs(world)) if (distance(lair, other) < rules.lair) return false;
   if (insideField(world, lair, lair.radius + 4)) return false;
   for (const o of place.near(lair, lair.radius + 12)) if (obstacleClearance(o, lair) < lair.radius + 2) return false;
   return true;
@@ -1397,6 +1399,83 @@ function den(place: Placement, lair: WorldLair, random: ReturnType<typeof stream
     const b = start + k * 2.1 + random.range(-0.3, 0.3), rock = V3_PROPS['rock-mossy'], r = random.range(0.9, 1.2);
     place.add({ id: `${lair.id}-den-${k}`, kind: 'rock', x: round2(lair.x + Math.sin(b) * 8.4), z: round2(lair.z + Math.cos(b) * 8.4),
       radius: rock.radius * r, height: rock.height * r, variant: Math.floor(random.next() * 4), model: 'rock-mossy' });
+  }
+}
+
+/**
+ * The other beasts' haunts by region (W4b): barrow ghouls at opened barrows in the Ash Steppe, where the old burials
+ * lie; bog trolls alone in the Fens and on the Frostspine passes.
+ */
+export const HAUNTS: Readonly<Record<string, readonly { species: MonsterSpecies; count: number }[]>> = {
+  ashsteppe: [{ species: 'ghoul', count: 3 }],
+  fenlands: [{ species: 'troll', count: 2 }],
+  frostspine: [{ species: 'troll', count: 2 }],
+};
+/** A haunt keeps the lairs' clearing and distances (LAIR_RULES); the pieces on its rim keep these clearances. */
+const HAUNT_PIECE_RULES: Rules = { road: 6, location: 40, site: 60, obstacle: 2 };
+
+/** A haunt's rim: a piece at compass angle `angle` whose nearest point stands `rim` metres from the centre. */
+function rimPiece(haunt: WorldLair, id: string, model: V3BuildingModel | V3PropModel, angle: number, rim: number,
+  variant: number, faceIn: boolean): Obstacle {
+  const size = Object.hasOwn(V3_BUILDINGS, model) ? V3_BUILDINGS[model as V3BuildingModel] : V3_PROPS[model as V3PropModel];
+  // Facing the centre, the piece's local X (its width) runs along the radius; otherwise its local Z does.
+  const half = 'radius' in size ? size.radius : (faceIn ? size.width : size.length) / 2;
+  const at = { x: round2(haunt.x + Math.sin(angle) * (rim + half)), z: round2(haunt.z + Math.cos(angle) * (rim + half)) };
+  const heading = faceIn ? facing(angle) : facing(angle) + Math.PI / 2;
+  return Object.hasOwn(V3_BUILDINGS, model) ? building(id, model as V3BuildingModel, at, heading, variant)
+    : prop(id, model as V3PropModel, at, heading, variant);
+}
+
+/**
+ * The pieces round a haunt's clearing, all beyond the 6 m where its beasts appear, with wide gaps between them (a troll
+ * is 2.6 m across). Ghouls: an old long barrow with its passage facing the clearing, dug open on one flank, and a warded
+ * grave and old headstones a third of the way round on either side. Trolls: a giant beast's skull, the troll's larder,
+ * and two big mossy boulders.
+ */
+function hauntPieces(haunt: WorldLair, random: ReturnType<typeof stream>): Obstacle[] {
+  const start = random.range(0, Math.PI * 2), side = random.range(-0.25, 0.25);
+  const id = (k: number) => `${haunt.id}-piece-${k}`;
+  if (haunt.species === 'ghoul') {
+    return [rimPiece(haunt, id(0), 'kit-barrow', start, 8.6, 0, true),
+      rimPiece(haunt, id(1), 'prop-grave-ward', start + 2.1 + side, 8.2, 0, false),
+      rimPiece(haunt, id(2), 'prop-gravestones', start - 2.1 + side, 8.2, 0, false)];
+  }
+  const pieces = [rimPiece(haunt, id(0), 'prop-giant-skull', start, 8.4, 0, true)];
+  for (let k = 1; k <= 2; k++) {
+    const b = start + (k === 1 ? 2.3 : -2.3) + side, rock = V3_PROPS['rock-mossy'], r = random.range(1.35, 1.7);
+    pieces.push({ id: id(k), kind: 'rock', x: round2(haunt.x + Math.sin(b) * (8.4 + rock.radius * r)),
+      z: round2(haunt.z + Math.cos(b) * (8.4 + rock.radius * r)), radius: rock.radius * r, height: rock.height * r,
+      variant: Math.floor(random.next() * 4), model: 'rock-mossy' });
+  }
+  return pieces;
+}
+
+/**
+ * Haunts, placed right after the wolves' lairs (so every lair stays where W4a put it) and before the forests: open
+ * clearings anywhere in their regions that keep the lairs' distances from people, roads, water and every other lair or
+ * haunt, with room on the rim for their pieces.
+ */
+function haunts(place: Placement, seed: string): void {
+  const world = place.world;
+  const random = stream(`korovany2:v3:${seed}:haunts`);
+  for (const region of world.exploration!.regions) {
+    const plans = Object.hasOwn(HAUNTS, region.id) ? HAUNTS[region.id]! : [];
+    const rb = region.bounds;
+    let made = 0;
+    for (const plan of plans) {
+      let placed = 0;
+      for (let attempt = 0; attempt < 600 && placed < plan.count; attempt++) {
+        const haunt: WorldLair = { id: `haunt-${region.id}-${made}`, species: plan.species, radius: LAIR_RULES.radius,
+          x: round2(random.range(rb.minX, rb.maxX)), z: round2(random.range(rb.minZ, rb.maxZ)) };
+        if (!lairFits(place, haunt)) continue;
+        const pieces = hauntPieces(haunt, random);
+        if (!pieces.every(piece => fits(place, piece, HAUNT_PIECE_RULES))) continue;
+        world.haunts!.push(haunt);
+        for (const piece of pieces) place.add(piece);
+        placed++;
+        made++;
+      }
+    }
   }
 }
 
@@ -1602,8 +1681,9 @@ function forestFloor(place: Placement, seed: string): void {
  * Chapel and the Star Monastery are rebuilt round chapels; the Royal Citadel and the Old Fort become castles; ruins,
  * shrines and landmarks are rebuilt round their cooked landmarks; the military posts get watch towers; remains of huge
  * creatures lie in the wilds; a ring of mountains closes the world (but for the coast), crags rise in massifs and
- * outcrops, lakes and the sea lie where nothing else stands, grave wolves den in the dark forests' glades, and woodland
- * becomes real forest, dark and dense in Greenmarch and Hollowvale, over fallen trunks, stumps and mossy boulders.
+ * outcrops, lakes and the sea lie where nothing else stands, grave wolves den in the dark forests' glades, barrow ghouls
+ * haunt opened barrows on the Ash Steppe and bog trolls the Fens and the Frostspine, and woodland becomes real forest,
+ * dark and dense in Greenmarch and Hollowvale, over fallen trunks, stumps and mossy boulders.
  */
 export function buildWorldV3(world: WorldBlueprint): WorldBlueprint {
   const locations = world.exploration!.locations;
@@ -1616,6 +1696,7 @@ export function buildWorldV3(world: WorldBlueprint): WorldBlueprint {
   world.decor = [];
   world.lakes = [];
   world.lairs = [];
+  world.haunts = [];
   world.obstacles = world.obstacles.filter(o => {
     if (o.kind !== 'wall') return false;
     // The original home's walls have no home in story worlds (homes move to each faction's location), and the Old
@@ -1643,6 +1724,7 @@ export function buildWorldV3(world: WorldBlueprint): WorldBlueprint {
   massifs(place, world.seed);
   lakes(place, world.seed);
   lairs(place, world.seed);
+  haunts(place, world.seed);
   fallenLogs(place, world.seed);
   vegetation(place, world.seed);
   solitaryTrees(place, world.seed);

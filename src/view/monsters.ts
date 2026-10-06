@@ -6,11 +6,14 @@ import { MONSTER_CLIPS, type WorldModel } from './world-assets';
 type MonsterClip = typeof MONSTER_CLIPS[number];
 
 /**
- * Per species, the authored ground speeds of its Walk and Run clips (cook_monster_quadruped.py recipe, metres per
- * second) and the speed above which it runs rather than walks.
+ * Per species, the authored ground speeds of its Walk and Run clips (the cook recipes: cook_monster_quadruped.py for the
+ * wolf, cook_monster_biped.py for the ghoul and troll, metres per second) and the speed above which it runs rather than
+ * walks.
  */
 export const MONSTER_GAITS: Readonly<Record<MonsterSpecies, { walk: number; run: number; runAbove: number }>> = {
   wolf: { walk: 1.3, run: 6.0, runAbove: 2.2 },
+  ghoul: { walk: 1.1, run: 5.0, runAbove: 2.0 },
+  troll: { walk: 1.0, run: 4.4, runAbove: 1.9 },
 };
 
 export interface MonsterFrame {

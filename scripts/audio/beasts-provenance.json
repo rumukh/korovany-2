@@ -1,14 +1,21 @@
 {
   "schema": "korovany2-beast-voices/1",
-  "license": "Original procedural synthesis for Korovany II from scripts/audio/synth_beasts.py: no recordings, samples, sound libraries or generative models; the project's own work.",
+  "license": "Original procedural synthesis for Korovany II from scripts/audio/synth_beasts_w4b.py (which imports scripts/audio/synth_beasts.py for the wolf's voices): no recordings, samples, sound libraries or generative models; the project's own work.",
   "script": {
-    "path": "scripts/audio/synth_beasts.py",
-    "sha256": "1f4aa18e44be1b5e7370b805c8c47e32983b765200f9bd03e7c872a55d6f5ab3"
+    "path": "scripts/audio/synth_beasts_w4b.py",
+    "sha256": "045c45edb7a67742707feab5b6fec1d01c829feedc85e041020de40eec50b98d"
   },
+  "imports": [
+    {
+      "path": "scripts/audio/synth_beasts.py",
+      "sha256": "1f4aa18e44be1b5e7370b805c8c47e32983b765200f9bd03e7c872a55d6f5ab3"
+    }
+  ],
   "mastering": "fixed -25 dBFS RMS under a -3 dBTP true-peak ceiling (as produce_soundtrack.py masters effects); Vorbis -q:a 5, mono, 48 kHz",
   "ffmpeg": "ffmpeg version 2024-06-30-git-b818dff8d8-full_build-www.gyan.dev Copyright (c) 2000-2024 the FFmpeg developers",
   "limitations": [
-    "Synthesised voices (a source-filter model with formants and noise), not recordings of wolves: stylised rather than naturalistic, with no growl texture beyond a modulated pulse train."
+    "Synthesised voices (a source-filter model with formants and noise), not recordings of animals: stylised rather than naturalistic, with no growl texture beyond a modulated pulse train.",
+    "The ghoul's and troll's voices are invented creature sounds built from the same few parts (pulse trains, formants, filtered noise, gated clicks); they are recognisable cues, not a sound designer's layered recordings."
   ],
   "assets": [
     {
@@ -114,6 +121,149 @@
       "sourceRmsDbfs": -9.537,
       "sourceTruePeakDbtp": 4.197,
       "gainDb": -15.463
+    },
+    {
+      "id": "beast-ghoul-howl",
+      "seed": 7501,
+      "sha256": "1b998ce7dafd8bc3b07e11dbcb43b9a04f98cafebbc0dafc8d540ada85baede5",
+      "bytes": 23206,
+      "duration": 2.073,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -12.601,
+      "sourceTruePeakDbtp": 1.126,
+      "gainDb": -12.399
+    },
+    {
+      "id": "beast-ghoul-howl-2",
+      "seed": 7502,
+      "sha256": "9916ad8b29f35d1054e67af77afdcee05f7f89ea1a25ca40d94883808a07fdb2",
+      "bytes": 25658,
+      "duration": 2.336,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -11.218,
+      "sourceTruePeakDbtp": 1.987,
+      "gainDb": -13.782
+    },
+    {
+      "id": "beast-ghoul-snarl",
+      "seed": 7511,
+      "sha256": "ce8e63a7d531ff2d3bd1b219dfc20f3ea1f2dd1aaf6fa1f1f0f52b915c0864e3",
+      "bytes": 12024,
+      "duration": 0.828,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -18.658,
+      "sourceTruePeakDbtp": -0.781,
+      "gainDb": -6.342
+    },
+    {
+      "id": "beast-ghoul-snarl-2",
+      "seed": 7512,
+      "sha256": "5560a22a25ac98abc339084f5b6a660b910f9f9aeb6f65516452f3486cdcb359",
+      "bytes": 13162,
+      "duration": 0.915,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -18.024,
+      "sourceTruePeakDbtp": -0.509,
+      "gainDb": -6.976
+    },
+    {
+      "id": "beast-ghoul-yelp",
+      "seed": 7521,
+      "sha256": "0f9c86c639387c3dd60069510db5ead084943fc8bdbe9392f912e3fab14ce10c",
+      "bytes": 9522,
+      "duration": 0.626,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -12.534,
+      "sourceTruePeakDbtp": 2.429,
+      "gainDb": -12.466
+    },
+    {
+      "id": "beast-ghoul-death",
+      "seed": 7531,
+      "sha256": "b2a14acfa1f3e81773d59bdd5d101112cd284cdb678c9241697885cf9709a9c7",
+      "bytes": 21263,
+      "duration": 1.636,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -16.78,
+      "sourceTruePeakDbtp": 0.976,
+      "gainDb": -8.22
+    },
+    {
+      "id": "beast-troll-howl",
+      "seed": 7601,
+      "sha256": "26c0c8855f4a8fcb46544728272415359486411c31125ac410cd31798624edd9",
+      "bytes": 26248,
+      "duration": 3.051,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -10.432,
+      "sourceTruePeakDbtp": 2.43,
+      "gainDb": -14.568
+    },
+    {
+      "id": "beast-troll-snarl",
+      "seed": 7611,
+      "sha256": "fdb1a82891bde69ae128947a757f5d8c55a37b64f917e4fdd2037a5f4d71c94d",
+      "bytes": 17087,
+      "duration": 1.469,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -17.427,
+      "sourceTruePeakDbtp": 0.404,
+      "gainDb": -7.573
+    },
+    {
+      "id": "beast-troll-snarl-2",
+      "seed": 7612,
+      "sha256": "1efd6c6f28d74da5d74003a94a8dc1a3f3b58ebe5e2580a62b598f9d0f80fa59",
+      "bytes": 18336,
+      "duration": 1.613,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -17.761,
+      "sourceTruePeakDbtp": 0.232,
+      "gainDb": -7.239
+    },
+    {
+      "id": "beast-troll-yelp",
+      "seed": 7621,
+      "sha256": "331a3bad37221a6ccd3286bea9c00b37626df9212cfd16f9f7a0f1470a5ec2c7",
+      "bytes": 10475,
+      "duration": 0.883,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -14.736,
+      "sourceTruePeakDbtp": 1.358,
+      "gainDb": -10.264
+    },
+    {
+      "id": "beast-troll-death",
+      "seed": 7631,
+      "sha256": "2b868a83cb282f8b11a8c2890dfaa2193b63957f463204786cfc7771b0e2939b",
+      "bytes": 23604,
+      "duration": 2.978,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -12.353,
+      "sourceTruePeakDbtp": 3.811,
+      "gainDb": -12.647
     }
   ]
 }

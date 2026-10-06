@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { ActorSnapshot, GameSnapshot, MonsterSnapshot, OutpostSnapshot, WorldBlueprint } from '../game/types';
+import { monsterLairs } from '../game/world';
 import { allegiancePennant, createActor, createModelHero, createModelTroop, createModelWagon, proceduralWagon, type ActorModel, type ViewAllegiance, type WagonVisual } from './actors';
 import { FollowCamera, type GroundPoint, type MovementBasis } from './camera';
 import { WorldEffects } from './effects';
@@ -326,10 +327,11 @@ export class Presentation {
       group.add(person.root);
       return person;
     });
-    // Version 3: one beast of each species this world's lairs keep, so a pack's first appearance compiles nothing.
-    const beasts = [...new Set((this.world.lairs ?? []).map(lair => lair.species))].map((species, index) => {
+    // Version 3: one beast of each species this world's lairs and haunts keep, so a pack's first appearance compiles
+    // nothing and uploads no texture.
+    const beasts = [...new Set(monsterLairs(this.world).map(lair => lair.species))].map((species, index) => {
       const beast = new MonsterInstance(this.resources.world!.require(MONSTER_MODELS[species]), species);
-      beast.root.position.set(x - 4 - index * 2, this.lift(x, z), z + 4.5);
+      beast.root.position.set(x - 4 - index * 2.6, this.lift(x, z), z + 4.5);
       beast.update({ state: 'idle', progress: 0, speed: 0, hit: false, reducedMotion: true }, 0);
       group.add(beast.root);
       return beast;

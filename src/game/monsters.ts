@@ -1,15 +1,17 @@
 /**
- * Version 3 only: hostile monsters, the beasts of the borderland (grave wolves grown bold on empty roads and opened
- * graves). Lairs are part of the world (`WorldBlueprint.lairs`). A pack appears at a lair while the hero is 90-160 m
- * away, wanders within 25 m of it, hunts the hero only (never the convoy or a shipment) and gives up beyond its 35 m
- * leash; idle packs vanish beyond 240 m, and a lair whose pack was killed out stays empty for 90-180 s. Packs, spawn
- * points, roaming and cooldowns draw on the simulation's seeded PRNG, so replays and saves stay deterministic.
- * Version 1/2 campaigns have no lairs, no monster state and no monster system: none of this runs or draws there.
+ * Version 3 only: hostile monsters, the beasts of the borderland: grave wolves grown bold on empty roads and opened
+ * graves, barrow ghouls drawn to the burials Raut's men dug up for bone ash, and bog trolls of the fens and passes. They
+ * are beasts, not the dead: the Caller stays unseen and the missing crews never become monsters. Packs appear at the
+ * wolves' lairs and the other beasts' haunts (`WorldBlueprint.lairs` and `haunts`) while the hero is 90-160 m away,
+ * wander within 25 m, hunt the hero only (never the convoy or a shipment) and give up beyond their 35 m leash; idle
+ * packs vanish beyond 240 m, and a place whose pack was killed out stays empty for 90-180 s. Packs, spawn points,
+ * roaming and cooldowns draw on the simulation's seeded PRNG, so replays and saves stay deterministic. Version 1/2
+ * campaigns have no lairs, no monster state and no monster system: none of this runs or draws there.
  */
 import type { System, World } from '@aegis/core';
 import { actors, campaign, Combatant, type ActorData, type CampaignData, type MonsterState } from './state';
-import type { FactionId, MonsterSpecies, Vec2, WorldBlueprint, WorldLair } from './types';
-import { distance, isWalkable, moveWithCollision } from './world';
+import type { FactionId, MonsterSpecies, Obstacle, Vec2, WorldBlueprint, WorldLair } from './types';
+import { distance, isWalkable, monsterLairs, moveWithCollision, nearbyObstacles, obstacleClearance, segmentClearance } from './world';
 
 export interface MonsterSpec {
   hp: number;
@@ -34,6 +36,12 @@ export interface MonsterSpec {
 export const MONSTERS: Readonly<Record<MonsterSpecies, Readonly<MonsterSpec>>> = {
   wolf: { hp: 48, damage: 8, speed: 6.0, walk: 1.3, radius: 0.6, attackRange: 1.9, windup: 0.35, recovery: 0.4, cooldown: 1.2,
     aggro: 18, pack: [3, 4], coins: 4 },
+  /** A claw swipe from a lean, long-armed carrion beast, in threes and fours. */
+  ghoul: { hp: 72, damage: 10, speed: 5.0, walk: 1.1, radius: 0.6, attackRange: 2.1, windup: 0.45, recovery: 0.5, cooldown: 1.4,
+    aggro: 16, pack: [3, 4], coins: 6 },
+  /** Alone: a slow, heavily telegraphed two-fisted slam that the hero can step out of; it takes a long fight to fell. */
+  troll: { hp: 300, damage: 24, speed: 4.4, walk: 1.0, radius: 1.3, attackRange: 3.2, windup: 0.9, recovery: 1.0, cooldown: 2.4,
+    aggro: 20, pack: [1, 1], coins: 20 },
 };
 
 export const MONSTER_RULES = {
@@ -60,7 +68,7 @@ export const MONSTER_RULES = {
 export const MONSTER_FACTION: FactionId = 'villain';
 
 export function createMonsterState(world: WorldBlueprint): MonsterState {
-  return { version: 1, sequence: 0, timer: 0, lairs: Object.fromEntries((world.lairs ?? []).map(lair => [lair.id, { cooldown: 0 }])) };
+  return { version: 1, sequence: 0, timer: 0, lairs: Object.fromEntries(monsterLairs(world).map(lair => [lair.id, { cooldown: 0 }])) };
 }
 
 export const monsterId = (n: number): string => `monster-${n}`;
@@ -82,7 +90,7 @@ function createMonster(world: World, s: CampaignData, lair: WorldLair, at: Vec2)
 
 /** The spawner (version 3 schedules only): cooldowns, vanishing far packs and new packs at lairs in the spawn band. */
 export function monsterSpawner(blueprint: WorldBlueprint): System {
-  const lairs = blueprint.lairs ?? [];
+  const lairs = monsterLairs(blueprint);
   return {
     name: 'KorovanyMonsters', phase: 'postUpdate', after: ['KorovanyConquest'],
     run(ctx) {
@@ -172,6 +180,56 @@ function travel(blueprint: WorldBlueprint, a: ActorData, dx: number, dz: number,
 }
 
 /**
+ * The way round a solid box (a barrow, a giant's skull, a fallen trunk, a building) that stands between a monster and
+ * `goal`: the shortest walk round it over its corners, pushed out by the monster's radius and a margin, in legs that
+ * keep clear of the box. Returns the walk's next waypoint, or null when no box narrows the straight way below the
+ * monster's width or no walk round it exists; `travel`'s swerves handle trees, boulders and other round solids.
+ */
+function detour(blueprint: WorldBlueprint, a: ActorData, goal: Vec2): Vec2 | null {
+  // A leg ending at the goal may pass as close to the box as the goal itself stands (a hero pressed against its side).
+  const width = (o: Obstacle): number => Math.min(a.radius * 0.9, obstacleClearance(o, goal) - 0.05);
+  let blocking: Obstacle | null = null, nearest = Infinity;
+  for (const o of nearbyObstacles(blueprint, Math.min(a.x, goal.x) - 2, Math.min(a.z, goal.z) - 2, Math.max(a.x, goal.x) + 2,
+    Math.max(a.z, goal.z) + 2)) {
+    if (!o.shape || segmentClearance(o, a, goal) >= width(o)) continue;
+    const clearance = obstacleClearance(o, a);
+    if (clearance < nearest) { nearest = clearance; blocking = o; }
+  }
+  if (!blocking) return null;
+  const box = blocking, { heading, halfX, halfZ } = box.shape!, c = Math.cos(heading), s = Math.sin(heading);
+  const margin = a.radius + 0.4;
+  // Nodes: the monster, the box's walkable corners (local X runs along (cos h, -sin h), local Z along (sin h, cos h)), the goal.
+  const nodes: Vec2[] = [{ x: a.x, z: a.z }];
+  for (const [sx, sz] of [[1, 1], [1, -1], [-1, -1], [-1, 1]] as const) {
+    const lx = sx * (halfX + margin), lz = sz * (halfZ + margin);
+    const corner = { x: box.x + lx * c + lz * s, z: box.z - lx * s + lz * c };
+    if (isWalkable(blueprint, corner, a.radius)) nodes.push(corner);
+  }
+  nodes.push({ x: goal.x, z: goal.z });
+  const last = nodes.length - 1, toGoal = width(box);
+  const clear = (i: number, j: number): boolean => segmentClearance(box, nodes[i]!, nodes[j]!) >= (j === last ? toGoal : a.radius * 0.9);
+  // Dijkstra over at most six nodes.
+  const cost = nodes.map((_, i) => (i === 0 ? 0 : Infinity)), from = nodes.map(() => -1), done = nodes.map(() => false);
+  for (;;) {
+    let u = -1;
+    for (let i = 0; i <= last; i++) if (!done[i] && cost[i]! < Infinity && (u < 0 || cost[i]! < cost[u]!)) u = i;
+    if (u < 0 || u === last) break;
+    done[u] = true;
+    for (let v = 1; v <= last; v++) {
+      if (done[v] || !clear(u, v)) continue;
+      const through = cost[u]! + distance(nodes[u]!, nodes[v]!);
+      if (through < cost[v]!) { cost[v] = through; from[v] = u; }
+    }
+  }
+  if (cost[last] === Infinity) return null;
+  const path: number[] = [];
+  for (let at = last; at > 0; at = from[at]!) path.unshift(at);
+  // The first waypoint the monster has not reached yet (it may already stand at a corner).
+  for (const index of path) if (distance(a, nodes[index]!) > 0.3) return index === last ? null : nodes[index]!;
+  return null;
+}
+
+/**
  * One monster's turn in the enemy AI: the soldiers' telegraphed windup, strike and recovery with its species' timings,
  * hunting the hero inside its aggro radius (or with its pack, `alerted`) while the hero stays inside the leash, and
  * wandering its circle otherwise. `bite` deals the strike's damage to the hero.
@@ -225,8 +283,15 @@ export function monsterStep(world: World, s: CampaignData, blueprint: WorldBluep
     return;
   }
   a.state = 'chase';
-  // Close in on the hero, weaving round solids, while keeping apart from the rest of the pack.
-  let sx = range > a.attackRange * 0.8 ? dx : 0, sz = range > a.attackRange * 0.8 ? dz : 0;
+  // Close in on the hero, round any box in the way, weaving round other solids, while keeping apart from the rest of the
+  // pack.
+  let sx = 0, sz = 0;
+  if (range > a.attackRange * 0.8) {
+    const way = detour(blueprint, a, p);
+    const gx = way ? way.x - a.x : dx, gz = way ? way.z - a.z : dz, g = Math.hypot(gx, gz) || 1;
+    sx = gx / g;
+    sz = gz / g;
+  }
   for (const other of pack) {
     if (other === a || other.hp <= 0) continue;
     const d = distance(a, other), gap = a.radius + other.radius + 0.4;

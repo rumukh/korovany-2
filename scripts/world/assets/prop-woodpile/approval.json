@@ -13,14 +13,14 @@
   {
    "gate": "model",
    "decision": "accepted",
-   "sha256": "ec202ff0632cb6831da4b088a9ef869b61098d3210657c5948d452a14c9ebd3b",
-   "rationale": "Cooked 5,910 triangles, 462 KB; 1.23 m tall, 3.2 m long against a gable wall. Log ends and bark read at gameplay distance; albedoGain 2.0 after r1 came out about 2x dark."
+   "sha256": "b7eb14fe728138d1d87aaa131e9a9aa3fc08fe6b49bf6fb7a17d77fb4bf5cbc0",
+   "rationale": "W4b recook of the accepted r2 for texture memory: the same raw, geometry (5910 triangles), 512 px base colour and albedo gain, with normal and ORM maps baked at 1024 and stored at 256 px instead of 512 (the W1 prop standard); 331632 bytes. Side by side with r2 in the close review view the renders differ by under 1/255 per channel on average, with the same mean luma."
   },
   {
    "gate": "in-game",
    "decision": "accepted",
-   "sha256": "ec202ff0632cb6831da4b088a9ef869b61098d3210657c5948d452a14c9ebd3b",
-   "rationale": "Stacked against cottage gables: fits its 1.0 x 3.2 m box, no gaps to the wall in the default camera. Limitation: the log ends are soft, not individually modelled."
+   "sha256": "b7eb14fe728138d1d87aaa131e9a9aa3fc08fe6b49bf6fb7a17d77fb4bf5cbc0",
+   "rationale": "Unchanged in game at the closest camera (18 m) beside a soldier: shading and relief read as before. The world's texture memory falls by 10 MiB (4 to 2 MiB per prop)."
   }
  ]
 }

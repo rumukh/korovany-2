@@ -1,6 +1,6 @@
 import type { Vec2, WorldBlueprint } from '../game/types';
 import { MONSTER_RULES } from '../game/monsters';
-import { lakeBounds, lakeClearance } from '../game/world';
+import { lakeBounds, lakeClearance, monsterLairs } from '../game/world';
 import { fbm } from '../game/world-v3';
 
 /**
@@ -10,7 +10,7 @@ import { fbm } from '../game/world-v3';
  * Relief is regional value-noise hills, limited by a 10 degree cone that rises from the ground that must stay level:
  * road corridors and their shoulders, the river banks, lakes and the sea with a 6 m bank, location clearings, every v3
  * footprint and field, the combat zones (military sites and homes, the villain's citadel arena) and the monster lairs'
- * hunting grounds. Roads, sites, the bridge decks, every shore and every fight stand on level ground; elsewhere the
+ * and haunts' hunting grounds. Roads, sites, the bridge decks, every shore and every fight stand on level ground; elsewhere the
  * walkable slope stays at most about 12 degrees.
  */
 const CELL = 4;
@@ -110,7 +110,7 @@ function levelDistance(world: WorldBlueprint): { grid: Float32Array; columns: nu
     const box = lakeBounds(lake), reach = LAKE_BANK + FAR;
     apply(box.minX - reach, box.minZ - reach, box.maxX + reach, box.maxZ + reach, p => Math.max(0, lakeClearance(lake, p) - LAKE_BANK));
   }
-  for (const lair of world.lairs ?? []) around(lair.x, lair.z, LAIR_FLAT);
+  for (const lair of monsterLairs(world)) around(lair.x, lair.z, LAIR_FLAT);
   return { grid, columns, rows };
 }
 

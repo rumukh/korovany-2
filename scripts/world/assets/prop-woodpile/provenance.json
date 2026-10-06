@@ -4,8 +4,8 @@
  "kind": "prop",
  "output": {
   "file": "public/world/prop-woodpile/prop-woodpile.glb",
-  "sha256": "ec202ff0632cb6831da4b088a9ef869b61098d3210657c5948d452a14c9ebd3b",
-  "bytes": 461872
+  "sha256": "b7eb14fe728138d1d87aaa131e9a9aa3fc08fe6b49bf6fb7a17d77fb4bf5cbc0",
+  "bytes": 331632
  },
  "license": "Derived from TRELLIS-image-large output. TRELLIS's textured GLB export depends on components licensed for research and evaluation only (Gaussian export, diffoctreerast); no commercial clearance is established. The owner acknowledged publishing TRELLIS-derived assets on the public Korovany II site on 2026-09-26.",
  "tools": [
@@ -105,24 +105,24 @@
   },
   "materials": {
    "bakeSize": 1024,
-   "mapsSize": 512,
+   "mapsSize": 256,
    "albedoSizes": [
     512
    ],
    "albedoGain": 2,
    "cageExtrusionMeters": 0.02,
    "maxRayMeters": 0.06,
-   "atlasCoverage": 0.4695281982421875,
+   "atlasCoverage": 0.470062255859375,
    "metalFractionOfSurface": 0,
    "classFractions": {
-    "cut-ends": 0.1196499951252803,
-    "bark": 0.44523252412986253,
-    "gaps": 0.42768353319684116
+    "cut-ends": 0.1216321495812504,
+    "bark": 0.4601700967344024,
+    "gaps": 0.41209504641952865
    },
-   "unclassifiedFraction": 0.007433947548015989,
-   "roughnessMean": 0.9356694221496582,
+   "unclassifiedFraction": 0.006102707264818542,
+   "roughnessMean": 0.9336556196212769,
    "metalnessMean": 0,
-   "aoMean": 0.5126572251319885,
+   "aoMean": 0.5117887854576111,
    "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active, supersampled) from the approved TRELLIS source mesh, then any declared colour repairs the recipe lists (matchBoxes, retint, facingBalance); tangent normals baked from the approved source mesh and whiteout-blended with relief derived from colour; AO baked from the decimated geometry; roughness and metalness from recipe colour classes. Artistic derivation, not measured PBR."
   },
   "geometryCompression": {
@@ -157,11 +157,11 @@
      "raw": 0,
      "packed": 0
     },
-    "stored": 291348
+    "stored": 161108
    },
-   "inputSha256": "37c908d0c272f7ee90fb26017a3819b6582d7e4dc8d3a20ecb0ddc1cf9c1f34f",
-   "bytesBefore": 544476,
-   "bytesAfter": 461872
+   "inputSha256": "f4fe21d40f5424d7f4da107ad0129b7b1d20560443e096d55eb2dff42d94bb8f",
+   "bytesBefore": 414236,
+   "bytesAfter": 331632
   },
   "staticQuantization": {
    "script": "quantize_prop_glb.py",
@@ -214,9 +214,9 @@
     "tangentDegrees": 0.8,
     "uvTexels2048": 0.05
    },
-   "inputSha256": "2487ab8c856b35eb5a4074bca88ee29e5b249417c33d3347088dda3b5234e7c3",
-   "bytesBefore": 845800,
-   "bytesAfter": 544476
+   "inputSha256": "4250a3a1082b1fd1226ceec42858c00a875404e5fcbe5d94128ec5fe5f630783",
+   "bytesBefore": 715560,
+   "bytesAfter": 414236
   },
   "tangentRepair": {
    "script": "repair_tangents.py",
@@ -225,9 +225,9 @@
    "normalsChecked": 10769,
    "tangentsChecked": 10769,
    "repaired": [],
-   "inputSha256": "2487ab8c856b35eb5a4074bca88ee29e5b249417c33d3347088dda3b5234e7c3",
+   "inputSha256": "4250a3a1082b1fd1226ceec42858c00a875404e5fcbe5d94128ec5fe5f630783",
    "bytesChanged": 0
   },
-  "seconds": 4.735508800018579
+  "seconds": 3.4079310999950394
  }
 }

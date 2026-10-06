@@ -11,8 +11,8 @@ export type * from './narrative-types';
 export type FactionId = 'elf' | 'guard' | 'villain';
 export type Phase = 'playing' | 'victory' | 'defeat';
 export type ActorKind = 'soldier' | 'archer' | 'captain' | 'boss' | 'caravan';
-/** Version 3 monsters: grave wolves. */
-export type MonsterSpecies = 'wolf';
+/** Version 3 monsters: grave wolves (W4a), barrow ghouls and bog trolls (W4b). */
+export type MonsterSpecies = 'wolf' | 'ghoul' | 'troll';
 export type ActorState = 'idle' | 'chase' | 'windup' | 'attack' | 'recovery' | 'dead';
 export type ConvoyMode = 'hold' | 'follow' | 'return' | 'route';
 export type UpgradeId = 'damage' | 'vitality' | 'logistics';
@@ -94,8 +94,9 @@ export interface ActorSnapshot extends Position {
 }
 
 /**
- * Version 3 only: a hostile beast of the borderland (a grave wolf). Monsters serve no faction, are never dyed and hunt
- * the hero only; they are not troops, so snapshots list them apart from `actors`, in `GameSnapshot.monsters`.
+ * Version 3 only: a hostile beast of the borderland (a grave wolf, a barrow ghoul or a bog troll). Monsters serve no
+ * faction, are never dyed and hunt the hero only; they are not troops, so snapshots list them apart from `actors`, in
+ * `GameSnapshot.monsters`.
  */
 export interface MonsterSnapshot extends Position {
   /** `monster-<n>`, numbered in spawn order. */
@@ -247,6 +248,12 @@ export interface WorldBlueprint {
   lakes?: WorldLake[];
   /** Version 3 only: monster lairs (grave-wolf dens in the dark forests' glades); never collision. */
   lairs?: WorldLair[];
+  /**
+   * Version 3 only: the haunts of the other beasts, clearings like the lairs (beasts appear at their centre) whose rim
+   * holds the place they haunt: an opened barrow for barrow ghouls in the Ash Steppe, a giant's skull and boulders for
+   * bog trolls in the Fens and on the Frostspine. Placed after the wolves' lairs; never collision themselves.
+   */
+  haunts?: WorldLair[];
 }
 
 export interface ObjectiveSnapshot {

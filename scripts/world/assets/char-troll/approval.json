@@ -1,0 +1,36 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "char-troll",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "c",
+   "sha256": "c52695554ea68d4cf3bdd9a6d521f4fb3017de138ddfe7fee9c5d00d59d1f3e3",
+   "rationale": "Azure gpt-image-2.5-sunburst, three candidates from one prompt (a huge hunched wild beast of the fens and passes, no clothing or weapon; riggable A-pose; neutral studio light). All three share the brief; c chosen for the widest gap between the hanging arms and the body (the rig needs it), a clear lichen-and-moss back and tusked jaw, and feet planted flat."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "fa35faed6433c3f2a36f6ce8830d82070fa7c2ae4ad640557dd32e11eddefa73",
+   "rationale": "Bog troll from TRELLIS raw c-s7502 (19,869 triangles, decimated to 5,801), cooked with cook_monster_biped.py on the same humanoid rig scaled to the beast: 4.4 m to the top of the hump, hips at 1.5 m, arms reaching the knees; base colour 512 px, normal and ORM 256 px; 436516 bytes. Eight clips: Idle (a heavy, swaying breath), Walk at 1.0 m/s with a rolling gait, Run at 4.4 m/s, Windup (0.9 s: both fists rise before the face, the body rearing back), Strike (0.2 s: a two-fisted slam down and forward into a crouch), Recovery (1.0 s), Hit and Death (a slow fall onto the back). Rig iterations: dev1-dev2 strike and recovery targets fell 0.67-0.82 m short of reach; dev3 raised the fists over the head and stretched the shoulders up to 6.8x; dev4 brings them up in front of the face (at most 3.6x). r1 at luma power 0.7 was 0.46 of the concept's luminance; r2 at 0.6 is 0.64.",
+   "limitations": [
+    "Single-view TRELLIS reconstruction: the hump and back are TRELLIS's invention and lumpy where moss and hair were reconstructed as geometry.",
+    "Clips are procedural; the slam has no impact effect on the ground and the jaw never opens; the fingers curl as one bone per hand.",
+    "Shoulders stretch up to about 3.6x in the windup (strain review), visible as smoothing over the shoulder hump.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "fa35faed6433c3f2a36f6ce8830d82070fa7c2ae4ad640557dd32e11eddefa73",
+   "rationale": "A lone troll at its larder (a giant beast's skull and two big mossy boulders) in the Fens and on the Frostspine, at 18-30 m cameras: it stands twice the soldier's height, its 0.9 s windup and 3.2 m tell ring telegraph the slam, and stepping back out of the ring avoids it (unit test). It rounds the skull to reach a hero behind it. Balanced: a stand-up fight costs a hero 15-40 % of health (median 27 %), a hero who steps out of the slams 0-20 %.",
+   "limitations": [
+    "A slam has no ground impact effect or camera shake; the troll does not grab, throw or charge.",
+    "It walks round the skull and boulders by their corners; it does not path-find through dense woods."
+   ]
+  }
+ ]
+}
