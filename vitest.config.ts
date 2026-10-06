@@ -15,6 +15,9 @@ export default defineConfig({
     exclude,
     environment: 'node',
     testTimeout: 120_000,
+    // Simulation suites block their worker's event loop for long stretches; leaving a quarter of the CPUs free keeps
+    // worker-to-runner messages from timing out (3 workers on a 4-vCPU runner, as before; 12 on 16 threads).
+    maxWorkers: '75%',
     // SwiftShader browsers must not compete with each other or simulation suites.
     fileParallelism: process.env.KOROVANY_BROWSER !== '1' && process.env.KOROVANY_WORLD_BROWSER !== '1',
   },
