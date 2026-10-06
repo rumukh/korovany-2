@@ -65,7 +65,11 @@ directory.
 
 Browser-enabled runs execute test files sequentially: the engine's CDP launcher
 uses software WebGL, so concurrent renderers and simulation suites otherwise
-compete for CPU time. Ordinary headless unit-test runs remain parallel.
+compete for CPU time. Ordinary headless unit-test runs remain parallel on 75% of
+the logical CPUs, so workers busy with long simulations still answer the runner.
+The six faction campaign acceptance cases run as separate files
+(`tests/faction-acceptance-<faction>-<directive>.test.ts`) so they spread over
+the workers.
 CI builds the site, runs unit tests and runs four balanced browser-file groups on
 separate runners concurrently. Deployment requires every job to succeed; no
 browser assertions, audio clips or narrative branches are omitted. Each browser

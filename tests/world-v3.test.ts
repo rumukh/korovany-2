@@ -210,11 +210,14 @@ describe('v1 and v2 stay byte-identical', () => {
   };
   const sha = (value: unknown): string => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
-  test('world ids, saves and snapshots match the recorded baseline', () => {
+  test('world ids, saves and snapshots match the recorded baseline', async () => {
+    // Yield between worlds and campaigns so this long run never stalls its worker's messages to the runner.
+    const yieldRunner = (): Promise<void> => new Promise(resolve => setImmediate(resolve));
     const out: Record<string, string> = {};
     for (const seed of [0, 1, 42, 'the-unwritten-road', 'ROAD-II']) {
       out[`world:v1:${seed}`] = generateWorld(seed, 1).id;
       out[`world:v2:${seed}`] = generateWorld(seed).id;
+      await yieldRunner();
     }
     for (const worldVersion of [1, 2] as const) for (const faction of FACTIONS) {
       const game = createCampaign({ seed: 'hash-baseline', faction, runId: 'hash-baseline', worldVersion });
@@ -225,6 +228,7 @@ describe('v1 and v2 stay byte-identical', () => {
       }
       out[`save:v${worldVersion}:${faction}`] = sha(game.serialize());
       out[`snapshot:v${worldVersion}:${faction}`] = sha(game.snapshot());
+      await yieldRunner();
     }
     expect(out).toEqual(baseline);
   });
