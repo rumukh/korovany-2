@@ -342,8 +342,9 @@ export interface CampaignModelSource {
 /**
  * Every cooked model a campaign can present from this snapshot on, loaded before it is drawn: the player's hero, the
  * troop of every actor, the boss faction's soldier (the only actors created after a campaign starts are the boss's
- * reinforcement soldiers), the shared wagons and pickups, and, in a world with a story, all twenty residents and
- * the Echo Well and signature landmarks standing in it. The other factions' heroes and boss are never loaded.
+ * reinforcement soldiers; version 3 monsters are world fauna, loaded with the world's assets), the shared wagons and
+ * pickups, and, in a world with a story, all twenty residents and the Echo Well and signature landmarks standing in it.
+ * The other factions' heroes and boss are never loaded.
  */
 export function campaignModelIds(snapshot: CampaignModelSource): ModelId[] {
   const ids = new Set<ModelId>([HEROES[snapshot.faction].id, ...SHARED_MODEL_IDS]);

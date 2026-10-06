@@ -11,6 +11,8 @@ export type * from './narrative-types';
 export type FactionId = 'elf' | 'guard' | 'villain';
 export type Phase = 'playing' | 'victory' | 'defeat';
 export type ActorKind = 'soldier' | 'archer' | 'captain' | 'boss' | 'caravan';
+/** Version 3 monsters: grave wolves. */
+export type MonsterSpecies = 'wolf';
 export type ActorState = 'idle' | 'chase' | 'windup' | 'attack' | 'recovery' | 'dead';
 export type ConvoyMode = 'hold' | 'follow' | 'return' | 'route';
 export type UpgradeId = 'damage' | 'vitality' | 'logistics';
@@ -89,6 +91,28 @@ export interface ActorSnapshot extends Position {
   target: 'player' | 'convoy' | 'shipment' | null;
   home: Vec2;
   siteId: string;
+}
+
+/**
+ * Version 3 only: a hostile beast of the borderland (a grave wolf). Monsters serve no faction, are never dyed and hunt
+ * the hero only; they are not troops, so snapshots list them apart from `actors`, in `GameSnapshot.monsters`.
+ */
+export interface MonsterSnapshot extends Position {
+  /** `monster-<n>`, numbered in spawn order. */
+  id: string;
+  species: MonsterSpecies;
+  hp: number;
+  maxHp: number;
+  radius: number;
+  state: ActorState;
+  /** Seconds remaining in the currently telegraphed state (or of a wandering pause). */
+  stateTime: number;
+  attackRange: number;
+  target: 'player' | null;
+  /** Its lair's centre. */
+  home: Vec2;
+  /** Its lair (`WorldBlueprint.lairs`). */
+  lairId: string;
 }
 
 export interface ConvoySnapshot extends Position {
@@ -186,6 +210,11 @@ export interface WorldLake extends Vec2 { id: string; kind: 'mere' | 'pool' | 't
  * two gate towers. `heading` uses the box convention (local +Z along (sin h, cos h)).
  */
 export interface WorldDecor extends Vec2 { id: string; model: string; heading: number }
+/**
+ * Version 3 only: a monster lair, an open clearing of `radius` metres (no solids) on near-level ground where a pack of
+ * `species` appears while the hero is 90-160 m away; never collision.
+ */
+export interface WorldLair extends Vec2 { id: string; species: MonsterSpecies; radius: number }
 export interface WorldSite extends Vec2 {
   id: string;
   kind: 'home' | 'outpost' | 'fortress' | 'raid';
@@ -216,6 +245,8 @@ export interface WorldBlueprint {
   decor?: WorldDecor[];
   /** Version 3 only: lakes and the sea, solid like the river. */
   lakes?: WorldLake[];
+  /** Version 3 only: monster lairs (grave-wolf dens in the dark forests' glades); never collision. */
+  lairs?: WorldLair[];
 }
 
 export interface ObjectiveSnapshot {
@@ -269,6 +300,8 @@ export interface GameSnapshot {
   world: WorldBlueprint;
   player: PlayerSnapshot;
   actors: ActorSnapshot[];
+  /** Version 3 only: the monsters abroad (absent from version 1/2 snapshots). */
+  monsters?: MonsterSnapshot[];
   convoy: ConvoySnapshot;
   outposts: OutpostSnapshot[];
   pickups: PickupSnapshot[];

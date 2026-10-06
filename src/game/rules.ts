@@ -2,6 +2,7 @@ import type { System, TickContext, World } from '@aegis/core';
 import { EMPTY_UPGRADES, FACTIONS, MAX_UPGRADE_LEVEL } from './config';
 import { canCapturePost, factionCampaignSnapshot, militaryReady, requiredPosts, shipmentDestination } from './faction-campaigns';
 import { discoverNarrative, narrativeResolved } from './narrative';
+import { monsterSlain, monsterSpawner, monsterStep } from './monsters';
 import { actors, campaign, Combatant, Intent, type ActorData, type CampaignData } from './state';
 import type {
   EffectSnapshot, EventKind, GameInput, InteractionSnapshot, ObjectiveSnapshot, ShopItem,
@@ -76,6 +77,10 @@ function hurtActor(world: World, s: CampaignData, a: ActorData, amount: number):
   a.state = 'dead';
   a.stateTime = 0;
   a.target = null;
+  if (a.kind === 'monster') {
+    emit(world, s, 'kill', 'event.kill', a, monsterSlain(world, s, a), a.id);
+    return;
+  }
   s.player.kills++;
   s.player.level = 1 + Math.floor(s.player.kills / 4);
   const coins = a.kind === 'boss' ? 80 : a.kind === 'captain' ? 24 : 14;
@@ -328,8 +333,23 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
           caravan.heading = caravan.patrolDirection * Math.PI / 2;
           caravan.state = 'idle';
         }
+        // Version 3 monsters hunt as packs: a lair is alerted when any of its living beasts hunts the hero.
+        const packs = new Map<string, ActorData[]>(), alerted = new Set<string>();
+        if (blueprint.version === 3) {
+          for (const a of all) {
+            if (a.kind !== 'monster' || a.hp <= 0) continue;
+            const pack = packs.get(a.siteId);
+            if (pack) pack.push(a); else packs.set(a.siteId, [a]);
+            if (a.target === 'player') alerted.add(a.siteId);
+          }
+        }
         for (const a of all) {
           if (a.hp <= 0 || a.kind === 'caravan' || (a.siteId === 'fortress' && !s.fortress.unlocked)) continue;
+          if (a.kind === 'monster') {
+            monsterStep(ctx.world, s, blueprint, a, alerted, packs.get(a.siteId) ?? [], ctx.dt,
+              () => hurtTarget(ctx.world, s, 'player', a.damage));
+            continue;
+          }
           if (a.allegiance === 'friendly') {
             if (s.faction === 'villain' && s.military?.directive && a.siteId === 'home') {
               a.home = { x: s.convoy.x, z: s.convoy.z };
@@ -639,6 +659,7 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
         }
       },
     },
+    ...(blueprint.version === 3 ? [monsterSpawner(blueprint)] : []),
     {
       name: 'KorovanyOutcome', phase: 'cleanup',
       run(ctx) {

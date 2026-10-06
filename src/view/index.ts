@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { ActorSnapshot, GameSnapshot, OutpostSnapshot, WorldBlueprint } from '../game/types';
+import type { ActorSnapshot, GameSnapshot, MonsterSnapshot, OutpostSnapshot, WorldBlueprint } from '../game/types';
 import { allegiancePennant, createActor, createModelHero, createModelTroop, createModelWagon, proceduralWagon, type ActorModel, type ViewAllegiance, type WagonVisual } from './actors';
 import { FollowCamera, type GroundPoint, type MovementBasis } from './camera';
 import { WorldEffects } from './effects';
@@ -10,9 +10,10 @@ import { residentModel, WorldResidents } from './residents';
 import { createWorldScenery, type WorldScenery } from './world';
 import { createWorldSceneryV3 } from './scenery-v3';
 import { terrainFor, type Terrain } from './terrain';
-import type { WorldAssetLibrary } from './world-assets';
+import { MONSTER_MODELS, type WorldAssetLibrary } from './world-assets';
 import { WorldFauna } from './fauna';
 import { WorldHerds } from './herds';
+import { MonsterInstance } from './monsters';
 import { lightWorld, lightWorldV3, positionSun, positionSunV3, skyEnvironment, V3_GRADE } from './atmosphere';
 import { WorldPostprocessing } from './postprocessing';
 import { DRAFT_OX, gltfModelSource, HEROES, LANDMARK_IDS, ModelLibrary, PICKUP_IDS, propInstance, troopModelFor, WAGONS, type CharacterInstance, type HeroInstance, type ModelStatus, type TroopModelId, type WagonModelId } from './models';
@@ -94,6 +95,8 @@ interface ActorVisual {
   root: THREE.Group;
   actor?: ActorModel;
   character?: CharacterInstance;
+  /** Version 3 monsters. */
+  monster?: MonsterInstance;
   wagon?: WagonVisual;
   bar: HealthBar;
   tell: THREE.Group;
@@ -164,6 +167,8 @@ export class Presentation {
   readonly effects: WorldEffects;
   readonly residents: WorldResidents;
   private readonly actorVisuals = new Map<string, ActorVisual>();
+  /** Version 3 monsters, by ID. */
+  private readonly monsterVisuals = new Map<string, ActorVisual>();
   private readonly postVisuals = new Map<string, PostVisual>();
   /** The cooked hero; the procedural one only without a model library (DOM-free and cutaway tests). */
   private hero: { root: THREE.Group; actor?: ActorModel; character?: HeroInstance } | undefined;
@@ -321,6 +326,14 @@ export class Presentation {
       group.add(person.root);
       return person;
     });
+    // Version 3: one beast of each species this world's lairs keep, so a pack's first appearance compiles nothing.
+    const beasts = [...new Set((this.world.lairs ?? []).map(lair => lair.species))].map((species, index) => {
+      const beast = new MonsterInstance(this.resources.world!.require(MONSTER_MODELS[species]), species);
+      beast.root.position.set(x - 4 - index * 2, this.lift(x, z), z + 4.5);
+      beast.update({ state: 'idle', progress: 0, speed: 0, hit: false, reducedMotion: true }, 0);
+      group.add(beast.root);
+      return beast;
+    });
     // The world draws the Echo Well and every signature landmark through instanced static batches, and the pickups
     // through instanced pools, all with the scenery's shadow-depth material. One batched copy of each landmark and
     // pickup compiles those instanced programs and uploads its textures, so none stalls on first appearance; culling
@@ -362,6 +375,7 @@ export class Presentation {
       for (const extra of extras) extra.character.dispose();
       for (const wagon of wagons) wagon.dispose();
       for (const person of residents) person.dispose();
+      for (const beast of beasts) beast.dispose();
       for (const mesh of props) mesh.dispose();
       this.removeActor(actor.id, visual);
     }
@@ -408,6 +422,24 @@ export class Presentation {
     };
   }
 
+  /** A version 3 monster: its cooked, never-dyed body with a hostile health bar and attack tell. */
+  private makeMonster(snapshot: MonsterSnapshot, dead: boolean): ActorVisual {
+    const library = this.resources.world;
+    if (!library) throw new Error(`Monster ${snapshot.id} needs the world asset library.`);
+    const monster = new MonsterInstance(library.require(MONSTER_MODELS[snapshot.species]), snapshot.species, dead);
+    const root = new THREE.Group();
+    root.name = `monster:${snapshot.id}`;
+    root.add(monster.root);
+    this.scene.add(root);
+    const bar = healthBar(this.resources, root, monster.height + 0.15, 'hostile');
+    const tell = createTell(this.resources, this.scene);
+    tell.group.name = `tell:${snapshot.id}`;
+    return {
+      appearance: `monster:${snapshot.species}`, root, monster, bar, tell: tell.group, tellRing: tell.ring, tellLine: tell.line,
+      lastX: snapshot.x, lastZ: snapshot.z, lastHp: snapshot.hp, speed: 0, state: snapshot.state, stateDuration: snapshot.stateTime,
+    };
+  }
+
   /** A cooked wagon and ox; the procedural wagon only without a model library (DOM-free geometry tests). */
   private makeWagon(id: WagonModelId, affiliation: boolean | ViewAllegiance, pennant: string): WagonVisual {
     const wagon = this.resources.model(id);
@@ -420,10 +452,12 @@ export class Presentation {
 
   private removeActor(id: string, visual: ActorVisual): void {
     visual.character?.dispose();
+    visual.monster?.dispose();
     visual.wagon?.dispose();
     visual.root.removeFromParent();
     visual.tell.removeFromParent();
     this.actorVisuals.delete(id);
+    this.monsterVisuals.delete(id);
   }
 
   private makePost(post: OutpostSnapshot): PostVisual {
@@ -679,6 +713,7 @@ export class Presentation {
       if (activeIds.has(id)) continue;
       this.removeActor(id, visual);
     }
+    this.updateMonsters(snapshot, tickChanged, tickDt, paused, camera, reducedMotion, dt);
 
     for (const post of snapshot.outposts) {
       let visual = this.postVisuals.get(post.id);
@@ -701,9 +736,59 @@ export class Presentation {
     this.lastTick = snapshot.tick;
   }
 
+  /** Version 3 monsters: placed on the terrain, animated by their state, with a health bar and an attack tell. */
+  private updateMonsters(snapshot: Readonly<GameSnapshot>, tickChanged: boolean, tickDt: number, paused: boolean,
+    camera: THREE.Camera, reducedMotion: boolean, dt: number): void {
+    const present = new Set<string>();
+    let corpses = 0;
+    for (const monster of snapshot.monsters ?? []) {
+      present.add(monster.id);
+      const dead = monster.state === 'dead' || monster.hp <= 0;
+      let visual = this.monsterVisuals.get(monster.id);
+      if (!visual) {
+        visual = this.makeMonster(monster, dead);
+        this.monsterVisuals.set(monster.id, visual);
+      }
+      if (dead) corpses += 1;
+      visual.root.visible = !dead || corpses <= 8;
+      visual.root.position.set(monster.x, this.lift(monster.x, monster.z), monster.z);
+      this.orient(visual.root, monster.x, monster.z, monster.heading, dead);
+      if (tickChanged) {
+        visual.speed = Math.hypot(monster.x - visual.lastX, monster.z - visual.lastZ) / tickDt;
+        visual.lastX = monster.x;
+        visual.lastZ = monster.z;
+      }
+      if (visual.state !== monster.state) {
+        visual.state = monster.state;
+        visual.stateDuration = monster.stateTime;
+      }
+      const progress = THREE.MathUtils.clamp(1 - monster.stateTime / Math.max(visual.stateDuration, 0.01), 0, 1);
+      const hit = tickChanged && monster.hp < visual.lastHp;
+      if (tickChanged) visual.lastHp = monster.hp;
+      visual.monster!.update({
+        state: dead ? 'dead' : monster.state === 'windup' || monster.state === 'attack' || monster.state === 'recovery' ? monster.state
+          : !paused && visual.speed > 0.35 ? 'move' : 'idle',
+        progress,
+        speed: paused ? 0 : visual.speed,
+        hit,
+        reducedMotion,
+      }, dt);
+      visual.bar.root.visible = !dead && (monster.hp < monster.maxHp || monster.state === 'windup');
+      updateHealth(visual.bar, monster.hp, monster.maxHp, camera, visual.root);
+      visual.tell.visible = monster.state === 'windup' && !dead;
+      visual.tell.position.set(monster.x, this.terrain.height(monster.x, monster.z), monster.z);
+      visual.tell.rotation.y = monster.heading;
+      visual.tellRing.scale.setScalar(monster.attackRange * 2);
+      visual.tellRing.visible = true;
+      visual.tellLine.visible = false;
+    }
+    for (const [id, visual] of this.monsterVisuals) if (!present.has(id)) this.removeActor(id, visual);
+  }
+
   dispose(): void {
-    for (const visual of this.actorVisuals.values()) {
+    for (const visual of [...this.actorVisuals.values(), ...this.monsterVisuals.values()]) {
       visual.character?.dispose();
+      visual.monster?.dispose();
       visual.wagon?.dispose();
     }
     this.convoy?.dispose();
@@ -716,6 +801,7 @@ export class Presentation {
     this.sun.shadow.dispose();
     this.scene.clear();
     this.actorVisuals.clear();
+    this.monsterVisuals.clear();
     this.postVisuals.clear();
     this.resources.dispose();
   }

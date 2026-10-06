@@ -74,6 +74,38 @@ from the water. The sea closes the Salt Coast: its shore runs inside the east
 bounds along the whole coast (never closer than 2 m to them) and turns out past
 them in the 12 m beyond the coast's ends, where only the mountain ring may stand
 in it. Reeds, drowned trees and the boulders in the surf are presentation only.
+W4a adds monsters to v3: `WorldBlueprint.lairs` (`WorldLair { id, species: 'wolf',
+x, z, radius }`, absent in v1/v2) are grave-wolf dens in the Greenmarch and
+Hollowvale woodland, each an open clearing of `radius` (10 m) holding only its
+den (a fallen pine and two mossy boulders on the rim, `<lair>-den-<0..2>`), at
+least 100 m from settlements, inns, chapel shrines, homes and military sites,
+60 m from every other location, 22 m from road surfaces, 14 m from water and
+120 m from each other; the terrain lies level within 40 m of a den. The v3
+schedule (and only v3's) runs the `KorovanyMonsters` spawner. Every second it
+removes wandering beasts more than 240 m from the hero and gives each lair that
+is not quiet and has no beasts abroad a pack of 3-4 while the hero is 90-160 m
+away, while no more than 12 monster entities, bodies included, exist. Positions,
+pack sizes and wandering draw on the simulation PRNG. Monsters are combatant
+entities (`kind: 'monster'`, `species`, `allegiance: 'hostile'`, their lair as
+`siteId` and its centre as `home`, a fixed meaningless `faction`) with IDs
+`monster-<n>` numbered by the campaign's `spawner` state (`{ version: 1, sequence,
+timer, lairs: { <lairId>: { cooldown } } }`, only in v3 campaigns). Snapshots list
+them apart from the troops, in `GameSnapshot.monsters` (`MonsterSnapshot { id,
+species, x, z, heading, hp, maxHp, radius, state, stateTime, attackRange, target:
+'player' | null, home, lairId }`; the key is absent in v1/v2), never in `actors`.
+A wolf (48 HP, 8 damage, 6 m/s, 0.6 m radius, 1.9 m reach) wanders within 25 m
+of its den, hunts the hero inside 18 m (its whole pack with it) while the hero
+stays within 35 m of the den, and attacks with the troops' telegraphed windup
+(0.35 s), strike and recovery (0.4 s) and a 1.2 s cooldown. It never targets the
+convoy or a shipment. Friendly soldiers, the convoy's weapon, abilities and
+projectiles hurt monsters like any hostile actor. A dead monster drops 4 coins
+while fewer than 16 pickups lie on the ground and stays down for 8 s. Its kill
+emits `event.kill` (amount: the coins, `targetId`: its ID) but never counts
+towards `player.kills`, level or renown. Once a lair's whole pack is dead the
+lair stays quiet for 90-180 s. Living monsters near the hero or a stop count as
+narrative danger. Save validation checks monster identities against the
+sequence, lair, species stats, leash, roaming point, targets, the cap, quiet
+lairs, the spawner's timers, and pickups (at most 56 in v3).
 Default `generateWorld`/`createCampaign` versions stay 2; the browser shell passes `worldVersion: 3` for new
 campaigns. The v3 layout still grows between releases, so restoring a v3 save whose `worldId` no longer matches
 its regenerated world throws `OutdatedWorldError` (the shell explains that the campaign belongs to an earlier
@@ -177,8 +209,10 @@ rewards twice.
 
 The shared mystery concerns a shipment's missing crew, a voice that imitates the
 dead, and the ward-glass trade, but the witnesses, obligations, decisions and
-endings are faction-scoped. It does not add monster combat,
-a day/night system or simulated village populations. Local outcomes are recorded
+endings are faction-scoped. The Caller is never seen and the missing crews never
+become monsters: the story adds no monster combat, a day/night system or
+simulated village populations. (Version 3 worlds have hostile beasts of the
+borderland, grave wolves, outside the story; see "Monsters" above.) Local outcomes are recorded
 narrative events; they change testimony, reputation and available final plans,
 not unimplemented combat bonuses.
 

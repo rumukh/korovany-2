@@ -129,7 +129,10 @@ export class AudioPresentation {
     const enemies = snapshot.actors.filter((actor) => actor.hp > 0 && near(actor, 28) &&
       actor.allegiance !== "friendly" && actor.allegiance !== "neutral" &&
       ["windup", "attack", "chase"].includes(actor.state));
-    if (enemies.length) this.dangerUntil = snapshot.elapsed + 6;
+    // Version 3 monsters hunting the hero count as danger too.
+    const beasts = (snapshot.monsters ?? []).some((monster) => monster.hp > 0 && near(monster, 28) &&
+      ["windup", "attack", "chase"].includes(monster.state));
+    if (enemies.length || beasts) this.dangerUntil = snapshot.elapsed + 6;
     if (snapshot.fortress.unlocked && !snapshot.fortress.bossDefeated &&
       snapshot.actors.some((actor) => actor.kind === "boss" && actor.hp > 0 && near(actor, 36) &&
         actor.allegiance !== "friendly" && actor.allegiance !== "neutral")) this.bossUntil = snapshot.elapsed + 8;
@@ -151,13 +154,15 @@ export class AudioPresentation {
     const previous = this.previous!;
     this.beds(snapshot);
     const distance = (point: Vec2) => Math.hypot(point.x - snapshot.player.x, point.z - snapshot.player.z);
-    const cueAt = (id: string, point: Vec2) => this.sound.cue(id, distance(point),
-      ((point.x - snapshot.player.x) * Math.cos(snapshot.player.heading) -
-        (point.z - snapshot.player.z) * Math.sin(snapshot.player.heading)) / 30);
+    const panOf = (point: Vec2) => ((point.x - snapshot.player.x) * Math.cos(snapshot.player.heading) -
+      (point.z - snapshot.player.z) * Math.sin(snapshot.player.heading)) / 30;
+    const cueAt = (id: string, point: Vec2) => this.sound.cue(id, distance(point), panOf(point));
     for (const event of snapshot.events) {
       if (event.id <= this.lastEvent) continue;
       this.lastEvent = event.id;
       if (event.kind === "notice") continue;
+      // A monster's fall has its own cry (below), not the troops' kill sting.
+      if (event.kind === "kill" && event.targetId.startsWith("monster-")) continue;
       const id = event.kind === "attack" ? `attack-${snapshot.faction}`
         : event.kind === "ability" ? `ability-${snapshot.faction}` : event.kind === "hurt" ? "hit" : event.kind;
       if (event.kind === "victory" || event.kind === "defeat") {
@@ -184,8 +189,35 @@ export class AudioPresentation {
       }
       if (snapshot.player.dodgeCooldown > previous.player.dodgeCooldown) this.sound.cue("dodge");
       if ((snapshot.narrative?.discovered.length ?? 0) > (previous.narrative?.discovered.length ?? 0)) this.sound.cue("discover");
+      this.beasts(snapshot, previous, cueAt, panOf);
     }
     if (snapshot.narrative?.inspection && snapshot.narrative.inspection.locationId !== previous.narrative?.inspection?.locationId) this.sound.cue("inspect");
     this.previous = snapshot;
+  }
+
+  /**
+   * Version 3 monsters' voices: a far howl, quieter than any fight, as a pack appears at its lair; a howl as the pack
+   * turns on the hero; a snarl at each windup, a yelp at a wound and a cry at its death.
+   */
+  private beasts(snapshot: GameSnapshot, previous: GameSnapshot, cueAt: (id: string, point: Vec2) => void,
+    panOf: (point: Vec2) => number): void {
+    const now = snapshot.monsters ?? [], before = new Map((previous.monsters ?? []).map((monster) => [monster.id, monster]));
+    const lairs = new Set(now.map((monster) => monster.lairId));
+    for (const lair of lairs) {
+      const pack = now.filter((monster) => monster.lairId === lair);
+      const earlier = (previous.monsters ?? []).filter((monster) => monster.lairId === lair);
+      const voice = `beast-${pack[0]!.species}`;
+      const hunter = pack.find((monster) => monster.target === "player" && monster.hp > 0);
+      if (!earlier.length) this.sound.cue(`${voice}-howl`, 45, panOf(pack[0]!));
+      else if (hunter && !earlier.some((monster) => monster.target === "player" && monster.hp > 0)) cueAt(`${voice}-howl`, hunter);
+    }
+    for (const monster of now) {
+      const was = before.get(monster.id);
+      if (!was) continue;
+      const voice = `beast-${monster.species}`;
+      if (monster.hp <= 0 && was.hp > 0) cueAt(`${voice}-death`, monster);
+      else if (monster.hp < was.hp) cueAt(`${voice}-yelp`, monster);
+      else if (monster.state === "windup" && was.state !== "windup") cueAt(`${voice}-snarl`, monster);
+    }
   }
 }

@@ -1,0 +1,521 @@
+{
+  "schema": "korovany2-monster-quadruped-recipe/1",
+  "id": "char-wolf",
+  "source": {
+    "candidate": "a2-s7311",
+    "tool": "TRELLIS-image-large 25e0d31, offline",
+    "seed": 7311,
+    "textureSize": 1024,
+    "simplify": 0.95,
+    "glbSha256": "137d926c38f90ffef95eec77a601248c9519ef3c69b976f91bca4918d8a51dcb",
+    "conceptSha256": "a7cc9fd3330848242dac67204a41b42811c023cd7ed15517f387abcd62557aaa"
+  },
+  "yawDegrees": 0,
+  "heightMeters": 1.45,
+  "feetFraction": 0.035,
+  "triangleBudget": 6000,
+  "baseQuality": 90,
+  "ormQuality": 85,
+  "minEdgeMeters": 0.008,
+  "note": "Grave wolf cooked from the delegated-gate round-2 concept candidate a and TRELLIS raw a2-s7311 (head on the midline, front pair square, hind pair 0.13 m apart). Landmarks placed on the normalized mesh from session profiles of the leg columns (the tail excluded behind its front edge), the back and belly lines, the head and ears; the head faces -Y (yaw 0). Height 1.45 m to the ear tips, about 1.34 m at the withers: a little more than half the 2.25 m soldier, larger than any ordinary wolf.",
+  "landmarks": {
+    "hipCentre": [
+      0,
+      0.7,
+      1.04
+    ],
+    "lumbar": [
+      0,
+      0.4,
+      1.07
+    ],
+    "back": [
+      0,
+      0.05,
+      1.1
+    ],
+    "withers": [
+      0,
+      -0.3,
+      1.18
+    ],
+    "neckBase": [
+      0,
+      -0.48,
+      1.06
+    ],
+    "neckMid": [
+      0,
+      -0.58,
+      1.2
+    ],
+    "poll": [
+      0,
+      -0.66,
+      1.24
+    ],
+    "muzzle": [
+      0,
+      -0.98,
+      1.07
+    ],
+    "tailRoot": [
+      0,
+      0.93,
+      1.07
+    ],
+    "tailTip": [
+      0,
+      1.1,
+      0.5
+    ],
+    "ear": [
+      0.09,
+      -0.66,
+      1.33
+    ],
+    "earTip": [
+      0.105,
+      -0.745,
+      1.447
+    ],
+    "legs": {
+      "LF": {
+        "scapulaTop": [
+          0.09,
+          -0.3,
+          1.27
+        ],
+        "shoulder": [
+          0.14,
+          -0.47,
+          0.86
+        ],
+        "elbow": [
+          0.14,
+          -0.235,
+          0.64
+        ],
+        "carpus": [
+          0.16,
+          -0.285,
+          0.21
+        ],
+        "fetlock": [
+          0.17,
+          -0.35,
+          0.07
+        ],
+        "toe": [
+          0.18,
+          -0.5,
+          0.0
+        ]
+      },
+      "RF": {
+        "scapulaTop": [
+          -0.09,
+          -0.3,
+          1.27
+        ],
+        "shoulder": [
+          -0.14,
+          -0.47,
+          0.86
+        ],
+        "elbow": [
+          -0.135,
+          -0.235,
+          0.64
+        ],
+        "carpus": [
+          -0.155,
+          -0.29,
+          0.21
+        ],
+        "fetlock": [
+          -0.165,
+          -0.35,
+          0.07
+        ],
+        "toe": [
+          -0.17,
+          -0.5,
+          0.0
+        ]
+      },
+      "LH": {
+        "hip": [
+          0.12,
+          0.72,
+          0.97
+        ],
+        "stifle": [
+          0.15,
+          0.6,
+          0.64
+        ],
+        "hock": [
+          0.2,
+          0.79,
+          0.32
+        ],
+        "fetlock": [
+          0.25,
+          0.67,
+          0.09
+        ],
+        "toe": [
+          0.29,
+          0.51,
+          0.0
+        ]
+      },
+      "RH": {
+        "hip": [
+          -0.12,
+          0.72,
+          0.97
+        ],
+        "stifle": [
+          -0.15,
+          0.64,
+          0.64
+        ],
+        "hock": [
+          -0.19,
+          0.875,
+          0.35
+        ],
+        "fetlock": [
+          -0.245,
+          0.8,
+          0.09
+        ],
+        "toe": [
+          -0.28,
+          0.635,
+          0.0
+        ]
+      }
+    }
+  },
+  "weights": {
+    "legHalfWidth": 0.12,
+    "legHalfDepth": 0.21,
+    "legTopMargin": -0.04,
+    "midlineGap": 0.02,
+    "tailHalfWidth": 0.13,
+    "tailLead": 0.04,
+    "tailFront": [
+      [
+        0.86,
+        1.1
+      ],
+      [
+        0.9,
+        0.45
+      ]
+    ],
+    "headMargin": 0.08,
+    "neckMargin": -0.02,
+    "shoulderRadius": 0.22,
+    "thighRadius": 0.25,
+    "legBlend": 0.1,
+    "hoofLockHeight": 0.05,
+    "dewlapZ": 0.95,
+    "humerusAbove": 0.05,
+    "humerusMinX": 0.08,
+    "relax": 10,
+    "finalRelax": 4,
+    "minWeight": 0.01,
+    "earRadius": 0.13,
+    "groundLegHeight": 0.25
+  },
+  "gaits": {
+    "Walk": {
+      "speed": 1.3,
+      "duty": 0.62,
+      "sweep": 0.46,
+      "offsets": {
+        "LH": 0.0,
+        "LF": 0.25,
+        "RH": 0.5,
+        "RF": 0.75
+      },
+      "lift": {
+        "F": 0.1,
+        "H": 0.09
+      },
+      "flex_F": 60,
+      "flex_H": 30,
+      "fetlockFlex": 25,
+      "heelLift": 8,
+      "rollFraction": 0.25,
+      "liftPeak": {
+        "F": 0.45,
+        "H": 0.5
+      },
+      "flexPeak": {
+        "F": 0.45,
+        "H": 0.5
+      },
+      "bob": [
+        0.012,
+        2,
+        0.1
+      ],
+      "pitch": [
+        0.8,
+        2,
+        0.35
+      ],
+      "roll": [
+        1.2,
+        1,
+        0.1
+      ],
+      "yaw": [
+        1.5,
+        1,
+        0.35
+      ],
+      "sway": [
+        0.008,
+        1,
+        0.1
+      ],
+      "nod": [
+        3.0,
+        2,
+        0.15
+      ],
+      "counter": 0.3,
+      "scapula": 6,
+      "tail": [
+        4,
+        1,
+        0.3
+      ],
+      "tailLag": 0.06,
+      "drop": -0.03,
+      "neckBias": 12
+    },
+    "Run": {
+      "speed": 6.0,
+      "duty": 0.3,
+      "sweep": 0.46,
+      "offsets": {
+        "LH": 0.0,
+        "RH": 0.1,
+        "LF": 0.5,
+        "RF": 0.6
+      },
+      "lift": {
+        "F": 0.2,
+        "H": 0.18
+      },
+      "flex_F": 75,
+      "flex_H": 50,
+      "fetlockFlex": 50,
+      "heelLift": 8,
+      "rollFraction": 0.35,
+      "liftPeak": {
+        "F": 0.42,
+        "H": 0.5
+      },
+      "flexPeak": {
+        "F": 0.4,
+        "H": 0.5
+      },
+      "bob": [
+        0.03,
+        1,
+        0.9
+      ],
+      "pitch": [
+        4.0,
+        1,
+        0.65
+      ],
+      "flex": [
+        12,
+        1,
+        0.65
+      ],
+      "nod": [
+        6,
+        1,
+        0.6
+      ],
+      "counter": 0.6,
+      "scapula": 10,
+      "tail": [
+        3,
+        1,
+        0.3
+      ],
+      "tailLag": 0.05,
+      "drop": -0.05,
+      "tailLift": 20,
+      "neckBias": 8
+    }
+  },
+  "idle": {
+    "seconds": 4.0,
+    "breath": [
+      1,
+      2,
+      0
+    ],
+    "breathRise": 0.004,
+    "breathPitch": 0.5,
+    "sway": [
+      0.004,
+      1,
+      0.1
+    ],
+    "nod": [
+      3,
+      1,
+      0.2
+    ],
+    "look": [
+      18,
+      1,
+      0.55
+    ],
+    "neckBias": [
+      10,
+      4,
+      -8
+    ],
+    "earPitch": 0,
+    "tailSwishAt": [
+      1.6
+    ],
+    "tailSwishSeconds": 1.2,
+    "tailSwishDegrees": 6,
+    "earFlickAt": [
+      [
+        1.2
+      ],
+      [
+        2.9
+      ]
+    ],
+    "earFlickSeconds": 0.25,
+    "earFlickDegrees": 18
+  },
+  "attack": {
+    "windupSeconds": 0.35,
+    "strikeSeconds": 0.12,
+    "recoverySeconds": 0.4,
+    "landBy": 0.45,
+    "crouch": {
+      "back": 0.14,
+      "sink": 0.16,
+      "pitch": 8,
+      "flex": 8,
+      "neck": [
+        24,
+        8,
+        -22
+      ],
+      "ears": -50,
+      "tail": -10,
+      "scapula": -8
+    },
+    "lunge": {
+      "surge": 0.34,
+      "rise": 0.0,
+      "pitch": 0,
+      "flex": -8,
+      "neck": [
+        -8,
+        -3,
+        14
+      ],
+      "ears": -35,
+      "tail": 10,
+      "scapula": 12,
+      "frontReach": 0.42,
+      "frontLift": 0.1,
+      "frontFlex": 35,
+      "pawCurl": 25
+    },
+    "note": "Timings match the game's wolf: windup 0.35 s, strike (the attack state) 0.12 s, recovery 0.4 s; the game scrubs these clips by its own progress through each state."
+  },
+  "hit": {
+    "seconds": 0.35,
+    "side": 0.06,
+    "back": 0.09,
+    "sink": 0.03,
+    "pitch": -3,
+    "roll": 8,
+    "neck": [
+      -10,
+      -4,
+      0
+    ],
+    "headYaw": 28,
+    "ears": -40,
+    "tail": -10
+  },
+  "death": {
+    "seconds": 1.4,
+    "buckle": 0.35,
+    "rollEnd": 0.95,
+    "settleEnd": 1.3,
+    "side": 1,
+    "pivot": 0.32,
+    "roll": 80,
+    "fold": 28,
+    "back": 0.05,
+    "sink": 0.22,
+    "pitch": 4,
+    "neck": [
+      35,
+      15,
+      10
+    ],
+    "headYaw": 25,
+    "tail": [
+      0,
+      -25
+    ],
+    "ears": -30
+  },
+  "body": {
+    "bakeSize": 1024,
+    "textureSize": 512,
+    "cageExtrusionMeters": 0.02,
+    "maxRayMeters": 0.05,
+    "aoSamples": 64,
+    "aoPower": 1.0,
+    "aoFloor": 0.4,
+    "reliefStrength": 4.0,
+    "roughnessFromDetail": 0.5,
+    "normalMapStrength": 1.0,
+    "albedoGain": 1.0,
+    "toneGamma": 0.9,
+    "defaultRoughness": 0.95,
+    "regions": [
+      {
+        "name": "paws",
+        "zMax": 0.05,
+        "roughness": 0.6
+      },
+      {
+        "name": "nose-and-eyes",
+        "colour": {
+          "maxValue": 0.06
+        },
+        "yMax": -0.88,
+        "roughness": 0.4
+      }
+    ],
+    "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved TRELLIS source mesh; there is no rear-view projection, so the back, far side and underside are as TRELLIS invented them from the single approved concept. Tangent normals baked from the source geometry and whiteout-blended with colour relief; AO baked from the decimated geometry; roughness set inside declared regions (the dark nose and eyes by colour value at the muzzle, the paw soles by height) and otherwise the default, both reduced by colour detail; no metal and no dye mask (monsters are never dyed). Base colour lifted by luma power toneGamma 0.9 (chroma ratios kept), so the coat keeps the concept's charcoal but reads in forest shade: the bake's mean linear luminance is then about 0.54 of the concept's, as the deer's; set by eye in review renders, not calibrated. Artistic derivation, not measured PBR."
+  },
+  "textureNote": "Baked at 1024 and stored at 512 px, as the deer and goat, to keep the version 3 world's texture memory within its budget; a wolf is at most about 100 px tall at the closest camera."
+}

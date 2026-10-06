@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "sfx": [
+    {
+      "id": "beast-wolf-howl",
+      "src": "audio/beasts/beast-wolf-howl.ogg",
+      "duration": 2.942,
+      "loop": false
+    },
+    {
+      "id": "beast-wolf-howl-2",
+      "src": "audio/beasts/beast-wolf-howl-2.ogg",
+      "duration": 3.244,
+      "loop": false
+    },
+    {
+      "id": "beast-wolf-snarl",
+      "src": "audio/beasts/beast-wolf-snarl.ogg",
+      "duration": 0.841,
+      "loop": false
+    },
+    {
+      "id": "beast-wolf-snarl-2",
+      "src": "audio/beasts/beast-wolf-snarl-2.ogg",
+      "duration": 0.889,
+      "loop": false
+    },
+    {
+      "id": "beast-wolf-snarl-3",
+      "src": "audio/beasts/beast-wolf-snarl-3.ogg",
+      "duration": 0.797,
+      "loop": false
+    },
+    {
+      "id": "beast-wolf-yelp",
+      "src": "audio/beasts/beast-wolf-yelp.ogg",
+      "duration": 0.744,
+      "loop": false
+    },
+    {
+      "id": "beast-wolf-yelp-2",
+      "src": "audio/beasts/beast-wolf-yelp-2.ogg",
+      "duration": 0.752,
+      "loop": false
+    },
+    {
+      "id": "beast-wolf-death",
+      "src": "audio/beasts/beast-wolf-death.ogg",
+      "duration": 1.76,
+      "loop": false
+    }
+  ]
+}

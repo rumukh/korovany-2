@@ -1,11 +1,12 @@
 import { createSchedule, createSimulation, createWorld, type World } from '@aegis/core';
 import { FACTIONS, TICK_RATE } from './config';
 import { configureFactionWorld, createMilitary, factionCampaignSnapshot, FACTION_CAMPAIGNS, SHIPMENT_NAME } from './faction-campaigns';
+import { createMonsterState } from './monsters';
 import { assertRecord, boundedNumber, validatedUpgrades } from './profile';
 import { applyNarrative, createNarrative, discoverNarrative, narrativeSnapshot, pauseNarrative, validateNarrativeInput } from './narrative';
 import { campaignSystems, createActor, interaction, objective, resolveOutcome, shopItems } from './rules';
 import { actors, campaign, Campaign, Intent, type CampaignData } from './state';
-import type { CampaignOptions, CampaignSave, FactionId, GameInput, GameSession, GameSnapshot, Vec2, WorldBlueprint } from './types';
+import type { ActorSnapshot, CampaignOptions, CampaignSave, FactionId, GameInput, GameSession, GameSnapshot, MonsterSnapshot, Vec2, WorldBlueprint } from './types';
 import { generateWorld, normalizeSeed } from './world';
 import { validateSavedWorld } from './validation';
 
@@ -92,6 +93,7 @@ function initialState(options: CampaignOptions, blueprint: WorldBlueprint): Camp
     rewards: null, raidComplete: false, eventSequence: 0, transientSequence: 0, spawnSequence: 0,
     followTimer: 0, convoyWeaponTimer: 0, reinforcementTimer: 0, dodgeDirection: { x: 0, z: 1 },
     ...(blueprint.version !== 1 ? { narrative: createNarrative(blueprint, options.faction), military: createMilitary() } : {}),
+    ...(blueprint.version === 3 ? { spawner: createMonsterState(blueprint) } : {}),
   };
 }
 
@@ -138,12 +140,19 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
     },
     snapshot(): GameSnapshot {
       const s = campaign(world);
-      const visibleActors = actors(world).map(a => {
+      const combatants = actors(world);
+      const visibleActors = combatants.filter(a => a.kind !== 'monster').map(a => {
         const { cooldown: _cooldown, damage: _damage, speed: _speed, deadTime: _deadTime,
           attackPoint: _attackPoint, patrolDirection: _patrolDirection,
           marchRoute: _marchRoute, marchDestination: _marchDestination, ...visible } = a;
-        return visible;
+        return visible as ActorSnapshot;
       });
+      // Version 3: the monsters abroad, listed apart from the troops; version 1/2 snapshots have no such key.
+      const monsters: MonsterSnapshot[] | undefined = blueprint.version === 3 ? combatants.filter(a => a.kind === 'monster').map(a => ({
+        id: a.id, species: a.species!, x: a.x, z: a.z, heading: a.heading, hp: a.hp, maxHp: a.maxHp, radius: a.radius,
+        state: a.state, stateTime: a.stateTime, attackRange: a.attackRange, target: a.target === 'player' ? 'player' : null,
+        home: { x: a.home.x, z: a.home.z }, lairId: a.siteId,
+      })) : undefined;
       const projectiles = s.projectiles.map(p => {
         const { vx: _vx, vz: _vz, damage: _damage, ...visible } = p;
         return visible;
@@ -151,7 +160,7 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
       const view = {
         version: 1 as const, phase: s.phase, tick: world.tick, elapsed: world.tick / TICK_RATE,
         seed: s.seed, runId: s.runId, faction: s.faction, world: blueprint,
-        player: s.player, actors: visibleActors, convoy: s.convoy, outposts: s.outposts,
+        player: s.player, actors: visibleActors, ...(monsters ? { monsters } : {}), convoy: s.convoy, outposts: s.outposts,
         pickups: s.pickups, projectiles, effects: s.effects, events: s.events,
         objective: objective(s), fortress: s.fortress, interaction: interaction(s, blueprint, actors(world)),
         shop: shopItems(s, blueprint), rewards: s.rewards,
