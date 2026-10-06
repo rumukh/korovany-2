@@ -1,0 +1,36 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "char-ghoul",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "c",
+   "sha256": "a9dfb671d7130d29848fef4b5b792fbddd63fe0d352a8edc3801e7cc32943095",
+   "rationale": "Azure gpt-image-2.5-sunburst, three candidates from one prompt (a gaunt carrion beast of the barrows, explicitly not a corpse, zombie or person; riggable A-pose with arms clear of the body; neutral studio light). c chosen: the most bestial head (a short snout, a ridge of spines down the neck), long clawed hands well apart from the thighs and a darker hide that separates from pale ash ground; a and b read more like a starved man."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "7628ee5f05a53c8cd7b2741f26358f36e1947b6022911c1c72e93692b2e2dd93",
+   "rationale": "Barrow ghoul from TRELLIS raw c-s7402, cooked with the new cook_monster_biped.py (derived from the shipped troop cook, which stays unchanged): 5,108 triangles in one skinned mesh on the troops' 38-joint humanoid rig with shoulder, hip and knee helpers; 2.6 m tall, about 2.2 m in its hunched ready stance; base colour baked at 1024 and stored at 512 px, normal and ORM at 256 px; 280000 bytes. Eight clips on the game's enemy contract: Idle (hunched, breathing, head turning), Walk at 1.1 m/s, Run at 5.0 m/s, Windup (0.45 s: the right claw rises behind the head), Strike (0.15 s: a downward cross-body swipe), Recovery (0.5 s), Hit (additive flinch) and Death (buckle and fall onto the back, every frame lifted clear of the ground). Rig iterations: dev1 stretched the hand skin toward the hips (hand bones too narrow, hip helper reaching the hands) and its strike and recovery targets fell 29-36 cm short of the arm's reach; dev2 widened the hand and finger radii, shortened the hip helper and moved the targets in reach (all clips within 5 mm). r1 kept TRELLIS's dark bake (mean linear luminance 0.37 of the concept's foreground); r2 lifts it by luma power 0.55 (0.59 of the concept, the wolf ships at 0.55).",
+   "limitations": [
+    "Single-view TRELLIS reconstruction: the back and the soles are TRELLIS's invention.",
+    "Clips are procedural (IK poses and oscillators), not motion capture: the swipe is one arm on a planted stance; fingers curl as one bone per hand; the mouth never opens.",
+    "Edges stretch up to 2.7x (strain review: the knees and hips in the Run, the shoulders in the windup), visible as smoothing of those joints at the closest camera.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "7628ee5f05a53c8cd7b2741f26358f36e1947b6022911c1c72e93692b2e2dd93",
+   "rationale": "A pack of three or four at an opened barrow on the Ash Steppe, the real simulation and view at 18-30 m cameras: the hunched, long-armed silhouette reads against the ash and the barrow, the windup ring and the claw swipe telegraph the hit, the dead lie on the ground, and the 2.6 m beast stands a head above the 2.25 m soldier. Balanced in the simulation (45 stand-up fights: median 8 % health lost, worst 50 % for the 120 HP elf against four).",
+   "limitations": [
+    "Ghouls fight on the same open, level clearing as the wolves; they never enter the barrow (it is a closed mound with a dark doorway).",
+    "They do not flank or circle; packs close in straight, round any box in the way."
+   ]
+  }
+ ]
+}

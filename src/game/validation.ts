@@ -6,7 +6,7 @@ import { narrativeResolved, validateNarrativeState } from './narrative';
 import { assertRecord, boundedNumber, validatedUpgrades } from './profile';
 import { Combatant, type ActorData, type CampaignData } from './state';
 import type { GameInput, WorldBlueprint } from './types';
-import { distance, isWalkable, projectSegment } from './world';
+import { distance, isWalkable, monsterLairs, projectSegment } from './world';
 
 function shape<T>(value: unknown, template: T, path: string): asserts value is T {
   if (template === null) {
@@ -188,7 +188,7 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     same(s.spawner.version, 1, 'monster schema');
     boundedNumber(s.spawner.sequence, 'monster sequence', 0, 999_999_999, true);
     timer(s.spawner.timer, 'monster timer', MONSTER_RULES.check);
-    for (const lair of blueprint.lairs ?? []) timer(s.spawner.lairs[lair.id]!.cooldown, 'lair cooldown', MONSTER_RULES.cooldown[1]);
+    for (const lair of monsterLairs(blueprint)) timer(s.spawner.lairs[lair.id]!.cooldown, 'lair cooldown', MONSTER_RULES.cooldown[1]);
   }
   boundedNumber(s.eventSequence, 'event sequence', 0, 10_000_000, true);
   boundedNumber(s.transientSequence, 'transient sequence', 0, 10_000_000, true);
@@ -302,7 +302,7 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
       same(a.home.x, s.fortress.x + (Number(reinforcement[1]) - 2) * 3, 'reinforcement home X');
       same(a.home.z, s.fortress.z + 5, 'reinforcement home Z');
     } else if (monster !== null && monster <= s.spawner!.sequence) {
-      const lair = (blueprint.lairs ?? []).find(l => l.id === a.siteId);
+      const lair = monsterLairs(blueprint).find(l => l.id === a.siteId);
       if (!lair) throw new Error('Monster outside a lair');
       const spec = MONSTERS[lair.species];
       same(a.kind, 'monster', 'monster kind'); same(a.species, lair.species, 'monster species');
@@ -335,7 +335,7 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     }
     const post = initial.outposts.find(post => post.id === a.siteId);
     if (!post && a.siteId !== 'raid' && a.siteId !== 'fortress' && !(s.military && a.siteId === 'home') &&
-        !(a.kind === 'monster' && (blueprint.lairs ?? []).some(l => l.id === a.siteId))) throw new Error('Invalid actor site');
+        !(a.kind === 'monster' && monsterLairs(blueprint).some(l => l.id === a.siteId))) throw new Error('Invalid actor site');
     if (a.kind !== 'monster') {
       const expectedHp = a.kind === 'boss' ? 480 : a.kind === 'caravan' ? 170 : a.kind === 'captain' ? 90 : a.kind === 'archer' ? 48 : 60;
       same(a.maxHp, expectedHp, 'actor max HP');
@@ -374,7 +374,7 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
   if (s.spawner) {
     const monsters = entities.map(e => e.components.KorovanyCombatant as ActorData).filter(a => a.kind === 'monster');
     if (monsters.length > MONSTER_RULES.cap) throw new Error('Monster cap exceeded');
-    for (const lair of blueprint.lairs ?? []) {
+    for (const lair of monsterLairs(blueprint)) {
       if (s.spawner.lairs[lair.id]!.cooldown > 0 && monsters.some(a => a.siteId === lair.id && a.hp > 0)) throw new Error('A quiet lair has a living pack');
     }
   }

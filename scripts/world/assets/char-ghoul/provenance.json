@@ -1,0 +1,538 @@
+{
+ "schema": "korovany2-world-asset/1",
+ "id": "char-ghoul",
+ "kind": "fauna",
+ "output": {
+  "file": "public/world/char-ghoul/char-ghoul.glb",
+  "sha256": "7628ee5f05a53c8cd7b2741f26358f36e1947b6022911c1c72e93692b2e2dd93",
+  "bytes": 280000
+ },
+ "license": "Derived from TRELLIS-image-large output. TRELLIS's textured GLB export depends on components licensed for research and evaluation only (Gaussian export, diffoctreerast); no commercial clearance is established. The owner acknowledged publishing TRELLIS-derived assets on the public Korovany II site on 2026-09-26.",
+ "tools": [
+  {
+   "name": "Azure OpenAI gpt-image-2.5-sunburst",
+   "runtime": "Azure OpenAI image generation (cloud)",
+   "role": "concept art",
+   "approval": "Owner approved cloud concept generation for in-game objects on 2026-10-04."
+  },
+  {
+   "name": "TRELLIS-image-large",
+   "model": "microsoft/TRELLIS-image-large",
+   "modelRevision": "25e0d31ffbebe4b5a97464dd851910efc3002d96",
+   "offline": true,
+   "licensing": {
+    "wholeToolchainMit": false,
+    "commercialClearanceEstablished": false
+   },
+   "seed": 7402,
+   "inferenceSeconds": 69.1,
+   "output": {
+    "sha256": "c4e2260b8c788e9efeff0c6ebfb1f72ef4a20422efad0d0858faefa3d5677b70",
+    "bytes": 1454408
+   }
+  },
+  {
+   "name": "Blender 5.2.2 LTS",
+   "build": "d13f752e3b9c",
+   "role": "generation, cooking, rigging and bakes (CPU Cycles)"
+  },
+  {
+   "name": "meshoptimizer 0.22.0 (npm)",
+   "role": "lossless EXT_meshopt_compression"
+  }
+ ],
+ "source": {
+  "concept": {
+   "candidate": "c",
+   "sha256": "a9dfb671d7130d29848fef4b5b792fbddd63fe0d352a8edc3801e7cc32943095",
+   "note": "Pixels of the accepted Azure candidate, re-encoded without metadata."
+  },
+  "trellis": {
+   "candidate": "c-s7402",
+   "sha256": "c4e2260b8c788e9efeff0c6ebfb1f72ef4a20422efad0d0858faefa3d5677b70"
+  }
+ },
+ "limitations": [
+  "Single-view TRELLIS reconstruction from one approved concept: the far side, back and underside are TRELLIS's invention.",
+  "Roughness and metalness come from colour classes and Cycles bakes, not measured PBR.",
+  "Clips are procedural (IK poses, oscillators, keyed attack poses), not motion capture; the hands curl as one finger bone each and the jaw never opens.",
+  "Single-view TRELLIS reconstruction: the back and the soles are TRELLIS's invention.",
+  "Clips are procedural (IK poses and oscillators), not motion capture: the swipe is one arm on a planted stance; fingers curl as one bone per hand; the mouth never opens.",
+  "Edges stretch up to 2.7x (strain review: the knees and hips in the Run, the shoulders in the windup), visible as smoothing of those joints at the closest camera.",
+  "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+ ],
+ "cook": {
+  "scripts": {
+   "world/pipeline/cook_monster_biped.py": "55c6f0049bffe9f52231c7087312833989614e88badb4dbde91b92dcff3e9d08",
+   "models/pipeline/k2rig.py": "acacf7ff3039f58271b996b289ecca657d30bc99e195d7b7013e577003a0fc3c",
+   "models/pipeline/k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
+   "models/pipeline/k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
+   "models/pipeline/webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
+   "models/pipeline/quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f",
+   "models/pipeline/meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+  },
+  "scriptsNote": "SHA-256 of each script with LF line endings, equal to its committed copy.",
+  "normalization": {
+   "uniformScale": 2.6007288829808104,
+   "sourceHeight": 0.9997197389602661,
+   "feetCentre": [
+    0.000288449227809906,
+    -0.023441561066611744,
+    -0.49978169798851013
+   ],
+   "yawDegrees": 0,
+   "targetHeightMeters": 2.6,
+   "axes": "glTF +Y up/+Z forward -> Blender import -> glTF export_yup; no extra axis rotation"
+  },
+  "topology": {
+   "vertices": 2551,
+   "faces": 5108,
+   "triangles": 5108,
+   "boundaryEdges": 0,
+   "nonManifoldEdges": 0,
+   "components": 1,
+   "componentVertexCounts": [
+    2551
+   ],
+   "degenerateFaces": 0,
+   "inconsistentWindingEdges": 0
+  },
+  "decimation": {
+   "applied": false,
+   "triangles": 5112
+  },
+  "materials": {
+   "bakeSize": 1024,
+   "textureSize": 512,
+   "atlasCoverage": 0.5197563171386719,
+   "dyeFractionOfSurface": 0,
+   "metalFractionOfSurface": 0,
+   "regionFractions": {
+    "claws": 0.0449831560869278,
+    "toeclaws": 0.011750372474330464
+   },
+   "dyeFills": {},
+   "toneMatch": [],
+   "roughnessMean": 0.7631855010986328,
+   "aoMean": 0.8704321384429932,
+   "albedoGain": 1,
+   "reliefStrength": 4,
+   "aoSamples": 64,
+   "toneGamma": 0.55,
+   "toneCalibration": null,
+   "provenance": "Base colour re-baked (Cycles CPU, emission, selected-to-active) from the approved TRELLIS source mesh (its own back: no rear-view projection); tangent normals baked from the source geometry and whiteout-blended with colour relief; AO baked from the decimated geometry; roughness, metalness and dye mask derived from colour inside declared regions. Base colour then lifted by luma power toneGamma (chroma ratios kept), calibrated in the game against the approved concept. Artistic derivation, not measured PBR.",
+   "detailMaps": {
+    "body-normal": {
+     "size": 256,
+     "resampled": true,
+     "from": 512,
+     "filter": "2x2 box, renormalized"
+    },
+    "body-orm": {
+     "size": 256,
+     "resampled": true,
+     "from": 512,
+     "filter": "2x2 box"
+    }
+   }
+  },
+  "clips": [
+   {
+    "name": "Idle",
+    "frames": 168,
+    "seconds": 2.8,
+    "loop": true,
+    "maxWristBendDegrees": {
+     "l": 12.8,
+     "r": 12.8
+    },
+    "maxReachShortfallMeters": {
+     "l": 0,
+     "r": 0
+    }
+   },
+   {
+    "name": "Walk",
+    "frames": 66,
+    "seconds": 1.1,
+    "loop": true,
+    "speed": 1.1,
+    "direction": [
+     0,
+     -1
+    ],
+    "stride": 1.2100000000000002,
+    "duty": 0.62,
+    "maxWristBendDegrees": {
+     "l": 12.8,
+     "r": 12.8
+    },
+    "maxReachShortfallMeters": {
+     "l": 0,
+     "r": 0
+    }
+   },
+   {
+    "name": "Run",
+    "frames": 37,
+    "seconds": 0.6166666666666667,
+    "loop": true,
+    "speed": 5,
+    "direction": [
+     0,
+     -1
+    ],
+    "stride": 3.0833333333333335,
+    "duty": 0.34,
+    "maxWristBendDegrees": {
+     "l": 12.8,
+     "r": 12.8
+    },
+    "maxReachShortfallMeters": {
+     "l": 0.0048,
+     "r": 0.0049
+    }
+   },
+   {
+    "name": "Windup",
+    "frames": 27,
+    "seconds": 0.45,
+    "maxWristBendDegrees": {
+     "l": 12.8,
+     "r": 12.8
+    },
+    "maxReachShortfallMeters": {
+     "l": 0,
+     "r": 0
+    }
+   },
+   {
+    "name": "Strike",
+    "frames": 9,
+    "seconds": 0.15,
+    "maxWristBendDegrees": {
+     "l": 12.8,
+     "r": 12.8
+    },
+    "maxReachShortfallMeters": {
+     "l": 0,
+     "r": 0
+    }
+   },
+   {
+    "name": "Recovery",
+    "frames": 30,
+    "seconds": 0.5,
+    "maxWristBendDegrees": {
+     "l": 12.8,
+     "r": 12.8
+    },
+    "maxReachShortfallMeters": {
+     "l": 0,
+     "r": 0
+    }
+   },
+   {
+    "name": "Hit",
+    "frames": 21,
+    "seconds": 0.35,
+    "maxWristBendDegrees": {
+     "l": 12.8,
+     "r": 12.8
+    },
+    "maxReachShortfallMeters": {
+     "l": 0,
+     "r": 0
+    }
+   },
+   {
+    "name": "Death",
+    "frames": 72,
+    "seconds": 1.2,
+    "groundClamp": {
+     "lowestBefore": -0.012975303456187248,
+     "iterations": 1,
+     "maxLift": 0.01797530345618725,
+     "finalLift": 0.01797503523528576,
+     "lowestAfter": 0.004999457858502865
+    },
+    "maxWristBendDegrees": {
+     "l": 12.8,
+     "r": 12.8
+    },
+    "maxReachShortfallMeters": {
+     "l": 0,
+     "r": 0
+    }
+   }
+  ],
+  "rig": {
+   "joints": 30,
+   "names": [
+    "root",
+    "pelvis",
+    "spine",
+    "chest",
+    "neck",
+    "head",
+    "clavicle_l",
+    "upperarm_l",
+    "forearm_l",
+    "hand_l",
+    "fingers_l",
+    "thigh_l",
+    "shin_l",
+    "foot_l",
+    "toe_l",
+    "shoulderhelper_l",
+    "kneehelper_l",
+    "hiphelper_l",
+    "clavicle_r",
+    "upperarm_r",
+    "forearm_r",
+    "hand_r",
+    "fingers_r",
+    "thigh_r",
+    "shin_r",
+    "foot_r",
+    "toe_r",
+    "shoulderhelper_r",
+    "kneehelper_r",
+    "hiphelper_r"
+   ]
+  },
+  "weights": {
+   "method": "bone-heat",
+   "joints": 29,
+   "maxInfluences": 4,
+   "relaxationIterations": 24,
+   "finalRelaxation": 2,
+   "lockedVertices": 120,
+   "heatEmptyVertices": 0,
+   "fallbackVertices": 0,
+   "blends": [
+    {
+     "joint": [
+      0.28999999165534973,
+      0.15000000596046448,
+      2.119999885559082
+     ],
+     "vertices": 128
+    },
+    {
+     "joint": [
+      0.46000000834465027,
+      0.20999999344348907,
+      1.649999976158142
+     ],
+     "vertices": 95
+    },
+    {
+     "joint": [
+      0.2150000035762787,
+      0.17000000178813934,
+      0.7300000190734863
+     ],
+     "vertices": 57
+    },
+    {
+     "joint": [
+      0.14000000059604645,
+      0.10000000149011612,
+      1.309999942779541
+     ],
+     "vertices": 346
+    },
+    {
+     "joint": [
+      -0.28999999165534973,
+      0.15000000596046448,
+      2.119999885559082
+     ],
+     "vertices": 119
+    },
+    {
+     "joint": [
+      -0.46000000834465027,
+      0.20999999344348907,
+      1.649999976158142
+     ],
+     "vertices": 95
+    },
+    {
+     "joint": [
+      -0.2150000035762787,
+      0.17000000178813934,
+      0.7300000190734863
+     ],
+     "vertices": 58
+    },
+    {
+     "joint": [
+      -0.14000000059604645,
+      0.10000000149011612,
+      1.309999942779541
+     ],
+     "vertices": 344
+    }
+   ],
+   "regions": {
+    "lockedSoleVertices": 120,
+    "partVertices": {
+     "arm_l": 447,
+     "arm_r": 469,
+     "head": 191,
+     "leg_l": 364,
+     "leg_r": 358,
+     "torso": 722
+    },
+    "bands": {
+     "shoulder": 0.28,
+     "hip": 0.12,
+     "neck": 0.06,
+     "armpit": 0.2,
+     "armpitOffset": [
+      0.03,
+      0.06,
+      -0.16
+     ]
+    },
+    "emptyFallbackVertices": 0
+   },
+   "ankleRamp": {
+    "applied": true,
+    "vertices": {
+     "l": 106,
+     "r": 105
+    },
+    "top": 0.14,
+    "full": 0.03
+   },
+   "seams": [
+    {
+     "seamVertices": 586,
+     "softenedVertices": 1763,
+     "iterations": 20,
+     "rings": 8,
+     "respectsRegions": true
+    }
+   ],
+   "pruning": {
+    "minWeight": 0.01,
+    "influencesPruned": 839
+   }
+  },
+  "geometryCompression": {
+   "extension": "EXT_meshopt_compression",
+   "encoder": "meshoptimizer 0.18.1 (npm)",
+   "script": "meshopt_glb.mjs",
+   "scriptSha256": "9f5914236e6aac82b541e0685ab34f839a1287d50c41b8322724ddf420597ec8",
+   "filters": "none",
+   "reorder": {
+    "method": "meshoptimizer reorderMesh: vertex-cache triangle order, then vertex-fetch vertex order",
+    "primitives": 1,
+    "kept": 0,
+    "vertices": 3865,
+    "triangles": 5108,
+    "check": "a permutation: every vertex keeps its exact attribute bytes, and the triangles are the same, with the same winding, in another order"
+   },
+   "check": "every view decoded again: attribute views byte-identical to the reordered data; triangle index views hold the same triangles in the same order and winding (only the first vertex may rotate)",
+   "views": {
+    "attributes": {
+     "views": 207,
+     "raw": 197740,
+     "packed": 122577
+    },
+    "triangles": {
+     "views": 1,
+     "raw": 30648,
+     "packed": 5492,
+     "rotatedTriangles": 3352
+    },
+    "indices": {
+     "views": 0,
+     "raw": 0,
+     "packed": 0
+    },
+    "stored": 67000
+   },
+   "inputSha256": "4268eb262e4ae6e466c3a093cf8c0e76320cd0efaa4c36381a8826460b211a41",
+   "bytesBefore": 351404,
+   "bytesAfter": 280000
+  },
+  "quantization": {
+   "script": "quantize_glb.py",
+   "scriptSha256": "46911d96d3deaba53622cbe20ba3ca1d20dea63bdf08af95658332dcdd2f4303",
+   "extension": "KHR_mesh_quantization",
+   "settings": {
+    "POSITION": "SHORT normalized; uniform scale and offset folded into the inverse bind matrices",
+    "NORMAL": "BYTE normalized",
+    "TANGENT": "BYTE normalized",
+    "TEXCOORD_0": "UNSIGNED_SHORT normalized",
+    "WEIGHTS_0": "UNSIGNED_BYTE normalized, largest-remainder rounding to 255",
+    "rotation": "SHORT normalized"
+   },
+   "dequantization": {
+    "scaleMeters": 1.300001,
+    "offsetMeters": [
+     -0.001741,
+     1.3,
+     -0.060298
+    ]
+   },
+   "maxErrors": {
+    "positionMm": 0.01984,
+    "normalDegrees": 0.3733,
+    "tangentDegrees": 0.35971,
+    "uvTexels2048": 0.01563,
+    "weight": 0.00277,
+    "rotationDegrees": 0.00328
+   },
+   "bounds": {
+    "positionMm": 0.1,
+    "normalDegrees": 0.8,
+    "tangentDegrees": 0.8,
+    "uvTexels2048": 0.05,
+    "weight": 0.004,
+    "rotationDegrees": 0.01
+   },
+   "inputSha256": "1f8e6b909caa07c3cad3c13e1be7626dea8fb5957bb167e6bc7ce71ee4138d13",
+   "bytesBefore": 583252,
+   "bytesAfter": 351404
+  },
+  "baseEncoding": {
+   "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+   "script": "webp_exact.py",
+   "scriptSha256": "87f340d373c6807260f3704dff4f5b42bda80e47ff6030022d166def26c2773d",
+   "settings": {
+    "quality": 90,
+    "method": 6,
+    "exact": true,
+    "alpha": "lossless"
+   },
+   "reason": "Base-colour alpha is the dye mask; libwebp's default lossy mode discards RGB under alpha 0.",
+   "images": [
+    {
+     "image": "body-base",
+     "size": [
+      512,
+      512
+     ],
+     "bytes": 55008,
+     "sha256": "0a6846517b5ad641eab29a27d71f10cbe931c5f3f569ed0f86098ba5526546fd",
+     "bytesBefore": 1704,
+     "meanAbsRgbError": {
+      "dyed": null,
+      "undyed": 2.378
+     },
+     "meanAbsRgbErrorBefore": {
+      "dyed": null,
+      "undyed": 26.989
+     },
+     "undyedFraction": 1
+    }
+   ]
+  },
+  "seconds": 7.50131560000591
+ }
+}

@@ -106,6 +106,21 @@ lair stays quiet for 90-180 s. Living monsters near the hero or a stop count as
 narrative danger. Save validation checks monster identities against the
 sequence, lair, species stats, leash, roaming point, targets, the cap, quiet
 lairs, the spawner's timers, and pickups (at most 56 in v3).
+W4b adds two species beside the wolf: `WorldBlueprint.haunts` (`WorldLair[]` with
+`species: 'ghoul' | 'troll'`, absent in v1/v2), placed right after the lairs
+(which stay exactly where W4a put them) from their own random stream, keep the
+lairs' clearing and distances (from each other and every lair as well): barrow
+ghoul haunts in the Ash Steppe with an opened long barrow (`kit-barrow`, a
+14 x 8 m box), a warded grave and old headstones on the rim, and bog troll
+haunts in the Fens and on the Frostspine with a giant skull and two big mossy
+boulders (`<haunt>-piece-<n>`). The spawner, cooldowns, validation and terrain
+levelling treat lairs and haunts alike (`monsterLairs`: lairs, then haunts). A
+ghoul (72 HP, 10 damage, 5 m/s, 0.6 m radius, 2.1 m reach, windup 0.45 s,
+recovery 0.5 s, cooldown 1.4 s, 16 m aggro) comes in packs of 3-4 and drops 6
+coins; a troll (300 HP, 24 damage, 4.4 m/s, 1.3 m radius, 3.2 m reach, windup
+0.9 s, recovery 1.0 s, cooldown 2.4 s, 20 m aggro) comes alone and drops 20.
+Chasing monsters walk round the corners of a box (a barrow, a skull, a fallen
+trunk) that stands between them and the hero.
 Default `generateWorld`/`createCampaign` versions stay 2; the browser shell passes `worldVersion: 3` for new
 campaigns. The v3 layout still grows between releases, so restoring a v3 save whose `worldId` no longer matches
 its regenerated world throws `OutdatedWorldError` (the shell explains that the campaign belongs to an earlier
@@ -212,7 +227,7 @@ dead, and the ward-glass trade, but the witnesses, obligations, decisions and
 endings are faction-scoped. The Caller is never seen and the missing crews never
 become monsters: the story adds no monster combat, a day/night system or
 simulated village populations. (Version 3 worlds have hostile beasts of the
-borderland, grave wolves, outside the story; see "Monsters" above.) Local outcomes are recorded
+borderland, grave wolves, barrow ghouls and bog trolls, outside the story; see "Monsters" above.) Local outcomes are recorded
 narrative events; they change testimony, reputation and available final plans,
 not unimplemented combat bonuses.
 

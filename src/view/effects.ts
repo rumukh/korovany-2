@@ -206,6 +206,14 @@ export class WorldEffects {
     this.low = low;
   }
 
+  /** Forgets the last run's bursts and event and tick trackers, as a new instance starts (a new run on the same world). */
+  reset(): void {
+    this.bursts.length = 0;
+    this.lastEvent = -1;
+    this.lastTick = -1;
+    this.trailClock = 0;
+  }
+
   update(snapshot: Readonly<GameSnapshot>, dt: number, cosmeticTime: number, reducedMotion: boolean): void {
     const effects = snapshot.effects.slice(-64);
     this.rings.begin(effects.length + 2);

@@ -20,7 +20,7 @@
   ],
   "material": {
     "bakeSize": 1024,
-    "mapsSize": 512,
+    "mapsSize": 256,
     "cageExtrusionMeters": 0.02,
     "maxRayMeters": 0.06,
     "aoSamples": 32,
@@ -74,5 +74,6 @@
     "normalMapStrength": 1.0,
     "albedoGain": 1.85
   },
-  "albedoGainNote": "Linear gain matching the cooked albedo's mean luminance to the approved concept's foreground (TRELLIS textures came out about 1.7-1.9 times darker; the woodpile gain is capped at 2.0). Measured by luminance ratio, not calibrated in the game."
+  "albedoGainNote": "Linear gain matching the cooked albedo's mean luminance to the approved concept's foreground (TRELLIS textures came out about 1.7-1.9 times darker; the woodpile gain is capped at 2.0). Measured by luminance ratio, not calibrated in the game.",
+  "textureNote": "W4b recook (r3): 512 px base colour with 256 px normal and ORM maps, the W1 prop standard, to keep the version 3 world within its 160 MiB texture memory as the barrow ghoul and the bog troll were added (4 to 2 MiB); a farm prop is at most about 300 px tall at the closest camera."
 }

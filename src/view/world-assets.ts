@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { MonsterSpecies, WorldBlueprint } from '../game/types';
+import { monsterLairs } from '../game/world';
 
 /**
  * Version 3 world assets: buildings, props, trees, rocks and animals. This registry is separate from the cooked
@@ -44,6 +45,8 @@ export const WORLD_MODELS = {
   'kit-ruin-chapel': { kind: 'kit' },
   'kit-ruin-house': { kind: 'kit' },
   'kit-camp-tower': { kind: 'kit' },
+  /** W4b: the barrow ghouls' long barrow (build_kit_w4.py). */
+  'kit-barrow': { kind: 'kit' },
   'prop-haystack': { kind: 'prop' },
   'prop-woodpile': { kind: 'prop' },
   'prop-barrels': { kind: 'prop' },
@@ -101,8 +104,10 @@ export const WORLD_MODELS = {
   /** W3b herds in the wilds: red deer hinds in the forests, feral goats on the crags (cook_quadruped.py). */
   'char-deer': { kind: 'fauna' },
   'char-goat': { kind: 'fauna' },
-  /** W4 monsters: the grave wolf (cook_monster_quadruped.py). */
+  /** W4 monsters: the grave wolf (cook_monster_quadruped.py); the barrow ghoul and the bog troll (cook_monster_biped.py). */
   'char-wolf': { kind: 'fauna' },
+  'char-ghoul': { kind: 'fauna' },
+  'char-troll': { kind: 'fauna' },
 } as const satisfies Record<string, { kind: WorldModelKind }>;
 export type WorldModelId = keyof typeof WORLD_MODELS;
 export const WORLD_MODEL_IDS = Object.keys(WORLD_MODELS) as WorldModelId[];
@@ -152,7 +157,7 @@ export const FAUNA_CLIPS = ['Idle', 'Graze', 'Walk', 'Run', 'Startle'] as const;
  */
 export const MONSTER_CLIPS = ['Idle', 'Walk', 'Run', 'Windup', 'Strike', 'Recovery', 'Hit', 'Death'] as const;
 /** Each monster species' model. */
-export const MONSTER_MODELS: Readonly<Record<MonsterSpecies, WorldModelId>> = { wolf: 'char-wolf' };
+export const MONSTER_MODELS: Readonly<Record<MonsterSpecies, WorldModelId>> = { wolf: 'char-wolf', ghoul: 'char-ghoul', troll: 'char-troll' };
 /**
  * The clips of every fauna model other than the sheep. The crows were the first (the perched model's and the flying
  * model's: the view swaps the two at take-off and landing); the name stays for the world-asset suite, which reads the
@@ -160,7 +165,7 @@ export const MONSTER_MODELS: Readonly<Record<MonsterSpecies, WorldModelId>> = { 
  */
 export const CROW_CLIPS = {
   'char-crow': ['Perch', 'Peck'], 'char-crow-flight': ['Fly', 'Glide', 'TakeOff'], 'char-deer': FAUNA_CLIPS, 'char-goat': FAUNA_CLIPS,
-  'char-wolf': MONSTER_CLIPS,
+  'char-wolf': MONSTER_CLIPS, 'char-ghoul': MONSTER_CLIPS, 'char-troll': MONSTER_CLIPS,
 } as const;
 /**
  * A tree species file holds one group per variant (`variant-0` ...), each with named meshes: bark-layered wood and
@@ -311,15 +316,15 @@ function validate(id: WorldModelId, scene: THREE.Object3D, clips: ReadonlyMap<st
 /**
  * Every world model a world can present: all of a v3 world's obstacle and decor models, its sheep when it has
  * pastures, the crows, deer and goats, which every v3 world has (crows gather on fields, graveyards and gibbets; deer
- * herds keep to the forests and goats to the crags), the monsters of its lairs, the undergrowth scattered round its
- * trees and what stands along its shores.
+ * herds keep to the forests and goats to the crags), the monsters of its lairs and haunts, the undergrowth scattered
+ * round its trees and what stands along its shores.
  */
-export function worldAssetIds(world: Pick<WorldBlueprint, 'version' | 'obstacles' | 'fields' | 'decor' | 'lairs'>): WorldModelId[] {
+export function worldAssetIds(world: Pick<WorldBlueprint, 'version' | 'obstacles' | 'fields' | 'decor' | 'lairs' | 'haunts'>): WorldModelId[] {
   if (world.version !== 3) return [];
   const ids = new Set<string>(['char-crow', 'char-crow-flight', 'char-deer', 'char-goat', ...UNDERGROWTH, ...SHORE_MODELS]);
   // Flocks graze on stubble fields (fauna.ts flockHomes).
   if (world.fields?.some(field => field.crop === 'stubble')) ids.add('char-sheep');
-  for (const lair of world.lairs ?? []) ids.add(MONSTER_MODELS[lair.species]);
+  for (const lair of monsterLairs(world)) ids.add(MONSTER_MODELS[lair.species]);
   for (const obstacle of world.obstacles) if (obstacle.model) ids.add(obstacle.model);
   for (const decor of world.decor ?? []) ids.add(decor.model);
   for (const id of ids) if (!(id in WORLD_MODELS)) throw new Error(`World obstacle model ${id} is not a registered world asset.`);

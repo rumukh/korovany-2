@@ -1,5 +1,5 @@
 import { createPrng } from '@aegis/core';
-import type { Bounds, Obstacle, RoadNode, Vec2, WorldBlueprint, WorldLake, WorldVersion } from './types';
+import type { Bounds, Obstacle, RoadNode, Vec2, WorldBlueprint, WorldLair, WorldLake, WorldVersion } from './types';
 import { expandWorld } from './world-expansion';
 import { buildWorldV3 } from './world-v3';
 
@@ -15,6 +15,11 @@ export function normalizeSeed(seed: string | number): string {
 
 export function distance(a: Vec2, b: Vec2): number {
   return Math.hypot(a.x - b.x, a.z - b.z);
+}
+
+/** Every place a version 3 pack appears: the grave wolves' lairs first, then the other beasts' haunts. */
+export function monsterLairs(world: Pick<WorldBlueprint, 'lairs' | 'haunts'>): WorldLair[] {
+  return [...world.lairs ?? [], ...world.haunts ?? []];
 }
 
 export function projectSegment(p: Vec2, a: Vec2, b: Vec2): Vec2 {
@@ -56,6 +61,18 @@ export function lakeBounds(lake: WorldLake): Bounds {
     lakeBoxes.set(lake, box);
   }
   return box;
+}
+
+/**
+ * Whether `p` comes closer to a lake's shore than `gap` (in the water counts as closer): exactly
+ * `lakeClearance(lake, p) < gap`. A point outside the shore's bounding box is at least that box's distance from the
+ * shore, so one a metre or more beyond `gap` from the box is answered without walking the shore.
+ */
+export function lakeWithin(lake: WorldLake, p: Vec2, gap: number): boolean {
+  const box = lakeBounds(lake);
+  const outside = Math.max(box.minX - p.x, p.x - box.maxX, box.minZ - p.z, p.z - box.maxZ);
+  if (outside > 0 && outside >= gap + 1) return false;
+  return lakeClearance(lake, p) < gap;
 }
 
 /**

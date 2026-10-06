@@ -235,6 +235,8 @@ W1_KIT_REVISION = "r1"
 W2_KIT = {"kit-curtain", "kit-curtain-ruin", "kit-tower-round", "kit-tower-square", "kit-tower-ruin", "kit-keep", "kit-gate-arch",
           "kit-ruin-chapel", "kit-ruin-house", "kit-camp-tower"}
 W2_KIT_REVISION = "r1"
+# W4b: the barrow ghouls' long barrow (build_kit_w4.py).
+W4_KIT_REVISION = "r2"
 # W3a: build_nature_w3.py (which imports build_nature.py's helpers unchanged) cooks the dark-forest species, re-cooks the W0
 # trees with a middle level of detail, and builds the undergrowth, the crags and the forest floor.
 W3_TREES = {"tree-spruce", "tree-birch", "tree-deadoak", "tree-blackpine", "tree-twistedoak", "tree-deadbirch"}
@@ -272,7 +274,9 @@ if __name__ == "__main__":
                    "Roughness and metalness come from colour classes and Cycles bakes, not measured PBR."]
     for asset in args:
         if asset in W0_PROPS:
-            trellis_asset(asset, "prop", "r2", f"{asset}-albedo512.glb",
+            # W4b recooked the W0 farm props with 256 px normal and ORM maps (texture memory); the shipped bytes name their
+            # revision.
+            trellis_asset(asset, "prop", shipped_cook(asset, f"{asset}-albedo512.glb"), f"{asset}-albedo512.glb",
                           ["cook_landmark.py", "k2cook.py", "k2materials.py", "k2sheet.py", "repair_tangents.py", "quantize_prop_glb.py", "meshopt_glb.mjs"],
                           PROP_LIMITS)
         elif asset.startswith("prop-"):
@@ -299,6 +303,19 @@ if __name__ == "__main__":
                            "meshopt_glb.mjs"],
                           PROP_LIMITS + ["Clips are procedural (IK gaits, oscillators, keyed attack poses), not motion capture; the strike lifts "
                                          "both forelegs together and the death roll is a rigid turn of the body with folded legs."])
+        elif asset in ("char-ghoul", "char-troll"):
+            # W4b: cook_monster_biped.py derives from the shipped troop cook (cook_troop_g.py, unchanged) with the monster clip
+            # contract and no items, dye or rear projection; it imports k2rig, k2cook and k2materials unchanged.
+            trellis_asset(asset, "fauna", shipped_cook(asset, f"{asset}.glb"), f"{asset}.glb",
+                          ["cook_monster_biped.py", "k2rig.py", "k2cook.py", "k2materials.py", "webp_exact.py", "quantize_glb.py", "meshopt_glb.mjs"],
+                          PROP_LIMITS + ["Clips are procedural (IK poses, oscillators, keyed attack poses), not motion capture; the hands "
+                                         "curl as one finger bone each and the jaw never opens."])
+        elif asset == "kit-barrow":
+            # W4b: build_kit_w4.py imports the W0, W1 and W2 kits' builders, bake and export unchanged: all four made these bytes.
+            generated_asset(asset, "kit", "kit-w4", W4_KIT_REVISION, "build_kit_w4.py",
+                            ["Box-modelled stones on a smooth turf mound: no grass cards, carved stones or soil slump; detail comes "
+                             "from the surface layers."],
+                            scripts=["build_kit_w4.py", "build_kit_w2.py", "build_kit_w1.py", "build_kit.py", "meshopt_glb.mjs"])
         elif asset in ("char-crow", "char-crow-flight"):
             trellis_asset(asset, "fauna", shipped_cook(asset, f"{asset}.glb"), f"{asset}.glb",
                           ["cook_crow.py", "k2rig.py", "k2cook.py", "k2materials.py", "k2sheet.py", "webp_exact.py", "quantize_glb.py", "meshopt_glb.mjs"],
