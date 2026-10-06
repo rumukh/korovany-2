@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createServer, type ViteDevServer } from 'vite';
 import {
-  evaluate, launchBrowser, openPage, screenshot, until, type CdpSession, type LaunchedBrowser,
+  evaluate, openPage, screenshot, until, type CdpSession, type LaunchedBrowser,
 } from '../vendor/aegis-engine/packages/render-three/src/browser';
-import { closeTestBrowser } from './browser-cleanup';
+import { closeTestBrowser, launchTestBrowser } from './browser-cleanup';
 
 const WIDTH = 1280, HEIGHT = 720;
 /** Simulation ticks (1/60 s) between drawn frames of the hunt: 7.5 frames a second, at least two in every 0.35 s windup. */
@@ -263,7 +263,7 @@ describe.runIf(process.env.KOROVANY_WORLD_BROWSER === '1')('version 3 grave wolv
     await server.listen();
     const origin = server.resolvedUrls?.local[0];
     if (!origin) throw new Error('Monster preview server has no local URL');
-    browser = await launchBrowser({ viewport: { width: WIDTH, height: HEIGHT } });
+    browser = await launchTestBrowser({ viewport: { width: WIDTH, height: HEIGHT } });
     cdp = await openPage(browser.port, `${origin}__monsters`, { width: WIDTH, height: HEIGHT });
     await until(cdp, 'Boolean(window.wolves && (window.wolves.ready || window.wolves.error))', Boolean, 240_000);
     expect(await evaluate(cdp, 'window.wolves.error')).toBeNull();

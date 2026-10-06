@@ -3,13 +3,14 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
 import {
-  evaluate, launchBrowser, openPage, screenshot, until,
+  evaluate, openPage, screenshot, until,
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
 import { createCampaign, type GameSnapshot } from "../src/game";
 import { CampaignDriver } from "./driver";
-import { closeTestBrowser } from "./browser-cleanup";
+import { closeTestBrowser, launchTestBrowser } from "./browser-cleanup";
 import { navigateTestPage, reloadTestPage } from "./browser-navigation";
+import { INSPECT_WITHOUT_WORLD } from "./game-inspect";
 import { storageKeys } from "../src/ui/storage";
 
 interface Inspection {
@@ -27,7 +28,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller through the rea
   let cdp: CdpSession;
   const captures = process.env.KOROVANY_CAPTURE_DIR;
 
-  async function inspect(): Promise<Inspection> { return evaluate(cdp, "window.korovany.inspect()"); }
+  async function inspect(): Promise<Inspection> { return evaluate(cdp, INSPECT_WITHOUT_WORLD); }
   async function frames(count = 2): Promise<void> {
     await evaluate(cdp, `new Promise((resolve,reject) => {
       let remaining=${count};
@@ -77,7 +78,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller through the rea
     const origin = server.resolvedUrls?.local[0];
     if (!origin) throw new Error("Missing controller game URL.");
     expect((await fetch(origin)).status).toBe(200);
-    browser = await launchBrowser({ viewport: { width: 960, height: 640 } });
+    browser = await launchTestBrowser({ viewport: { width: 960, height: 640 } });
     cdp = await openPage(browser.port, "about:blank", { width: 960, height: 640 });
     // Bound SwiftShader pixel cost for input timing while preserving the full CSS layout.
     await cdp.send("Emulation.setDeviceMetricsOverride", {

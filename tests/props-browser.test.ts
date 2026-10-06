@@ -3,10 +3,10 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createServer, type ViteDevServer } from 'vite';
 import {
-  evaluate, launchBrowser, openPage, screenshot, until, type CdpSession, type LaunchedBrowser,
+  evaluate, openPage, screenshot, until, type CdpSession, type LaunchedBrowser,
 } from '../vendor/aegis-engine/packages/render-three/src/browser';
 import { LANDMARK_IDS, LANDMARK_PLACES, PICKUP_IDS } from '../src/view/models';
-import { closeTestBrowser } from './browser-cleanup';
+import { closeTestBrowser, launchTestBrowser } from './browser-cleanup';
 import { navigateTestPage } from './browser-navigation';
 
 const harness = `<!doctype html><html><head><link rel="icon" href="data:,"><style>
@@ -187,7 +187,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked landmarks and picku
     await server.listen();
     const origin = server.resolvedUrls?.local[0];
     if (!origin) throw new Error('Prop harness server has no URL');
-    browser = await launchBrowser({ viewport: { width: 1280, height: 800 } });
+    browser = await launchTestBrowser({ viewport: { width: 1280, height: 800 } });
     cdp = await openPage(browser.port, `${origin}__props`, { width: 1280, height: 800 });
     await until(cdp, 'Boolean(window.propHarness && (window.propHarness.state.ready || window.propHarness.state.error))', Boolean, 60_000);
     expect(await evaluate(cdp, 'window.propHarness.state.error')).toBeNull();

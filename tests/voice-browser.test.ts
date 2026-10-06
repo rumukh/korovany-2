@@ -5,11 +5,12 @@ import { paragraphs, voiceKey, type VoiceEntry } from "../src/audio/manifest";
 import type { Soundscape } from "../src/audio/soundscape";
 import { storageKeys, type Settings } from "../src/ui/storage";
 import {
-  click, evaluate, launchBrowser, openPage, until, type CdpSession, type LaunchedBrowser,
+  click, evaluate, openPage, until, type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeTestBrowser } from "./browser-cleanup";
+import { closeTestBrowser, launchTestBrowser } from "./browser-cleanup";
 import { navigateTestPage, reloadTestPage } from "./browser-navigation";
 import { isSpeechPlaying } from "./browser-audio";
+import { INSPECT_WITHOUT_WORLD } from "./game-inspect";
 
 interface Inspection {
   snapshot: GameSnapshot;
@@ -69,7 +70,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction voice browser tran
   });
   const wave = fixtureWave();
   const inspect = async () => {
-    const inspected = await evaluate<Inspection>(cdp, "window.korovany.inspect()");
+    const inspected = await evaluate<Inspection>(cdp, INSPECT_WITHOUT_WORLD);
     traceAudio("inspect", inspected.audio);
     return inspected;
   };
@@ -143,7 +144,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction voice browser tran
     const origin = server.resolvedUrls?.local[0];
     if (!origin) throw new Error("Missing voice test URL");
     expect((await fetch(origin)).status).toBe(200);
-    browser = await launchBrowser({ viewport: { width: 1440, height: 1000 } });
+    browser = await launchTestBrowser({ viewport: { width: 1440, height: 1000 } });
     cdp = await openPage(browser.port, "about:blank", { width: 1440, height: 1000 });
     await navigateTestPage(cdp, origin, "window.korovany");
   }, 90_000);

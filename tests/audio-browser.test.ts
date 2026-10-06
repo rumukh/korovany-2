@@ -6,11 +6,12 @@ import type { Soundscape } from "../src/audio/soundscape";
 import { defaultMix, mixChannels } from "../src/audio/mix";
 import { storageKeys, type Settings } from "../src/ui/storage";
 import {
-  click, evaluate, launchBrowser, openPage, until, type CdpSession, type LaunchedBrowser,
+  click, evaluate, openPage, until, type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeTestBrowser } from "./browser-cleanup";
+import { closeTestBrowser, launchTestBrowser } from "./browser-cleanup";
 import { waitForSpeech } from "./browser-audio";
 import { navigateTestPage, reloadTestPage } from "./browser-navigation";
+import { INSPECT_WITHOUT_WORLD } from "./game-inspect";
 
 interface Inspection {
   snapshot: GameSnapshot;
@@ -75,7 +76,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("actual browser audio trans
   const assets = (ids: string[], loop: boolean) => ids.map((id) => ({ id, src: "audio/soundtrack/fixture.wav", duration: 12, loop }));
   const score = { version: 1, music: assets(music, true), ambience: assets(ambience, true), sfx: assets(sfx, false) };
   const wave = fixtureWave();
-  const inspect = () => evaluate<Inspection>(cdp, "window.korovany.inspect()");
+  const inspect = () => evaluate<Inspection>(cdp, INSPECT_WITHOUT_WORLD);
 
   async function select(selector: string) {
     const point = await evaluate<{ x: number; y: number }>(cdp, `(() => {
@@ -121,7 +122,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("actual browser audio trans
     expect((await fetch(origin)).status).toBe(200);
     expect(await (await fetch(new URL("audio/soundtrack/manifest.json", origin))).json()).toEqual(score);
     manifestRequests = 0;
-    browser = await launchBrowser({ viewport: { width: 1280, height: 900 } });
+    browser = await launchTestBrowser({ viewport: { width: 1280, height: 900 } });
     cdp = await openPage(browser.port, "about:blank", { width: 1280, height: 900 });
     await cdp.send("Page.addScriptToEvaluateOnNewDocument", { source: `
       if (!localStorage.getItem(${JSON.stringify(storageKeys.settings)})) localStorage.setItem(

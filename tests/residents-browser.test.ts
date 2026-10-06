@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createServer, type ViteDevServer } from 'vite';
 import {
-  evaluate, launchBrowser, openPage, screenshot, until, type CdpSession, type LaunchedBrowser,
+  evaluate, openPage, screenshot, until, type CdpSession, type LaunchedBrowser,
 } from '../vendor/aegis-engine/packages/render-three/src/browser';
-import { closeTestBrowser } from './browser-cleanup';
+import { closeTestBrowser, launchTestBrowser } from './browser-cleanup';
 import { navigateTestPage } from './browser-navigation';
 
 const harness = `<!doctype html><html><head><link rel="icon" href="data:,"><style>
@@ -178,7 +178,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked residents in the br
     await server.listen();
     const origin = server.resolvedUrls?.local[0];
     if (!origin) throw new Error('Resident harness server has no URL');
-    browser = await launchBrowser({ viewport: { width: 1280, height: 800 } });
+    browser = await launchTestBrowser({ viewport: { width: 1280, height: 800 } });
     cdp = await openPage(browser.port, `${origin}__residents`, { width: 1280, height: 800 });
     await until(cdp, 'Boolean(window.residentHarness && (window.residentHarness.state.ready || window.residentHarness.state.error))', Boolean, 60_000);
     expect(await evaluate(cdp, 'window.residentHarness.state.error')).toBeNull();

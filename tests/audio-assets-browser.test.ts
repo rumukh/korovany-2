@@ -8,9 +8,9 @@ import { defaultMix } from "../src/audio/mix";
 import type { Soundscape } from "../src/audio/soundscape";
 import { storageKeys } from "../src/ui/storage";
 import {
-  click, evaluate, launchBrowser, openPage, until, type CdpSession, type LaunchedBrowser,
+  click, evaluate, openPage, until, type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeTestBrowser } from "./browser-cleanup";
+import { closeTestBrowser, launchTestBrowser } from "./browser-cleanup";
 import { waitForSpeech } from "./browser-audio";
 import { navigateTestPage } from "./browser-navigation";
 
@@ -104,7 +104,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("shipped Ogg audio under a 
     if (!local) throw new Error("No actual-asset test URL.");
     origin = new URL(base, local).href;
     expect((await fetch(new URL("audio/soundtrack/manifest.json", origin))).status).toBe(200);
-    browser = await launchBrowser({ viewport: { width: 1280, height: 900 } });
+    browser = await launchTestBrowser({ viewport: { width: 1280, height: 900 } });
     cdp = await openPage(browser.port, new URL("media-check.html", origin).href, { width: 1280, height: 900 });
     await until(cdp, "Boolean(document.querySelector('#unlock'))", Boolean, 30_000);
   }, 120_000);

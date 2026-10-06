@@ -1,12 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
 import {
-  click, evaluate, launchBrowser, mouseMove, openPage, until,
+  click, evaluate, mouseMove, openPage, until,
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
 import type { GameSnapshot } from "../src/game";
-import { closeTestBrowser } from "./browser-cleanup";
+import { closeTestBrowser, launchTestBrowser } from "./browser-cleanup";
 import { navigateTestPage } from "./browser-navigation";
+import { INSPECT_WITHOUT_WORLD } from "./game-inspect";
 import { storageKeys } from "../src/ui/storage";
 
 interface Inspection {
@@ -22,7 +23,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("captured mouse look in the
   let server: ViteDevServer | undefined;
   let browser: LaunchedBrowser | undefined;
   let cdp: CdpSession;
-  const inspect = () => evaluate<Inspection>(cdp, "window.korovany.inspect()");
+  const inspect = () => evaluate<Inspection>(cdp, INSPECT_WITHOUT_WORLD);
   const attacks = (state: Inspection) => state.snapshot.events
     .filter(event => event.kind === "attack" && event.targetId === "player").at(-1)?.id ?? 0;
 
@@ -76,7 +77,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("captured mouse look in the
     const origin = server.resolvedUrls?.local[0];
     if (!origin) throw new Error("Missing mouse-look test server.");
     expect((await fetch(origin)).status).toBe(200);
-    browser = await launchBrowser({ viewport: { width: 960, height: 640 } });
+    browser = await launchTestBrowser({ viewport: { width: 960, height: 640 } });
     cdp = await openPage(browser.port, "about:blank", { width: 960, height: 640 });
     await cdp.send("Emulation.setDeviceMetricsOverride", { width: 960, height: 640, deviceScaleFactor: 0.5, mobile: false });
     await cdp.send("Page.addScriptToEvaluateOnNewDocument", { source: `
