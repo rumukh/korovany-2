@@ -4,8 +4,8 @@
   "role": "the player's logistics convoy wagon (the convoy actor of every faction): an open-bed covered wagon drawn by char-draft-ox, carrying prop-cargo-load, its pennant dyed with the faction colour",
   "output": {
     "file": "public/models/prop-wagon-convoy/prop-wagon-convoy.glb",
-    "sha256": "56853d43df0eb417c8a95bee4ab1207944430190736c95cd0a06e09c6ae4924d",
-    "bytes": 754788
+    "sha256": "9463fc4e81c2399005f667c16b2b7936792b9270a0348aa8b916fdc1b17c62e4",
+    "bytes": 475732
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from the agent's original grey Blender blockout renders (pipeline/make_wagon_references.py); no cloud generation, third-party image, franchise design or real-person likeness was used as input.",
   "acknowledgment": {
@@ -406,22 +406,28 @@
           "raw": 0,
           "packed": 0
         },
-        "stored": 467142
+        "stored": 188092
       },
-      "inputSha256": "827641f9f195e95a3b60d0fbb7872c2c88252909ed8fcbdafddd0547bb98cc83",
-      "bytesBefore": 989676,
-      "bytesAfter": 754788
+      "inputSha256": "d550a12a2ca85d739872ddf460bef4eda5935e19958bb37c7f4941cdd4361ea1",
+      "bytesBefore": 710620,
+      "bytesAfter": 475732
     },
     "derivedFrom": {
-      "cook": "real-004-q",
-      "sha256": "827641f9f195e95a3b60d0fbb7872c2c88252909ed8fcbdafddd0547bb98cc83",
-      "bytes": 989676,
-      "note": "The exact real-004-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "cook": "real-004-q-h",
+      "sha256": "d550a12a2ca85d739872ddf460bef4eda5935e19958bb37c7f4941cdd4361ea1",
+      "bytes": 710620,
+      "note": "The exact real-004-q-h output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
       "derivedFrom": {
-        "cook": "real-004",
-        "sha256": "5ceed35badda85e3177408adc7df1535a1091a48f01052d56335e0d547153bf6",
-        "bytes": 1510712,
-        "note": "The exact real-004 output, quantized by quantize_static_glb.py; the Blender cook was not re-run."
+        "cook": "real-004-q",
+        "sha256": "827641f9f195e95a3b60d0fbb7872c2c88252909ed8fcbdafddd0547bb98cc83",
+        "bytes": 989676,
+        "note": "The exact real-004-q output (the shipped real-004-q-m before EXT_meshopt_compression) with its maps of 1024 px or more halved by resize_maps.py; the Blender cook was not re-run.",
+        "derivedFrom": {
+          "cook": "real-004",
+          "sha256": "5ceed35badda85e3177408adc7df1535a1091a48f01052d56335e0d547153bf6",
+          "bytes": 1510712,
+          "note": "The exact real-004 output, quantized by quantize_static_glb.py; the Blender cook was not re-run."
+        }
       }
     },
     "scripts": {
@@ -433,20 +439,118 @@
       "k2uv.py": "da10d5ef3d511a478f07b9b688b7d43fd11ec8f86bada8505ebaf418b6acc3d2",
       "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
       "quantize_static_glb.py": "9a42f5dc947e841f43cf6b4b096dedb9d063911c3f56236b9cb1dc13d3607327",
-      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5",
+      "resize_maps.py": "50c064c9eb1f597903437ca9cf6a409e7345b9606543d17d4f0e1c620f220688"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
     "seconds": 24.9,
-    "verification": "tests/wagon-models.test.ts checks the body, one spun node per axle whose rim touches the ground, the harness tips within 6 cm of the draft ox's hame hooks, the budgets, WebP maps and normals, and drives the wagon through the presenter without a DOM; tests/wagons-browser.test.ts decodes and renders it in the game's WebGL presenter."
+    "verification": "tests/wagon-models.test.ts checks the body, one spun node per axle whose rim touches the ground, the harness tips within 6 cm of the draft ox's hame hooks, the budgets, WebP maps and normals, and drives the wagon through the presenter without a DOM; tests/wagons-browser.test.ts decodes and renders it in the game's WebGL presenter.",
+    "textureResize": {
+      "script": "resize_maps.py",
+      "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba",
+      "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+      "minSize": 1024,
+      "filter": "2x2 box to half size, as the GPU builds mip level 1: sRGB colour in linear light, alpha and data plainly",
+      "reason": "The game camera never samples this model's top mip level (follow camera at 18-40 m, 48 degree view, pixel ratio at most 1.75); halving its large maps leaves the game's frames unchanged and quarters their texture memory.",
+      "inputSha256": "827641f9f195e95a3b60d0fbb7872c2c88252909ed8fcbdafddd0547bb98cc83",
+      "bytesBefore": 989676,
+      "bytesAfter": 710620,
+      "images": [
+        {
+          "image": "body-normal",
+          "role": "data",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 167988,
+          "bytes": 60464,
+          "sha256Before": "c469c3f07fcf58c4837477f22a915fe37e030b15b87b515cb41d5c40d5482766",
+          "sha256": "a375bd607222a6411a111986fa35c92b2dc76e8d89c0257e09dbb8636b09b1e7",
+          "settings": {
+            "quality": 92,
+            "method": 6
+          },
+          "meanAbsRgbError": 3.321
+        },
+        {
+          "image": "body-orm",
+          "role": "data",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 119550,
+          "bytes": 41404,
+          "sha256Before": "01c4cbbd0b8e6e8411527ff9486fa41182d41e0c1da2d6c48923d71788199042",
+          "sha256": "1e270328d088c3e4f7b5139dc5a954c3c21c6a89b73f947194357eb4cfde8501",
+          "settings": {
+            "quality": 92,
+            "method": 6
+          },
+          "meanAbsRgbError": 2.686
+        },
+        {
+          "image": "body-base",
+          "role": "colour",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 145904,
+          "bytes": 52524,
+          "sha256Before": "97411499dc4004f9c1fda7883191ee38d4167a86c60becf35276f8492bb1c2fc",
+          "sha256": "705f2b0ec50d82f3ae6417802871faef881b3109f46128ac123a7aeebbd3d49c",
+          "settings": {
+            "quality": 92,
+            "method": 6,
+            "exact": true
+          },
+          "meanAbsRgbError": 1.595
+        }
+      ],
+      "kept": [
+        {
+          "image": "parts-base",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 15222,
+          "sha256": "645b42a6b4ac70ab058d7240d0b48c2c86d2205da78cdd237b4074a8272e9122"
+        },
+        {
+          "image": "parts-orm",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 18478,
+          "sha256": "13b63c59f4b334e2a313412af4a78491313f5547d7d7968b11372c9f8f9db68c"
+        }
+      ]
+    }
   },
   "limitations": [
     "Single-view TRELLIS reconstruction from one approved concept: the far side, back and underside are TRELLIS's invention, with no rear-view painting projected onto them.",
     "Roughness, metalness and ambient occlusion are derived from colour inside declared regions and Cycles bakes, not measured PBR or hand-painted masks.",
-    "One body mesh with its detail painted into a single 1024 px base colour; there are no LODs, trim sheets or separate material layers.",
+    "One body mesh with its detail painted into a single base colour (cooked at 1024 px, shipped at 512 px); there are no LODs, trim sheets or separate material layers.",
     "The base colour is lifted by luma power 0.85 (chroma kept), set by eye in review renders, not calibrated against the concept.",
     "Re-cooking is not guaranteed to be byte-reproducible: MikkTSpace tangents can round differently on a few vertices, and Blender's smart UV project can lay out an atlas differently between runs.",
     "The reconstructed wheels, drawbar and ground clutter were cut away and replaced by Blender-authored spoked wheels (1,972 triangles per axle node), shafts, crossbar, duga arch, warding bell and pennant with procedural wood grain: clean and sharper than the reconstructed body, and visibly a different kind of surface up close.",
-    "The TRELLIS texture atlas does not survive the cut and decimation (the first cooks showed smeared, streaked base colour), so the body is unwrapped afresh (smart UV project) and its base colour re-baked from the source mesh: detail is TRELLIS's 2048 px reconstruction resampled to 1024 px.",
+    "The TRELLIS texture atlas does not survive the cut and decimation (the first cooks showed smeared, streaked base colour), so the body is unwrapped afresh (smart UV project) and its base colour re-baked from the source mesh: detail is TRELLIS's 2048 px reconstruction resampled to 1024 px, shipped at 512 px.",
     "The wooden parts' paint was sampled from the concept by eye; wheels and shafts are darker than the first cooks, which read far too light in game.",
     "The pennant is a static rippled cloth (enlarged and rippled after the in-game review so it still reads from straight behind); it does not flutter, and the canvas and ropes do not move.",
     "The body and wheels lean 0.085 rad about the centreline when disabled, as the procedural wagon did, so one rim lifts and the other sinks by up to about 8 cm.",

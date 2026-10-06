@@ -4,8 +4,8 @@
   "role": "the draft ox that pulls both wagons (presentation only: part of the convoy and caravan visuals, not an actor)",
   "output": {
     "file": "public/models/char-draft-ox/char-draft-ox.glb",
-    "sha256": "d46778ed889557722f3d3c4c8750eb4bf939f16f68593e457472d04096a0af19",
-    "bytes": 509944
+    "sha256": "542f377984c46c46ed4820bc85b8c05266317355bcce909c2434988267b4709b",
+    "bytes": 346680
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from the agent's original grey Blender blockout renders (pipeline/make_wagon_references.py); no cloud generation, third-party image, franchise design or real-person likeness was used as input.",
   "acknowledgment": {
@@ -229,23 +229,36 @@
         {
           "image": "body-base",
           "size": [
-            1024,
-            1024
+            512,
+            512
           ],
-          "bytes": 110708,
-          "sha256": "9920124314b97f8157141d62a2d00ff41ccaf5c38643d3e7aa20a97cab2c2f38",
-          "bytesBefore": 5660,
+          "bytes": 44218,
+          "sha256": "024e6733395664b51f765b6d44f42036d70a38278165ce60e92c8e14af1bd6da",
+          "bytesBefore": 110708,
           "meanAbsRgbError": {
             "dyed": null,
-            "undyed": 1.392
+            "undyed": 1.61
           },
-          "meanAbsRgbErrorBefore": {
-            "dyed": null,
-            "undyed": 55.826
-          },
-          "undyedFraction": 1
+          "undyedFraction": 1,
+          "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+          "script": "resize_maps.py",
+          "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba"
         }
-      ]
+      ],
+      "amendedBy": {
+        "script": "resize_maps.py",
+        "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba",
+        "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+        "settings": {
+          "quality": 90,
+          "method": 6,
+          "exact": true,
+          "alpha": "lossless"
+        },
+        "images": [
+          "body-base"
+        ]
+      }
     },
     "quantization": {
       "script": "quantize_glb.py",
@@ -319,22 +332,28 @@
           "raw": 0,
           "packed": 0
         },
-        "stored": 274774
+        "stored": 111508
       },
-      "inputSha256": "e4f60b85729e4afb3e5a40459ed8786ff8e126b41dc1765d60c84e9eed0ea0d3",
-      "bytesBefore": 652924,
-      "bytesAfter": 509944
+      "inputSha256": "a8bce084b428cad88bd9f3151e1d857822931fbf4c2517463123efc895df5185",
+      "bytesBefore": 489660,
+      "bytesAfter": 346680
     },
     "derivedFrom": {
-      "cook": "real-008-q",
-      "sha256": "e4f60b85729e4afb3e5a40459ed8786ff8e126b41dc1765d60c84e9eed0ea0d3",
-      "bytes": 652924,
-      "note": "The exact real-008-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "cook": "real-008-q-h",
+      "sha256": "a8bce084b428cad88bd9f3151e1d857822931fbf4c2517463123efc895df5185",
+      "bytes": 489660,
+      "note": "The exact real-008-q-h output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
       "derivedFrom": {
-        "cook": "real-008",
-        "sha256": "979eb77dec8f60621bfb5f13d690872ac52f4025da4c191d95340d07478a514a",
-        "bytes": 1004328,
-        "note": "The exact real-008 output, quantized by quantize_glb.py; the Blender cook was not re-run."
+        "cook": "real-008-q",
+        "sha256": "e4f60b85729e4afb3e5a40459ed8786ff8e126b41dc1765d60c84e9eed0ea0d3",
+        "bytes": 652924,
+        "note": "The exact real-008-q output (the shipped real-008-q-m before EXT_meshopt_compression) with its maps of 1024 px or more halved by resize_maps.py; the Blender cook was not re-run.",
+        "derivedFrom": {
+          "cook": "real-008",
+          "sha256": "979eb77dec8f60621bfb5f13d690872ac52f4025da4c191d95340d07478a514a",
+          "bytes": 1004328,
+          "note": "The exact real-008 output, quantized by quantize_glb.py; the Blender cook was not re-run."
+        }
       }
     },
     "weights": {
@@ -567,16 +586,96 @@
       "k2sheet.py": "0141e81990f6318c974fa018c895e02aa71b9c8ba5e23dbdd741e4881e6f177c",
       "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
       "quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f",
-      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5",
+      "resize_maps.py": "50c064c9eb1f597903437ca9cf6a409e7345b9606543d17d4f0e1c620f220688"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
     "seconds": 25.6,
-    "verification": "tests/wagon-models.test.ts verifies every 60 Hz frame of every clip (deformation, hoof contact and slide at the authored ground speed, swing lift, loop closure, clearance, edge strain, rigid hooves, normalized weights, no root motion) and rejects six deliberately broken copies; tests/wagons-browser.test.ts renders it."
+    "verification": "tests/wagon-models.test.ts verifies every 60 Hz frame of every clip (deformation, hoof contact and slide at the authored ground speed, swing lift, loop closure, clearance, edge strain, rigid hooves, normalized weights, no root motion) and rejects six deliberately broken copies; tests/wagons-browser.test.ts renders it.",
+    "textureResize": {
+      "script": "resize_maps.py",
+      "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba",
+      "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+      "minSize": 1024,
+      "filter": "2x2 box to half size, as the GPU builds mip level 1: sRGB colour in linear light, alpha and data plainly",
+      "reason": "The game camera never samples this model's top mip level (follow camera at 18-40 m, 48 degree view, pixel ratio at most 1.75); halving its large maps leaves the game's frames unchanged and quarters their texture memory.",
+      "inputSha256": "e4f60b85729e4afb3e5a40459ed8786ff8e126b41dc1765d60c84e9eed0ea0d3",
+      "bytesBefore": 652924,
+      "bytesAfter": 489660,
+      "images": [
+        {
+          "image": "body-normal",
+          "role": "data",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 97388,
+          "bytes": 33272,
+          "sha256Before": "784a699736516969b2fd2f297241a25de91ec1a881965e1e142b2e4f103b8c5f",
+          "sha256": "1697d825a5fda6787c68b31b3d42b9d216a8ca73233e26be95f8bd869458ed72",
+          "settings": {
+            "quality": 92,
+            "method": 6
+          },
+          "meanAbsRgbError": 1.484
+        },
+        {
+          "image": "body-orm",
+          "role": "data",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 66678,
+          "bytes": 34018,
+          "sha256Before": "196a1da6ee2b2484fdd0cb75f6c0d0babefd527018a7dc3172f00e94e6fbd6b7",
+          "sha256": "7f47d1d790e7bdcb4fcbf847c375b0df773d73631c081ac206c78de5e0ef91d1",
+          "settings": {
+            "quality": 92,
+            "method": 6
+          },
+          "meanAbsRgbError": 1.561
+        },
+        {
+          "image": "body-base",
+          "role": "colour",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 110708,
+          "bytes": 44218,
+          "sha256Before": "9920124314b97f8157141d62a2d00ff41ccaf5c38643d3e7aa20a97cab2c2f38",
+          "sha256": "024e6733395664b51f765b6d44f42036d70a38278165ce60e92c8e14af1bd6da",
+          "settings": {
+            "quality": 90,
+            "method": 6,
+            "exact": true,
+            "alpha": "lossless"
+          },
+          "meanAbsRgbError": 1.61
+        }
+      ],
+      "kept": []
+    }
   },
   "limitations": [
     "Single-view TRELLIS reconstruction from one approved concept: the far side, back and underside are TRELLIS's invention, with no rear-view painting projected onto them.",
     "Roughness, metalness and ambient occlusion are derived from colour inside declared regions and Cycles bakes, not measured PBR or hand-painted masks.",
-    "One body mesh with its detail painted into a single 1024 px base colour; there are no LODs, trim sheets or separate material layers.",
+    "One body mesh with its detail painted into a single base colour (cooked at 1024 px, shipped at 512 px); there are no LODs, trim sheets or separate material layers.",
     "The base colour is lifted by luma power 0.8 (chroma kept), set by eye in review renders, not calibrated against the concept.",
     "Re-cooking is not guaranteed to be byte-reproducible: MikkTSpace tangents can round differently on a few vertices, and Blender's smart UV project can lay out an atlas differently between runs.",
     "Hooves are single caps without cloven toes, the eyes are painted, the collar is part of the body mesh and bends with the neck, and the tail is fused along the rump, so its four tail joints can only sway it stiffly.",

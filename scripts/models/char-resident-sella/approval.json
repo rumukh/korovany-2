@@ -38,10 +38,10 @@
     },
     {
       "gate": "in-game",
-      "decision": "Ship the calibrated residents, ship-001-t-q-m (Recommended)",
-      "decidedAt": "2026-10-03T03:45:57.869511+02:00",
-      "question": "Gate 3 for batch D4, delegated under the standing instruction of 2026-10-01: Ivet, Sella, Orsa, Hana and Dren are in the running game at the Reed Chapel, Mirecross, Saltmarket, the Tide Observatory and Wreckers' Rest (board 127.0.0.1:47905, _reviews/gate3-residents-d4). Rig, weights and clips are identical in both candidates, both pass the new tangent check (one vertex of Ivet repaired), are quantized and meshopt-compressed, and pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the five GLBs add 2.67 MB (2.45 MB gzip-9) and all 33 preloaded models total 22.8 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in 19 of 20 scene and quality pairs (one is 0.2 ms higher) and draw calls fall by 26 to 52 per scene; in SwiftShader p50 is within -5.8% and +5.7%. Calibrated lifts all five to their concepts' brightness; the lift saturates the painted backs (Sella's vest, Orsa's and Hana's coats, Dren's tunic) and tints Sella's face orange. As cooked, they stay at 42% to 67% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
-      "sha256": "3756ae4ca47948f9eb7bc7cd62f6fdc10acbc0f4f085bfbd9a4bdaaffff66a7f",
+      "decision": "Ship the map-halved model (Recommended)",
+      "decidedAt": "2026-10-07T01:03:00.013679+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: char-resident-sella with its maps of 1024 px or more halved (resize_maps.py, then meshopt_glb.mjs; geometry, skin and clips byte-identical) is in the running game (board _reviews/gate3-resize-large). The file falls from 552,260 to 345,604 bytes. In isolated renders 0.108% of its pixels differ by more than 8/255 at 18 m (0.018% at pixel ratio 1.75, 0.0% at 26 m), tone ratio 1.0007; in the game (three factions, 18 and 26 m, pixel ratio 1 and 1.75) at most 0.019% of a frame differs by more than 8/255. Close-ups are softer (4.678% of pixels over 8/255). Shader programs are unchanged. Should I ship it?",
+      "sha256": "d48c72a879a7cecba79f5e1d5d952d5ee3dfa8c929c6d32b118a277cdf4452f1",
       "decidedBy": {
         "mode": "delegated",
         "record": "_reviews/delegation-2026-10-01.json",
@@ -63,6 +63,19 @@
         "record": "_reviews/delegation-2026-10-01.json",
         "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
       }
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "Ship the calibrated residents, ship-001-t-q-m (Recommended)",
+      "decidedAt": "2026-10-03T03:45:57.869511+02:00",
+      "question": "Gate 3 for batch D4, delegated under the standing instruction of 2026-10-01: Ivet, Sella, Orsa, Hana and Dren are in the running game at the Reed Chapel, Mirecross, Saltmarket, the Tide Observatory and Wreckers' Rest (board 127.0.0.1:47905, _reviews/gate3-residents-d4). Rig, weights and clips are identical in both candidates, both pass the new tangent check (one vertex of Ivet repaired), are quantized and meshopt-compressed, and pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the five GLBs add 2.67 MB (2.45 MB gzip-9) and all 33 preloaded models total 22.8 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in 19 of 20 scene and quality pairs (one is 0.2 ms higher) and draw calls fall by 26 to 52 per scene; in SwiftShader p50 is within -5.8% and +5.7%. Calibrated lifts all five to their concepts' brightness; the lift saturates the painted backs (Sella's vest, Orsa's and Hana's coats, Dren's tunic) and tints Sella's face orange. As cooked, they stay at 42% to 67% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "3756ae4ca47948f9eb7bc7cd62f6fdc10acbc0f4f085bfbd9a4bdaaffff66a7f",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      },
+      "superseded": "Re-shipped with its maps of 1024 px or more halved (resize_maps.py: a 2x2 box filter, as the GPU builds mip level 1, then meshopt_glb.mjs): the game camera never samples the cooked top level, so the frames are unchanged while the file shrinks by about a third and those maps' texture memory to a quarter (_reviews/gate3-resize-large)."
     }
   ]
 }

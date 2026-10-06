@@ -186,8 +186,11 @@ pennants (the convoy flies its faction's colour, the shipment its current
 allegiance) without extra shader variants. Each campaign loads only the models it
 can show (its own hero, the boss it fights, the troops of its factions, the
 wagons and pickups, and in story worlds the residents and landmarks): about
-28.0 to 29.3 MB of the 33.9 MB of models for a story campaign and about 13.1 to
-13.6 MB for a legacy one. The game waits for those models before presenting a run and stops
+20.6 to 21.3 MB of the 24.5 MB of models for a story campaign and about 9.0 to
+9.5 MB for a legacy one. Characters and wagons ship their maps of 1024 px or more
+at half size, since the game camera never comes close enough to show the finer
+level; the frames look the same with a quarter of those maps' texture memory.
+The game waits for those models before presenting a run and stops
 with an explicit asset error if any fails to load.
 
 **Licensing limitation:** TRELLIS code and weights are MIT-licensed, but its

@@ -4,8 +4,8 @@
   "role": "the Palace Marshal (boss actor of the guard faction in a military villain run, shown x1.7)",
   "output": {
     "file": "public/models/char-boss-marshal/char-boss-marshal.glb",
-    "sha256": "fb7b4281db6f880c168cd8138b0fae0e770b2834d13baf6e6a49751438c47554",
-    "bytes": 1441864
+    "sha256": "dcabfe861b9c5bcdd8e58a8f3d9a6e20ef290f9c520edbbf9e43b836aac2ebc5",
+    "bytes": 854308
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from the approved line-soldier concept with its head replaced by the blank head of an original Blender mannequin; no cloud generation, third-party image, franchise design or real-person likeness was used as input.",
   "acknowledgment": {
@@ -356,21 +356,20 @@
         {
           "image": "body-base",
           "size": [
-            2048,
-            2048
+            1024,
+            1024
           ],
-          "bytes": 602064,
-          "sha256": "516a500900e78a5b79558ef51e138e7792cccaa1ca3a6013b3e6c38f5915be4b",
-          "bytesBefore": 20652,
+          "bytes": 221532,
+          "sha256": "7b193cded6ebdf226db49e0d41aa83d4068bf29e049a565b39af22b5da09df4d",
+          "bytesBefore": 602064,
           "meanAbsRgbError": {
             "dyed": null,
-            "undyed": 1.53
+            "undyed": 1.693
           },
-          "meanAbsRgbErrorBefore": {
-            "dyed": null,
-            "undyed": 49.059
-          },
-          "undyedFraction": 1
+          "undyedFraction": 1,
+          "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+          "script": "resize_maps.py",
+          "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba"
         },
         {
           "image": "items-base",
@@ -391,7 +390,21 @@
           },
           "undyedFraction": 1
         }
-      ]
+      ],
+      "amendedBy": {
+        "script": "resize_maps.py",
+        "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba",
+        "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+        "settings": {
+          "quality": 90,
+          "method": 6,
+          "exact": true,
+          "alpha": "lossless"
+        },
+        "images": [
+          "body-base"
+        ]
+      }
     },
     "quantization": {
       "script": "quantize_glb.py",
@@ -465,22 +478,28 @@
           "raw": 0,
           "packed": 0
         },
-        "stored": 960992
+        "stored": 373436
       },
-      "inputSha256": "1be67cd2bcd7f4db7cde733a8ab76bc544b069547549dc5ff490eaa0703c2899",
-      "bytesBefore": 1724756,
-      "bytesAfter": 1441864
+      "inputSha256": "062c49102328bdaa112b400b2a61fd94be1fb5b30c7e4edc0a9455f0b6d1a5f7",
+      "bytesBefore": 1137200,
+      "bytesAfter": 854308
     },
     "derivedFrom": {
-      "cook": "ship-002-q",
-      "sha256": "1be67cd2bcd7f4db7cde733a8ab76bc544b069547549dc5ff490eaa0703c2899",
-      "bytes": 1724756,
-      "note": "The exact ship-002-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "cook": "ship-002-q-h",
+      "sha256": "062c49102328bdaa112b400b2a61fd94be1fb5b30c7e4edc0a9455f0b6d1a5f7",
+      "bytes": 1137200,
+      "note": "The exact ship-002-q-h output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
       "derivedFrom": {
-        "cook": "ship-002",
-        "sha256": "a24358880f25a9ead66e91da975c628d53b732a11e758b29eb479537a6795a6a",
-        "bytes": 2452364,
-        "note": "The exact ship-002 output, quantized by quantize_glb.py; the Blender cook was not re-run."
+        "cook": "ship-002-q",
+        "sha256": "1be67cd2bcd7f4db7cde733a8ab76bc544b069547549dc5ff490eaa0703c2899",
+        "bytes": 1724756,
+        "note": "The exact ship-002-q output (the shipped ship-002-q-m before EXT_meshopt_compression) with its maps of 1024 px or more halved by resize_maps.py; the Blender cook was not re-run.",
+        "derivedFrom": {
+          "cook": "ship-002",
+          "sha256": "a24358880f25a9ead66e91da975c628d53b732a11e758b29eb479537a6795a6a",
+          "bytes": 2452364,
+          "note": "The exact ship-002 output, quantized by quantize_glb.py; the Blender cook was not re-run."
+        }
       }
     },
     "weights": {
@@ -701,11 +720,110 @@
       "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
       "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
       "quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f",
-      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5",
+      "resize_maps.py": "50c064c9eb1f597903437ca9cf6a409e7345b9606543d17d4f0e1c620f220688"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
     "seconds": 99.0,
-    "verification": "tests/troop-models.test.ts verifies every 60 Hz frame of every clip and rejects six deliberately broken copies."
+    "verification": "tests/troop-models.test.ts verifies every 60 Hz frame of every clip and rejects six deliberately broken copies.",
+    "textureResize": {
+      "script": "resize_maps.py",
+      "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba",
+      "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+      "minSize": 1024,
+      "filter": "2x2 box to half size, as the GPU builds mip level 1: sRGB colour in linear light, alpha and data plainly",
+      "reason": "The game camera never samples this model's top mip level (follow camera at 18-40 m, 48 degree view, pixel ratio at most 1.75); halving its large maps leaves the game's frames unchanged and quarters their texture memory.",
+      "inputSha256": "1be67cd2bcd7f4db7cde733a8ab76bc544b069547549dc5ff490eaa0703c2899",
+      "bytesBefore": 1724756,
+      "bytesAfter": 1137200,
+      "images": [
+        {
+          "image": "body-normal",
+          "role": "data",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 167128,
+          "bytes": 56662,
+          "sha256Before": "da30277529080bc596824917974810cee18cc946dc11c1da0de31913b6d763aa",
+          "sha256": "7e7eb338bfd7ae50e831dece6118fe328bf882bef48ef6800a8f8ab5c81d34c3",
+          "settings": {
+            "quality": 92,
+            "method": 6
+          },
+          "meanAbsRgbError": 2.299
+        },
+        {
+          "image": "body-orm",
+          "role": "data",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 182324,
+          "bytes": 85766,
+          "sha256Before": "66978ba7e9afd405dafa4c3a89deef8a708c6987a78507f2e8e2288984317702",
+          "sha256": "bcdbea09a0a7a24254f5a9d461872847d6defb1b43f5d04d093af176c3ee7c21",
+          "settings": {
+            "quality": 92,
+            "method": 6
+          },
+          "meanAbsRgbError": 7.079
+        },
+        {
+          "image": "body-base",
+          "role": "colour",
+          "sizeBefore": [
+            2048,
+            2048
+          ],
+          "size": [
+            1024,
+            1024
+          ],
+          "bytesBefore": 602064,
+          "bytes": 221532,
+          "sha256Before": "516a500900e78a5b79558ef51e138e7792cccaa1ca3a6013b3e6c38f5915be4b",
+          "sha256": "7b193cded6ebdf226db49e0d41aa83d4068bf29e049a565b39af22b5da09df4d",
+          "settings": {
+            "quality": 90,
+            "method": 6,
+            "exact": true,
+            "alpha": "lossless"
+          },
+          "meanAbsRgbError": 1.693
+        }
+      ],
+      "kept": [
+        {
+          "image": "items-base",
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 4320,
+          "sha256": "9a34035daea88460ea3cb50c79f16505de27446d09d7a95c9ccaf8ee3744d6c2"
+        },
+        {
+          "image": "items-orm",
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 5156,
+          "sha256": "ddcd22ed0a89d5e416a8a8d9d3013c9252b5dace4f4690dd733a6638dee29b68"
+        }
+      ]
+    }
   },
   "limitations": [
     "Single-view TRELLIS reconstruction from one concept: hands are fused 'mitten' shapes (a thumb and two or three joined fingers), and the face is soft, with smeared eye sockets.",
@@ -717,6 +835,7 @@
     "Procedural clips authored in Blender (no motion capture), no root motion. The game scales the captain x1.2 and the bosses x1.7 as the procedural figures were; their Run is authored at the simulation speed divided by that scale.",
     "Re-cooking is not guaranteed to be byte-reproducible: MikkTSpace tangents can round differently on a few vertices, and Blender's smart UV project can lay out the item atlas differently between runs.",
     "TRELLIS blackened the steel cuirass and brightened the slate-blue surcoat to royal blue on every seed; the mantle corner hanging behind the left arm in the concept was not reconstructed.",
-    "Two thin dark arcs cross the shoulder blades where the rear painting meets the mesh's mantle edge (visible only close up)."
+    "Two thin dark arcs cross the shoulder blades where the rear painting meets the mesh's mantle edge (visible only close up).",
+    "Maps of 1024 px or more ship at half the cooked resolution (resize_maps.py: a 2x2 box filter, as the GPU builds mip level 1): the game camera stays 18-40 m away, so it never sampled the cooked top level, and close-up renders are softer than the cook."
   ]
 }

@@ -191,7 +191,7 @@ describe('cooked 3D models', () => {
     expect(triangles).toBeLessThanOrEqual(14_000);
     const images = gltf.images!.map((image, index) => ({ name: image.name, ...imageSize(imageBytes(document, index)) }));
     expect(images.every(image => image.format === 'webp')).toBe(true);
-    expect(images.find(image => image.name === 'body-base')).toMatchObject({ width: 1024, height: 1024, alpha: true });
+    expect(images.find(image => image.name === 'body-base')).toMatchObject({ width: 512, height: 512, alpha: true });
     expect(images.find(image => image.name === 'items-base')).toMatchObject({ alpha: true });
     const { scene, animations } = await parseGlbWithoutTextures(glb('char-line-soldier'));
     const bounds = new THREE.Box3().setFromObject(scene);

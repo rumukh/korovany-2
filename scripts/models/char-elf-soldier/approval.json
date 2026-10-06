@@ -26,10 +26,10 @@
     },
     {
       "gate": "in-game",
-      "decision": "approve: ship all three elf troops as cooked",
-      "decidedAt": "2026-10-04T00:25:48.620779+02:00",
-      "question": "Ship the elf soldier, archer and captain as cooked (ship-001-t-q-m) in place of the Crown troop models for elf troop actors, after the in-game review at gameplay camera distances, combat, corpse and conversation states, high and low quality, reduced motion and measured cost?",
-      "sha256": "4fcc02697f7465c69affc767eaf0146459eae58aec3ec2ecce5a70c024c201cb",
+      "decision": "Ship the map-halved model (Recommended)",
+      "decidedAt": "2026-10-07T01:03:00.013679+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: char-elf-soldier with its maps of 1024 px or more halved (resize_maps.py, then meshopt_glb.mjs; geometry, skin and clips byte-identical) is in the running game (board _reviews/gate3-resize-large). The file falls from 862,908 to 571,768 bytes. In isolated renders 0.0% of its pixels differ by more than 8/255 at 18 m (0.147% at pixel ratio 1.75, 0.0% at 26 m), tone ratio 0.9991; in the game (three factions, 18 and 26 m, pixel ratio 1 and 1.75) at most 0.019% of a frame differs by more than 8/255. Close-ups are softer (9.925% of pixels over 8/255). Shader programs are unchanged. Should I ship it?",
+      "sha256": "71f6acc65bdcc235be5b119747f3d24ce72505917ceeec069847e1728ed0cd1f",
       "decidedBy": {
         "mode": "delegated",
         "record": "_reviews/delegation-2026-10-01.json",
@@ -46,6 +46,19 @@
       "sha256": "2622f05a3424c1c78ef66f1c1495636b5153f5baa87af316fb4e2854ac942a55",
       "approvedFileSha256": "29ad8e084e4195973a65f3d57639bc82f1956d393981f53bec8cf9be0b894d6d",
       "pixelSha256": "2e925f6e281c8b880152ee3e47b67f73ba885b9a18df19cf384d4d049cd37651"
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "approve: ship all three elf troops as cooked",
+      "decidedAt": "2026-10-04T00:25:48.620779+02:00",
+      "question": "Ship the elf soldier, archer and captain as cooked (ship-001-t-q-m) in place of the Crown troop models for elf troop actors, after the in-game review at gameplay camera distances, combat, corpse and conversation states, high and low quality, reduced motion and measured cost?",
+      "sha256": "4fcc02697f7465c69affc767eaf0146459eae58aec3ec2ecce5a70c024c201cb",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      },
+      "superseded": "Re-shipped with its maps of 1024 px or more halved (resize_maps.py: a 2x2 box filter, as the GPU builds mip level 1, then meshopt_glb.mjs): the game camera never samples the cooked top level, so the frames are unchanged while the file shrinks by about a third and those maps' texture memory to a quarter (_reviews/gate3-resize-large)."
     }
   ]
 }

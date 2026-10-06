@@ -79,7 +79,7 @@ describe('cooked residents', () => {
     expect(triangles(document)).toBeLessThanOrEqual(10_000);
     const images = gltf.images!.map((image, index) => ({ name: image.name, ...imageSize(imageBytes(document, index)) }));
     expect(images.every(image => image.format === 'webp')).toBe(true);
-    for (const name of ['body-base', 'body-normal']) expect(images.find(image => image.name === name)?.width).toBeGreaterThanOrEqual(1024);
+    for (const name of ['body-base', 'body-normal']) expect(images.find(image => image.name === name)?.width).toBeGreaterThanOrEqual(512);
     expect(images.find(image => image.name === 'body-orm')?.width).toBe(512);
     // Vertex data and rotation keys are quantized (KHR_mesh_quantization, read by three.js without a decoder); the
     // positions' dequantization lives in the inverse bind matrices, so the bounds below are measured through the skin.
