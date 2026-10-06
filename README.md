@@ -495,9 +495,13 @@ ambience beds follow the player. Final scores start only after victory, never af
 defeat plays its cue and then falls silent. Presentation
 effects use snapshot events and movement, with distance attenuation, stereo
 placement, rate limits and bounded polyphony. They do not change game rules.
+Footsteps are timber on the bridge decks and soft earth everywhere else,
+including the home camp and other site rings. Each surface has four quiet takes,
+shuffled without an immediate repeat and varied slightly in pitch and level.
 
 The score contains eight original instrumental compositions totaling 15 minutes,
-eight 32-second regional loops and 24 distinct effects. Production captions,
+eight 32-second regional loops and 24 distinct effects in 30 files, counting
+each footstep take. Production captions,
 source hashes, mastering details and reproduction instructions are retained in
 [`scripts/audio`](scripts/audio/README.md). Voice casting, pronunciation and
 exact narrative coverage are documented in [`scripts/voices`](scripts/voices/README.md).

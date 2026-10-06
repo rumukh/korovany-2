@@ -1,4 +1,4 @@
-import type { GameSnapshot, LocalizedText, Vec2 } from "../game";
+import type { GameSnapshot, LocalizedText, Vec2, WorldBlueprint } from "../game";
 import type { EndingId } from "../game/narrative-data";
 import { getFactionStory } from "../game/faction-stories";
 import type { Language } from "../ui/storage";
@@ -34,6 +34,12 @@ export function regionAudio(snapshot: GameSnapshot): string {
     point.x >= bounds.minX && point.x <= bounds.maxX && point.z >= bounds.minZ && point.z <= bounds.maxZ);
   const aliases: Record<string, string> = { fenlands: "fens", saltcoast: "salt-coast", ashsteppe: "ash-steppe" };
   return region ? aliases[region.id] ?? region.id : "heartlands";
+}
+
+/** Timber footfalls on the plank bridge decks; trodden earth everywhere else, including camps and other site rings. */
+export function footstep(world: WorldBlueprint, point: Vec2): "step-wood" | "step-dirt" {
+  return world.bridges.some((bounds) => point.x >= bounds.minX && point.x <= bounds.maxX &&
+    point.z >= bounds.minZ && point.z <= bounds.maxZ) ? "step-wood" : "step-dirt";
 }
 
 export function endingMusic(snapshot: GameSnapshot): string | null {
@@ -175,10 +181,7 @@ export class AudioPresentation {
       const moved = distance(previous.player);
       if (moved < 5 && snapshot.player.state === "moving") this.footDistance += moved;
       if (this.footDistance > 2.3) {
-        const onStone = snapshot.world.bridges.some((bounds) => snapshot.player.x >= bounds.minX && snapshot.player.x <= bounds.maxX &&
-          snapshot.player.z >= bounds.minZ && snapshot.player.z <= bounds.maxZ) ||
-          snapshot.world.sites.some((site) => ["fortress", "home"].includes(site.kind) && distance(site) < site.radius);
-        this.sound.cue(onStone ? "step-stone" : "step-dirt");
+        this.sound.cue(footstep(snapshot.world, snapshot.player));
         this.footDistance %= 2.3;
       }
       const cartMoved = Math.hypot(snapshot.convoy.x - previous.convoy.x, snapshot.convoy.z - previous.convoy.z);

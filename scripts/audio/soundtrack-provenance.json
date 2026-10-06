@@ -2,7 +2,7 @@
   "version": 1,
   "production": "korovany2-hollow-road-20260913",
   "master_archive": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913",
-  "generator_sha256": "89ef0c309b22c25ea2246b54b3956084d8fe69b5c67e62f44b8ee8eb82ace9a4",
+  "generator_sha256": "f66c0912169eb5e6914ea7be5384ba93140cd19b26e8356136bbc9852acf035e",
   "recipe_sha256": "c80ceeebc797bf44f1c64338e227e69616c0b31484f74db264ccb2d22d394612",
   "render_wrapper_sha256": "5a5459e6c882bea836190e6248f6c743e77128b6c410af7976025b373bea6760",
   "local_runner_sha256": "0a4de6c08413656ac6bdbb99a18c828a5806d1b16545b49f83df835de54bf995",
@@ -2424,114 +2424,6 @@
     },
     {
       "asset": {
-        "id": "step-dirt",
-        "src": "audio/soundtrack/sfx/step-dirt.ogg",
-        "duration": 0.38,
-        "loop": false
-      },
-      "category": "sfx",
-      "source": {
-        "method": "deterministic-acoustic-synthesis-v1",
-        "description": "Soft heel thump followed by granular earth and leather scuff.",
-        "seed": 221418476,
-        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-dirt-source.wav",
-        "sha256": "bf442e8d9f143a5d48ec93da57444ce7f361b2126075a25cddb5d2df9ec977bc",
-        "codec": "pcm_f32le",
-        "sample_rate": 48000,
-        "channels": 1,
-        "numpy": "2.2.2",
-        "scipy": "1.15.1"
-      },
-      "master": {
-        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-dirt-master.flac",
-        "codec": "flac",
-        "duration": 0.38,
-        "decoded_duration": 0.38,
-        "sample_rate": 48000,
-        "channels": 1,
-        "peak_dbfs": -6.577,
-        "true_peak_dbtp": -6.571,
-        "rms_dbfs": -25.0,
-        "sha256": "cda7639730af6d88d4324569efe2b2b2201a36f599db94da18a9f9d61e354c29"
-      },
-      "delivery": {
-        "codec": "vorbis",
-        "quality": 5,
-        "duration": 0.38,
-        "decoded_duration": 0.37733333333333335,
-        "sample_rate": 48000,
-        "channels": 1,
-        "peak_dbfs": -9.061,
-        "true_peak_dbtp": -9.056,
-        "rms_dbfs": -25.109,
-        "sha256": "6594cf9787fbf1adc5d30c82f2ddfd11ac81094a2afb65f33ae50bdfa0151f43"
-      },
-      "mastering": {
-        "source_integrated_lufs": null,
-        "source_true_peak_dbtp": 4.512857066087409,
-        "source_rms_dbfs": -13.916,
-        "target_lufs": null,
-        "target_rms_dbfs": -25,
-        "peak_ceiling_dbtp": -3,
-        "static_gain_db": -11.08391579
-      }
-    },
-    {
-      "asset": {
-        "id": "step-stone",
-        "src": "audio/soundtrack/sfx/step-stone.ogg",
-        "duration": 0.32,
-        "loop": false
-      },
-      "category": "sfx",
-      "source": {
-        "method": "deterministic-acoustic-synthesis-v1",
-        "description": "Hard heel and toe contacts with a short stone reflection.",
-        "seed": 3356391501,
-        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-stone-source.wav",
-        "sha256": "faec277a5f64717ffc5c54ae139d65631d2fab57104ee15cc4f76dfbe29a0431",
-        "codec": "pcm_f32le",
-        "sample_rate": 48000,
-        "channels": 1,
-        "numpy": "2.2.2",
-        "scipy": "1.15.1"
-      },
-      "master": {
-        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-stone-master.flac",
-        "codec": "flac",
-        "duration": 0.32,
-        "decoded_duration": 0.32,
-        "sample_rate": 48000,
-        "channels": 1,
-        "peak_dbfs": -11.689,
-        "true_peak_dbtp": -11.651,
-        "rms_dbfs": -25.0,
-        "sha256": "dff2e31599ed25eb97e5d499019c739aba6ce11d28e122ea7a43db15be23da76"
-      },
-      "delivery": {
-        "codec": "vorbis",
-        "quality": 5,
-        "duration": 0.32,
-        "decoded_duration": 0.31733333333333336,
-        "sample_rate": 48000,
-        "channels": 1,
-        "peak_dbfs": -11.518,
-        "true_peak_dbtp": -11.469,
-        "rms_dbfs": -24.884,
-        "sha256": "695a5b4e1cb70f3457aec4d51a7ee5c8ca392642f4cd0a87f587a16ae4512412"
-      },
-      "mastering": {
-        "source_integrated_lufs": null,
-        "source_true_peak_dbtp": 0.0059248301210702275,
-        "source_rms_dbfs": -13.343,
-        "target_lufs": null,
-        "target_rms_dbfs": -25,
-        "peak_ceiling_dbtp": -3,
-        "static_gain_db": -11.65653912
-      }
-    },
-    {
-      "asset": {
         "id": "dodge",
         "src": "audio/soundtrack/sfx/dodge.ogg",
         "duration": 0.68,
@@ -2690,6 +2582,494 @@
         "target_rms_dbfs": -25,
         "peak_ceiling_dbtp": -3,
         "static_gain_db": -4.60488748
+      }
+    },
+    {
+      "asset": {
+        "id": "step-dirt",
+        "src": "audio/soundtrack/sfx/step-dirt.ogg",
+        "duration": 0.3,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v2",
+        "description": "Running footfall on trodden earth: soft heel thud, soil grit and a forefoot scuff; no tuned ring. Take 1 of 4.",
+        "seed": 221418476,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-dirt-source.wav",
+        "sha256": "85dadd939fcefaf8d2163b7e38fb0d691e96a5a2694f17e7f91057eec5067b59",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1",
+        "supersedes": "The v1 modal step-dirt and step-stone, whose long tuned partials rang like bells."
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-dirt-master.flac",
+        "codec": "flac",
+        "duration": 0.3,
+        "decoded_duration": 0.3,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "flac",
+        "peak_dbfs": -15.782,
+        "true_peak_dbtp": -15.75,
+        "rms_dbfs": -37.715,
+        "sha256": "aa50de8fc7eee7106d156b72ab279a391dda5d0e915919e9e8093a4a9de7f5e7"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.3,
+        "decoded_duration": 0.29733333333333334,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "vorbis",
+        "peak_dbfs": -16.193,
+        "true_peak_dbtp": -16.157,
+        "rms_dbfs": -37.794,
+        "sha256": "c57531bd881868acc9a289811f1cafb90193eb0161ac666b5a648811c3cfc5de"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 5.240667139892446,
+        "source_rms_dbfs": -16.724,
+        "target_lufs": null,
+        "target_rms_dbfs": null,
+        "source_transient_lufs": -12.009,
+        "target_transient_lufs": -33.0,
+        "delivery_transient_lufs": -33.194,
+        "delivery_ring_ms": 15.0,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -20.99116263
+      }
+    },
+    {
+      "asset": {
+        "id": "step-dirt-2",
+        "src": "audio/soundtrack/sfx/step-dirt-2.ogg",
+        "duration": 0.3,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v2",
+        "description": "Running footfall on trodden earth: soft heel thud, soil grit and a forefoot scuff; no tuned ring. Take 2 of 4.",
+        "seed": 4056515215,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-dirt-2-source.wav",
+        "sha256": "5e169c929f6853ce1a02fd49ee3712c084721d648d0e7b9c85753140084b4bdf",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1",
+        "supersedes": "The v1 modal step-dirt and step-stone, whose long tuned partials rang like bells."
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-dirt-2-master.flac",
+        "codec": "flac",
+        "duration": 0.3,
+        "decoded_duration": 0.3,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "flac",
+        "peak_dbfs": -15.728,
+        "true_peak_dbtp": -15.685,
+        "rms_dbfs": -37.18,
+        "sha256": "ae2ae40fe9ca32eba71831437592f85506ed3b66059f8af5ee18231612277d79"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.3,
+        "decoded_duration": 0.29733333333333334,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "vorbis",
+        "peak_dbfs": -16.269,
+        "true_peak_dbtp": -16.263,
+        "rms_dbfs": -37.305,
+        "sha256": "04d2aeb18b2905da58434d5bca5b056d43922f768772bf1f70a621bf52eb369d"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 3.5391266863971365,
+        "source_rms_dbfs": -17.956,
+        "target_lufs": null,
+        "target_rms_dbfs": null,
+        "source_transient_lufs": -13.776,
+        "target_transient_lufs": -33.0,
+        "delivery_transient_lufs": -33.198,
+        "delivery_ring_ms": 35.0,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -19.22406043
+      }
+    },
+    {
+      "asset": {
+        "id": "step-dirt-3",
+        "src": "audio/soundtrack/sfx/step-dirt-3.ogg",
+        "duration": 0.3,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v2",
+        "description": "Running footfall on trodden earth: soft heel thud, soil grit and a forefoot scuff; no tuned ring. Take 3 of 4.",
+        "seed": 170210205,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-dirt-3-source.wav",
+        "sha256": "a236ab6a510b7c67843e6bb80192f1df91d479addb0d1424aeb1bc176c1a7f73",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1",
+        "supersedes": "The v1 modal step-dirt and step-stone, whose long tuned partials rang like bells."
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-dirt-3-master.flac",
+        "codec": "flac",
+        "duration": 0.3,
+        "decoded_duration": 0.3,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "flac",
+        "peak_dbfs": -16.17,
+        "true_peak_dbtp": -16.151,
+        "rms_dbfs": -37.495,
+        "sha256": "9c91bf0afa7b1c4516c3db0fa3e2d2379058c36cf399c285fc1b6b97e1687a74"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.3,
+        "decoded_duration": 0.29733333333333334,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "vorbis",
+        "peak_dbfs": -16.437,
+        "true_peak_dbtp": -16.386,
+        "rms_dbfs": -37.574,
+        "sha256": "606a060842d30ad4c704f23920120dd59c1a57df05e78345959a5d647049c7d9"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 3.7796778523571866,
+        "source_rms_dbfs": -17.564,
+        "target_lufs": null,
+        "target_rms_dbfs": null,
+        "source_transient_lufs": -13.069,
+        "target_transient_lufs": -33.0,
+        "delivery_transient_lufs": -33.167,
+        "delivery_ring_ms": 35.0,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -19.93087681
+      }
+    },
+    {
+      "asset": {
+        "id": "step-dirt-4",
+        "src": "audio/soundtrack/sfx/step-dirt-4.ogg",
+        "duration": 0.3,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v2",
+        "description": "Running footfall on trodden earth: soft heel thud, soil grit and a forefoot scuff; no tuned ring. Take 4 of 4.",
+        "seed": 2525409454,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-dirt-4-source.wav",
+        "sha256": "4b56614e3b6fd6866b8993f3211fdd10f734437023baf7b8af89433059cbadb9",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1",
+        "supersedes": "The v1 modal step-dirt and step-stone, whose long tuned partials rang like bells."
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-dirt-4-master.flac",
+        "codec": "flac",
+        "duration": 0.3,
+        "decoded_duration": 0.3,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "flac",
+        "peak_dbfs": -14.9,
+        "true_peak_dbtp": -14.895,
+        "rms_dbfs": -37.202,
+        "sha256": "6bc834ae4e18ef6df49b6092fe8c108242099764057ba694450f5d58baf09733"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.3,
+        "decoded_duration": 0.29733333333333334,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "vorbis",
+        "peak_dbfs": -15.494,
+        "true_peak_dbtp": -15.489,
+        "rms_dbfs": -37.332,
+        "sha256": "482bfa7be1e6e6f75197d315b3836e9c7901b9fcfd039d61caed5ce0a712d82b"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 5.864207625331678,
+        "source_rms_dbfs": -16.442,
+        "target_lufs": null,
+        "target_rms_dbfs": null,
+        "source_transient_lufs": -12.241,
+        "target_transient_lufs": -33.0,
+        "delivery_transient_lufs": -33.229,
+        "delivery_ring_ms": 15.0,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -20.75909559
+      }
+    },
+    {
+      "asset": {
+        "id": "step-wood",
+        "src": "audio/soundtrack/sfx/step-wood.ogg",
+        "duration": 0.32,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v2",
+        "description": "Running footfall on a timber bridge deck: dull, briefly hollow plank knock and a lighter forefoot contact; no tuned ring. Take 1 of 4.",
+        "seed": 1935185981,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-wood-source.wav",
+        "sha256": "dd56d661f40dd8528ac6c9f93b1dea24d21cdfba22baffa748b2a8bdf48cbfee",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1",
+        "supersedes": "The v1 modal step-dirt and step-stone, whose long tuned partials rang like bells."
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-wood-master.flac",
+        "codec": "flac",
+        "duration": 0.32,
+        "decoded_duration": 0.32,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "flac",
+        "peak_dbfs": -11.807,
+        "true_peak_dbtp": -11.782,
+        "rms_dbfs": -37.17,
+        "sha256": "09928f42c2e6783fc23bbf87379252cc54c3ae5d2248e77f5c079e305f81217c"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.32,
+        "decoded_duration": 0.31733333333333336,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "vorbis",
+        "peak_dbfs": -12.156,
+        "true_peak_dbtp": -12.083,
+        "rms_dbfs": -37.437,
+        "sha256": "73eedc4aa6bc98fb4e324e2d3e16f5a80956e6aa4650f2e5acd72a3b8e28431d"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 0.28481653137862,
+        "source_rms_dbfs": -25.104,
+        "target_lufs": null,
+        "target_rms_dbfs": null,
+        "source_transient_lufs": -19.934,
+        "target_transient_lufs": -32.0,
+        "delivery_transient_lufs": -32.303,
+        "delivery_ring_ms": 35.0,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -12.06643996
+      }
+    },
+    {
+      "asset": {
+        "id": "step-wood-2",
+        "src": "audio/soundtrack/sfx/step-wood-2.ogg",
+        "duration": 0.32,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v2",
+        "description": "Running footfall on a timber bridge deck: dull, briefly hollow plank knock and a lighter forefoot contact; no tuned ring. Take 2 of 4.",
+        "seed": 1809731081,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-wood-2-source.wav",
+        "sha256": "4773d6ebdc85b7f1f877af8143c9ae796cfa6e3e8f6de3a66df6481c1d39be3a",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1",
+        "supersedes": "The v1 modal step-dirt and step-stone, whose long tuned partials rang like bells."
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-wood-2-master.flac",
+        "codec": "flac",
+        "duration": 0.32,
+        "decoded_duration": 0.32,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "flac",
+        "peak_dbfs": -11.794,
+        "true_peak_dbtp": -11.74,
+        "rms_dbfs": -37.037,
+        "sha256": "c4131b6dfed6165e58bfe5c30a5a9113c543823ce53152029767e31b87a33609"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.32,
+        "decoded_duration": 0.31733333333333336,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "vorbis",
+        "peak_dbfs": -12.032,
+        "true_peak_dbtp": -12.014,
+        "rms_dbfs": -37.079,
+        "sha256": "0d6df2ebb7060fb386d11f2f4739ca1e2097befb3504da8d6ee09a5d8bbec4f7"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 1.608990094112941,
+        "source_rms_dbfs": -23.688,
+        "target_lufs": null,
+        "target_rms_dbfs": null,
+        "source_transient_lufs": -18.651,
+        "target_transient_lufs": -32.0,
+        "delivery_transient_lufs": -32.176,
+        "delivery_ring_ms": 25.0,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -13.34921849
+      }
+    },
+    {
+      "asset": {
+        "id": "step-wood-3",
+        "src": "audio/soundtrack/sfx/step-wood-3.ogg",
+        "duration": 0.32,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v2",
+        "description": "Running footfall on a timber bridge deck: dull, briefly hollow plank knock and a lighter forefoot contact; no tuned ring. Take 3 of 4.",
+        "seed": 3877762782,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-wood-3-source.wav",
+        "sha256": "4676d68d886b3ec198b31b0be0c3200725efb68576cb509a734c71e8e9258b8a",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1",
+        "supersedes": "The v1 modal step-dirt and step-stone, whose long tuned partials rang like bells."
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-wood-3-master.flac",
+        "codec": "flac",
+        "duration": 0.32,
+        "decoded_duration": 0.32,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "flac",
+        "peak_dbfs": -11.915,
+        "true_peak_dbtp": -11.893,
+        "rms_dbfs": -37.321,
+        "sha256": "b59de9382a223bb68dcc10a00f2dbd0c4ff12a86865c6fbe811e78a2a89bb334"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.32,
+        "decoded_duration": 0.31733333333333336,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "vorbis",
+        "peak_dbfs": -12.063,
+        "true_peak_dbtp": -12.058,
+        "rms_dbfs": -37.469,
+        "sha256": "d6bfb90644c8391d12eb8371d5673c3e44055da3db7a910b97b7fa577e8355ff"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": -1.665325312818485,
+        "source_rms_dbfs": -27.093,
+        "target_lufs": null,
+        "target_rms_dbfs": null,
+        "source_transient_lufs": -21.772,
+        "target_transient_lufs": -32.0,
+        "delivery_transient_lufs": -32.246,
+        "delivery_ring_ms": 30.0,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -10.22794716
+      }
+    },
+    {
+      "asset": {
+        "id": "step-wood-4",
+        "src": "audio/soundtrack/sfx/step-wood-4.ogg",
+        "duration": 0.32,
+        "loop": false
+      },
+      "category": "sfx",
+      "source": {
+        "method": "deterministic-acoustic-synthesis-v2",
+        "description": "Running footfall on a timber bridge deck: dull, briefly hollow plank knock and a lighter forefoot contact; no tuned ring. Take 4 of 4.",
+        "seed": 1561697240,
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-wood-4-source.wav",
+        "sha256": "3e8edf30a4b76dbac22099006a3d6c8f485cd9c183551d37d09248a87ead8de4",
+        "codec": "pcm_f32le",
+        "sample_rate": 48000,
+        "channels": 1,
+        "numpy": "2.2.2",
+        "scipy": "1.15.1",
+        "supersedes": "The v1 modal step-dirt and step-stone, whose long tuned partials rang like bells."
+      },
+      "master": {
+        "path": "C:\\AI\\ACE-Step-1.5\\outputs\\korovany2-hollow-road-20260913\\sfx\\step-wood-4-master.flac",
+        "codec": "flac",
+        "duration": 0.32,
+        "decoded_duration": 0.32,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "flac",
+        "peak_dbfs": -10.852,
+        "true_peak_dbtp": -10.668,
+        "rms_dbfs": -37.42,
+        "sha256": "5780f6cc4c2c3b9e03b6e405712b38ec5aee68d24fafd449f32cb6ef133362eb"
+      },
+      "delivery": {
+        "codec": "vorbis",
+        "quality": 5,
+        "duration": 0.32,
+        "decoded_duration": 0.31733333333333336,
+        "sample_rate": 48000,
+        "channels": 1,
+        "native_codec": "vorbis",
+        "peak_dbfs": -11.541,
+        "true_peak_dbtp": -11.415,
+        "rms_dbfs": -37.493,
+        "sha256": "7e2495e157d069c7e62e4bf8f35f580aacb980370a17bfb0c3ea198017f1798b"
+      },
+      "mastering": {
+        "source_integrated_lufs": null,
+        "source_true_peak_dbtp": 0.13970460544579166,
+        "source_rms_dbfs": -26.613,
+        "target_lufs": null,
+        "target_rms_dbfs": null,
+        "source_transient_lufs": -21.193,
+        "target_transient_lufs": -32.0,
+        "delivery_transient_lufs": -32.187,
+        "delivery_ring_ms": 30.0,
+        "peak_ceiling_dbtp": -3,
+        "static_gain_db": -10.80727637
       }
     }
   ]

@@ -121,7 +121,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("shipped Ogg audio under a 
   it("fully decodes every shipped score, regional loop and effect in Chromium", async () => {
     expect(soundtrack.music).toHaveLength(8);
     expect(soundtrack.ambience).toHaveLength(8);
-    expect(soundtrack.sfx).toHaveLength(24);
+    expect(soundtrack.sfx).toHaveLength(30);
     for (const [group, channels] of [[soundtrack.music, 2], [soundtrack.ambience, 2], [soundtrack.sfx, 1]] as const) {
       for (const asset of group) audible(await decode(asset.src), asset.duration, channels, 48000);
     }

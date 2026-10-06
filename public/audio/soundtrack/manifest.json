@@ -216,18 +216,6 @@
       "loop": false
     },
     {
-      "id": "step-dirt",
-      "src": "audio/soundtrack/sfx/step-dirt.ogg",
-      "duration": 0.38,
-      "loop": false
-    },
-    {
-      "id": "step-stone",
-      "src": "audio/soundtrack/sfx/step-stone.ogg",
-      "duration": 0.32,
-      "loop": false
-    },
-    {
       "id": "dodge",
       "src": "audio/soundtrack/sfx/dodge.ogg",
       "duration": 0.68,
@@ -243,6 +231,54 @@
       "id": "inspect",
       "src": "audio/soundtrack/sfx/inspect.ogg",
       "duration": 0.9,
+      "loop": false
+    },
+    {
+      "id": "step-dirt",
+      "src": "audio/soundtrack/sfx/step-dirt.ogg",
+      "duration": 0.3,
+      "loop": false
+    },
+    {
+      "id": "step-dirt-2",
+      "src": "audio/soundtrack/sfx/step-dirt-2.ogg",
+      "duration": 0.3,
+      "loop": false
+    },
+    {
+      "id": "step-dirt-3",
+      "src": "audio/soundtrack/sfx/step-dirt-3.ogg",
+      "duration": 0.3,
+      "loop": false
+    },
+    {
+      "id": "step-dirt-4",
+      "src": "audio/soundtrack/sfx/step-dirt-4.ogg",
+      "duration": 0.3,
+      "loop": false
+    },
+    {
+      "id": "step-wood",
+      "src": "audio/soundtrack/sfx/step-wood.ogg",
+      "duration": 0.32,
+      "loop": false
+    },
+    {
+      "id": "step-wood-2",
+      "src": "audio/soundtrack/sfx/step-wood-2.ogg",
+      "duration": 0.32,
+      "loop": false
+    },
+    {
+      "id": "step-wood-3",
+      "src": "audio/soundtrack/sfx/step-wood-3.ogg",
+      "duration": 0.32,
+      "loop": false
+    },
+    {
+      "id": "step-wood-4",
+      "src": "audio/soundtrack/sfx/step-wood-4.ogg",
+      "duration": 0.32,
       "loop": false
     }
   ]

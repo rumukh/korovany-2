@@ -18,6 +18,7 @@ class Gain {
 }
 class Source {
   buffer: unknown;
+  playbackRate = new Param();
   connect = vi.fn();
   disconnect = vi.fn();
   start = vi.fn();
@@ -72,7 +73,8 @@ const score = {
   version: 1,
   music: ["title", "road", "combat", "fortress", "ending-commons", "ending-compact", "ending-cinder"].map(asset),
   ambience: ["heartlands", "fens", "hollowvale"].map(asset),
-  sfx: ["click", "hit", "delivery", "victory", "defeat", "attack-elf", ...Array.from({ length: 24 }, (_, i) => `effect${i}`)].map(asset),
+  sfx: ["click", "click-2", "hit", "delivery", "victory", "defeat", "attack-elf", "step-dirt", "step-dirt-2", "step-dirt-3",
+    "step-dirt-4", ...Array.from({ length: 24 }, (_, i) => `effect${i}`)].map(asset),
 };
 const entry = (speaker: string, language: "en" | "ru", text: string, count = 1) => ({
   id: `${speaker}-${language}-${text}`, speaker, language, text,
@@ -520,6 +522,43 @@ describe("bounded spatial effects and memory", () => {
     expect(sound.inspect().effects).toBe(12);
     sound.configure(false, { ...defaultMix(), effects: 0 });
     expect(sound.inspect().effects).toBe(0);
+  });
+
+  it("shuffles footstep takes without an immediate repeat, varies each footfall slightly and alternates two takes", async () => {
+    let seed = 7;
+    vi.spyOn(Math, "random").mockImplementation(() => (seed = seed * 16807 % 2147483647) / 2147483647);
+    const sound = make();
+    sound.setActive(true);
+    await sound.unlock();
+    await flush();
+    const context = Context.instances[0]!;
+    const takes: string[] = [];
+    for (let step = 0; step < 32; step++) {
+      context.currentTime += 0.3;
+      sound.cue("step-dirt");
+      await flush();
+      takes.push(sound.inspect().recentEffects.at(-1)!.id);
+      const source = context.sources.at(-1)!;
+      expect(source.playbackRate.value).toBeGreaterThanOrEqual(0.95);
+      expect(source.playbackRate.value).toBeLessThanOrEqual(1.05);
+      expect(context.gains.at(-1)!.gain.value).toBeGreaterThanOrEqual(10 ** (-1.5 / 20));
+      expect(context.gains.at(-1)!.gain.value).toBeLessThanOrEqual(1);
+      source.end();
+    }
+    expect(new Set(takes)).toEqual(new Set(["step-dirt", "step-dirt-2", "step-dirt-3", "step-dirt-4"]));
+    expect(takes.filter((take, index) => take === takes[index - 1])).toEqual([]);
+    expect(new Set(context.sources.map((source) => source.playbackRate.value)).size).toBeGreaterThan(16);
+    const clicks: string[] = [];
+    for (let press = 0; press < 3; press++) {
+      context.currentTime += 0.3;
+      sound.cue("click");
+      await flush();
+      clicks.push(sound.inspect().recentEffects.at(-1)!.id);
+      // Other effects keep their authored pitch and level.
+      expect(context.sources.at(-1)!.playbackRate.value).toBe(1);
+      expect(context.gains.at(-1)!.gain.value).toBe(1);
+    }
+    expect(clicks).toEqual(["click", "click-2", "click"]);
   });
 
   it("evicts least-recently-used decoded audio without decoding streamed beds", async () => {

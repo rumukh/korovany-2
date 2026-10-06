@@ -2,7 +2,8 @@
 
 The local bank in `public/audio/soundtrack` contains eight original instrumental
 compositions (15 minutes), eight 32-second regional ambience loops and 24 mono
-effects. Dialogue is a separate production and is not part of this manifest.
+effects in 30 files: both footfalls have four takes. Dialogue is a separate
+production and is not part of this manifest.
 No third-party recordings, artist imitation, sampled dialogue or invented
 supernatural utterances are used here.
 
@@ -18,11 +19,16 @@ Ogg Vorbis at 48 kHz: stereo for music/ambience, mono for spatial effects.
 | Music, looping | `title` (120s), `road` (150s), `mystery` (120s), `combat` (120s), `fortress` (120s) |
 | Music, one-shot | `ending-commons`, `ending-compact`, `ending-cinder` (90s each) |
 | Ambience, looping | `heartlands`, `greenmarch`, `fens`, `salt-coast`, `ash-steppe`, `crownlands`, `frostspine`, `hollowvale` |
-| SFX, one-shot | `attack-elf`, `attack-guard`, `attack-villain`, `hit`, `kill`, `pickup`, `capture`, `delivery`, `raid`, `convoy`, `repair`, `upgrade`, `ability-elf`, `ability-guard`, `ability-villain`, `fortress`, `victory`, `defeat`, `click`, `step-dirt`, `step-stone`, `dodge`, `discover`, `inspect` |
+| SFX, one-shot | `attack-elf`, `attack-guard`, `attack-villain`, `hit`, `kill`, `pickup`, `capture`, `delivery`, `raid`, `convoy`, `repair`, `upgrade`, `ability-elf`, `ability-guard`, `ability-villain`, `fortress`, `victory`, `defeat`, `click`, `dodge`, `discover`, `inspect` |
+| SFX, footfalls | `step-dirt` and `step-wood`, each with takes `-2`, `-3` and `-4` (for example `step-wood-3`) |
 
 World region IDs `fenlands`, `saltcoast`, `ashsteppe` map to sound IDs `fens`,
 `salt-coast`, `ash-steppe`. The other five match directly. Music/SFX namespaces
-are separate, so both may contain `fortress`.
+are separate, so both may contain `fortress`. An effect's numbered takes share
+its cue: the runtime alternates two takes and shuffles three or more without
+an immediate repeat. Footfalls are timber on the bridge decks and earth
+everywhere else, including camps and other site rings. Each one also varies
+slightly in pitch (±5%) and level (0 to -1.5 dB).
 
 The musical palette is close bowed viola/cello, dry plucked strings, wood and
 leather-frame percussion, sparse protective bells and glass harmonics. The
@@ -31,6 +37,10 @@ and bare-road resolve. None contains voices. Environmental beds distinguish
 pasture, orchard canopy, reeds/water, surf/rigging, ash, foundry, mountain
 wind and empty-valley shutters/well water. Effects distinguish material,
 register, envelope and gesture rather than reusing notification beeps.
+Footfalls use only noise-excited contacts with fast natural decays. Earth has a
+soft heel thud, soil grit and a forefoot scuff; timber has a dull, briefly hollow
+plank knock. No tuned partial rings. The superseded modal `step-dirt` and
+`step-stone` used long partials that rang like cow bells.
 
 ## Mastering and provenance
 
@@ -45,6 +55,8 @@ Source score FLACs and unabridged ACE result JSONs are retained under
 `korovany2-hollow-road-20260913-`. Acoustic source WAVs, mastered lossless FLACs,
 per-asset metadata and the local review playlist are retained under
 `C:\AI\ACE-Step-1.5\outputs\korovany2-hollow-road-20260913`.
+The superseded v1 footfall sources, masters and records are kept in its
+`superseded-20261006-footsteps` folder.
 These large archival files are intentionally outside Git. Do not remove them
 as temporary files. The repository contains compact runtime copies.
 
@@ -71,6 +83,13 @@ edge tapers and material-specific natural decays.
 Music targets -21 LUFS with a -2.5 dBTP ceiling; environmental beds target
 -31 LUFS with a -6 dBTP ceiling. Effects use -25 dBFS RMS with a -3 dBTP ceiling,
 because integrated LUFS gating is undefined for some sub-400ms transients.
+Footfalls are the exception because they repeat several times a second under
+everything else. Each take is mastered to a transient loudness, measured as
+the loudest 100 ms of K-weighted power: -33 LUFS for earth and -32 LUFS for
+timber. That is about 12 dB under the superseded footfalls, which were mastered
+like the other effects. Footfall records also store `delivery_ring_ms`: the time
+the strongest partial in the delivered file takes to fall 20 dB. Mastering
+rejects a footfall above 60 ms; the old stone footfall rang for 175 ms.
 Only static gain is applied: no loudness-pumping compressor or hard limiter.
 Mix/ducking/spatialization is the runtime's responsibility. Vorbis quality is
 6 for music, 4 for ambience and 5 for effects.
@@ -98,6 +117,11 @@ dependency or runtime service is needed to play the committed files.
 
 # CPU-only authoring and mastering, independent of model generation.
 python -B .\scripts\audio\produce_soundtrack.py --acoustic
+
+# Or re-author only selected effects, such as the footfall takes, then rebuild
+# and validate the manifest against every archived original.
+python -B .\scripts\audio\produce_soundtrack.py --effects step-dirt step-dirt-2 step-dirt-3 step-dirt-4 step-wood step-wood-2 step-wood-3 step-wood-4
+python -B .\scripts\audio\produce_soundtrack.py --validate --review-samples
 
 # Sequential full-quality jobs; use -Cue title for the production sample.
 # Existing exact-recipe masters are reused, never overwritten by a new model run.

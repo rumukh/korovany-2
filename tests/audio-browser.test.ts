@@ -71,7 +71,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("actual browser audio trans
   const ambience = ["heartlands", "greenmarch", "fens", "salt-coast", "ash-steppe", "crownlands", "frostspine", "hollowvale"];
   const sfx = ["attack-elf", "attack-guard", "attack-villain", "hit", "kill", "pickup", "capture", "delivery", "raid", "convoy",
     "repair", "upgrade", "ability-elf", "ability-guard", "ability-villain", "fortress", "victory", "defeat", "click",
-    "step-dirt", "step-stone", "dodge", "discover", "inspect"];
+    "step-dirt", "step-wood", "dodge", "discover", "inspect"];
   const assets = (ids: string[], loop: boolean) => ids.map((id) => ({ id, src: "audio/soundtrack/fixture.wav", duration: 12, loop }));
   const score = { version: 1, music: assets(music, true), ambience: assets(ambience, true), sfx: assets(sfx, false) };
   const wave = fixtureWave();

@@ -55,12 +55,25 @@ EFFECTS = {
     "victory": (4.5, "Restrained rising three-bell cadence with dry plucked strings."),
     "defeat": (3.6, "Low descending muted strings and a final dull wood contact."),
     "click": (0.14, "Short double wooden mechanism contact."),
-    "step-dirt": (0.38, "Soft heel thump followed by granular earth and leather scuff."),
-    "step-stone": (0.32, "Hard heel and toe contacts with a short stone reflection."),
     "dodge": (0.68, "Cloth rush, leather flex and a restrained earth slide."),
     "discover": (2.0, "Open resonant glass and a dry plucked questioning figure."),
     "inspect": (0.9, "Parchment unfolding, wood edge contact, quiet glass detail."),
 }
+# Footfalls repeat several times a second under every other sound, so each surface has several takes (`step-wood`,
+# `step-wood-2`, ...) mastered to a quiet transient loudness instead of the effects' RMS level.
+FOOTSTEP_TAKES = 4
+FOOTSTEPS = {
+    "dirt": (0.3, -33.0, "Running footfall on trodden earth: soft heel thud, soil grit and a forefoot scuff; no tuned ring."),
+    "wood": (0.32, -32.0, "Running footfall on a timber bridge deck: dull, briefly hollow plank knock and a lighter "
+                          "forefoot contact; no tuned ring."),
+}
+EFFECTS.update({
+    f"step-{surface}" + ("" if take == 1 else f"-{take}"): (duration, f"{description} Take {take} of {FOOTSTEP_TAKES}.")
+    for surface, (duration, _, description) in FOOTSTEPS.items() for take in range(1, FOOTSTEP_TAKES + 1)
+})
+# ITU-R BS.1770 K-weighting at 48 kHz: the high shelf, then the RLB high-pass.
+K_WEIGHTING = (([1.53512485958697, -2.69169618940638, 1.19839281085285], [1.0, -1.69065929318241, 0.73248077421585]),
+               ([1.0, -2.0, 1.0], [1.0, -1.99004745483398, 0.99007225036621]))
 
 
 def run(*args: str) -> str:
@@ -251,7 +264,72 @@ def ambience(identifier: str) -> tuple[np.ndarray, int]:
     return x.astype(np.float32), seed
 
 
+def contact(rng: np.random.Generator, seconds: float, low: float, high: float, decay: float,
+            attack: float = .0015) -> np.ndarray:
+    """Band-limited noise with an exponential decay: a sole meeting the ground, with no tuned partial to ring."""
+    t = clock(seconds)
+    envelope = np.exp(-np.maximum(0, t - attack) / decay) * np.minimum(1, t / attack) ** 1.5
+    return band_noise(rng, seconds, low, high) * envelope
+
+
+def grit(rng: np.random.Generator, seconds: float, density: float, decay: float,
+         low: float = 900, high: float = 6500) -> np.ndarray:
+    """Sparse crackle of soil or dust under a sole (`density` grains per second), thinning as the foot settles."""
+    t = clock(seconds)
+    falloff = np.exp(-t / decay)
+    impulses = (rng.random(len(t)) < density * falloff / RATE) * rng.normal(size=len(t)) * falloff
+    width = round(.0005 * RATE)
+    texture = np.convolve(impulses, rng.normal(size=width) * np.hanning(width))[:len(t)]
+    texture = signal.sosfilt(signal.butter(2, (low, high), "bandpass", fs=RATE, output="sos"), texture)
+    return texture / max(1e-8, float(np.max(np.abs(texture))))
+
+
+def plank(rng: np.random.Generator, seconds: float, modes: list[tuple[float, float, float]], decay: float) -> np.ndarray:
+    """A timber deck answering a footfall: a short noise impulse through broad board modes (frequency, Q, level).
+    With Q of 10 or less and an extra decay, no mode outlasts a few tens of milliseconds: a dull knock, not a bar or bell."""
+    t = clock(seconds)
+    excitation = rng.normal(size=len(t)) * np.exp(-t / .002)
+    body = np.zeros(len(t))
+    for frequency, q, level in modes:
+        b, a = signal.iirpeak(frequency, q, fs=RATE)
+        body += level * signal.lfilter(b, a, excitation)
+    body *= np.exp(-t / decay)
+    return body / max(1e-8, float(np.max(np.abs(body))))
+
+
+def footstep(identifier: str) -> tuple[np.ndarray, int]:
+    """One take of a running footfall built only from noise-excited contacts with fast natural decays."""
+    rng, seed = rng_for(identifier)
+    surface = identifier.split("-")[1]
+    x = np.zeros(round(EFFECTS[identifier][0] * RATE))
+    heel = rng.uniform(.004, .008)
+    toe = heel + rng.uniform(.05, .085)
+    if surface == "dirt":
+        add(x, contact(rng, .1, 90, 520, rng.uniform(.012, .017)), heel, .7)
+        add(x, contact(rng, .05, 400, 3000, .006), heel, .35)
+        add(x, grit(rng, .16, rng.uniform(2000, 3000), .035), heel + .002, .45)
+        add(x, contact(rng, .14, 300, 3500, rng.uniform(.026, .034), attack=.012), toe, rng.uniform(.2, .28))
+        add(x, grit(rng, .12, rng.uniform(1300, 1900), .03), toe + .008, .25)
+    elif surface == "wood":
+        modes = [(frequency * rng.uniform(.93, 1.07), q, level)
+                 for frequency, q, level in ((108, 10, .5), (186, 9, 1), (305, 9, .75), (490, 8, .45), (780, 7, .25))]
+        add(x, plank(rng, .18, modes, .06), heel, 1)
+        add(x, contact(rng, .02, 1800, 7000, .0025), heel, .2)
+        if rng.random() < .5:
+            loose = [(frequency * 1.35, q, level) for frequency, q, level in modes]
+            add(x, plank(rng, .09, loose, .02), heel + rng.uniform(.022, .034), .14)
+        add(x, plank(rng, .14, [(frequency * 1.08, q, level) for frequency, q, level in modes], .035), toe,
+            rng.uniform(.36, .46))
+        add(x, contact(rng, .015, 2000, 7000, .002), toe, .08)
+        add(x, grit(rng, .08, 900, .02, 1500, 7000), toe + .004, .07)
+    else:
+        raise ValueError(f"Missing footstep authoring: {identifier}")
+    return shape(x, .001, .04).astype(np.float32), seed
+
+
 def effect(identifier: str) -> tuple[np.ndarray, int]:
+    if identifier.startswith("step-"):
+        return footstep(identifier)
     rng, seed = rng_for(identifier)
     seconds = EFFECTS[identifier][0]
     x = np.zeros(round(seconds * RATE))
@@ -340,16 +418,6 @@ def effect(identifier: str) -> tuple[np.ndarray, int]:
     elif identifier == "click":
         strike(.003, 1050, "wood", .5, .1)
         strike(.032, 620, "wood", .25, .09)
-    elif identifier == "step-dirt":
-        strike(.005, 75, "leather", .45, .25)
-        add(x, sweep(rng, .24, 1.4), .045, .28)
-        grains = band_noise(rng, .2, 700, 6500)
-        grains *= np.maximum(0, rng.normal(size=len(grains))) ** 2
-        add(x, shape(grains, .025, .1), .08, .06)
-    elif identifier == "step-stone":
-        strike(.004, 240, "wood", .62, .23)
-        strike(.087, 510, "glass", .12, .2)
-        x = room(x, .15, (.025, .052))
     elif identifier == "dodge":
         add(x, sweep(rng, .44, 1.3), .01, .38)
         add(x, creak(rng, .29, 180), .03, .09)
@@ -393,6 +461,30 @@ def loudness(path: Path) -> dict:
                  "-af", "loudnorm=I=-23:TP=-2:LRA=11:print_format=json", "-f", "null", "NUL")
     start = output.rfind("{")
     return json.loads(output[start:output.index("}", start) + 1])
+
+
+def transient_loudness(x: np.ndarray, window: float = .1) -> float:
+    """Loudest 100 ms of K-weighted power in LUFS: a single footfall is too short for gated integrated loudness."""
+    mono = np.asarray(x, dtype=np.float64).reshape(len(x), -1).mean(axis=1)
+    for b, a in K_WEIGHTING:
+        mono = signal.lfilter(b, a, mono)
+    size = round(window * RATE)
+    power = np.convolve(mono * mono, np.ones(size) / size)
+    return -0.691 + 10 * math.log10(max(float(np.max(power)), 1e-20))
+
+
+def ring_time(x: np.ndarray) -> float:
+    """Seconds the strongest partial takes to fall 20 dB from its peak (43 ms frames, 5 ms hop). A damped footfall dies
+    within tens of milliseconds; a tuned bar or bell rings on (the v1 stone footfall's 234 Hz partial took 175 ms)."""
+    mono = np.asarray(x, dtype=np.float64).reshape(len(x), -1).mean(axis=1)
+    hop = 240
+    frequencies, _, spectrum = signal.stft(mono, RATE, nperseg=2048, noverlap=2048 - hop, boundary=None)
+    power = np.abs(spectrum) ** 2
+    band = np.flatnonzero((frequencies >= 60) & (frequencies <= 8000))
+    track = power[band[np.argmax(power[band].max(axis=1))]]
+    start = int(np.argmax(track))
+    below = np.flatnonzero(track[start:] < track[start] * .01)
+    return float((below[0] if len(below) else len(track) - start) * hop / RATE)
 
 
 def metrics(path: Path, channels: int, loop: bool) -> dict:
@@ -472,11 +564,17 @@ def master(identifier: str, category: str, x: np.ndarray, duration: float, loop:
         "music": (-21, -2.5, 6), "ambience": (-31, -6, 4), "sfx": (-20, -3, 5),
     }[category]
     source_rms = 20 * math.log10(max(float(np.sqrt(np.mean(x.astype(np.float64) ** 2))), 1e-12))
+    footstep = FOOTSTEPS[identifier.split("-")[1]] if category == "sfx" and identifier.startswith("step-") else None
     if category == "sfx":
         # BS.1770 gating is undefined for some sub-400ms transients; use fixed RMS/true-peak mastering.
         integrated = None
         peak = 20 * math.log10(max(float(np.max(np.abs(signal.resample_poly(x, 4, 1, axis=0)))), 1e-12))
-        gain = min(-25 - source_rms, ceiling - peak)
+        if footstep:
+            # Every take of a surface meets one quiet transient loudness, well under the effects' RMS level.
+            source_transient = transient_loudness(x)
+            gain = min(footstep[1] - source_transient, ceiling - peak)
+        else:
+            gain = min(-25 - source_rms, ceiling - peak)
     else:
         levels = loudness(working)
         integrated = float(levels["input_i"])
@@ -493,6 +591,9 @@ def master(identifier: str, category: str, x: np.ndarray, duration: float, loop:
     delivery_metrics = metrics(ogg, x.shape[1], loop)
     if abs(delivery_metrics["duration"] - duration) > .002:
         raise ValueError(f"Vorbis duration changed: {identifier}")
+    delivered = read_audio(ogg, 1) if footstep else None
+    if footstep and ring_time(delivered) > .06:
+        raise ValueError(f"Footstep rings like a tuned bar or bell: {identifier}")
     row = {"id": identifier, "src": f"audio/soundtrack/{category}/{identifier}.ogg",
            "duration": duration, "loop": loop}
     record = {
@@ -502,7 +603,11 @@ def master(identifier: str, category: str, x: np.ndarray, duration: float, loop:
         "mastering": {"source_integrated_lufs": integrated, "source_true_peak_dbtp": peak,
                       "source_rms_dbfs": round(source_rms, 3),
                       "target_lufs": target if category != "sfx" else None,
-                      "target_rms_dbfs": -25 if category == "sfx" else None,
+                      "target_rms_dbfs": -25 if category == "sfx" and not footstep else None,
+                      **({"source_transient_lufs": round(source_transient, 3), "target_transient_lufs": footstep[1],
+                          "delivery_transient_lufs": round(transient_loudness(delivered), 3),
+                          "delivery_ring_ms": round(ring_time(delivered) * 1000, 1)}
+                         if footstep else {}),
                       "peak_ceiling_dbtp": ceiling, "static_gain_db": round(gain, 8)},
     }
     save_json(archive / f"{identifier}.json", record)
@@ -522,16 +627,24 @@ def produce_acoustic() -> None:
                 "seed": seed, "path": str(raw), "sha256": sha256(raw), "codec": "pcm_f32le",
                 "sample_rate": RATE, "channels": 2, "duration": 36, "crossfade_seconds": 4,
                 "numpy": np.__version__, "scipy": scipy.__version__})
-    for identifier, (duration, description) in EFFECTS.items():
+    produce_effects(list(EFFECTS))
+
+
+def produce_effects(identifiers: list[str]) -> None:
+    for identifier in identifiers:
+        duration, description = EFFECTS[identifier]
         x, seed = effect(identifier)
         raw_dir = ARCHIVE / "sfx"
         raw_dir.mkdir(parents=True, exist_ok=True)
         raw = raw_dir / f"{identifier}-source.wav"
         wavfile.write(raw, RATE, x)
+        footstep = identifier.startswith("step-")
         master(identifier, "sfx", x, duration, False,
-               {"method": "deterministic-acoustic-synthesis-v1", "description": description,
-                "seed": seed, "path": str(raw), "sha256": sha256(raw), "codec": "pcm_f32le",
-                "sample_rate": RATE, "channels": 1, "numpy": np.__version__, "scipy": scipy.__version__})
+               {"method": "deterministic-acoustic-synthesis-v2" if footstep else "deterministic-acoustic-synthesis-v1",
+                "description": description, "seed": seed, "path": str(raw), "sha256": sha256(raw), "codec": "pcm_f32le",
+                "sample_rate": RATE, "channels": 1, "numpy": np.__version__, "scipy": scipy.__version__,
+                **({"supersedes": "The v1 modal step-dirt and step-stone, whose long tuned partials rang like bells."}
+                   if footstep else {})})
 
 
 def produce_music(identifiers: list[str]) -> None:
@@ -658,15 +771,18 @@ def review_samples() -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--acoustic", action="store_true")
+    parser.add_argument("--effects", nargs="+", choices=list(EFFECTS))
     parser.add_argument("--music", nargs="+", choices=[cue["id"] for cue in RECIPE["cues"]])
     parser.add_argument("--manifest", action="store_true")
     parser.add_argument("--validate", action="store_true")
     parser.add_argument("--review-samples", action="store_true")
     args = parser.parse_args()
-    if not any((args.acoustic, args.music, args.manifest, args.validate, args.review_samples)):
-        parser.error("Choose --acoustic, --music, --manifest, --validate or --review-samples")
+    if not any((args.acoustic, args.effects, args.music, args.manifest, args.validate, args.review_samples)):
+        parser.error("Choose --acoustic, --effects, --music, --manifest, --validate or --review-samples")
     if args.acoustic:
         produce_acoustic()
+    elif args.effects:
+        produce_effects(args.effects)
     if args.music:
         produce_music(args.music)
     if args.manifest or args.validate:

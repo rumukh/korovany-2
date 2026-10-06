@@ -359,10 +359,12 @@ export class Soundscape {
     return decoded;
   }
 
-  private play(buffer: AudioBuffer, channel: "effects" | "voices", volume: number, pan: number, ended: () => void): Playing {
+  private play(buffer: AudioBuffer, channel: "effects" | "voices", volume: number, pan: number, ended: () => void,
+    rate = 1): Playing {
     const context = this.context!;
     const source = context.createBufferSource();
     source.buffer = buffer;
+    source.playbackRate.value = rate;
     const gain = context.createGain();
     gain.gain.value = volume;
     const panner = context.createStereoPanner();
@@ -411,13 +413,21 @@ export class Soundscape {
         if (!base) throw new Error(`Missing effect ${id}`);
         const variants = effects.filter((entry) => entry.id === id ||
           (entry.id.startsWith(`${id}-`) && /^\d+$/.test(entry.id.slice(id.length + 1))));
-        const index = this.variations.get(id) ?? 0;
-        const asset: AudioAsset = variants[index % variants.length] ?? base;
-        this.variations.set(id, index + 1);
+        // Two takes alternate; three or more are shuffled without playing the same take twice in a row.
+        const previous = this.variations.get(id) ?? -1;
+        const index = variants.length > 2
+          ? (previous + 1 + Math.floor(Math.random() * (variants.length - 1))) % variants.length
+          : (previous + 1) % Math.max(1, variants.length);
+        const asset: AudioAsset = variants[index] ?? base;
+        this.variations.set(id, index);
         const buffer = await this.buffer(asset.src, signal);
         if (!valid()) return;
-        const playing = this.play(buffer, "effects", Math.max(0, 1 - distance / 55) ** 2,
-          Math.max(-1, Math.min(1, pan)), () => this.effects.delete(playing));
+        // Footfalls repeat several times a second: vary each one slightly in pitch (+-5%) and level (0 to -1.5 dB).
+        const footstep = id.startsWith("step-");
+        const rate = footstep ? 0.95 + Math.random() * 0.1 : 1;
+        const level = footstep ? 10 ** (-Math.random() * 1.5 / 20) : 1;
+        const playing = this.play(buffer, "effects", level * Math.max(0, 1 - distance / 55) ** 2,
+          Math.max(-1, Math.min(1, pan)), () => this.effects.delete(playing), rate);
         this.effects.add(playing);
         this.recentEffects.push({ id: asset.id, src: asset.src, distance });
         if (this.recentEffects.length > 16) this.recentEffects.shift();
