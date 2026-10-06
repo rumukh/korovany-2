@@ -236,6 +236,12 @@ river, places and story, and changes:
   cold grass and snow in the Frostspine.
 - **Light.** An overcast late-autumn grade with denser fog; characters stay
   within 5 percent of their calibrated brightness.
+- **Air and weather.** Each wild region has its own air, eased in as the hero
+  travels: dim green-grey under the dark forests, a pale thick mist on the Fens,
+  a brown ash haze on the Ash Steppe, cold haze on the Frostspine and sea haze on
+  the Salt Coast. Leaves fall in the forests, ash and embers drift over the
+  steppe, snow falls on the Frostspine and will-o'-wisps wander over the Fens
+  (at high quality, without reduced motion). Scenery only.
 - **Animals.** Sheep flocks graze on settlement pastures and scatter from the
   hero; crows peck on stubble fields, in graveyards and under gibbets and take
   off when the hero comes near; herds of red deer hinds browse in forest glades
