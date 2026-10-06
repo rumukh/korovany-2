@@ -216,7 +216,10 @@ export class WorldWeather {
   private readonly far: { value: number };
   private time = 0;
   private low = false;
-  private settled = false;
+  /** The air has been placed once; later changes of region ease in. */
+  private placed = false;
+  private targetNear = 0;
+  private targetFar = 0;
 
   constructor(private readonly world: WorldBlueprint, private readonly fog: THREE.Fog, private readonly background: THREE.Color,
     private readonly horizon: THREE.Color | undefined) {
@@ -259,17 +262,41 @@ export class WorldWeather {
   }
 
   /**
+   * Another update at the same spot would draw the same air: no particle is shown (they show only at high quality
+   * without reduced motion) and the fog has come to rest on the region's colour and range.
+   */
+  get settled(): boolean {
+    return this.placed && !this.points.visible && this.fog.color.equals(this.targetColor)
+      && this.near.value === this.targetNear && this.far.value === this.targetFar;
+  }
+
+  /** What is left of the fog's ease is below a hundredth of a metre and well under one 8-bit step of colour. */
+  private airArrived(): boolean {
+    const fog = this.fog.color, target = this.targetColor;
+    return Math.max(Math.abs(fog.r - target.r), Math.abs(fog.g - target.g), Math.abs(fog.b - target.b)) < 5e-4
+      && Math.abs(this.near.value - this.targetNear) < 0.01 && Math.abs(this.far.value - this.targetFar) < 0.01;
+  }
+
+  /**
    * Eases the fog towards the hero's region and moves the particles. `halfHeight` is half the drawing buffer's height in
    * pixels (the point sizes follow the resolution).
    */
   update(hero: Vec2, ground: number, dt: number, reducedMotion: boolean, halfHeight: number): void {
     const weights = regionWeights(this.world, hero);
     const { near, far } = targetAir(weights, this.targetColor);
-    const ease = this.settled ? 1 - Math.exp(-Math.max(0, dt) / AIR_EASE) : 1;
-    this.settled = true;
+    this.targetNear = near;
+    this.targetFar = far;
+    const ease = this.placed ? 1 - Math.exp(-Math.max(0, dt) / AIR_EASE) : 1;
+    this.placed = true;
     this.fog.color.lerp(this.targetColor, ease);
     this.near.value += (near - this.near.value) * ease;
     this.far.value += (far - this.far.value) * ease;
+    // The air comes to rest exactly on its region's grade once what is left of the ease is too small to see.
+    if (this.airArrived()) {
+      this.fog.color.copy(this.targetColor);
+      this.near.value = near;
+      this.far.value = far;
+    }
     this.fog.near = this.near.value;
     this.fog.far = this.far.value;
     this.background.copy(this.fog.color);

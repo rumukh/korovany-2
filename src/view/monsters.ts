@@ -48,6 +48,8 @@ export class MonsterInstance {
   private readonly hit: THREE.AnimationAction;
   private readonly gait: { walk: number; run: number; runAbove: number };
   private dead = false;
+  private goal: MonsterClip | undefined;
+  private still = false;
 
   constructor(model: WorldModel, readonly species: MonsterSpecies, startDead = false) {
     this.gait = MONSTER_GAITS[species];
@@ -112,6 +114,17 @@ export class MonsterInstance {
     return best;
   }
 
+  /**
+   * Another update with the same frame would not move the beast: reduced motion holds the stance, every weight has
+   * reached its goal, the goal is not a walking or running loop, and no death or flinch is still playing.
+   */
+  get settled(): boolean {
+    if (!this.still || this.goal === undefined || this.goal === 'Walk' || this.goal === 'Run' || this.hit.isRunning()) return false;
+    for (const [name, weight] of this.weights) if (weight !== (name === this.goal ? 1 : 0)) return false;
+    const death = this.actions.get('Death')!;
+    return this.goal !== 'Death' || death.time >= death.getClip().duration;
+  }
+
   update(frame: MonsterFrame, dt: number): void {
     const target: MonsterClip = frame.state === 'dead' ? 'Death'
       : frame.state === 'windup' ? 'Windup'
@@ -119,6 +132,8 @@ export class MonsterInstance {
           : frame.state === 'recovery' ? 'Recovery'
             : frame.state === 'move' && frame.speed > this.gait.runAbove ? 'Run'
               : frame.state === 'move' && frame.speed > 0.35 ? 'Walk' : 'Idle';
+    this.goal = target;
+    this.still = frame.reducedMotion;
     if (target === 'Death' && !this.dead) {
       this.dead = true;
       const death = this.actions.get('Death')!;
