@@ -8,6 +8,8 @@ import {
 import { closeTestBrowser } from './browser-cleanup';
 
 const WIDTH = 1280, HEIGHT = 720;
+/** Simulation ticks (1/60 s) between drawn frames of the hunt: 7.5 frames a second, at least two in every 0.35 s windup. */
+const TICKS_PER_RENDER = 8;
 
 // W4a: a real guard campaign in a version 3 world, staged by save editing (only the hero moves): a grave-wolf pack
 // appears at a den, hunts the hero and dies under the hero's blows, every few simulation ticks drawn by the real view.
@@ -66,11 +68,27 @@ try {
   const view = createGameView(canvas, world, { quality: 'high', reducedMotion: false, models, worldAssets, renderer });
   view.resize();
   await Promise.all([models.ready, loading]);
-  for (let i = 0; i < 3; i++) view.render(session.snapshot(), 1 / 60);
+  const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
+  // Waits for the GPU to finish everything drawn so far without blocking the page: a fence polled from later tasks
+  // (a pixel read-back would hold the main thread until the GPU is done). Returns the milliseconds waited.
+  const gpuIdle = async () => {
+    const t0 = performance.now(), fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+    gl.flush();
+    while (gl.clientWaitSync(fence, 0, 0) === gl.TIMEOUT_EXPIRED) await new Promise(resolve => setTimeout(resolve, 4));
+    gl.deleteSync(fence);
+    return Math.round(performance.now() - t0);
+  };
+  // The first frames carry the warm-up and every upload of the load. The page waits for their GPU work between tasks, so
+  // it answers the test's polls throughout (under SwiftShader on a CI runner this work takes tens of seconds).
+  state.loadMs = [];
+  for (let i = 0; i < 3; i++) {
+    const t0 = performance.now();
+    view.render(session.snapshot(), 1 / 60);
+    const drawn = Math.round(performance.now() - t0);
+    state.loadMs.push([drawn, await gpuIdle()]);
+  }
   state.lair = lair;
   state.warmup = view.warmup;
-  const settle = () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
-  const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
   const visuals = () => [...presentation.monsterVisuals.values()];
   state.job = null;
   state.startHunt = () => {
@@ -92,24 +110,37 @@ try {
           });
           return [...keys];
         };
-        const clips = new Set(), result = { renders: 0, maxCalls: 0, maxTriangles: 0, maxBeasts: 0, programsBefore, mismatch: 0, hpLost: 0 };
+        const clips = new Set(), result = { renders: 0, maxCalls: 0, maxTriangles: 0, maxBeasts: 0, programsBefore, mismatch: 0, hpLost: 0,
+          seconds: 0, slowestRenderMs: 0, slowestGpuMs: 0 };
+        const started = performance.now();
+        // One drawn frame per ${TICKS_PER_RENDER} simulation ticks; the page then waits for the GPU between tasks, so it
+        // always answers the test's polls (under SwiftShader on a CI runner one 720p frame can take seconds).
+        const draw = async (snapshot, dt) => {
+          const t0 = performance.now(), programs = renderer.info.programs.length;
+          view.render(snapshot, dt);
+          const ms = Math.round(performance.now() - t0);
+          if (ms > result.slowestRenderMs) {
+            result.slowestRenderMs = ms;
+            result.slowest = { render: result.renders, programs, compiled: renderer.info.programs.length - programs, effects: snapshot.effects.length };
+          }
+          result.slowestGpuMs = Math.max(result.slowestGpuMs, await gpuIdle());
+        };
         const maxHp = session.snapshot().player.maxHp;
         let hunting = false;
-        for (let step = 0; step < 900; step += 4) {
+        for (let step = 0; step < 900; step += ${TICKS_PER_RENDER}) {
           const snapshot = session.snapshot();
           const pack = (snapshot.monsters ?? []).filter(m => m.lairId === lair.id);
           if (pack.length && pack.every(m => m.hp <= 0)) break;
           if (!hunting) hunting = pack.some(m => m.state === 'windup');
           const prey = pack.filter(m => m.hp > 0).sort((a, b) => near(a, snapshot.player) - near(b, snapshot.player))[0];
-          for (let i = 0; i < 4; i++) {
+          for (let i = 0; i < ${TICKS_PER_RENDER}; i++) {
             const s = session.snapshot();
             session.step(hunting && prey ? { attack: true, aim: { x: prey.x - s.player.x, z: prey.z - s.player.z } } : {});
           }
           counters.calls = 0;
           counters.triangles = 0;
           const now = session.snapshot();
-          view.render(now, 4 / 60);
-          settle();
+          await draw(now, ${TICKS_PER_RENDER} / 60);
           result.renders++;
           result.maxCalls = Math.max(result.maxCalls, counters.calls);
           result.maxTriangles = Math.max(result.maxTriangles, Math.round(counters.triangles));
@@ -121,9 +152,9 @@ try {
               visuals().some(visual => visual.monster.activeClip === 'Run')) result.programsAtSight = renderer.info.programs.length;
           if (!result.effectSeen && result.programsAtSight !== undefined) result.programsBeforeEffects = renderer.info.programs.length;
           for (const visual of visuals()) clips.add(visual.monster.activeClip);
-          if (result.renders % 8 === 0) await nextTask();
         }
-        for (let i = 0; i < 12; i++) { session.step({}); view.render(session.snapshot(), 1 / 10); settle(); }
+        for (let i = 0; i < 12; i++) { session.step({}); await draw(session.snapshot(), 1 / 10); }
+        result.seconds = Math.round((performance.now() - started) / 100) / 10;
         const final = session.snapshot();
         const fallen = (final.monsters ?? []).filter(m => m.lairId === lair.id);
         result.clips = [...clips].sort();
@@ -137,6 +168,8 @@ try {
         result.monsterProgramsCreated = monsterKeys().filter(key => !keysBefore.has(key)).length;
         result.monsterPrograms = monsterKeys().length;
         result.contextLost = gl.isContextLost();
+        // Read the frame back in the task that drew it, before the canvas is presented and its drawing buffer cleared.
+        view.render(final, 1 / 60);
         const pixels = new Uint8Array(64 * 64 * 4);
         gl.readPixels(${WIDTH / 2} - 32, ${HEIGHT / 2} - 32, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
         result.brightness = pixels.reduce((sum, value, index) => index % 4 === 3 ? sum : sum + value, 0);
@@ -199,6 +232,9 @@ interface Hunt {
   phase: string;
   contextLost: boolean;
   brightness: number;
+  seconds: number;
+  slowestRenderMs: number;
+  slowestGpuMs: number;
 }
 
 describe.runIf(process.env.KOROVANY_WORLD_BROWSER === '1')('version 3 grave wolves in WebGL', () => {
@@ -231,6 +267,7 @@ describe.runIf(process.env.KOROVANY_WORLD_BROWSER === '1')('version 3 grave wolv
     cdp = await openPage(browser.port, `${origin}__monsters`, { width: WIDTH, height: HEIGHT });
     await until(cdp, 'Boolean(window.wolves && (window.wolves.ready || window.wolves.error))', Boolean, 240_000);
     expect(await evaluate(cdp, 'window.wolves.error')).toBeNull();
+    console.info('Grave wolf page: first frames (draw and sync, ms)', JSON.stringify(await evaluate(cdp, 'window.wolves.loadMs')));
   }, 300_000);
 
   afterAll(async () => {
