@@ -571,6 +571,8 @@ export class CharacterInstance {
   private readonly weights = new Map<CharacterClip, number>();
   private readonly hit: THREE.AnimationAction;
   private dead = false;
+  private goal: CharacterClip | undefined;
+  private still = false;
 
   constructor(model: LoadedModel, materials: { body: THREE.Material; items: THREE.Material; depth: THREE.Material }, startDead = false) {
     if (!(model.id in TROOPS)) throw new Error(`${model.id} is not a troop model`);
@@ -632,6 +634,17 @@ export class CharacterInstance {
     return best;
   }
 
+  /**
+   * Another update with the same frame would not move the figure: reduced motion holds the stance, every weight has
+   * reached its goal, the goal is not a running loop, and no death or flinch is still playing.
+   */
+  get settled(): boolean {
+    if (!this.still || this.goal === undefined || this.goal === 'Run' || this.hit.isRunning()) return false;
+    for (const [name, weight] of this.weights) if (weight !== (name === this.goal ? 1 : 0)) return false;
+    const death = this.actions.get('Death')!;
+    return this.goal !== 'Death' || death.time >= death.getClip().duration;
+  }
+
   update(frame: CharacterFrame, dt: number): void {
     const target: CharacterClip = frame.state === 'dead' ? 'Death'
       : frame.state === 'windup' ? 'Windup'
@@ -639,6 +652,8 @@ export class CharacterInstance {
           : frame.state === 'recovery' ? 'Recovery'
             : frame.state === 'move' && frame.speed > 0.35 ? 'Run'
               : frame.relaxed ? 'AtEase' : 'Idle';
+    this.goal = target;
+    this.still = frame.reducedMotion;
     if (target === 'Death' && !this.dead) {
       this.dead = true;
       const death = this.actions.get('Death')!;
@@ -715,6 +730,7 @@ export class OxInstance {
   private readonly weights = new Map<OxBase, number>();
   private readonly hit: THREE.AnimationAction;
   private gait: OxBase = 'Idle';
+  private still = false;
 
   constructor(model: LoadedModel, materials: { body: THREE.Material; depth: THREE.Material }) {
     if (model.id !== DRAFT_OX.id) throw new Error(`${model.id} is not the draft ox`);
@@ -752,6 +768,13 @@ export class OxInstance {
     return this.gait;
   }
 
+  /** Another update with the same frame would not move the ox: a still stance, fully faded in, with no flinch playing. */
+  get settled(): boolean {
+    if (!this.still || this.gait !== 'Idle' || this.hit.isRunning()) return false;
+    for (const [name, weight] of this.weights) if (weight !== (name === 'Idle' ? 1 : 0)) return false;
+    return true;
+  }
+
   private choose(speed: number): OxBase {
     const order: OxBase[] = ['Idle', 'Walk', 'Trot', 'Canter'];
     let index = order.indexOf(this.gait);
@@ -762,6 +785,7 @@ export class OxInstance {
 
   update(frame: OxFrame, dt: number): void {
     this.gait = this.choose(frame.speed);
+    this.still = frame.reducedMotion;
     for (const [name, action] of this.actions) {
       if (name === 'Idle') {
         // Reduced motion keeps a still stance instead of breathing, head and tail motion.
@@ -816,6 +840,7 @@ export class ResidentInstance {
   private readonly idle: THREE.AnimationAction;
   private readonly talk: THREE.AnimationAction;
   private talkWeight = 0;
+  private still = false;
 
   constructor(model: LoadedModel, materials: { body: THREE.Material; depth: THREE.Material }, phase = 0) {
     if (!isResidentModel(model.id)) throw new Error(`${model.id} is not a resident model`);
@@ -843,8 +868,14 @@ export class ResidentInstance {
     return this.talkWeight >= 0.5 ? 'Talk' : 'Idle';
   }
 
+  /** Reduced motion holds Idle's first frame with no gesture, so another update would not move the resident. */
+  get settled(): boolean {
+    return this.still && this.talkWeight === 0;
+  }
+
   update(frame: ResidentFrame, dt: number): void {
     const talking = frame.talking && !frame.reducedMotion;
+    this.still = frame.reducedMotion;
     // Reduced motion keeps a still stance instead of breathing, weight shifts and gestures.
     this.idle.paused = frame.reducedMotion;
     if (frame.reducedMotion) {
@@ -1000,6 +1031,9 @@ export class HeroInstance {
   private dodgeYaw = 0;
   private wasDodging = false;
   private dead = false;
+  private still = false;
+  /** The body yaw `yaw` eases towards (see `advance`). */
+  private facing = 0;
   private readonly corrected = new THREE.Quaternion();
   private readonly delta = new THREE.Quaternion();
   private readonly offset = new THREE.Vector3();
@@ -1083,8 +1117,28 @@ export class HeroInstance {
     return this.weights.get(name) ?? 0;
   }
 
+  /**
+   * Another update with the same frame would not move the hero: reduced motion holds the stance, the base blend has
+   * reached its targets without a locomotion clip, the body has turned onto its facing, and no swing, flinch, dash or
+   * death is still playing.
+   */
+  get settled(): boolean {
+    if (!this.still || this.current || this.previous) return false;
+    if (!this.dead && this.hitTime < this.hitSampler.duration) return false;
+    if (this.dodgeTime < this.actions.get('Dodge')!.getClip().duration) return false;
+    if (this.dead && this.deathTime < this.actions.get('Death')!.getClip().duration) return false;
+    for (const name of BASE_CLIPS) {
+      const target = this.targets.get(name);
+      if (target === undefined || this.weights.get(name) !== target) return false;
+      if (target > 0 && LOCOMOTION.includes(name)) return false;
+    }
+    if (this.dead) return true;
+    return this.yaw === THREE.MathUtils.euclideanModulo(this.facing + Math.PI, Math.PI * 2) - Math.PI;
+  }
+
   update(frame: HeroFrame, dt: number): void {
     dt = Math.max(0, dt);
+    this.still = frame.reducedMotion;
     const speed = Math.hypot(frame.velocity.x, frame.velocity.z);
     if (frame.dead !== this.dead) {
       this.dead = frame.dead;
@@ -1186,8 +1240,11 @@ export class HeroInstance {
         facing = Math.atan2(frame.velocity.x, frame.velocity.z) - this.direction * (Math.PI / 2);
       }
       const turn = THREE.MathUtils.euclideanModulo(facing - this.yaw + Math.PI, Math.PI * 2) - Math.PI;
-      this.yaw = THREE.MathUtils.euclideanModulo(this.yaw + turn * (1 - Math.exp(-dt / (dashing ? DASH_TURN : TURN))) + Math.PI, Math.PI * 2)
-        - Math.PI;
+      this.facing = facing;
+      // The last ten-thousandth of a radian is not eased: the body comes to rest exactly on its facing.
+      this.yaw = Math.abs(turn) < 1e-4 ? THREE.MathUtils.euclideanModulo(facing + Math.PI, Math.PI * 2) - Math.PI
+        : THREE.MathUtils.euclideanModulo(this.yaw + turn * (1 - Math.exp(-dt / (dashing ? DASH_TURN : TURN))) + Math.PI, Math.PI * 2)
+          - Math.PI;
     }
     this.root.rotation.y = this.yaw;
     // Overlay envelope: in over 50 ms, held through the clip, out over 150 ms after it ends or a story opens.

@@ -118,6 +118,7 @@ function resident(resources: ViewResources, npc: NpcSnapshot): Resident {
 
 export class WorldResidents {
   private readonly people = new Map<string, Resident>();
+  private still = false;
 
   /** `ground` stands residents on a version 3 world's presentation relief (flat for v1/v2). */
   constructor(private readonly resources: ViewResources, private readonly scene: THREE.Scene,
@@ -130,6 +131,13 @@ export class WorldResidents {
     return ids;
   }
 
+  /** Reduced motion holds every resident and quest marker still, so another update with the same snapshot moves none. */
+  get settled(): boolean {
+    if (!this.still) return false;
+    for (const person of this.people.values()) if (person.model && !person.model.settled) return false;
+    return true;
+  }
+
   /** The cooked model presenting a resident, or undefined while it is procedural or not listed. */
   model(npcId: string): ResidentInstance | undefined {
     return this.people.get(npcId)?.model;
@@ -137,6 +145,7 @@ export class WorldResidents {
 
   /** `dt` is render time: conversations pause the simulation, but the speaking resident keeps gesturing. */
   update(snapshot: Readonly<GameSnapshot>, camera: THREE.Camera, reducedMotion: boolean, dt = 0): void {
+    this.still = reducedMotion;
     const ids = new Set<string>();
     for (const npc of snapshot.narrative?.npcs ?? []) {
       ids.add(npc.id);
