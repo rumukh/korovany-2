@@ -70,12 +70,14 @@ the logical CPUs, so workers busy with long simulations still answer the runner.
 The six faction campaign acceptance cases run as separate files
 (`tests/faction-acceptance-<faction>-<directive>.test.ts`) so they spread over
 the workers.
-CI builds the site, runs unit tests and runs four balanced browser-file groups on
-separate runners concurrently. Deployment requires every job to succeed; no
+CI builds the site, runs the unit tests on two runners (Vitest's `--shard`) and
+runs six browser-file groups, balanced by measured duration, on separate runners
+concurrently. Deployment requires every job to succeed; no
 browser assertions, audio clips or narrative branches are omitted. Each browser
 runner still runs only one test file at a time. The workflow lists its groups
 explicitly, and a coverage test requires every browser suite to appear exactly
-once. `KOROVANY_TEST_SUITE=unit` or `browser` selects those categories locally.
+once and keeps Vitest's sharding out of the browser job.
+`KOROVANY_TEST_SUITE=unit` or `browser` selects those categories locally.
 Without the selector, `npm test` retains its full-suite behavior.
 CI enables both the world-visual benchmark (`KOROVANY_WORLD_BROWSER=1`) and the
 complete shipped-voice checks (`KOROVANY_VOICE_ASSETS=1`). These remain opt-in for
