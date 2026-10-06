@@ -68,6 +68,23 @@ export function parseSoundtrack(value: unknown): SoundtrackManifest {
   return { version: 1, music: category("music"), ambience: category("ambience"), sfx: category("sfx") };
 }
 
+/**
+ * The monsters' voices (`public/audio/beasts/manifest.json`, scripts/audio/synth_beasts.py), kept apart from the
+ * soundtrack: one-shot effects whose IDs start with `beast-`, with numbered variants like the soundtrack's effects.
+ */
+export function parseBeasts(value: unknown): AudioAsset[] {
+  const root = record(value);
+  if (root.version !== 1 || !Array.isArray(root.sfx) || !root.sfx.length) throw new Error("Empty or unsupported beast manifest.");
+  const ids = new Set<string>();
+  return root.sfx.map((item) => {
+    const asset = record(item);
+    const id = string(asset.id);
+    if (!id.startsWith("beast-") || ids.has(id) || asset.loop !== false) throw new Error(`Invalid or duplicate beast voice: ${id}`);
+    ids.add(id);
+    return { id, src: source(asset.src, "beasts"), duration: duration(asset.duration), loop: false };
+  });
+}
+
 export function parseVoices(value: unknown): Map<string, VoiceEntry> {
   const root = record(value);
   if (root.version !== 1 || !Array.isArray(root.entries) || !root.entries.length) throw new Error("Empty or unsupported voice manifest.");

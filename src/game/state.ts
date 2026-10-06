@@ -2,11 +2,18 @@ import { defineComponent, defineResource, type World } from '@aegis/core';
 import type { NarrativeState } from './narrative';
 import type { MilitaryState } from './faction-campaigns';
 import type {
-  ActorSnapshot, ConvoySnapshot, EffectSnapshot, FactionId, FortressSnapshot, GameEvent,
-  GameInput, OutpostSnapshot, Phase, PickupSnapshot, PlayerSnapshot, ProjectileSnapshot, RunRewards, Vec2,
+  ActorKind, ActorSnapshot, ConvoySnapshot, EffectSnapshot, FactionId, FortressSnapshot, GameEvent,
+  GameInput, MonsterSpecies, OutpostSnapshot, Phase, PickupSnapshot, PlayerSnapshot, ProjectileSnapshot, RunRewards, Vec2,
 } from './types';
 
-export interface ActorData extends ActorSnapshot {
+/**
+ * One combatant entity. Version 3 monsters are combatants of kind `monster` with a `species`, `allegiance: 'hostile'`,
+ * their lair as `siteId` and its centre as `home`; snapshots list them apart from the troops (`GameSnapshot.monsters`).
+ */
+export interface ActorData extends Omit<ActorSnapshot, 'kind'> {
+  kind: ActorKind | 'monster';
+  /** Version 3 monsters only. */
+  species?: MonsterSpecies;
   cooldown: number;
   damage: number;
   speed: number;
@@ -15,6 +22,16 @@ export interface ActorData extends ActorSnapshot {
   patrolDirection: number;
   marchRoute?: Vec2[];
   marchDestination?: string | null;
+  /** Version 3 monsters only: the point it wanders to while it is not hunting, within its roam circle round `home`. */
+  roam?: Vec2;
+}
+/** Version 3 only: the monster spawner. `sequence` numbers `monster-<n>` IDs; a lair's `cooldown` runs after its pack
+ * was killed out and blocks a new pack until it reaches 0. */
+export interface MonsterState {
+  version: 1;
+  sequence: number;
+  timer: number;
+  lairs: Record<string, { cooldown: number }>;
 }
 export interface ProjectileData extends ProjectileSnapshot {
   vx: number;
@@ -47,6 +64,8 @@ export interface CampaignData {
   /** Absent on legacy v1 worlds, retained in the Aegis campaign resource on v2. */
   narrative?: NarrativeState;
   military?: MilitaryState;
+  /** Version 3 only: the monster spawner's state. */
+  spawner?: MonsterState;
 }
 export const Combatant = defineComponent<ActorData>({
   id: 'KorovanyCombatant',

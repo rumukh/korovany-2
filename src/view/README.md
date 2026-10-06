@@ -46,7 +46,9 @@ inns, archives, wells, bell frames, antler shrines, glass ribs and star instrume
 Regional ground, masonry, roofs and foliage distinguish the eight landscapes.
 The Hollow Road reuses these authored locations. Books and shelves remain
 scenery; evidence and supernatural encounters are presented as paused story
-scenes, not additional interactive meshes or monster actors.
+scenes, not additional interactive meshes or monster actors: the Caller is never
+shown. Version 3's grave wolves, beasts of the borderland outside the story, are
+the only monsters (`MonsterInstance`, see "Version 3 worlds" above).
 Grass and pebbles are excluded from roads, locations, water and blockers. Horizon
 mountains stay outside the map. All bridges have level traversable decks; rails
 are over solid water outside their exact walkable rectangles. Regional foliage
@@ -65,7 +67,7 @@ The browser shell starts new campaigns in version 3; saved version 1 and 2 campa
 A version 3 blueprint (`generateWorld(seed, 3)`, `CampaignOptions.worldVersion: 3`) is drawn by
 `createWorldSceneryV3` (`scenery-v3.ts`) instead of `createWorldScenery`; versions 1 and 2 are drawn exactly as before.
 Every v3 obstacle names a `model` from the world asset registry (`world-assets.ts`: buildings, walls, fences, farm and
-village props, trees, boulders, the reeds, and the sheep, crows, deer and goats), which is separate from the cooked characters and story
+village props, trees, boulders, the reeds, and the sheep, crows, deer, goats and grave wolves), which is separate from the cooked characters and story
 props in `models.ts`: own files (`public/world/<id>/<id>.glb`, `public/world/surfaces`), provenance (`scripts/world`)
 and budgets.
 `createGameView` needs a page-lifetime `WorldAssetLibrary` in `GameViewOptions.worldAssets` and presents a v3 world
@@ -83,8 +85,8 @@ primitive fallback). Version 1 and 2 worlds request nothing from it.
   streets in the stone towns (`COBBLED_PLACES`) and fortress courtyards (`COURTYARDS`: cobbles in the Royal Citadel,
   trampled ground in the Old Fort). The layers ship as WebP and upload as RGBA8 and RG8; KTX2/Basis was measured
   at W0 and deferred (ETC1S saved 282 KB and 15 MiB of GPU memory but needs a 585 KB transcoder). The whole v3 world
-  needs about 153 MiB of texture memory, within its 160 MiB budget; W1 and W2 props use 256 px normal and ORM maps,
-  the small ones a 256 px albedo, and the sheep, deer and goats 512 px maps.
+  needs about 157 MiB of texture memory, within its 160 MiB budget; W1 and W2 props use 256 px normal and ORM maps,
+  the small ones a 256 px albedo, and the sheep, deer, goats and grave wolves 512 px maps.
 - **Settlements.** Each region builds its own vernacular from the scripted kit (`build_kit.py`, `build_kit_w1.py`):
   timber cottages, longhouses and barns in the Heartlands, the Greenmarch and Hollowvale, stone and brick houses,
   jettied townhouses with cobbles in Crownbridge, stilt huts and a reed-roofed chapel in the Fens, salt sheds and
@@ -121,7 +123,8 @@ primitive fallback). Version 1 and 2 worlds request nothing from it.
   Fen meres, sparse rushes on the tarns), drowned dead trees and stumps in the meres and pools, and boulders in the surf
   at rocky points on the coast.
 - **Terrain.** `terrainFor(world)` is a presentation-only heightfield (exactly 0 for v1/v2): level on roads, sites,
-  clearings, footprints, fields, shores and combat zones, hills elsewhere with slopes of at most about 11 degrees. Terrain
+  clearings, footprints, fields, shores, combat zones and within `LAIR_FLAT` (40 m) of every monster den, hills
+  elsewhere with slopes of at most about 11 degrees. Terrain
   chunks are 128 m meshes of 2 m quads. Actors, residents, pickups, effects, rings, the sun target and the camera
   focus stand on it; the river channel and the lake and sea beds are carved below the water plane.
 - **Instancing.** Static models are pooled per model, variant and distance band in a `ScatterField`: each update
@@ -150,6 +153,16 @@ primitive fallback). Version 1 and 2 worlds request nothing from it.
   and about 70 animals a world, 45 m from people and 14 m from roads); a herd startles together when the hero comes
   within 18 m (deer) or 11 m (goats), bounds away swerving round solids and water, and settles again once clear.
   Animals are never in snapshots, saves or rules.
+- **Monsters.** Grave wolves (`char-wolf`, a fauna model cooked by `cook_monster_quadruped.py` with the `MONSTER_CLIPS`
+  contract) come from `GameSnapshot.monsters`, not `actors`, and are drawn by `MonsterInstance` (`monsters.ts`), the
+  troops' clip logic for a beast: Idle, then Walk or Run by ground speed (above 2.2 m/s it runs), Windup, Strike and
+  Recovery scrubbed by the snapshot's progress through those states, Hit added on a wound and Death held at its last
+  frame. Monsters are never dyed and carry no allegiance ring; a hostile health bar shows once wounded or winding up,
+  and the windup's red tell ring has the wolf's 1.9 m reach. Bodies lie along steep ground like the troops' (dens are
+  level anyway). `worldAssetIds` adds each lair's species model, and the warm-up draws one beast per species. The
+  audio presentation howls (far and quiet) as a pack appears, howls again as it turns on the hero, snarls at each
+  windup, yelps at a wound and cries at a death, from its own manifest (`public/audio/beasts`, synthesised by
+  `scripts/audio/synth_beasts.py`; the soundtrack's manifest is unchanged), and hunting wolves start the combat music.
 
 Seven generated surface families use shared color, normal and roughness maps
 from `public/textures/frontier`. Albedo is sRGB; normal/roughness data is linear.

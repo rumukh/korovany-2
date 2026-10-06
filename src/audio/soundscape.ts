@@ -1,5 +1,5 @@
 import { defaultMix, type AudioMix } from "./mix";
-import { paragraphs, parseSoundtrack, parseVoices, voiceKey, type AudioAsset, type SoundtrackManifest, type VoiceEntry } from "./manifest";
+import { paragraphs, parseBeasts, parseSoundtrack, parseVoices, voiceKey, type AudioAsset, type SoundtrackManifest, type VoiceEntry } from "./manifest";
 
 export interface SpeechLine {
   speaker: string;
@@ -42,6 +42,8 @@ export class Soundscape {
   private downloads = new AbortController();
   private voiceDownload = new AbortController();
   private soundtrack: Promise<SoundtrackManifest> | null = null;
+  /** The monsters' voices, fetched with the first `beast-` cue (version 3 worlds only). */
+  private bestiary: Promise<AudioAsset[]> | null = null;
   private catalogue: Promise<Map<string, VoiceEntry>> | null = null;
   private readonly cache = new Map<string, AudioBuffer>();
   private cacheBytes = 0;
@@ -203,6 +205,11 @@ export class Soundscape {
   private score(): Promise<SoundtrackManifest> {
     this.soundtrack ??= this.json("audio/soundtrack/manifest.json").then(parseSoundtrack);
     return this.soundtrack;
+  }
+
+  private beasts(): Promise<AudioAsset[]> {
+    this.bestiary ??= this.json("audio/beasts/manifest.json").then(parseBeasts);
+    return this.bestiary;
   }
 
   private voices(): Promise<Map<string, VoiceEntry>> {
@@ -398,11 +405,11 @@ export class Soundscape {
     this.pendingEffects++;
     void (async () => {
       try {
-        const manifest = await this.score();
+        const effects = id.startsWith("beast-") ? await this.beasts() : (await this.score()).sfx;
         if (!valid()) return;
-        const base = manifest.sfx.find((entry) => entry.id === id);
+        const base = effects.find((entry) => entry.id === id);
         if (!base) throw new Error(`Missing effect ${id}`);
-        const variants = manifest.sfx.filter((entry) => entry.id === id ||
+        const variants = effects.filter((entry) => entry.id === id ||
           (entry.id.startsWith(`${id}-`) && /^\d+$/.test(entry.id.slice(id.length + 1))));
         const index = this.variations.get(id) ?? 0;
         const asset: AudioAsset = variants[index % variants.length] ?? base;

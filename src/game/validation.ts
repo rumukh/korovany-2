@@ -1,6 +1,7 @@
 import type { EntitySnapshot, WorldSnapshot } from '@aegis/core';
 import { FACTIONS } from './config';
 import { DIRECTIVES, militaryReady, shipmentDestination, type MilitaryState } from './faction-campaigns';
+import { MONSTER_FACTION, MONSTER_RULES, MONSTERS, monsterNumber } from './monsters';
 import { narrativeResolved, validateNarrativeState } from './narrative';
 import { assertRecord, boundedNumber, validatedUpgrades } from './profile';
 import { Combatant, type ActorData, type CampaignData } from './state';
@@ -183,12 +184,20 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
   boundedNumber(s.fortress.reinforcementWaves, 'reinforcement waves', 0, 1, true);
   boundedNumber(s.spawnSequence, 'spawn sequence', 0, 3, true);
   same(s.spawnSequence, s.fortress.reinforcementWaves * 3, 'spawn count');
+  if (s.spawner) {
+    same(s.spawner.version, 1, 'monster schema');
+    boundedNumber(s.spawner.sequence, 'monster sequence', 0, 999_999_999, true);
+    timer(s.spawner.timer, 'monster timer', MONSTER_RULES.check);
+    for (const lair of blueprint.lairs ?? []) timer(s.spawner.lairs[lair.id]!.cooldown, 'lair cooldown', MONSTER_RULES.cooldown[1]);
+  }
   boundedNumber(s.eventSequence, 'event sequence', 0, 10_000_000, true);
   boundedNumber(s.transientSequence, 'transient sequence', 0, 10_000_000, true);
   timer(s.followTimer, 'follow timer', 1); timer(s.convoyWeaponTimer, 'convoy weapon timer', 2.5);
   timer(s.reinforcementTimer, 'reinforcement timer', 2.1);
   if (Math.hypot(s.dodgeDirection.x, s.dodgeDirection.z) > 1.00001) throw new Error('Invalid dodge vector');
-  if (s.pickups.length > 40 || s.projectiles.length > 96 || s.effects.length > 48 || s.events.length > 32) throw new Error('Transient limits exceeded');
+  // Version 3 monsters drop coins only while fewer than `dropRoom` pickups lie on the ground, on top of the campaign's own 40.
+  const pickupLimit = s.spawner ? 40 + MONSTER_RULES.dropRoom : 40;
+  if (s.pickups.length > pickupLimit || s.projectiles.length > 96 || s.effects.length > 48 || s.events.length > 32) throw new Error('Transient limits exceeded');
   const point = (at: { x: number; z: number }): void => {
     boundedNumber(at.x, 'position.x', blueprint.bounds.minX - 1, blueprint.bounds.maxX + 1);
     boundedNumber(at.z, 'position.z', blueprint.bounds.minZ - 1, blueprint.bounds.maxZ + 1);
@@ -248,7 +257,7 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     same(s.rewards.victory, s.phase === 'victory', 'reward outcome');
     same(s.rewards.renown, (s.phase === 'victory' ? 60 : 5) + s.outposts.filter(p => p.owner === 'player').length * 10 + Math.floor(p.kills / 3), 'reward amount');
   }
-  const actorLimit = initialActors.length + 3;
+  const actorLimit = initialActors.length + 3 + (s.spawner ? MONSTER_RULES.cap : 0);
   if (!Array.isArray(value.entities) || value.entities.length > actorLimit) throw new Error('Invalid actor count');
   const entities: EntitySnapshot[] = [];
   const actorIds: string[] = [];
@@ -260,9 +269,11 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     const rawActor = entry.components.KorovanyCombatant;
     assertRecord(rawActor, 'actor');
     const originalTemplate = initialActors.find(a => a.id === rawActor.id);
+    const monster = s.spawner ? monsterNumber(rawActor.id) : null;
     const actorTemplate = Combatant.create({ target: rawActor.target === null ? null : 'player',
       ...(s.military ? { allegiance: 'hostile' } : {}), ...(originalTemplate?.name ? { name: originalTemplate.name } : {}),
-      ...(originalTemplate?.marchRoute ? { marchRoute: [{ x: 0, z: 0 }], marchDestination: rawActor.marchDestination === null ? null : '' } : {}) });
+      ...(originalTemplate?.marchRoute ? { marchRoute: [{ x: 0, z: 0 }], marchDestination: rawActor.marchDestination === null ? null : '' } : {}),
+      ...(monster !== null ? { species: 'wolf' as const, roam: { x: 0, z: 0 } } : {}) });
     shape(rawActor, actorTemplate, 'actor');
     const a = rawActor;
     const reinforcement = /^reinforcement-([123])$/.exec(a.id);
@@ -290,10 +301,24 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
       if (s.military) same(a.allegiance, 'hostile', 'reinforcement allegiance');
       same(a.home.x, s.fortress.x + (Number(reinforcement[1]) - 2) * 3, 'reinforcement home X');
       same(a.home.z, s.fortress.z + 5, 'reinforcement home Z');
+    } else if (monster !== null && monster <= s.spawner!.sequence) {
+      const lair = (blueprint.lairs ?? []).find(l => l.id === a.siteId);
+      if (!lair) throw new Error('Monster outside a lair');
+      const spec = MONSTERS[lair.species];
+      same(a.kind, 'monster', 'monster kind'); same(a.species, lair.species, 'monster species');
+      same(a.faction, MONSTER_FACTION, 'monster faction'); same(a.allegiance, 'hostile', 'monster allegiance');
+      same(a.home.x, lair.x, 'monster home X'); same(a.home.z, lair.z, 'monster home Z');
+      same(a.maxHp, spec.hp, 'monster max HP'); same(a.radius, spec.radius, 'monster radius');
+      same(a.damage, spec.damage, 'monster damage'); same(a.speed, spec.speed, 'monster speed');
+      same(a.attackRange, spec.attackRange, 'monster range');
+      point(a.roam!);
+      if (distance(a.roam!, a.home) > MONSTER_RULES.roam + 1e-6) throw new Error('Monster wanders beyond its lair');
+      if (distance(a, a.home) > MONSTER_RULES.leash + MONSTER_RULES.roam) throw new Error('Monster beyond its leash');
+      if (a.target !== null && a.target !== 'player') throw new Error('Monster hunts something other than the hero');
     } else throw new Error('Unknown actor identity');
     point(a); point(a.home); point(a.attackPoint);
     boundedNumber(a.heading, 'actor heading', -Math.PI, Math.PI);
-    oneOf(a.kind, ['soldier', 'archer', 'captain', 'boss', 'caravan'], 'actor kind');
+    oneOf(a.kind, s.spawner ? ['soldier', 'archer', 'captain', 'boss', 'caravan', 'monster'] : ['soldier', 'archer', 'captain', 'boss', 'caravan'], 'actor kind');
     oneOf(a.faction, ['elf', 'guard', 'villain'], 'actor faction');
     oneOf(a.state, ['idle', 'chase', 'windup', 'attack', 'recovery', 'dead'], 'actor state');
     oneOf(a.target, s.military ? ['player', 'convoy', 'shipment', null] : ['player', 'convoy', null], 'actor target');
@@ -309,17 +334,23 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
       }
     }
     const post = initial.outposts.find(post => post.id === a.siteId);
-    if (!post && a.siteId !== 'raid' && a.siteId !== 'fortress' && !(s.military && a.siteId === 'home')) throw new Error('Invalid actor site');
-    const expectedHp = a.kind === 'boss' ? 480 : a.kind === 'caravan' ? 170 : a.kind === 'captain' ? 90 : a.kind === 'archer' ? 48 : 60;
-    same(a.maxHp, expectedHp, 'actor max HP');
+    if (!post && a.siteId !== 'raid' && a.siteId !== 'fortress' && !(s.military && a.siteId === 'home') &&
+        !(a.kind === 'monster' && (blueprint.lairs ?? []).some(l => l.id === a.siteId))) throw new Error('Invalid actor site');
+    if (a.kind !== 'monster') {
+      const expectedHp = a.kind === 'boss' ? 480 : a.kind === 'caravan' ? 170 : a.kind === 'captain' ? 90 : a.kind === 'archer' ? 48 : 60;
+      same(a.maxHp, expectedHp, 'actor max HP');
+    }
     boundedNumber(a.hp, 'actor HP', 0, a.maxHp);
     if (s.military && a.id === 'enemy-caravan') same(a.state, 'idle', 'shipment state');
     else same(a.state === 'dead', a.hp === 0, 'actor death');
-    same(a.radius, a.kind === 'caravan' ? 1.5 : a.kind === 'boss' ? 1.3 : 0.7, 'actor radius');
-    same(a.damage, a.kind === 'boss' ? 24 : a.kind === 'captain' ? 17 : a.kind === 'archer' ? 10 : 12, 'actor damage');
-    same(a.speed, a.kind === 'boss' ? 3.6 : a.kind === 'archer' ? 3 : 3.5, 'actor speed');
-    same(a.attackRange, a.kind === 'archer' ? 14 : a.kind === 'boss' ? 4.3 : 2.4, 'actor range');
-    timer(a.cooldown, 'actor cooldown', 2.6); timer(a.stateTime, 'AI state timer', 1.1);
+    if (a.kind !== 'monster') {
+      same(a.radius, a.kind === 'caravan' ? 1.5 : a.kind === 'boss' ? 1.3 : 0.7, 'actor radius');
+      same(a.damage, a.kind === 'boss' ? 24 : a.kind === 'captain' ? 17 : a.kind === 'archer' ? 10 : 12, 'actor damage');
+      same(a.speed, a.kind === 'boss' ? 3.6 : a.kind === 'archer' ? 3 : 3.5, 'actor speed');
+      same(a.attackRange, a.kind === 'archer' ? 14 : a.kind === 'boss' ? 4.3 : 2.4, 'actor range');
+    }
+    // A wandering monster pauses up to `pause` seconds between moves.
+    timer(a.cooldown, 'actor cooldown', 2.6); timer(a.stateTime, 'AI state timer', a.kind === 'monster' ? MONSTER_RULES.pause[1] : 1.1);
     timer(a.deadTime, 'corpse age', s.military && a.kind === 'caravan' ? 10_000_000 : 8.1);
     oneOf(a.patrolDirection, [-1, 1], 'patrol direction');
     if (!isWalkable(blueprint, a, a.radius)) throw new Error('Actor outside walkable geometry');
@@ -332,12 +363,21 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     ...initialActors.map(a => a.id),
     ...Array.from({ length: s.spawnSequence }, (_, i) => `reinforcement-${i + 1}`),
   ]);
-  if (actorIds.some(id => !allowedIds.has(id))) throw new Error('Unknown actor ID');
+  const monsterIds = (id: string): boolean => !!s.spawner && (monsterNumber(id) ?? Infinity) <= s.spawner.sequence;
+  if (actorIds.some(id => !allowedIds.has(id) && !monsterIds(id))) throw new Error('Unknown actor ID');
+  // Monsters stand outside the campaign's kill ledger: their kills never count towards the hero's.
   same(p.kills + entities.filter(e => {
     const data = e.components.KorovanyCombatant;
     assertRecord(data, 'actor');
-    return typeof data.hp === 'number' && (data.hp > 0 || !!s.military && data.id === 'enemy-caravan');
+    return typeof data.hp === 'number' && data.kind !== 'monster' && (data.hp > 0 || !!s.military && data.id === 'enemy-caravan');
   }).length, initialActors.length + s.spawnSequence, 'kill conservation');
+  if (s.spawner) {
+    const monsters = entities.map(e => e.components.KorovanyCombatant as ActorData).filter(a => a.kind === 'monster');
+    if (monsters.length > MONSTER_RULES.cap) throw new Error('Monster cap exceeded');
+    for (const lair of blueprint.lairs ?? []) {
+      if (s.spawner.lairs[lair.id]!.cooldown > 0 && monsters.some(a => a.siteId === lair.id && a.hp > 0)) throw new Error('A quiet lair has a living pack');
+    }
+  }
   for (const post of s.outposts) same(post.defendersRemaining, aliveByPost.get(post.id) ?? 0, 'defender count');
   const livingCaravan = entities.some(e => {
     const a = e.components.KorovanyCombatant;

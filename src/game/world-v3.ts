@@ -1,5 +1,5 @@
 import type { WorldLocation, WorldRegion } from './narrative-types';
-import type { BoxShape, Obstacle, Vec2, WorldBlueprint, WorldField, WorldLake } from './types';
+import type { BoxShape, MonsterSpecies, Obstacle, Vec2, WorldBlueprint, WorldField, WorldLair, WorldLake } from './types';
 import { distance, lakeBounds, lakeClearance, obstacleClearance, projectSegment, segmentClearance } from './world';
 
 /**
@@ -287,6 +287,8 @@ function fits(place: Placement, o: Obstacle, rules: Rules, own?: WorldLocation):
     if (o.x < box.minX - reach || o.x > box.maxX + reach || o.z < box.minZ - reach || o.z > box.maxZ + reach) continue;
     if (lakeClearance(lake, o) < reach) return false;
   }
+  // Lairs too: their clearings stay open.
+  for (const lair of world.lairs ?? []) if (obstacleClearance(o, lair) < lair.radius) return false;
   if (place.roadClearance(o) < rules.road) return false;
   for (const location of world.exploration!.locations) {
     const clearing = location === own ? rules.own ?? LOCATION_CLEARING : Math.max(LOCATION_CLEARING, rules.location,
@@ -1319,6 +1321,85 @@ function sea(place: Placement, seed: string): void {
   world.lakes!.push({ id: 'sea', kind: 'sea', x: round2((middle.x + out) / 2), z: middle.z, shore });
 }
 
+/** Monster lairs by region: grave-wolf dens in the glades of the dark forests of Greenmarch and Hollowvale. */
+export const LAIRS: Readonly<Record<string, readonly { species: MonsterSpecies; count: number }[]>> = {
+  greenmarch: [{ species: 'wolf', count: 3 }],
+  hollowvale: [{ species: 'wolf', count: 3 }],
+};
+/**
+ * A lair is an open clearing of `radius` metres. Its centre keeps `settled` metres from the edges of settlements, inns,
+ * and chapel shrines (beyond a pack's 35 m leash and 16 m aggro), `location` from every other story location, `site`
+ * from military sites and homes, `road` from road surfaces (a pack roams 25 m, so it is sometimes seen from the road),
+ * `lake` from water, `lair` from other lairs and `bounds` from the world's edge.
+ */
+export const LAIR_RULES = { radius: 10, settled: 100, location: 60, site: 100, road: 22, lake: 14, lair: 120, bounds: 60 } as const;
+
+function lairFits(place: Placement, lair: WorldLair): boolean {
+  const world = place.world, rules = LAIR_RULES, b = world.bounds;
+  if (lair.x < b.minX + rules.bounds || lair.x > b.maxX - rules.bounds || lair.z < b.minZ + rules.bounds || lair.z > b.maxZ - rules.bounds) return false;
+  if (lair.z > world.river.minZ - rules.lake && lair.z < world.river.maxZ + rules.lake) return false;
+  for (const location of world.exploration!.locations) {
+    const settled = location.kind === 'settlement' || location.kind === 'inn' || CHAPEL_SHRINES.has(location.id);
+    if (distance(lair, location) - location.radius < (settled ? rules.settled : rules.location)) return false;
+  }
+  for (const site of world.sites) if (distance(lair, site) - site.radius < rules.site) return false;
+  for (const road of place.roads) if (distance(lair, projectSegment(lair, road.a, road.b)) - road.half < rules.road) return false;
+  for (const lake of world.lakes ?? []) if (lakeClearance(lake, lair) < rules.lake) return false;
+  for (const other of world.lairs ?? []) if (distance(lair, other) < rules.lair) return false;
+  if (insideField(world, lair, lair.radius + 4)) return false;
+  for (const o of place.near(lair, lair.radius + 12)) if (obstacleClearance(o, lair) < lair.radius + 2) return false;
+  return true;
+}
+
+/** Lairs, placed after the lakes and before the forests, in the glades of their regions' woodland (low woodland noise on
+ * a 10 m grid), so the dense cores stay whole and the trees grow round each clearing; where a region has too few
+ * fitting glades, a lair may lie anywhere in it, its clearing cut out of the forest. */
+function lairs(place: Placement, seed: string): void {
+  const world = place.world;
+  const random = stream(`korovany2:v3:${seed}:lairs`);
+  const noiseSeed = seedNumber(`korovany2:v3:${seed}:forest`);
+  for (const region of world.exploration!.regions) {
+    const plans = Object.hasOwn(LAIRS, region.id) ? LAIRS[region.id]! : [];
+    const woods = WOODLAND[region.id];
+    if (!plans.length || !woods) continue;
+    const rb = region.bounds;
+    const glades: Vec2[] = [], anywhere: Vec2[] = [];
+    for (let z = rb.minZ + 5; z < rb.maxZ; z += 10) for (let x = rb.minX + 5; x < rb.maxX; x += 10) {
+      anywhere.push({ x, z });
+      if (fbm(x * woods.scale, z * woods.scale, noiseSeed, 4) <= 1 - woods.density + 0.08) glades.push({ x, z });
+    }
+    let made = 0;
+    for (const plan of plans) {
+      let placed = 0;
+      for (let attempt = 0; attempt < 400 && placed < plan.count; attempt++) {
+        const spots = attempt < 200 && glades.length ? glades : anywhere;
+        const spot = spots[Math.floor(random.next() * spots.length)]!;
+        const lair: WorldLair = { id: `lair-${region.id}-${made}`, species: plan.species, radius: LAIR_RULES.radius,
+          x: round2(spot.x + random.range(-4, 4)), z: round2(spot.z + random.range(-4, 4)) };
+        if (!lairFits(place, lair)) continue;
+        world.lairs!.push(lair);
+        den(place, lair, random);
+        placed++;
+        made++;
+      }
+    }
+  }
+}
+
+/** A den on a lair clearing's rim: a fallen black pine lying along it and two mossy boulders, a third of the way round
+ * from each other, all beyond the 6 m where a pack appears. */
+function den(place: Placement, lair: WorldLair, random: ReturnType<typeof stream>): void {
+  const start = random.range(0, Math.PI * 2);
+  const log = V3_PROPS['wood-log'], s = random.range(0.75, 0.95), a = start;
+  place.add({ ...box(`${lair.id}-den-0`, round2(lair.x + Math.sin(a) * 8.2), round2(lair.z + Math.cos(a) * 8.2), log.width / 2 * s,
+    log.length / 2 * s, a + Math.PI / 2, log.height * s, 'wood-log', Math.floor(random.next() * 4)), kind: 'rock' });
+  for (let k = 1; k <= 2; k++) {
+    const b = start + k * 2.1 + random.range(-0.3, 0.3), rock = V3_PROPS['rock-mossy'], r = random.range(0.9, 1.2);
+    place.add({ id: `${lair.id}-den-${k}`, kind: 'rock', x: round2(lair.x + Math.sin(b) * 8.4), z: round2(lair.z + Math.cos(b) * 8.4),
+      radius: rock.radius * r, height: rock.height * r, variant: Math.floor(random.next() * 4), model: 'rock-mossy' });
+  }
+}
+
 /** Lone trees across the open land, by region: gnarled oaks over the farms, dead birches in the fens, wind-killed oaks
  * on the coast, dead trees on the ash, pines on the Frostspine slopes. */
 const SOLITARY: Readonly<Record<string, { count: number; species: [V3TreeSpecies, number][] }>> = {
@@ -1521,8 +1602,8 @@ function forestFloor(place: Placement, seed: string): void {
  * Chapel and the Star Monastery are rebuilt round chapels; the Royal Citadel and the Old Fort become castles; ruins,
  * shrines and landmarks are rebuilt round their cooked landmarks; the military posts get watch towers; remains of huge
  * creatures lie in the wilds; a ring of mountains closes the world (but for the coast), crags rise in massifs and
- * outcrops, and woodland becomes real forest, dark and dense in Greenmarch and Hollowvale, over fallen trunks, stumps
- * and mossy boulders.
+ * outcrops, lakes and the sea lie where nothing else stands, grave wolves den in the dark forests' glades, and woodland
+ * becomes real forest, dark and dense in Greenmarch and Hollowvale, over fallen trunks, stumps and mossy boulders.
  */
 export function buildWorldV3(world: WorldBlueprint): WorldBlueprint {
   const locations = world.exploration!.locations;
@@ -1534,6 +1615,7 @@ export function buildWorldV3(world: WorldBlueprint): WorldBlueprint {
   world.fields = [];
   world.decor = [];
   world.lakes = [];
+  world.lairs = [];
   world.obstacles = world.obstacles.filter(o => {
     if (o.kind !== 'wall') return false;
     // The original home's walls have no home in story worlds (homes move to each faction's location), and the Old
@@ -1560,6 +1642,7 @@ export function buildWorldV3(world: WorldBlueprint): WorldBlueprint {
   mountainRing(place, world.seed);
   massifs(place, world.seed);
   lakes(place, world.seed);
+  lairs(place, world.seed);
   fallenLogs(place, world.seed);
   vegetation(place, world.seed);
   solitaryTrees(place, world.seed);

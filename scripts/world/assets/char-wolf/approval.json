@@ -1,0 +1,37 @@
+{
+ "schema": "korovany2-world-approval/1",
+ "asset": "char-wolf",
+ "delegation": "_reviews/delegation-2026-10-04-world.json",
+ "decisions": [
+  {
+   "gate": "concept",
+   "decision": "accepted",
+   "candidate": "a",
+   "sha256": "58c42d52a13ae18c19675d67a847da6a05c22b8db228e1517973f10a2285ee39",
+   "rationale": "Round 2 (the round-1 head turned toward the viewer survived into both TRELLIS raws): all three candidates now hold the head in profile along the spine. a is the gaunt ash-and-charcoal grave wolf with the cleanest geometry for the rig: four separate legs with the far pair visible, the tail hanging clear behind both hind legs (c lets it touch the near hind leg), healed scars rather than raw sores (b shows open patches, which the no-gore brief excludes), mouth closed, nothing cropped."
+  },
+  {
+   "gate": "model",
+   "decision": "accepted",
+   "sha256": "9e917d26a216ff49ffd9ad48aa38d35d67839a38fdcddbfc61cd07d76c016b92",
+   "rationale": "Grave wolf from TRELLIS raw a2-s7311 (round-2 concept; both round-1 raws kept the concept's head turned to the viewer, and a2-s7312's tail lay against its hind legs), cooked with the new cook_monster_quadruped.py: 5,900 triangles in one skinned mesh on a 32-joint quadruped rig (the deer's, with the tail claimed before the leg columns); 1.45 m to the ear tips, about 1.34 m at the withers; base colour, normal and ORM baked at 1024 and stored at 512 px; 358,820 bytes. Eight clips on the game's enemy contract: Idle (head low and level), Walk at 1.3 m/s, a gallop Run at 6.0 m/s, Windup (a 0.35 s crouch back onto the haunches, ears pinned), Strike (a 0.12 s lunge: trunk forward 0.34 m, forelegs reaching, neck stretched), Recovery (0.4 s), Hit (a flinch, played additively) and Death (the legs buckle, the body rolls 80 degrees onto its side and settles; every frame lowered so the skinned mesh lies on the ground, within 3 cm). r1 and r2 rejected: r1's attack timings were 0.4/0.45 s against the tuned game wolf's 0.35/0.4 s, and r2 kept the raw's near-black coat (mean linear luminance 0.09 against the concept's 0.20), which vanished in forest shade; r3 lifts it by luma power 0.9. Dev cooks d1-d3 (rig only) set the lunge: a raised, rearing strike read as a jump at gameplay pitch, so the shipped strike surges forward low.",
+   "limitations": [
+    "Single-view TRELLIS reconstruction: the far flank and the underside are TRELLIS's invention; the mesh keeps 4 boundary and 2 non-manifold edges (pinholes TRELLIS left under the jaw, invisible at gameplay distance).",
+    "Clips are procedural (IK gaits, oscillators, keyed attack poses), not motion capture; the Run's left hind foot falls up to 3.6 cm short of its planted path and the forelegs reach 4.5 cm beyond their length in the strike (held straight).",
+    "No fur shading, jaw or snarl: the mouth stays closed in every clip; 512 px coat detail softens at the closest camera.",
+    "TRELLIS-derived: research and evaluation licence terms, no commercial clearance."
+   ]
+  },
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "sha256": "9e917d26a216ff49ffd9ad48aa38d35d67839a38fdcddbfc61cd07d76c016b92",
+   "rationale": "Packs of 3-4 grave wolves appear at 5-6 dens per world, in clearings of the Greenmarch and Hollowvale forests (a fallen pine and two mossy boulders on the rim), while the hero is 90-160 m away, and wander within 25 m of the den. At the default camera a wolf stands about waist high to the 2.25 m soldier-scale hero and reads as a wolf by silhouette and its ash-grey coat; at 18 m the pack fills the frame round the hero. Inside 18 m the pack turns on the hero, runs at 6 m/s, telegraphs each bite with a 0.35 s crouch and the red tell ring of its 1.9 m reach, and gives up beyond 35 m of its den. Killed, a wolf rolls onto its side and stays down for 8 s, dropping 4 coins; its kills never count towards the hero's level or renown. A stand-up fight costs a perfect-aim hero 4-27 % of its health (45 measured fights, all three factions), so packs are a hazard on the forest roads, not a wall.",
+   "limitations": [
+    "Wolves weave round trees, rocks and fallen trunks but do not path-find: a pack on the far side of a long log runs round its end.",
+    "Bodies lie on flat ground only (dens and their 40 m surrounds are levelled); there is no foot IK.",
+    "Synthesised voices (a source-filter model), stylised rather than naturalistic."
+   ]
+  }
+ ]
+}

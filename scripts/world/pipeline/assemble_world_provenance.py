@@ -1,6 +1,6 @@
 """Assemble portable provenance and approval records for Korovany II version 3 world assets.
 
-    python assemble_world_provenance.py <asset-id> [...]          (models: W0-W2 kits, W0 and W3 nature, W3b reeds, props, sheep, crows, deer, goats)
+    python assemble_world_provenance.py <asset-id> [...]          (models: W0-W2 kits, W0 and W3 nature, W3b reeds, props, sheep, crows, deer, goats, wolves)
     python assemble_world_provenance.py --surfaces                  (every surface layer)
 
 Reads the authoring folders under the authoring root, $K2_AUTHORING (cook receipts, generation receipts, review records),
@@ -291,6 +291,14 @@ if __name__ == "__main__":
             trellis_asset(asset, "fauna", shipped_cook(asset, f"{asset}.glb"), f"{asset}.glb",
                           ["cook_quadruped.py", "k2rig.py", "k2cook.py", "k2materials.py", "k2sheet.py", "webp_exact.py", "quantize_glb.py", "meshopt_glb.mjs"],
                           PROP_LIMITS + ["Clips are procedural (IK gaits, oscillators), not motion capture; there is no blending of grazing into walking."])
+        elif asset == "char-wolf":
+            # W4a: cook_monster_quadruped.py derives from cook_quadruped.py (unchanged, as the shipped deer and goat name it)
+            # with the monster clip contract (windup, strike, recovery, hit, death) and a tail claimed before the legs.
+            trellis_asset(asset, "fauna", shipped_cook(asset, f"{asset}.glb"), f"{asset}.glb",
+                          ["cook_monster_quadruped.py", "k2rig.py", "k2cook.py", "k2materials.py", "k2sheet.py", "webp_exact.py", "quantize_glb.py",
+                           "meshopt_glb.mjs"],
+                          PROP_LIMITS + ["Clips are procedural (IK gaits, oscillators, keyed attack poses), not motion capture; the strike lifts "
+                                         "both forelegs together and the death roll is a rigid turn of the body with folded legs."])
         elif asset in ("char-crow", "char-crow-flight"):
             trellis_asset(asset, "fauna", shipped_cook(asset, f"{asset}.glb"), f"{asset}.glb",
                           ["cook_crow.py", "k2rig.py", "k2cook.py", "k2materials.py", "k2sheet.py", "webp_exact.py", "quantize_glb.py", "meshopt_glb.mjs"],

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import type { WorldBlueprint } from '../game/types';
+import type { MonsterSpecies, WorldBlueprint } from '../game/types';
 
 /**
  * Version 3 world assets: buildings, props, trees, rocks and animals. This registry is separate from the cooked
@@ -101,6 +101,8 @@ export const WORLD_MODELS = {
   /** W3b herds in the wilds: red deer hinds in the forests, feral goats on the crags (cook_quadruped.py). */
   'char-deer': { kind: 'fauna' },
   'char-goat': { kind: 'fauna' },
+  /** W4 monsters: the grave wolf (cook_monster_quadruped.py). */
+  'char-wolf': { kind: 'fauna' },
 } as const satisfies Record<string, { kind: WorldModelKind }>;
 export type WorldModelId = keyof typeof WORLD_MODELS;
 export const WORLD_MODEL_IDS = Object.keys(WORLD_MODELS) as WorldModelId[];
@@ -144,12 +146,21 @@ export const SURFACE_FINISH: Readonly<Record<WorldSurface, { relief: number; rou
 /** The grazing animals' clips: the sheep's, which the deer and goat share. */
 export const FAUNA_CLIPS = ['Idle', 'Graze', 'Walk', 'Run', 'Startle'] as const;
 /**
+ * A monster's clips, the game's enemy state machine: Idle, Walk and Run by ground speed, Windup, Strike and Recovery
+ * scrubbed by the simulation's progress through those states, Hit played additively on a wound and Death held at its
+ * last frame.
+ */
+export const MONSTER_CLIPS = ['Idle', 'Walk', 'Run', 'Windup', 'Strike', 'Recovery', 'Hit', 'Death'] as const;
+/** Each monster species' model. */
+export const MONSTER_MODELS: Readonly<Record<MonsterSpecies, WorldModelId>> = { wolf: 'char-wolf' };
+/**
  * The clips of every fauna model other than the sheep. The crows were the first (the perched model's and the flying
  * model's: the view swaps the two at take-off and landing); the name stays for the world-asset suite, which reads the
  * clip set of each non-sheep fauna model from here.
  */
 export const CROW_CLIPS = {
   'char-crow': ['Perch', 'Peck'], 'char-crow-flight': ['Fly', 'Glide', 'TakeOff'], 'char-deer': FAUNA_CLIPS, 'char-goat': FAUNA_CLIPS,
+  'char-wolf': MONSTER_CLIPS,
 } as const;
 /**
  * A tree species file holds one group per variant (`variant-0` ...), each with named meshes: bark-layered wood and
@@ -300,14 +311,15 @@ function validate(id: WorldModelId, scene: THREE.Object3D, clips: ReadonlyMap<st
 /**
  * Every world model a world can present: all of a v3 world's obstacle and decor models, its sheep when it has
  * pastures, the crows, deer and goats, which every v3 world has (crows gather on fields, graveyards and gibbets; deer
- * herds keep to the forests and goats to the crags), the undergrowth scattered round its trees and what stands along its
- * shores.
+ * herds keep to the forests and goats to the crags), the monsters of its lairs, the undergrowth scattered round its
+ * trees and what stands along its shores.
  */
-export function worldAssetIds(world: Pick<WorldBlueprint, 'version' | 'obstacles' | 'fields' | 'decor'>): WorldModelId[] {
+export function worldAssetIds(world: Pick<WorldBlueprint, 'version' | 'obstacles' | 'fields' | 'decor' | 'lairs'>): WorldModelId[] {
   if (world.version !== 3) return [];
   const ids = new Set<string>(['char-crow', 'char-crow-flight', 'char-deer', 'char-goat', ...UNDERGROWTH, ...SHORE_MODELS]);
   // Flocks graze on stubble fields (fauna.ts flockHomes).
   if (world.fields?.some(field => field.crop === 'stubble')) ids.add('char-sheep');
+  for (const lair of world.lairs ?? []) ids.add(MONSTER_MODELS[lair.species]);
   for (const obstacle of world.obstacles) if (obstacle.model) ids.add(obstacle.model);
   for (const decor of world.decor ?? []) ids.add(decor.model);
   for (const id of ids) if (!(id in WORLD_MODELS)) throw new Error(`World obstacle model ${id} is not a registered world asset.`);

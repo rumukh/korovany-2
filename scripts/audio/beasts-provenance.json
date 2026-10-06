@@ -1,0 +1,119 @@
+{
+  "schema": "korovany2-beast-voices/1",
+  "license": "Original procedural synthesis for Korovany II from scripts/audio/synth_beasts.py: no recordings, samples, sound libraries or generative models; the project's own work.",
+  "script": {
+    "path": "scripts/audio/synth_beasts.py",
+    "sha256": "1f4aa18e44be1b5e7370b805c8c47e32983b765200f9bd03e7c872a55d6f5ab3"
+  },
+  "mastering": "fixed -25 dBFS RMS under a -3 dBTP true-peak ceiling (as produce_soundtrack.py masters effects); Vorbis -q:a 5, mono, 48 kHz",
+  "ffmpeg": "ffmpeg version 2024-06-30-git-b818dff8d8-full_build-www.gyan.dev Copyright (c) 2000-2024 the FFmpeg developers",
+  "limitations": [
+    "Synthesised voices (a source-filter model with formants and noise), not recordings of wolves: stylised rather than naturalistic, with no growl texture beyond a modulated pulse train."
+  ],
+  "assets": [
+    {
+      "id": "beast-wolf-howl",
+      "seed": 7401,
+      "sha256": "4b5c0b279db0c5af6eb1769b3eef10058af8babb52d138005961f90327fac84e",
+      "bytes": 27047,
+      "duration": 2.942,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -8.323,
+      "sourceTruePeakDbtp": 3.877,
+      "gainDb": -16.677
+    },
+    {
+      "id": "beast-wolf-howl-2",
+      "seed": 7402,
+      "sha256": "329380d60a8532e74871a7230205ffe156c2efbc7b853d46186c3081c1ce9fd2",
+      "bytes": 28749,
+      "duration": 3.244,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -3.81,
+      "sourceTruePeakDbtp": 6.824,
+      "gainDb": -21.19
+    },
+    {
+      "id": "beast-wolf-snarl",
+      "seed": 7411,
+      "sha256": "3f01b5f198e83347f3ec6eb082d9aa44cf3de6d559253968a2170f2f17150b54",
+      "bytes": 11677,
+      "duration": 0.841,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -17.21,
+      "sourceTruePeakDbtp": 0.325,
+      "gainDb": -7.79
+    },
+    {
+      "id": "beast-wolf-snarl-2",
+      "seed": 7412,
+      "sha256": "98093262b11a48927af03d04b849294e5a6caf9f0e673654a0ef5df6d44dd7c2",
+      "bytes": 12189,
+      "duration": 0.889,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -17.256,
+      "sourceTruePeakDbtp": -0.061,
+      "gainDb": -7.744
+    },
+    {
+      "id": "beast-wolf-snarl-3",
+      "seed": 7413,
+      "sha256": "be0d62cf85a6f5d85adf9cf419f81e6a54ecd0df72c06e40742fe84d343ac58b",
+      "bytes": 11207,
+      "duration": 0.797,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -17.727,
+      "sourceTruePeakDbtp": -0.094,
+      "gainDb": -7.273
+    },
+    {
+      "id": "beast-wolf-yelp",
+      "seed": 7421,
+      "sha256": "8861e0549e8dad4003d67e616f482313d1c941a942bb07f507aa6296d27445df",
+      "bytes": 9619,
+      "duration": 0.744,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -11.297,
+      "sourceTruePeakDbtp": 3.268,
+      "gainDb": -13.703
+    },
+    {
+      "id": "beast-wolf-yelp-2",
+      "seed": 7422,
+      "sha256": "2f6a96be3354374b4955bd46c0a3241d2839dea2dc4015d27e138c45edd3b5aa",
+      "bytes": 9900,
+      "duration": 0.752,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -10.753,
+      "sourceTruePeakDbtp": 4.087,
+      "gainDb": -14.247
+    },
+    {
+      "id": "beast-wolf-death",
+      "seed": 7431,
+      "sha256": "a93fad58e56dae2ff81188096602c17f76479e05327e3f806feaa7295bf8ac51",
+      "bytes": 18538,
+      "duration": 1.76,
+      "codec": "vorbis",
+      "channels": 1,
+      "sampleRate": 48000,
+      "sourceRmsDbfs": -9.537,
+      "sourceTruePeakDbtp": 4.197,
+      "gainDb": -15.463
+    }
+  ]
+}
