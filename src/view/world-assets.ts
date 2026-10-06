@@ -265,7 +265,7 @@ export function deriveSurface(heights: Float32Array, size: number, finish: { rel
       const right = (x + 1) % size, left = (x + size - 1) % size;
       const du = (heights[row + right]! - heights[row + left]!) * strength;
       const dv = (heights[up + x]! - heights[down + x]!) * strength;
-      const inverse = 1 / Math.hypot(du, dv, 1);
+      const inverse = 1 / Math.sqrt(du * du + dv * dv + 1);
       const i = offset + (row + x) * 4;
       target[i] = Math.round((0.5 - du * inverse * 0.5) * 255);
       target[i + 1] = Math.round((0.5 - dv * inverse * 0.5) * 255);

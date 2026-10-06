@@ -21,6 +21,7 @@ function runSignature(view: Presentation): string[] {
   const kept = new Set<THREE.Object3D>([view.scenery.group]);
   if (view.fauna) kept.add(view.fauna.group);
   if (view.herds) kept.add(view.herds.group);
+  if (view.weather) kept.add(view.weather.points);
   const names: string[] = [];
   for (const child of view.scene.children) {
     if (kept.has(child)) continue;
@@ -54,7 +55,7 @@ describe('a new run on the same world keeps its presentation', () => {
     const fresh = new Presentation(run.world, new ViewResources(undefined, 1, undefined, library));
     try {
       show(reused, preview);
-      const scenery = reused.scenery.group, terrain = reused.terrain, herds = reused.herds;
+      const scenery = reused.scenery.group, terrain = reused.terrain, herds = reused.herds, weather = reused.weather;
       const before = reused.scene.children.length;
       const heroOf = (view: Presentation) => (view as unknown as { hero?: { root: THREE.Object3D } }).hero;
       const previewHero = heroOf(reused)!.root;
@@ -73,6 +74,7 @@ describe('a new run on the same world keeps its presentation', () => {
       expect(reused.scenery.group).toBe(scenery);
       expect(reused.terrain).toBe(terrain);
       expect(reused.herds).toBe(herds);
+      expect(reused.weather).toBe(weather);
     } finally {
       reused.dispose();
       fresh.dispose();

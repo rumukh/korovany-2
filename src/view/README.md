@@ -148,6 +148,15 @@ primitive fallback). Version 1 and 2 worlds request nothing from it.
   grown by 2 m (`ScatterKind.hollow`); a low camera behind a tall chapel or inn sees through it, never into it.
 - **Light.** `lightWorldV3` is an overcast late-autumn grade (cooler sky and fog, a lower sun); character light stays
   within 10 percent of the v1/v2 calibration (measured 0.96 on the line soldier).
+- **Air and weather (W5, `weather.ts`).** `WorldWeather` gives each wild region its own air (`REGION_AIR`): a dim
+  green-grey fog under the Greenmarch and Hollowvale forests, a pale thick mist on the Fens (near 16 m, far 138 m), a
+  brown ash haze on the Ash Steppe, cold haze on the Frostspine and sea haze on the Salt Coast. The fog, the background
+  and the sky dome's horizon move together towards the hero's region over about 1.6 s, and a region's air fades out
+  over its last 40 m (`regionWeights`); the heartlands and the Crownlands keep the base grade. One point cloud
+  (`world-weather`, one shader program, compiled by the load-time warm-up) draws tumbling leaves in the forests,
+  charcoal ash with rare embers on the steppe, snow on the Frostspine and will-o'-wisps over the Fens; it hangs still
+  in the world and wraps round the hero, so the particles drift with the wind rather than the camera. Particles show at
+  high quality without reduced motion; the air always applies. Presentation only; version 1 and 2 scenes are unchanged.
 - **Animals.** `WorldFauna` grazes sheep flocks on settlement pastures (deterministic from the seed; each flock's
   home is the first walkable point of its stubble field, since haystacks may stand anywhere in it). They flee the
   hero within 9 m, move with the world's own `isWalkable`, stop animating beyond 60 m, hide beyond 120 m and freeze

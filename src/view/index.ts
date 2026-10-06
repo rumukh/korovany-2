@@ -14,6 +14,7 @@ import { terrainFor, type Terrain } from './terrain';
 import { MONSTER_MODELS, type WorldAssetLibrary } from './world-assets';
 import { WorldFauna } from './fauna';
 import { WorldHerds } from './herds';
+import { WorldWeather } from './weather';
 import { MonsterInstance } from './monsters';
 import { lightWorld, lightWorldV3, positionSun, positionSunV3, skyEnvironment, V3_GRADE } from './atmosphere';
 import { WorldPostprocessing } from './postprocessing';
@@ -29,6 +30,7 @@ const UP = new THREE.Vector3(0, 1, 0);
 const NORMAL = new THREE.Vector3();
 const TILT = new THREE.Quaternion();
 const YAW = new THREE.Quaternion();
+const DRAWING_BUFFER = new THREE.Vector2();
 
 /** Result of compiling the cooked-model programs before gameplay. */
 export interface ModelWarmup {
@@ -164,6 +166,8 @@ export class Presentation {
   readonly fauna: WorldFauna | undefined;
   /** Version 3: the deer and goat herds of the wilds (presentation only). */
   readonly herds: WorldHerds | undefined;
+  /** Version 3: each region's air (fog grade) and its falling leaves, ash, snow and fen wisps (presentation only). */
+  readonly weather: WorldWeather | undefined;
   readonly sun: THREE.DirectionalLight;
   readonly effects: WorldEffects;
   readonly residents: WorldResidents;
@@ -213,6 +217,16 @@ export class Presentation {
     this.effects = new WorldEffects(this.resources, this.scene, relief);
     this.residents = new WorldResidents(this.resources, this.scene, relief);
     this.sun = world.version === 3 ? lightWorldV3(this.scene) : lightWorld(this.scene);
+    if (world.version === 3) {
+      // The sky dome's horizon follows the regional fog, so distant ground never meets a sky of another colour.
+      let horizon: THREE.Color | undefined;
+      this.scenery.group.traverse(object => {
+        const material = (object as THREE.Mesh).material as THREE.ShaderMaterial | undefined;
+        if (!horizon && material?.isShaderMaterial && material.uniforms.horizon) horizon = material.uniforms.horizon.value as THREE.Color;
+      });
+      this.weather = new WorldWeather(world, this.scene.fog as THREE.Fog, this.scene.background as THREE.Color, horizon);
+      this.scene.add(this.weather.points);
+    }
     const fortress = world.sites.find((site) => site.kind === 'fortress');
     if (fortress) {
       const color = world.version === 1 ? palette.villain : factionColors[fortress.faction];
@@ -260,6 +274,7 @@ export class Presentation {
   setQuality(low: boolean): void {
     this.scenery.setQuality(low);
     this.effects.setQuality(low);
+    this.weather?.setQuality(low);
     this.sun.castShadow = !low;
   }
 
@@ -267,7 +282,7 @@ export class Presentation {
    * Starts a new run on this presentation's world: a campaign begun or continued from its title preview, or a restored
    * save. Every run-specific visual (the hero and its home banner, the convoy, troops, monsters, residents and effects)
    * is released and every tracker returns to a new presentation's first-frame state, while the world itself (terrain,
-   * scenery, sites and animals, the costly part to build) stays. The next `update` raises the run's visuals.
+   * scenery, sites, animals and weather, the costly part to build) stays. The next `update` raises the run's visuals.
    */
   resetRun(): void {
     for (const [id, visual] of [...this.actorVisuals, ...this.monsterVisuals]) this.removeActor(id, visual);
@@ -398,7 +413,8 @@ export class Presentation {
     // Version 3: one instance of every pooled scenery part (trees and impostors of every species, every building and prop)
     // and one sheep, crow, deer and goat, so none of them compiles on first appearance.
     const ground = this.terrain.height(x, z);
-    const worldWarm = [this.scenery.warm?.(x - 4, ground, z - 4), this.fauna?.warm(x + 4, ground, z - 4), this.herds?.warm(x + 4, ground, z + 4)];
+    const worldWarm = [this.scenery.warm?.(x - 4, ground, z - 4), this.fauna?.warm(x + 4, ground, z - 4), this.herds?.warm(x + 4, ground, z + 4),
+      this.weather?.warm(x, ground, z)];
     const warming = new Set<THREE.Object3D>();
     // The hero, when already built, shares the soldier's programs; drawing it here also uploads its own textures.
     for (const root of [group, visual.root, visual.bar.root, visual.tell, this.hero?.root]) root?.traverse(object => warming.add(object));
@@ -535,7 +551,8 @@ export class Presentation {
     return { flag, ring, progress, progressGeometry, supply };
   }
 
-  update(snapshot: Readonly<GameSnapshot>, dt: number, camera: THREE.Camera, reducedMotion: boolean): void {
+  /** `halfHeight`: half the drawing buffer's height in pixels (the weather's particle sizes follow it). */
+  update(snapshot: Readonly<GameSnapshot>, dt: number, camera: THREE.Camera, reducedMotion: boolean, halfHeight = 540): void {
     this.resources.assertTextures();
     this.cosmeticTime += dt;
     if (!this.hero) {
@@ -658,8 +675,11 @@ export class Presentation {
       this.fortressRing.material = this.resources.material(fortressRingColor, { unlit: true, opacity: 0.45, depthWrite: false });
     }
     // A player-centred shadow frustum preserves detail without a map-sized shadow texture.
-    if (this.world.version === 3) positionSunV3(this.sun, snapshot.player.x, snapshot.player.z, this.terrain.height(snapshot.player.x, snapshot.player.z));
-    else positionSun(this.sun, snapshot.player.x, snapshot.player.z);
+    if (this.world.version === 3) {
+      const ground = this.terrain.height(snapshot.player.x, snapshot.player.z);
+      positionSunV3(this.sun, snapshot.player.x, snapshot.player.z, ground);
+      this.weather?.update(snapshot.player, ground, dt, reducedMotion, halfHeight);
+    } else positionSun(this.sun, snapshot.player.x, snapshot.player.z);
 
     if (this.convoy && this.convoyBar) {
       this.convoy.root.position.set(snapshot.convoy.x, this.lift(snapshot.convoy.x, snapshot.convoy.z), snapshot.convoy.z);
@@ -844,6 +864,7 @@ export class Presentation {
     this.residents.dispose();
     this.fauna?.dispose();
     this.herds?.dispose();
+    this.weather?.dispose();
     this.scenery.dispose();
     this.sun.shadow.dispose();
     this.scene.clear();
@@ -998,7 +1019,7 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
       lastTick = snapshot.tick;
       const frameDt = Math.min(dt, 0.1);
       camera.update(snapshot.player, frameDt, current.terrain.height(snapshot.player.x, snapshot.player.z));
-      current.update(snapshot, frameDt, camera.camera, reducedMotion);
+      current.update(snapshot, frameDt, camera.camera, reducedMotion, renderer.getDrawingBufferSize(DRAWING_BUFFER).y / 2);
       const draw = (): void => {
         if (postprocessing) postprocessing.render();
         else renderer.render(current.scene, camera.camera);
