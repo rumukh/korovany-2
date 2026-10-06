@@ -3,11 +3,12 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
 import {
-  click, evaluate, launchBrowser, openPage, screenshot, until,
+  click, evaluate, openPage, screenshot, until,
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeTestBrowser } from "./browser-cleanup";
+import { closeTestBrowser, launchTestBrowser } from "./browser-cleanup";
 import { reloadTestPage } from "./browser-navigation";
+import { INSPECT_WITHOUT_WORLD } from "./game-inspect";
 import { claimRewards, createCampaign, createProfile, type GameSnapshot, type MetaProfile } from "../src/game";
 
 interface Inspection {
@@ -31,7 +32,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
   const gameplayTimeout = 60_000;
 
   async function inspect(): Promise<Inspection> {
-    return evaluate(cdp, "window.korovany.inspect()");
+    return evaluate(cdp, INSPECT_WITHOUT_WORLD);
   }
 
   async function press(code: string, down: boolean): Promise<void> {
@@ -108,7 +109,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     if (!url) throw new Error("Vite did not expose a local URL.");
     origin = url;
     expect((await fetch(origin)).status).toBe(200);
-    browser = await launchBrowser({ viewport: { width: 1440, height: 900 } });
+    browser = await launchTestBrowser({ viewport: { width: 1440, height: 900 } });
     cdp = await openPage(browser.port, origin, { width: 1440, height: 900 });
     pages.add(cdp);
     await until(cdp, "Boolean(window.korovany)", Boolean, 30_000);
@@ -352,7 +353,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     const original = await inspect();
     const owner = cdp;
     const untouched = await newTab();
-    expect((await evaluate<Inspection>(untouched, "window.korovany.inspect()")).snapshot?.tick).toBe(original.snapshot?.tick);
+    expect((await evaluate<Inspection>(untouched, INSPECT_WITHOUT_WORLD)).snapshot?.tick).toBe(original.snapshot?.tick);
     await activate(owner);
     await clickSelector('[data-action="continue"]');
     await until(cdp, "window.korovany.inspect().snapshot.tick", (tick: number) => tick >= (original.snapshot?.tick ?? 0) + 40, gameplayTimeout);

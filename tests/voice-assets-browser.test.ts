@@ -9,9 +9,9 @@ import type { Soundscape } from "../src/audio/soundscape";
 import { storageKeys } from "../src/ui/storage";
 import { createVoiceCatalogue, factions, hashText, journalBefore, scene, voiceState } from "../scripts/voices/catalogue";
 import {
-  click, evaluate, launchBrowser, openPage, until, type CdpSession, type LaunchedBrowser,
+  click, evaluate, openPage, until, type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeTestBrowser } from "./browser-cleanup";
+import { closeTestBrowser, launchTestBrowser } from "./browser-cleanup";
 import { navigateTestPage } from "./browser-navigation";
 import { isSpeechPlaying } from "./browser-audio";
 
@@ -103,7 +103,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1" && process.env.KOROVANY_VOIC
       if (!local) throw new Error("Missing released-voice URL");
       origin = new URL(base, local).href;
       expect((await fetch(new URL("audio/voices/manifest.json", origin))).status).toBe(200);
-      browser = await launchBrowser({ viewport: { width: 1440, height: 1000 } });
+      browser = await launchTestBrowser({ viewport: { width: 1440, height: 1000 } });
       cdp = await openPage(browser.port, new URL("media-check.html", origin).href, { width: 1440, height: 1000 });
       await until(cdp, "Boolean(document.querySelector('#unlock'))", Boolean, 30_000);
     }, 90_000);

@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createServer, type ViteDevServer } from 'vite';
 import {
-  evaluate, launchBrowser, openPage, screenshot, until, type CdpSession, type LaunchedBrowser,
+  evaluate, openPage, screenshot, until, type CdpSession, type LaunchedBrowser,
 } from '../vendor/aegis-engine/packages/render-three/src/browser';
-import { closeTestBrowser } from './browser-cleanup';
+import { closeTestBrowser, launchTestBrowser } from './browser-cleanup';
 
 const preview = `<!doctype html><html><head><link rel="icon" href="data:,"><style>
 html,body {margin:0;overflow:hidden;background:#b6cbba} canvas {display:block}
@@ -174,7 +174,7 @@ describe.runIf(process.env.KOROVANY_WORLD_BROWSER === '1')('expanded world WebGL
     const origin = server.resolvedUrls?.local[0];
     if (!origin) throw new Error('World preview server has no local URL');
     expect((await fetch(`${origin}__world-preview`)).status).toBe(200);
-    browser = await launchBrowser({ viewport: { width: 1440, height: 900 } });
+    browser = await launchTestBrowser({ viewport: { width: 1440, height: 900 } });
     cdp = await openPage(browser.port, `${origin}__world-preview`, { width: 1440, height: 900 });
     await until(cdp, 'Boolean(window.worldPreview)', Boolean, 45_000);
     await until(cdp, 'window.worldPreview.textures.pending === 0', Boolean, 30_000);

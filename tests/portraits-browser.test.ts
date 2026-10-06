@@ -8,11 +8,12 @@ import { NPC_PORTRAIT_IDS, PLAYER_PORTRAITS } from "../src/ui/portraits";
 import { storageKeys, type Language } from "../src/ui/storage";
 import { FactionStoryDriver } from "./faction-driver";
 import {
-  click, evaluate, launchBrowser, openPage, screenshot, until,
+  click, evaluate, openPage, screenshot, until,
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeTestBrowser } from "./browser-cleanup";
+import { closeTestBrowser, launchTestBrowser } from "./browser-cleanup";
 import { reloadTestPage } from "./browser-navigation";
+import { INSPECT_WITHOUT_WORLD } from "./game-inspect";
 
 interface Inspection { snapshot: GameSnapshot; overlay: string | null; running: boolean }
 const cases = (["elf", "guard", "villain"] as const).flatMap((faction) =>
@@ -23,7 +24,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("generated dialogue portrai
   let server: ViteDevServer;
   let browser: LaunchedBrowser;
   let cdp: CdpSession;
-  const inspect = () => evaluate<Inspection>(cdp, "window.korovany.inspect()");
+  const inspect = () => evaluate<Inspection>(cdp, INSPECT_WITHOUT_WORLD);
 
   async function tap(code: string, shift = false): Promise<void> {
     for (const type of ["keyDown", "keyUp"]) {
@@ -70,7 +71,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("generated dialogue portrai
     const origin = server.resolvedUrls?.local[0];
     if (!origin) throw new Error("Missing portrait preview URL");
     expect((await fetch(origin)).status).toBe(200);
-    browser = await launchBrowser({ viewport: { width: 1280, height: 900 } });
+    browser = await launchTestBrowser({ viewport: { width: 1280, height: 900 } });
     cdp = await openPage(browser.port, origin, { width: 1280, height: 900 });
     await until(cdp, "Boolean(window.korovany)", Boolean, 30_000);
   }, 90_000);

@@ -3,9 +3,9 @@ import { createServer, type ViteDevServer } from "vite";
 import { createCampaign, type GameSnapshot } from "../src/game";
 import { translate } from "../src/ui/locale";
 import { FactionStoryDriver } from "./faction-driver";
-import { closeTestBrowser } from "./browser-cleanup";
+import { closeTestBrowser, launchTestBrowser } from "./browser-cleanup";
 import {
-  click, evaluate, launchBrowser, openPage, type CdpSession, type LaunchedBrowser,
+  click, evaluate, openPage, type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
 
 describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller-owned DOM navigation in Chromium", () => {
@@ -99,7 +99,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller-owned DOM navig
     if (!origin) throw new Error("Controller test server unavailable");
     expect((await fetch(`${origin}__controller-shell`)).ok).toBe(true);
     // Keep the launcher's system-temp profile: deep TMPDIR paths break Chromium's Unix sockets.
-    browser = await launchBrowser({ viewport: { width: 1280, height: 800 } });
+    browser = await launchTestBrowser({ viewport: { width: 1280, height: 800 } });
     cdp = await openPage(browser.port, `${origin}__controller-shell`, { width: 1280, height: 800 });
   }, 60_000);
 

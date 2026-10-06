@@ -12,10 +12,10 @@ import { factionColors, palette } from "../src/view/palette";
 import { ViewResources } from "../src/view/resources";
 import { distanceToSegment, oldFortStructure } from "../src/view/world";
 import {
-  click, closeAllPages, evaluate, launchBrowser, openPage, screenshot, until,
+  click, closeAllPages, evaluate, openPage, screenshot, until,
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeTestBrowser } from "./browser-cleanup";
+import { closeTestBrowser, launchTestBrowser } from "./browser-cleanup";
 import { navigateTestPage, reloadTestPage } from "./browser-navigation";
 
 const factions: FactionId[] = ["elf", "guard", "villain"];
@@ -259,7 +259,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("faction presentation in th
     if (!url) throw new Error("Missing faction presentation preview URL");
     origin = url;
     expect((await fetch(origin)).status).toBe(200);
-    browser = await launchBrowser({ viewport: { width: 1440, height: 1000 } });
+    browser = await launchTestBrowser({ viewport: { width: 1440, height: 1000 } });
   }, 90_000);
 
   afterEach(async () => {

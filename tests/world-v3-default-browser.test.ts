@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
 import {
-  click, evaluate, launchBrowser, openPage, until,
+  click, evaluate, openPage, until,
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeTestBrowser } from "./browser-cleanup";
+import { closeTestBrowser, launchTestBrowser } from "./browser-cleanup";
 import { reloadTestPage } from "./browser-navigation";
 import { createCampaign } from "../src/game";
 
@@ -58,7 +58,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("new campaigns in world ver
     await server.listen();
     const origin = server.resolvedUrls?.local[0];
     if (!origin) throw new Error("Vite did not expose a local URL.");
-    browser = await launchBrowser({ viewport: { width: 1280, height: 720 } });
+    browser = await launchTestBrowser({ viewport: { width: 1280, height: 720 } });
     cdp = await openPage(browser.port, origin, { width: 1280, height: 720 });
     await until(cdp, "Boolean(window.korovany)", Boolean, 30_000);
     await reloadWith({ "korovany2.settings.v1": settings("ru") });

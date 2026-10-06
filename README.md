@@ -83,6 +83,16 @@ within the original deadline; renderer crashes and application errors still fail
 Long gameplay waits keep their tick-count assertions but allow up to 60 seconds
 for software rendering. These functional scenarios are not GPU benchmarks.
 
+Each browser suite owns its Chrome process (`tests/browser-cleanup.ts`). A launch
+that never publishes its DevTools endpoint is retried once before any test runs.
+Teardown drains the pages, sends a browser-level `Browser.close` and requires the
+process to exit with code 0 within 20 seconds; Chrome may close the connection
+before acknowledging, so the exit decides. A browser that crashed earlier, exits
+uncleanly or has to be killed still fails the suite. Profiles are removed after
+exit, with retries while Chrome's helper processes finish writing. Browser suites
+read `window.korovany.inspect()` without the 1.4 MB world blueprint
+(`tests/game-inspect.ts`) unless an assertion needs world data.
+
 The production game is written to `dist`. Serve that directory over HTTP; opening
 `index.html` directly with `file://` is not supported. Assets use relative paths,
 so the same build works at a site root or under `/korovany-2/`. Runtime assets are

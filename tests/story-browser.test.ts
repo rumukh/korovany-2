@@ -7,11 +7,12 @@ import { getFactionStory } from "../src/game/faction-stories";
 import { CampaignDriver } from "./driver";
 import { storageKeys, type Settings } from "../src/ui/storage";
 import {
-  click, evaluate, launchBrowser, openPage, screenshot, until,
+  click, evaluate, openPage, screenshot, until,
   type CdpSession, type LaunchedBrowser,
 } from "../vendor/aegis-engine/packages/render-three/src/browser";
-import { closeTestBrowser } from "./browser-cleanup";
+import { closeTestBrowser, launchTestBrowser } from "./browser-cleanup";
 import { reloadTestPage } from "./browser-navigation";
+import { INSPECT_WITHOUT_WORLD } from "./game-inspect";
 
 interface Inspection { snapshot: GameSnapshot; overlay: string | null; running: boolean }
 
@@ -22,8 +23,9 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
   // SwiftShader can take seconds per frame while the game caps simulation catch-up.
   const gameplayTimeout = 60_000;
 
-  async function inspect(): Promise<Inspection> {
-    return evaluate(cdp, "window.korovany.inspect()");
+  /** Assertions that read world data ask for the world; every other call leaves it in the page. */
+  async function inspect(withWorld = false): Promise<Inspection> {
+    return evaluate(cdp, withWorld ? "window.korovany.inspect()" : INSPECT_WITHOUT_WORLD);
   }
   async function visibleEvidence(): Promise<string> {
     return evaluate(cdp, "[...document.querySelectorAll('.inspection-text p')].map(p => p.textContent).join('\\n\\n')");
@@ -62,7 +64,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     const origin = server.resolvedUrls?.local[0];
     if (!origin) throw new Error("Missing narrative preview URL");
     expect((await fetch(origin)).status).toBe(200);
-    browser = await launchBrowser({ viewport: { width: 1440, height: 1000 } });
+    browser = await launchTestBrowser({ viewport: { width: 1440, height: 1000 } });
     cdp = await openPage(browser.port, origin, { width: 1440, height: 1000 });
     await until(cdp, "Boolean(window.korovany)", Boolean, 30_000);
     const game = createCampaign({ seed: "story-browser", faction: "guard", runId: "story-browser-run" });
@@ -122,7 +124,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
   it("opens a live NPC conversation, preserves it across reload, and closes without leaking movement", async () => {
     await select('[data-action="continue"]');
     await until(cdp, "Boolean(window.korovany.inspect().snapshot.narrative?.interaction?.kind === 'talk')", Boolean, 20_000);
-    const before = await inspect();
+    const before = await inspect(true);
     expect(before.snapshot.world.exploration?.regions.length).toBeGreaterThanOrEqual(8);
     expect(before.snapshot.narrative?.npcs.some((npc) => npc.id === before.snapshot.narrative?.interaction?.targetId)).toBe(true);
     await capture("residents-at-roadward");
@@ -334,7 +336,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     expect((await inspect()).snapshot.player.z).toBe(reading.snapshot.player.z);
     await tap("KeyT");
     await until(cdp, "window.korovany.inspect().overlay", (overlay: string) => overlay === "inspection", 15_000);
-    const revisited = await inspect();
+    const revisited = await inspect(true);
     const place = revisited.snapshot.world.exploration!.locations.find((location) => location.id === evidenceStage.at)!;
     expect(revisited.snapshot.narrative!.inspection!.text).toEqual(place.description);
     expect(await visibleEvidence()).toBe(place.description.ru);

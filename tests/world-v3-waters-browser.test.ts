@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createServer, type ViteDevServer } from 'vite';
 import {
-  evaluate, launchBrowser, openPage, screenshot, until, type CdpSession, type LaunchedBrowser,
+  evaluate, openPage, screenshot, until, type CdpSession, type LaunchedBrowser,
 } from '../vendor/aegis-engine/packages/render-three/src/browser';
-import { closeTestBrowser } from './browser-cleanup';
+import { closeTestBrowser, launchTestBrowser } from './browser-cleanup';
 
 const WIDTH = 1280, HEIGHT = 720;
 
@@ -148,7 +148,7 @@ describe.runIf(process.env.KOROVANY_WORLD_BROWSER === '1')('version 3 water in W
     await server.listen();
     const origin = server.resolvedUrls?.local[0];
     if (!origin) throw new Error('World v3 water preview server has no local URL');
-    browser = await launchBrowser({ viewport: { width: WIDTH, height: HEIGHT } });
+    browser = await launchTestBrowser({ viewport: { width: WIDTH, height: HEIGHT } });
     cdp = await openPage(browser.port, `${origin}__world-v3-waters`, { width: WIDTH, height: HEIGHT });
     await until(cdp, 'Boolean(window.waters && (window.waters.ready || window.waters.error))', Boolean, 240_000);
     expect(await evaluate(cdp, 'window.waters.error')).toBeNull();
