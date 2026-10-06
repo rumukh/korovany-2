@@ -586,7 +586,8 @@ function frame(time: number): void {
       }
     }
     const display = atTitle ? preview : snapshot;
-    if (display && !document.hidden) view?.render(display, delta);
+    // With reduced motion, a scene the simulation is not advancing is drawn until it settles and then held.
+    if (display && !document.hidden) view?.render(display, delta, settings.reducedMotion && !running);
   } catch (error) {
     if (fatal) {
       console.error("Korovany II recovery controls failed.", error);
@@ -638,7 +639,11 @@ for (const type of ["input", "change"]) window.addEventListener(type, (event) =>
 }, { signal: lifecycle.signal });
 window.addEventListener("blur", () => audio.setFocused(false), { signal: lifecycle.signal });
 window.addEventListener("focus", () => audio.setFocused(!document.hidden), { signal: lifecycle.signal });
-document.addEventListener("visibilitychange", () => audio.setFocused(!document.hidden && document.hasFocus()), { signal: lifecycle.signal });
+document.addEventListener("visibilitychange", () => {
+  audio.setFocused(!document.hidden && document.hasFocus());
+  // A held frame may not survive the page being hidden; draw it again.
+  if (!document.hidden) view?.invalidate();
+}, { signal: lifecycle.signal });
 shell.canvas.addEventListener("wheel", (event) => {
   if (!running) return;
   event.preventDefault();

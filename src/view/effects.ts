@@ -175,6 +175,7 @@ export class WorldEffects {
   private lastTick = -1;
   private trailClock = 0;
   private low = false;
+  private still = false;
 
   /** `ground` lifts every effect onto a version 3 world's presentation relief. */
   constructor(resources: ViewResources, parent: THREE.Object3D, ground?: GroundHeight) {
@@ -214,7 +215,16 @@ export class WorldEffects {
     this.trailClock = 0;
   }
 
+  /**
+   * Another update with the same snapshot would draw the same effects: reduced motion holds the pickups and hides the
+   * motes, and every spark burst has burnt out. Rings, arcs and projectiles follow the snapshot.
+   */
+  get settled(): boolean {
+    return this.still && this.bursts.length === 0;
+  }
+
   update(snapshot: Readonly<GameSnapshot>, dt: number, cosmeticTime: number, reducedMotion: boolean): void {
+    this.still = reducedMotion;
     const effects = snapshot.effects.slice(-64);
     this.rings.begin(effects.length + 2);
     this.arcs.begin(effects.length);

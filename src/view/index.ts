@@ -69,8 +69,13 @@ export function createRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
 }
 
 export interface GameView {
-  /** Present one detached authoritative snapshot. dt is cosmetic frame time in seconds. */
-  render(snapshot: Readonly<GameSnapshot>, dt: number): void;
+  /**
+   * Present one detached authoritative snapshot. dt is cosmetic frame time in seconds. `hold` says the shell will not
+   * advance the scene (the simulation is paused, at the title or behind a menu) and the player chose reduced motion: a
+   * frame that would repeat the last one drawn is then skipped, and the canvas keeps showing it. Any new snapshot, view
+   * change (resize, orbit, zoom, quality, motion), asset load or unsettled animation draws again.
+   */
+  render(snapshot: Readonly<GameSnapshot>, dt: number, hold?: boolean): void;
   getMoveBasis(): MovementBasis;
   screenToWorld(clientX: number, clientY: number): GroundPoint | null;
   /** Resizes the drawing buffer to the canvas CSS box. Does not alter CSS sizing. */
@@ -81,6 +86,8 @@ export interface GameView {
   zoom(delta: number): void;
   setQuality(quality: ViewQuality): void;
   setReducedMotion(reducedMotion: boolean): void;
+  /** The next `render` draws even under `hold`: the shell knows the shown frame may be stale (the page was hidden). */
+  invalidate(): void;
   /** Model loading state. Nothing is presented until every model is ready; failures are thrown by `render`. */
   readonly models: ModelStatus;
   /** The latest cooked-model shader warm-up (after a presentation is built or quality changes), if any. */
@@ -200,6 +207,7 @@ export class Presentation {
   private convoySpeed = 0;
   private cosmeticTime = 0;
   private sinceTick = 0;
+  private still = false;
 
   constructor(readonly world: WorldBlueprint, readonly resources = new ViewResources(), environment?: THREE.Texture) {
     this.terrain = terrainFor(world);
@@ -276,6 +284,24 @@ export class Presentation {
     this.effects.setQuality(low);
     this.weather?.setQuality(low);
     this.sun.castShadow = !low;
+  }
+
+  /**
+   * Another `update` with the same snapshot would leave the scene exactly as it is. That needs reduced motion (flags,
+   * water, pickups, fauna, herds and weather particles keep still; the camera snaps), every texture loaded, and every
+   * animated figure settled: no cross-fade, swing, flinch, dash or death still playing, no spark burst still burning
+   * and the fog already eased onto its region's air.
+   */
+  get settled(): boolean {
+    if (!this.still || this.resources.textureStatus.pending > 0) return false;
+    if (this.hero?.character && !this.hero.character.settled) return false;
+    if (this.convoy?.animal && !this.convoy.animal.settled) return false;
+    for (const visual of [...this.actorVisuals.values(), ...this.monsterVisuals.values()]) {
+      if (visual.character && !visual.character.settled) return false;
+      if (visual.monster && !visual.monster.settled) return false;
+      if (visual.wagon?.animal && !visual.wagon.animal.settled) return false;
+    }
+    return this.effects.settled && this.residents.settled && (this.weather?.settled ?? true);
   }
 
   /**
@@ -554,6 +580,7 @@ export class Presentation {
   /** `halfHeight`: half the drawing buffer's height in pixels (the weather's particle sizes follow it). */
   update(snapshot: Readonly<GameSnapshot>, dt: number, camera: THREE.Camera, reducedMotion: boolean, halfHeight = 540): void {
     this.resources.assertTextures();
+    this.still = reducedMotion;
     this.cosmeticTime += dt;
     if (!this.hero) {
       const model = this.resources.model(HEROES[snapshot.faction].id);
@@ -939,6 +966,14 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
   let needsWarmup = true;
   let warmup: ModelWarmup | undefined;
   const warmTarget = new THREE.WebGLRenderTarget(4, 4);
+  /** Bumped by every view change that alters the next frame without a new snapshot. */
+  let revision = 0;
+  /** What the last frame drawn under `hold` showed; an identical frame is skipped (see `GameView.render`). */
+  let held: { snapshot: Readonly<GameSnapshot>; presentation: Presentation; revision: number; assets: string } | undefined;
+  const assetState = (): string => {
+    const loaded = models.status, world = worldAssets?.status;
+    return `${loaded.loaded}/${loaded.pending}/${world?.loaded ?? 0}/${world?.pending ?? 0}`;
+  };
 
   function assertUsable(): void {
     if (disposed) throw new Error('The Korovany II view has already been disposed.');
@@ -946,6 +981,7 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
   }
   function resize(): void {
     assertUsable();
+    revision++;
     const rect = canvas.getBoundingClientRect();
     const width = Math.max(1, Math.round(rect.width));
     const height = Math.max(1, Math.round(rect.height));
@@ -986,6 +1022,7 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
   }
   function onContextRestored(): void {
     contextLost = false;
+    revision++;
   }
   canvas.addEventListener('webglcontextlost', onContextLost);
   canvas.addEventListener('webglcontextrestored', onContextRestored);
@@ -995,16 +1032,21 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
   else applyQuality();
 
   return {
-    render(snapshot, dt): void {
+    render(snapshot, dt, hold = false): void {
       assertUsable();
       if (!Number.isFinite(dt) || dt < 0) throw new Error('View frame time must be a finite nonnegative number.');
       models.assert();
       worldAssets?.assert();
       if (!ready(snapshot.world)) {
+        held = undefined;
         renderer.setRenderTarget(null);
         renderer.clear();
         return;
       }
+      // Nothing that decides the picture changed since the last frame drawn, and nothing in it is still moving: the
+      // canvas keeps that frame. Under software WebGL a paused v3 frame costs about as much as a played one.
+      if (hold && held && held.snapshot === snapshot && held.presentation === presentation && held.revision === revision
+        && held.assets === assetState() && !needsWarmup && held.presentation.settled) return;
       let current = presentation;
       if (!current || snapshot.world.id !== current.world.id) current = present(snapshot.world);
       else if (runId !== undefined && (runId !== snapshot.runId || faction !== snapshot.faction || snapshot.tick < lastTick)) {
@@ -1031,6 +1073,7 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
         needsWarmup = false;
       }
       draw();
+      held = hold ? { snapshot, presentation: current, revision, assets: assetState() } : undefined;
     },
     getMoveBasis: () => camera.getMoveBasis(),
     screenToWorld: (clientX, clientY) => camera.screenToWorld(clientX, clientY),
@@ -1038,10 +1081,12 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
     orbit(deltaYaw, deltaPitch = 0): void {
       assertUsable();
       camera.orbit(deltaYaw, deltaPitch);
+      revision++;
     },
     zoom(delta): void {
       assertUsable();
       camera.zoom(delta);
+      revision++;
     },
     setQuality(value): void {
       assertUsable();
@@ -1054,6 +1099,10 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
       assertUsable();
       reducedMotion = value;
       camera.setReducedMotion(value);
+      revision++;
+    },
+    invalidate(): void {
+      revision++;
     },
     get models(): ModelStatus {
       return models.status;

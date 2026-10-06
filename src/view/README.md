@@ -15,7 +15,7 @@ view.render(campaign.snapshot(), frameSeconds);
 
 | Method | Contract |
 | --- | --- |
-| `render(snapshot, dt)` | Detached readonly game state and nonnegative cosmetic frame seconds; no simulation updates. Rebuilds and disposes the previous mirror when world, run ID, faction or rewound tick changes. |
+| `render(snapshot, dt, hold?)` | Detached readonly game state and nonnegative cosmetic frame seconds; no simulation updates. Rebuilds and disposes the previous mirror when world, run ID, faction or rewound tick changes. `hold` says the shell will not advance the scene (paused, at the title or behind a menu) under reduced motion: once the scene has settled, a frame that would repeat the last one drawn is skipped and the canvas keeps it. |
 | `getMoveBasis()` | Unit `forward` and `right` vectors in world X/Z for shell-owned movement conversion. |
 | `screenToWorld(clientX, clientY)` | Ray-plane intersection in world X/Z using the canvas CSS rectangle; `null` for invalid/unavailable intersection. |
 | `orbit(deltaYaw, deltaPitch?)` | Radian deltas. Pitch is constrained for third-person visibility. |
@@ -23,6 +23,7 @@ view.render(campaign.snapshot(), frameSeconds);
 | `resize()` | Matches the drawing buffer to the canvas CSS dimensions, without changing CSS. |
 | `setQuality('low' \| 'high')` | Low caps DPR at 1, disables shadows, grasses and ambient motes, simplifies tree crowns and releases HDR postprocessing buffers; high caps DPR at 1.75 and enables subtle bloom with multisampled HDR targets. Generated textures remain in both modes. |
 | `setReducedMotion(boolean)` | Removes camera lag, ambient motes, water/cape flourishes and dodge trails; reduces gait animation. |
+| `invalidate()` | The next `render` draws even under `hold`; the shell calls it when the page becomes visible again. |
 | `dispose()` | Idempotently releases shared geometry/materials/textures, the sky reflection environment, shadow and HDR buffers, instance buffers, renderer resources and owned canvas listeners. A renderer passed in `GameViewOptions.renderer` is borrowed and left for its owner to dispose. |
 
 The shell owns RAF, keyboard/pointer/wheel input, pause, canvas layout and recovery
@@ -37,6 +38,23 @@ terrain, scenery, sites and animals, and `Presentation.resetRun()` releases only
 the run's visuals (hero, banner, convoy, troops, monsters, residents, effects),
 so starting a run no longer rebuilds the whole world (measured under SwiftShader:
 1.8 s to 0.08 s for a version 3 world).
+
+With reduced motion the paused scene is already still, so redrawing it every
+frame only costs time: a version 3 frame took 370-470 ms under SwiftShader at
+480 x 320 whether the game played or sat behind the pause menu. The shell passes
+`hold` while the simulation is not running and the player chose reduced motion.
+The view then draws until `Presentation.settled` holds and skips every frame that
+would repeat the last one: same snapshot object, same presentation, no resize,
+orbit, zoom, quality or motion change since, no model or world asset loading and
+no pending warm-up. `settled` needs every texture loaded and every animated
+figure at rest: troops, beasts, the ox and residents with their blend weights on
+their goals and no death or flinch playing, the hero also turned onto its facing
+with no swing, dash or death left, every spark burst burnt out and the fog eased
+onto its region's air. The hero's last ten-thousandth of a radian of turn and the
+fog's last invisible fraction of its ease snap onto their targets, so a settled
+scene is exactly still. Normal motion never holds: flags, water, weather and
+breathing keep animating behind menus. Under SwiftShader this cut the controller
+"camera inversion" browser test from 49-57 s to 24 s.
 
 Road widths, water and bridge rectangles, site positions and solid scenery come
 from `WorldBlueprint`. `generateWorld(seed, 1)` preserves the original 140-metre
