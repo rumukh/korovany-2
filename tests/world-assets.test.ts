@@ -9,10 +9,11 @@ import { assetsReady } from '../src/view';
 import { crowHomes, flockHomes } from '../src/view/fauna';
 import { ModelLibrary } from '../src/view/models';
 import {
-  CROW_CLIPS, deriveSurface, FAUNA_CLIPS, ROCK_VARIANTS, SURFACE_FINISH, SURFACE_METRES, SURFACE_SIZE, TREE_PARTS, TREE_VARIANTS,
+  CROW_CLIPS, deriveSurface, FAUNA_CLIPS, ROCK_VARIANTS, SURFACE_ALBEDO_PARTS, SURFACE_FINISH, SURFACE_METRES, SURFACE_SIZE, TREE_PARTS, TREE_VARIANTS,
   WORLD_MODEL_IDS, WORLD_MODELS, WORLD_SURFACES, WorldAssetLibrary, worldAssetIds, type WorldAssetSource, type WorldModelId,
 } from '../src/view/world-assets';
 import { imageSize, parseGlbWithoutTextures, readGlb } from './glb';
+import { fakeSurfaceAlbedo } from './world-surfaces';
 
 const shipped = new URL('../public/world/', import.meta.url);
 const sources = new URL('../scripts/world/', import.meta.url);
@@ -20,8 +21,11 @@ const glb = (id: WorldModelId) => new Uint8Array(readFileSync(new URL(`${id}/${i
 const sha256 = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
 const json = <T>(url: URL): T => JSON.parse(readFileSync(url, 'utf8')) as T;
 const MiB = 1024 * 1024;
-/** The approved plan's budgets for world assets: the preload of a version 3 world and any single file. */
-const WORLD_PRELOAD_BUDGET = 20 * MiB;
+/**
+ * The budgets for world assets: the preload of a version 3 world and any single file. The plan approved 20 MiB of
+ * preload; 23 MiB is proposed for the GPU-compressed surface albedo (21.5 MiB) and awaits the owner's approval.
+ */
+const WORLD_PRELOAD_BUDGET = 23 * MiB;
 const FILE_BUDGET = 8 * MiB;
 const TRIANGLES: Readonly<Record<string, number>> = { kit: 2500, prop: 6000, rock: 400, fauna: 6000 };
 
@@ -235,7 +239,7 @@ describe('version 3 world assets', () => {
     }
   });
 
-  test('a version 3 world preloads at most 20 MiB of world assets; version 1 and 2 worlds load none', () => {
+  test('a version 3 world preloads at most 23 MiB of world assets; version 1 and 2 worlds load none', () => {
     expect(worldAssetIds(generateWorld('budget', 1))).toEqual([]);
     expect(worldAssetIds(generateWorld('budget', 2))).toEqual([]);
     for (const faction of ['elf', 'guard', 'villain'] as const) {
@@ -244,9 +248,22 @@ describe('version 3 world assets', () => {
       expect(ids).toContain('char-sheep');
       let bytes = 0;
       for (const id of ids) bytes += statSync(new URL(`${id}/${id}.glb`, shipped)).size;
-      for (const name of WORLD_SURFACES) for (const map of ['albedo', 'height']) bytes += statSync(new URL(`surfaces/${name}-${map}.webp`, shipped)).size;
+      for (let part = 0; part < SURFACE_ALBEDO_PARTS; part++) bytes += statSync(new URL(`surfaces/surfaces-albedo-${part}.ktx2`, shipped)).size;
+      for (const name of WORLD_SURFACES) bytes += statSync(new URL(`surfaces/${name}-height.webp`, shipped)).size;
       expect(bytes, faction).toBeLessThanOrEqual(WORLD_PRELOAD_BUDGET);
     }
+  });
+
+  test('every deployed world file, the surface files included, is at most 8 MiB', () => {
+    let files = 0;
+    for (const entry of readdirSync(shipped, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      for (const name of readdirSync(new URL(`${entry.name}/`, shipped))) {
+        expect(statSync(new URL(`${entry.name}/${name}`, shipped)).size, `${entry.name}/${name}`).toBeLessThanOrEqual(FILE_BUDGET);
+        files++;
+      }
+    }
+    expect(files).toBeGreaterThan(WORLD_MODEL_IDS.length + WORLD_SURFACES.length);
   });
 
   test('an obstacle model outside the registry is an error, not a silent primitive', () => {
@@ -268,6 +285,10 @@ describe('version 3 world assets', () => {
       async image(url) {
         calls.set(url, (calls.get(url) ?? 0) + 1);
         return pixels(SURFACE_SIZE);
+      },
+      async surfaceAlbedo() {
+        calls.set('albedo', (calls.get('albedo') ?? 0) + 1);
+        return fakeSurfaceAlbedo();
       },
     });
     const library = new WorldAssetLibrary(source());
@@ -311,6 +332,10 @@ describe('version 3 world assets', () => {
       async image() {
         await loaded;
         return { width: SURFACE_SIZE, height: SURFACE_SIZE, data: new Uint8ClampedArray(SURFACE_SIZE * SURFACE_SIZE * 4).fill(128) };
+      },
+      async surfaceAlbedo() {
+        await loaded;
+        return fakeSurfaceAlbedo();
       },
     });
     const models = new ModelLibrary({ load: () => Promise.reject(new Error('no model was requested')) }, []);

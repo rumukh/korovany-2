@@ -7,6 +7,7 @@ import { Presentation } from '../src/view';
 import { ViewResources } from '../src/view/resources';
 import { SURFACE_SIZE, WorldAssetLibrary, worldAssetIds, type WorldAssetSource, type WorldModelId } from '../src/view/world-assets';
 import { parseGlbWithoutTextures } from './glb';
+import { fakeSurfaceAlbedo } from './world-surfaces';
 
 // A campaign begun or continued from its title preview keeps the world's presentation (terrain, scenery, animals) and
 // releases only the run's visuals, so starting a run no longer rebuilds the whole world.
@@ -14,6 +15,7 @@ const shipped = new URL('../public/world/', import.meta.url);
 const nodeSource: WorldAssetSource = {
   model: (id: WorldModelId) => parseGlbWithoutTextures(new Uint8Array(readFileSync(new URL(`${id}/${id}.glb`, shipped)))),
   image: async () => ({ width: SURFACE_SIZE, height: SURFACE_SIZE, data: new Uint8ClampedArray(SURFACE_SIZE * SURFACE_SIZE * 4).fill(128) }),
+  surfaceAlbedo: async () => fakeSurfaceAlbedo(),
 };
 
 /** Names of everything a run puts in the scene beside the world's own groups (which a new run keeps). */

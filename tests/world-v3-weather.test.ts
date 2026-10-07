@@ -10,6 +10,7 @@ import { ViewResources } from '../src/view/resources';
 import { AIR_EDGE, REGION_AIR, regionWeights, targetAir, WEATHER_COUNTS, weatherDensity } from '../src/view/weather';
 import { SURFACE_SIZE, WorldAssetLibrary, worldAssetIds, type WorldAssetSource, type WorldModelId } from '../src/view/world-assets';
 import { parseGlbWithoutTextures } from './glb';
+import { fakeSurfaceAlbedo } from './world-surfaces';
 
 // W5: each wild region's air (the fog grade the sky's horizon follows) and its weather (leaves, ash, snow, fen wisps),
 // presentation only and version 3 only.
@@ -17,6 +18,7 @@ const shipped = new URL('../public/world/', import.meta.url);
 const nodeSource: WorldAssetSource = {
   model: (id: WorldModelId) => parseGlbWithoutTextures(new Uint8Array(readFileSync(new URL(`${id}/${id}.glb`, shipped)))),
   image: async () => ({ width: SURFACE_SIZE, height: SURFACE_SIZE, data: new Uint8ClampedArray(SURFACE_SIZE * SURFACE_SIZE * 4).fill(128) }),
+  surfaceAlbedo: async () => fakeSurfaceAlbedo(),
 };
 
 async function presentation(version: 2 | 3) {

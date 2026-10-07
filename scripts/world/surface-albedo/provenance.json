@@ -1,0 +1,704 @@
+{
+ "schema": "korovany2-surface-albedo/2",
+ "id": "surface-albedo",
+ "outputs": [
+  {
+   "file": "public/world/surfaces/surfaces-albedo-0.ktx2",
+   "sha256": "1df61030028cb067fa0c48b1f3872513dbb63ea64ca7224d3bdb6465bdb1e22d",
+   "bytes": 4533660,
+   "format": "KTX2, Basis Universal UASTC 4x4 with Zstandard supercompression",
+   "width": 512,
+   "firstLayer": 0,
+   "layers": 16,
+   "levels": 10,
+   "transferFunction": "sRGB (colour; the roughness in alpha stays linear)"
+  },
+  {
+   "file": "public/world/surfaces/surfaces-albedo-1.ktx2",
+   "sha256": "612bfe17109a5e9677260200e08615f7a82ec06bc9603f595f8b847213e5b7a8",
+   "bytes": 4353974,
+   "format": "KTX2, Basis Universal UASTC 4x4 with Zstandard supercompression",
+   "width": 512,
+   "firstLayer": 16,
+   "layers": 16,
+   "levels": 10,
+   "transferFunction": "sRGB (colour; the roughness in alpha stays linear)"
+  }
+ ],
+ "perFileBudget": "Each part is at most 8 MiB (8388608 bytes), the world plan's budget for any one deployed world file (section 8); the cook stops if a part exceeds it. One file of all 32 layers would be 8,882,582 bytes (8.47 MiB), so the layers ship in two parts of 16, joined into one array at load.",
+ "inputs": [
+  {
+   "layer": "daub",
+   "albedo": {
+    "file": "public/world/surfaces/daub-albedo.webp",
+    "sha256": "319a331c16936903823eb97c165bdf2ac65cf66ddd5a6dbe17be7575d6ece9b1",
+    "bytes": 92348
+   },
+   "height": {
+    "file": "public/world/surfaces/daub-height.webp",
+    "sha256": "0e9f2578b24a6c5ac18db7e50d5dffc129e8735b071e7b64607729cb55c07cb3",
+    "bytes": 98438
+   }
+  },
+  {
+   "layer": "timber",
+   "albedo": {
+    "file": "public/world/surfaces/timber-albedo.webp",
+    "sha256": "ec84a3c637d1e690129bf21bef6bbc2ec42acd82100c4c960b7e1b90f6a11125",
+    "bytes": 77908
+   },
+   "height": {
+    "file": "public/world/surfaces/timber-height.webp",
+    "sha256": "bcc3610f253764db4fdb53ba7087497aa642c4384ab9e5173c3fa2a97612719d",
+    "bytes": 70078
+   }
+  },
+  {
+   "layer": "thatch",
+   "albedo": {
+    "file": "public/world/surfaces/thatch-albedo.webp",
+    "sha256": "7de61806b91f061b80fca644561356a624d2a7d6b8b7ec4fe2fe702257364824",
+    "bytes": 95582
+   },
+   "height": {
+    "file": "public/world/surfaces/thatch-height.webp",
+    "sha256": "06d482510fb3802b470c746943e05d76d06291cc220588ea171afbb9cd94d119",
+    "bytes": 82902
+   }
+  },
+  {
+   "layer": "shingle",
+   "albedo": {
+    "file": "public/world/surfaces/shingle-albedo.webp",
+    "sha256": "ed9d5fd87ceec3340db965760b27478f3235fdfb2f57821b9bfa2e9f7746fce1",
+    "bytes": 91598
+   },
+   "height": {
+    "file": "public/world/surfaces/shingle-height.webp",
+    "sha256": "f07ead210e85827fcc12ed6ca8e47d3193461e62771ca49ea67ff13e20c9a46d",
+    "bytes": 67998
+   }
+  },
+  {
+   "layer": "rubble",
+   "albedo": {
+    "file": "public/world/surfaces/rubble-albedo.webp",
+    "sha256": "35195f094f56a338ad945be77ef0e33d6f03f88e9e256372475ab2199a480754",
+    "bytes": 100456
+   },
+   "height": {
+    "file": "public/world/surfaces/rubble-height.webp",
+    "sha256": "30d6878793f06104f610e573dfd8405ff2780829848b67134a62510bf1f1edea",
+    "bytes": 75032
+   }
+  },
+  {
+   "layer": "planks",
+   "albedo": {
+    "file": "public/world/surfaces/planks-albedo.webp",
+    "sha256": "7f80a7d7d9a3f0506c4ec9b2a5e2908d2ab7ed48a528e12a62cd92e170d7c83e",
+    "bytes": 41136
+   },
+   "height": {
+    "file": "public/world/surfaces/planks-height.webp",
+    "sha256": "b80f1c397c9533ea25417dc5bff633e2dccc160e1804c8d30cec982485c5e284",
+    "bytes": 54604
+   }
+  },
+  {
+   "layer": "dark",
+   "albedo": {
+    "file": "public/world/surfaces/dark-albedo.webp",
+    "sha256": "db35cde25a3cac1434845ef0f2d038a2a60279805581dc4018a08a4a69e9572f",
+    "bytes": 34272
+   },
+   "height": {
+    "file": "public/world/surfaces/dark-height.webp",
+    "sha256": "5e1418be0794e66959510368a434050310e14f9ee52f00352b415102533e14a4",
+    "bytes": 48230
+   }
+  },
+  {
+   "layer": "meadow",
+   "albedo": {
+    "file": "public/world/surfaces/meadow-albedo.webp",
+    "sha256": "f154c3044a9f00341b472314b5db133c5036941fbf4c403009c1f547ecc2550b",
+    "bytes": 124836
+   },
+   "height": {
+    "file": "public/world/surfaces/meadow-height.webp",
+    "sha256": "657a5f480634d339b1f2bab881ae3e1696f8a676716392e03e31288c238ed351",
+    "bytes": 118752
+   }
+  },
+  {
+   "layer": "forest",
+   "albedo": {
+    "file": "public/world/surfaces/forest-albedo.webp",
+    "sha256": "5b4fed20537109a364a7796629511d3348aecf420341a998f1c8df212d81fb60",
+    "bytes": 141246
+   },
+   "height": {
+    "file": "public/world/surfaces/forest-height.webp",
+    "sha256": "1348a623ecc2f70ae32e9ea077e6dd97c3bd38cefe9252c2197e0467f63e3268",
+    "bytes": 79958
+   }
+  },
+  {
+   "layer": "mud",
+   "albedo": {
+    "file": "public/world/surfaces/mud-albedo.webp",
+    "sha256": "d4d71a5b666f4429217a29b74ae60b9525e35ee3a75187b9d2eadac0b7b27ebd",
+    "bytes": 92642
+   },
+   "height": {
+    "file": "public/world/surfaces/mud-height.webp",
+    "sha256": "139e47d2553f8c5996e5031824c1b0ba4cf90c58e66894d74528b439cd558af8",
+    "bytes": 92474
+   }
+  },
+  {
+   "layer": "road",
+   "albedo": {
+    "file": "public/world/surfaces/road-albedo.webp",
+    "sha256": "722d00ba7b9a83b50c06684fbcfe566bfc0e834fbeaba7583f95b1e96423b178",
+    "bytes": 130756
+   },
+   "height": {
+    "file": "public/world/surfaces/road-height.webp",
+    "sha256": "4c690c683b9610c8d9fc610b828522374f329ce3ab5c622aae25adbafb10ae13",
+    "bytes": 112626
+   }
+  },
+  {
+   "layer": "field",
+   "albedo": {
+    "file": "public/world/surfaces/field-albedo.webp",
+    "sha256": "d2b5000f7035278bf6a1859c3746dbafc4b34d1d9542be580454bc006c8252d4",
+    "bytes": 148436
+   },
+   "height": {
+    "file": "public/world/surfaces/field-height.webp",
+    "sha256": "46c70510334d5428655c700f336c2517be0dc819cfca516e2655f76316f0b0ff",
+    "bytes": 110998
+   }
+  },
+  {
+   "layer": "granite",
+   "albedo": {
+    "file": "public/world/surfaces/granite-albedo.webp",
+    "sha256": "daf7ab0aa2ec8d676158587b25b980d732115f74b0b2d8e9d06d4c4c0da90da1",
+    "bytes": 114190
+   },
+   "height": {
+    "file": "public/world/surfaces/granite-height.webp",
+    "sha256": "13f35fa65bc88fef130b0607cd240d230c541e9be3d8f0fdcf4934a3290668c8",
+    "bytes": 129756
+   }
+  },
+  {
+   "layer": "bark-spruce",
+   "albedo": {
+    "file": "public/world/surfaces/bark-spruce-albedo.webp",
+    "sha256": "5be10c80b0604fc80bea3b254cf8e6e420e8e8cacda5c92804496757be5e3dcc",
+    "bytes": 106512
+   },
+   "height": {
+    "file": "public/world/surfaces/bark-spruce-height.webp",
+    "sha256": "2e197f5dd3cd3b8046114e7853bab8006b918be9084ee5434dc181975e365dec",
+    "bytes": 68344
+   }
+  },
+  {
+   "layer": "bark-birch",
+   "albedo": {
+    "file": "public/world/surfaces/bark-birch-albedo.webp",
+    "sha256": "42dacfc86413ffab447fadeaccb057a2b908c7caf1d98ee0964dff7e4c4213d3",
+    "bytes": 76714
+   },
+   "height": {
+    "file": "public/world/surfaces/bark-birch-height.webp",
+    "sha256": "9ed8b7840b9b30d64b6e966442f3d576641d5039ef813a3c933c295ed0ba30b9",
+    "bytes": 50738
+   }
+  },
+  {
+   "layer": "ashlar",
+   "albedo": {
+    "file": "public/world/surfaces/ashlar-albedo.webp",
+    "sha256": "a2fffedff0bb4f315812071ef8a0ce5db0b19b5a9e0bda8095149f2ec9ba8380",
+    "bytes": 98338
+   },
+   "height": {
+    "file": "public/world/surfaces/ashlar-height.webp",
+    "sha256": "ad68fa936465e46cd0afad9a25b4d7b2b9065e0968aeefe4ae1bcf4030343552",
+    "bytes": 78662
+   }
+  },
+  {
+   "layer": "slate",
+   "albedo": {
+    "file": "public/world/surfaces/slate-albedo.webp",
+    "sha256": "a99edcd2bca51704f265cc9e183684731782c154142064f2c569e8b407b4f586",
+    "bytes": 59442
+   },
+   "height": {
+    "file": "public/world/surfaces/slate-height.webp",
+    "sha256": "de82b5d823fe79958d3d8d53b9c628aaed3a311a2b5538e9dfcb60a8f0cc74c3",
+    "bytes": 65570
+   }
+  },
+  {
+   "layer": "lime",
+   "albedo": {
+    "file": "public/world/surfaces/lime-albedo.webp",
+    "sha256": "b5e3203d082a7a12364a9ecf742d8c8ad1767a8d6d09465f08f8484af3d33191",
+    "bytes": 66572
+   },
+   "height": {
+    "file": "public/world/surfaces/lime-height.webp",
+    "sha256": "6051eb81dae99e002b8b46f39fbe1ce228a1427459c9986e6041889f61349f2e",
+    "bytes": 114056
+   }
+  },
+  {
+   "layer": "tarred",
+   "albedo": {
+    "file": "public/world/surfaces/tarred-albedo.webp",
+    "sha256": "700899b4408dc966d33de5e1cf8c79a5f405d0f3060c38a60c6e30874a19fe3e",
+    "bytes": 49640
+   },
+   "height": {
+    "file": "public/world/surfaces/tarred-height.webp",
+    "sha256": "ed15ca6fbc71e108ebc4eb7a3a4f1127a132bd8df545054c8cde12fcc07ce9c8",
+    "bytes": 63048
+   }
+  },
+  {
+   "layer": "brick",
+   "albedo": {
+    "file": "public/world/surfaces/brick-albedo.webp",
+    "sha256": "8dcab8bec6f527646dfeb706bec75348edc2b4d860e1f081fafd1685495fd0bf",
+    "bytes": 108680
+   },
+   "height": {
+    "file": "public/world/surfaces/brick-height.webp",
+    "sha256": "c9954a48d65fb54268b71dfe59bf51fd2c200bb1cd0fc76f3cc75797aca09f4e",
+    "bytes": 89934
+   }
+  },
+  {
+   "layer": "reedmud",
+   "albedo": {
+    "file": "public/world/surfaces/reedmud-albedo.webp",
+    "sha256": "3f1338f9705aebad4979e2632011e2030bbcaf3b1c23f26664213716bd72bb60",
+    "bytes": 128266
+   },
+   "height": {
+    "file": "public/world/surfaces/reedmud-height.webp",
+    "sha256": "4def4bf231900e237cf995c9c0f16ec8acc923655bd8831ed0d5969f8eed9943",
+    "bytes": 91426
+   }
+  },
+  {
+   "layer": "pebbles",
+   "albedo": {
+    "file": "public/world/surfaces/pebbles-albedo.webp",
+    "sha256": "44051b9e5e57bd04654d112b8f246ded52f3c2322bf13eeaa265bef06b48993b",
+    "bytes": 137404
+   },
+   "height": {
+    "file": "public/world/surfaces/pebbles-height.webp",
+    "sha256": "3d65d1f8fc3031faf89575104c71897254f42468eb159dbd945d834f97b1e1dd",
+    "bytes": 107366
+   }
+  },
+  {
+   "layer": "ash",
+   "albedo": {
+    "file": "public/world/surfaces/ash-albedo.webp",
+    "sha256": "f519155d46f73637aaff4d8669e6d9b39a7743cf2de5741686f6164ced641c6f",
+    "bytes": 122570
+   },
+   "height": {
+    "file": "public/world/surfaces/ash-height.webp",
+    "sha256": "d754eb3520559963c1dd1ca2c7a3bae614c0f9dc1674dc2ad0bfc0464248b523",
+    "bytes": 128140
+   }
+  },
+  {
+   "layer": "snow",
+   "albedo": {
+    "file": "public/world/surfaces/snow-albedo.webp",
+    "sha256": "d21e580bd70fde8e7c469dfe6829f87fc37a89e6d869dfa78e51fa558ca99366",
+    "bytes": 69506
+   },
+   "height": {
+    "file": "public/world/surfaces/snow-height.webp",
+    "sha256": "dc610a818677d848d890a5113070a0b7c3e573296d05f1a09a549d7ef4ab7ae0",
+    "bytes": 80788
+   }
+  },
+  {
+   "layer": "cobbles",
+   "albedo": {
+    "file": "public/world/surfaces/cobbles-albedo.webp",
+    "sha256": "1ed352dc16b35135d044ede4088857b3c35e584a073580c227f14cc6a4f32b9b",
+    "bytes": 85634
+   },
+   "height": {
+    "file": "public/world/surfaces/cobbles-height.webp",
+    "sha256": "54586e1b58615025edd6dac7537b972b134aed9a88f0c6c716b2b71a0d4bc042",
+    "bytes": 59388
+   }
+  },
+  {
+   "layer": "coldgrass",
+   "albedo": {
+    "file": "public/world/surfaces/coldgrass-albedo.webp",
+    "sha256": "b4314ec705f02bb26907f0ddfc687b20540b22fbea3e43a93a768400d7317442",
+    "bytes": 134268
+   },
+   "height": {
+    "file": "public/world/surfaces/coldgrass-height.webp",
+    "sha256": "e9d1b3a6c87b3558eceda06c07d2afc89ad99377e56b80117668280f6e1dca62",
+    "bytes": 126528
+   }
+  },
+  {
+   "layer": "castle",
+   "albedo": {
+    "file": "public/world/surfaces/castle-albedo.webp",
+    "sha256": "679d12164c29c84b6ec7880fbc383786cb57fea203581bb0ebd3e738479311b7",
+    "bytes": 82882
+   },
+   "height": {
+    "file": "public/world/surfaces/castle-height.webp",
+    "sha256": "448fa85c3856f671c53318a1a65d08daa4bc3a1532356349c47852d3fafad422",
+    "bytes": 69926
+   }
+  },
+  {
+   "layer": "mossruin",
+   "albedo": {
+    "file": "public/world/surfaces/mossruin-albedo.webp",
+    "sha256": "c3171c512eccbc320e671156a8bda5e9ea69794256200823d2d89c1e3e00314d",
+    "bytes": 86912
+   },
+   "height": {
+    "file": "public/world/surfaces/mossruin-height.webp",
+    "sha256": "feb2b0649462a9a6c11d658db60d25278b1b5c7acf0f6c52e468adeee458a2fa",
+    "bytes": 54814
+   }
+  },
+  {
+   "layer": "darkforest",
+   "albedo": {
+    "file": "public/world/surfaces/darkforest-albedo.webp",
+    "sha256": "a195c5b2b0e9fbed1f4ecd0ed0df890d5b6899fabf019f612724df4fe1742b03",
+    "bytes": 117524
+   },
+   "height": {
+    "file": "public/world/surfaces/darkforest-height.webp",
+    "sha256": "6d1c160def0b16976d0206528374c013fed141038b46cddf5bcf6da2704f365e",
+    "bytes": 119400
+   }
+  },
+  {
+   "layer": "cliff",
+   "albedo": {
+    "file": "public/world/surfaces/cliff-albedo.webp",
+    "sha256": "9ba6065185fc72e632a25192916b266682e42fa65a2de0669a8146e24a61e2be",
+    "bytes": 94876
+   },
+   "height": {
+    "file": "public/world/surfaces/cliff-height.webp",
+    "sha256": "5b5cff7a6e567c0e9ba25c4db7c9c35b467ead46c6a23106d71fdd5eeef2d593",
+    "bytes": 120908
+   }
+  },
+  {
+   "layer": "bark-pine",
+   "albedo": {
+    "file": "public/world/surfaces/bark-pine-albedo.webp",
+    "sha256": "e3e0a2e909e5a51fc57b595819fb593911b24fe5f5a5ddd43ce24dcf424bbf83",
+    "bytes": 55362
+   },
+   "height": {
+    "file": "public/world/surfaces/bark-pine-height.webp",
+    "sha256": "2350188e146fd3c02120e7adc0cfff1a6de5b33770d8a7f9c3aea5c031889337",
+    "bytes": 58454
+   }
+  },
+  {
+   "layer": "moss",
+   "albedo": {
+    "file": "public/world/surfaces/moss-albedo.webp",
+    "sha256": "3e7ae4e5c9522303a6337a3ce1cf63eaee7662bff8e9cd7674898e748815a376",
+    "bytes": 78624
+   },
+   "height": {
+    "file": "public/world/surfaces/moss-height.webp",
+    "sha256": "fdebc8d94cedb362263c429d706d4baeaca921b54232a64417f62d25e0b9b4e5",
+    "bytes": 122682
+   }
+  }
+ ],
+ "license": "Derived from the world's own surface layers, generated locally with Qwen Image Edit Plus 2511 (WanGP) from original scripted layout swatches: no photograph, third-party texture or TRELLIS output. Encoded with Basis Universal 2.50 (Apache-2.0); the encoder is not shipped.",
+ "tools": [
+  {
+   "name": "Basis Universal",
+   "version": "2.50",
+   "license": "Apache-2.0",
+   "binary": "basisu_st.wasm",
+   "sha256": "b42d951b1bf146133578e8c7927ad4a4a857552846a46a3ee33b541b2a06bc7d",
+   "role": "encoder (single-threaded WASI build run by Node through surface_tool.mjs; not shipped)"
+  },
+  {
+   "name": "three.js Basis Universal transcoder",
+   "version": "three 0.169.0",
+   "license": "Apache-2.0",
+   "sha256": {
+    "basis_transcoder.js": "8478b5b6d6b74e7d3082b89f6417321d8d1dc0307f2b30d4484bb11b441696a1",
+    "basis_transcoder.wasm": "6cf17dc889352c42e9acf8897107978d127005fe3386c36a0e3845e27967630a"
+   },
+   "role": "the game's transcoder, used to verify every layer of every level of both parts"
+  },
+  {
+   "name": "Pillow",
+   "version": "12.3.0",
+   "libwebp": "1.6.0",
+   "role": "decodes the layer WebPs"
+  }
+ ],
+ "cook": {
+  "scripts": {
+   "world/pipeline/surface_albedo_ktx2.py": "3b5b73178c4704cab302dc57a759e7d82d6c6ecd05ee72ce3fe01ce9cd899606",
+   "world/pipeline/surface_tool.mjs": "7b029a3cdf7a3c9c5653b8047e76b66433b01fdc058996680bf3c81676d6100c"
+  },
+  "scriptsNote": "SHA-256 of each script with LF line endings, equal to its committed copy.",
+  "recipe": {
+   "file": "recipe.json",
+   "sha256": "310bbce7f170b1c3824e476f5833528761c3aac9c8b0b16562814486a9c2621d"
+  },
+  "encoder": {
+   "arguments": [
+    "-tex_array",
+    "-mipmap",
+    "-mip_filter",
+    "box",
+    "-no_multithreading",
+    "-ktx2",
+    "-srgb",
+    "-uastc",
+    "-uastc_level",
+    "2",
+    "-uastc_rdo_d",
+    "32768",
+    "-uastc_rdo_m",
+    "-ktx2_zstandard_level",
+    "22",
+    "-uastc_rdo_l",
+    "1"
+   ],
+   "settings": "UASTC level 2, rate-distortion optimisation lambda 1 with a 32 KiB dictionary (single-threaded), Zstandard level 22; a full mip chain box-filtered with colour in linear light, as the GPU built it for the former RGBA8 array"
+  },
+  "receipt": "surface-albedo/cook/uastc-l1-split/cook.json (authoring folder)",
+  "deterministic": "two separate cooks, run side by side, produced identical bytes for both parts"
+ },
+ "derivation": {
+  "function": "deriveSurface (src/view/world-assets.ts): roughness = clamp(finish.roughness + (0.5 - height) * 0.12, 0.3, 1)",
+  "port": "surface_albedo_ktx2.py derive(): heights rounded through float32, float64 arithmetic in the game's order, JavaScript rounding",
+  "browserCheck": "2026-10-07: for all 32 layers, Pillow's decode of both WebPs and the port's albedo+roughness bytes equal Chrome's createImageBitmap decode and the game's deriveSurface (SHA-256 per layer)",
+  "fixture": {
+   "seed": 20261007,
+   "size": 64,
+   "finishes": [
+    {
+     "relief": 3,
+     "roughness": 0.9
+    },
+    {
+     "relief": 5,
+     "roughness": 0.3
+    },
+    {
+     "relief": 2.2,
+     "roughness": 0.97
+    }
+   ],
+   "sha256": "fbfb2c5531be9e6e14e3d9e12474aef7fc33b3fb66e263a740351893ade07c83"
+  },
+  "layerSha256": [
+   "edd5debcc0c2d8cc695ab27b1054dd8245e068c5b43cbd2374000859cb0f795b",
+   "67cad553ec4e1e4b1371c009a7d6c641e45527f5345889e48f5e6f42e9d0210a",
+   "fc99bc2bda021c5ed40bd7ef7448adb69ba36ea2b62ffbccd2dfd64a67c0f65f",
+   "eac3f10eb38c07fc90057bb1995c369966881de4e3dc81fe82c75b4b2fa80994",
+   "7cb25e79808c6481366bce9874120a68a0c4bda056c15a7015a2408cf37012f6",
+   "ed53aa7d0712b0197d623519dab393facb12f0cd33021314066ea5512122ad7e",
+   "45829adc7e1120159ee9a1248893c2a753f40171ef968a3243503c20c0b8d85c",
+   "5f77d72837eb28acc145c5cb4657a9307be9449879f2adee3898e6020f335f61",
+   "3047b42665d3e6d449e3c97e4cd6b089af679348baa69824a152bdab26d8445e",
+   "ac9b83503e03838e32b23e1e1a659a3a89f6385f6a2a153e36e6d6ca22999ac6",
+   "d0ec354f2c7469b75e061b92f76a7a0804d9109c802f7368e6d858c486311d76",
+   "f8c5a8a6631c5b1ce5bdbc50739b90db7301ee205a50bda1ea5aa88653b9fa7c",
+   "8f25bfb668842beadb2bb052a2e46f7d7d82284aea733fe0bce1d5f2a49e296c",
+   "38fe0c2c05c7a03a477bd11372297bf791aca3a4055f007c47f149c2b389e81f",
+   "05856c61fae707b74d0ebc1ba03ba17f63603bbdb2dbbcb0275a37f9eade6e17",
+   "9a864d5a889c863a545c250d2862df6b147e0896a3ee5aa1770fe88afbf1b1d3",
+   "b1b7b03b29aba4c64e0595a7d73d074d17b05df35ce5573a91022213255c08fc",
+   "7e8ff06859ca87157ea5060f715901e8cce6d66ad1dc510f58b78abceda5ab1d",
+   "2084084d71d2189b521a3b888e9a0db43d37ed8646a446f6441aa11bf3a40ba9",
+   "44fca0bc70eaf27d7a70623aec757416b1428f7ad1be78a123297c79674ec603",
+   "e595a0366203caec7f3a1eef34ce83f13aed0af6ccbfebcd64bdf92f290b2eb9",
+   "e920a345ef783897e4e6e766ff6f05249b6d5700cbcb2f46886417bb987ce1fe",
+   "8f5abd3b8dd7901569b22992b984fade6c0aec6ebe7c4c69f14b73b32db76d69",
+   "f5299cd09471c1c75f4449259ef99c94c037339ba7e2ff803c9de56e5e6b3796",
+   "12ee740923fb13a80da6041c127293007f76afc9b245b0b85bcd25feec24e4a2",
+   "dbfa5cbb9c6a489e7a54ad351f3f16768daac304ea3e916a461d51a3fc85cf06",
+   "bd0ae4e7fcbe9630de967de9d56e7b1df76063f35a1efc5eed7bbd7783d2dc6c",
+   "31bf94c9060f85680f247fc6d2981b7fbc0812e855f76d1dc6f00ab91be0970b",
+   "3445c11ee72e06aef181ef430b48e7df2678b0a7466591971870936d715c9cc6",
+   "3404b836c07b02ee24a5509b2c4fea9d001bc4c7016574dd202537be39b0a726",
+   "97caa155b402d3ee65a6fa072e66d1dd08484dd6d285ac2ac31ec04aa75c73e8",
+   "19de2dd13ebfacbb8fdf67fe52bb25296c2d07a0f7cf88e1bcd3d7c25ca7ca98"
+  ]
+ },
+ "verification": {
+  "transcoder": "three 0.169.0 basis_transcoder",
+  "targets": [
+   "ASTC 4x4",
+   "BC7",
+   "ETC1/ETC2",
+   "BC1/BC3",
+   "PVRTC1",
+   "RGBA8"
+  ],
+  "note": "every layer of every level of both parts transcoded to every target; PSNR of the RGBA8 transcode against the uncompressed layers and their box-filtered levels",
+  "psnr": {
+   "colour": {
+    "level0": {
+     "min": 35.72,
+     "median": 40.61
+    },
+    "level1": {
+     "min": 36.06,
+     "median": 39.83
+    },
+    "level2": {
+     "min": 35.63,
+     "median": 39.79
+    },
+    "level3": {
+     "min": 35.83,
+     "median": 41.28
+    },
+    "level4": {
+     "min": 37.01,
+     "median": 42.894999999999996
+    },
+    "level5": {
+     "min": 37.92,
+     "median": 45.215
+    },
+    "level6": {
+     "min": 39.18,
+     "median": 47.095
+    },
+    "level7": {
+     "min": 42.3,
+     "median": 49.505
+    },
+    "level8": {
+     "min": 47.78,
+     "median": 51.93
+    },
+    "level9": {
+     "min": 49.89,
+     "median": 52.9
+    }
+   },
+   "roughness": {
+    "level0": {
+     "min": 39.95,
+     "median": 42.64
+    },
+    "level1": {
+     "min": 41.19,
+     "median": 43.72
+    },
+    "level2": {
+     "min": 42.9,
+     "median": 44.480000000000004
+    },
+    "level3": {
+     "min": 42.02,
+     "median": 45.525000000000006
+    },
+    "level4": {
+     "min": 42.79,
+     "median": 46.365
+    },
+    "level5": {
+     "min": 43.93,
+     "median": 46.875
+    },
+    "level6": {
+     "min": 42.71,
+     "median": 47.47
+    },
+    "level7": {
+     "min": 43.74,
+     "median": 48.41
+    },
+    "level8": {
+     "min": 41.6,
+     "median": 48.13
+    },
+    "level9": {
+     "min": 42.11,
+     "median": 48.13
+    }
+   }
+  }
+ },
+ "inGame": {
+  "method": "54 shots of the guard campaign's version 3 world (every exploration location and the spawn line-up at 26 and 18 m), pixel ratio 1 and 1.75, RTX 4070 Ti SUPER (D3D11, BC7), the two parts joined at load, against the former WebP albedo with everything else equal; two runs of the former build were bit-identical",
+  "results": {
+   "1": {
+    "shots": 54,
+    "psnrMin": 42.58,
+    "psnrMedian": 43.815,
+    "over8Max": 0.639,
+    "over8Median": 0.3015,
+    "blurPsnrMin": 49.32,
+    "blurPsnrMedian": 50.32,
+    "lumaShiftMaxAbs": 0.606,
+    "hfRatioMin": 0.9921,
+    "hfRatioMax": 0.9985
+   },
+   "1.75": {
+    "shots": 54,
+    "psnrMin": 42.65,
+    "psnrMedian": 44.0,
+    "over8Max": 0.502,
+    "over8Median": 0.2585,
+    "blurPsnrMin": 49.72,
+    "blurPsnrMedian": 50.39,
+    "lumaShiftMaxAbs": 0.538,
+    "hfRatioMin": 0.9928,
+    "hfRatioMax": 0.997
+   }
+  },
+  "shaderPrograms": "unchanged (35 after the first frame, 37 after the shots, as before)",
+  "textureMemory": "albedo array 10.7 MiB instead of 42.7 MiB; the version 3 world about 119 MiB instead of 151 MiB",
+  "loadTime": "SwiftShader on four pinned cores, five interleaved page loads: world ready plus first frame median 9.00 s against 9.37 s for the former build (faster in four of five pairs; about 1 s run-to-run spread)"
+ },
+ "limitations": [
+  "Compression adds small texel-level differences: in game 0.26-0.30% of the frame (median, at most 0.64%) differs by more than 8/255, mostly in the finest grain of gravel and pebbles; PSNR 44 dB, 50 dB after a 1.5 px blur.",
+  "The mip levels are box-filtered in linear light with rounding, slightly brighter than the GPU's own (frame luminance +0.15 to +0.6%).",
+  "The two parts are 8,887,634 bytes together against 3,045,132 bytes for the 32 albedo WebPs they replace: a version 3 world preloads about 21.5 MiB.",
+  "Joining the parts at load briefly holds both the parts' and the joined array's transcoded data (10.7 MiB each on a BC7 GPU, 42.7 MiB on a software rasterizer).",
+  "The normals stay derived at load from the height maps (RG8, 21.3 MiB with GPU-generated mip levels): they are texel-scale noise that ETC1S or UASTC could not keep within the download budget."
+ ]
+}

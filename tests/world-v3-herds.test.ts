@@ -8,11 +8,13 @@ import { herdHomes } from '../src/view/herds';
 import { ViewResources } from '../src/view/resources';
 import { SURFACE_SIZE, WorldAssetLibrary, worldAssetIds, type WorldAssetSource, type WorldModelId } from '../src/view/world-assets';
 import { parseGlbWithoutTextures } from './glb';
+import { fakeSurfaceAlbedo } from './world-surfaces';
 
 const shipped = new URL('../public/world/', import.meta.url);
 const nodeSource: WorldAssetSource = {
   model: (id: WorldModelId) => parseGlbWithoutTextures(new Uint8Array(readFileSync(new URL(`${id}/${id}.glb`, shipped)))),
   image: async () => ({ width: SURFACE_SIZE, height: SURFACE_SIZE, data: new Uint8ClampedArray(SURFACE_SIZE * SURFACE_SIZE * 4).fill(128) }),
+  surfaceAlbedo: async () => fakeSurfaceAlbedo(),
 };
 const DEER_REGIONS = ['greenmarch', 'hollowvale', 'heartlands', 'crownlands'];
 const GOAT_REGIONS = ['frostspine', 'crownlands', 'ashsteppe'];

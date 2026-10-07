@@ -323,8 +323,13 @@ no recordings, samples or generative models. Surface
 textures are generated locally with Qwen Image Edit Plus 2511 from scripted
 layout swatches drawn at true physical scale. Everything is in `public/world`
 with recipes, provenance and approvals in `scripts/world`; the pipeline scripts
-read the authoring folder from `K2_AUTHORING` and Blender from `K2_BLENDER`. A
-version 3 world loads about 15.7 MiB of world assets before it is shown and
+read the authoring folder from `K2_AUTHORING` and Blender from `K2_BLENDER`. The
+surface layers' albedo (with each layer's roughness) ships GPU-compressed as
+Basis Universal UASTC KTX2 (two files of sixteen layers, each within the world's
+8 MiB per-file budget, joined into one array at load), which holds a quarter of
+the video memory and
+looks the same in play; their normals are derived at load from the height maps. A
+version 3 world loads about 21.5 MiB of world assets before it is shown and
 stops with an explicit asset error if any fails. Measured limitations and the
 remaining gap to AAA are listed in each `provenance.json`.
 

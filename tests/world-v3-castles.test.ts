@@ -11,6 +11,7 @@ import { LANDMARK_PLACES } from '../src/view/models';
 import { ViewResources } from '../src/view/resources';
 import { SURFACE_SIZE, WorldAssetLibrary, worldAssetIds, type WorldAssetSource, type WorldModelId } from '../src/view/world-assets';
 import { parseGlbWithoutTextures } from './glb';
+import { fakeSurfaceAlbedo } from './world-surfaces';
 
 const SEEDS = ['castles', 'assets-a', 42] as const;
 const worlds = SEEDS.map(seed => generateWorld(seed, 3));
@@ -219,6 +220,7 @@ describe('version 3 castle presentation (DOM-free)', () => {
   const nodeSource: WorldAssetSource = {
     model: (id: WorldModelId) => parseGlbWithoutTextures(new Uint8Array(readFileSync(new URL(`${id}/${id}.glb`, shipped)))),
     image: async () => ({ width: SURFACE_SIZE, height: SURFACE_SIZE, data: new Uint8ClampedArray(SURFACE_SIZE * SURFACE_SIZE * 4).fill(128) }),
+    surfaceAlbedo: async () => fakeSurfaceAlbedo(),
   };
 
   test('draws curtains as repeated modules and the gate arches as decor, and gives kept landmarks the sightline cutaway', async () => {

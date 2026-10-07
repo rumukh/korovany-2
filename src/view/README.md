@@ -104,17 +104,26 @@ version 1 or 2 campaign continued from the version 3 title preview starts once i
 the preview's world assets.
 
 - **Surfaces.** Thirty-two 512 px tiling layers (`WORLD_SURFACES`: architecture, ground, rock and bark) form two
-  `DataArrayTexture`s: the sRGB albedo, carrying in its alpha the roughness that `deriveSurface` derives at load from
-  each layer's grayscale height map, and an RG8 array of the tangent normal's X and Y derived the same way. Kit, bark and rock meshes carry the layer index in UV1.x and baked AO in UV1.y and
+  texture arrays: the sRGB albedo, carrying in its alpha the layer's roughness, and an RG8 `DataArrayTexture` of the
+  tangent normal's X and Y that `deriveSurface` derives at load from each layer's grayscale height map. The albedo
+  array ships GPU-compressed as Basis Universal UASTC KTX2 with its mip chain, in two files of sixteen layers each
+  (`surfaceAlbedoUrl(part)`, each within the world's 8 MiB per-file budget) that `WorldAssetLibrary` joins into one
+  array at load, built
+  by `scripts/world/pipeline/surface_albedo_ktx2.py` from the layers' cooked albedo WebPs and the roughness
+  `deriveSurface` gives their height maps (an exact port: the bytes before compression equal what the game assembled
+  at load, and the world asset tests compare the port with the game's function). Kit, bark and rock meshes carry the layer index in UV1.x and baked AO in UV1.y and
   share one program (`kitMaterial`); the ground blends eight layers by 1024-texel control maps (`terrainMaterial`,
   `terrainControl`) with height-based transitions and furrows turned along each field: meadow, forest, mud, road and
   field everywhere, a regional base and overlay (`REGION_GROUND`: reed mud in the Fens, cold grass with shingle on the
   Salt Coast, ash on the Ash Steppe, cold grass with snow in the Frostspine, cold grass in Hollowvale), a dark needle
   floor where the Greenmarch and Hollowvale forests stand densest (`REGION_GROUND.deep`, by local tree density), cobbled
   streets in the stone towns (`COBBLED_PLACES`) and fortress courtyards (`COURTYARDS`: cobbles in the Royal Citadel,
-  trampled ground in the Old Fort). The layers ship as WebP and upload as RGBA8 and RG8; KTX2/Basis was measured
-  at W0 and deferred (ETC1S saved 282 KB and 15 MiB of GPU memory but needs a 585 KB transcoder). The whole v3 world
-  needs about 151 MiB of texture memory, within its 160 MiB budget; props use 256 px normal and ORM maps (the W0 farm
+  trampled ground in the Old Fort). The height maps ship as WebP and the normals upload as RG8 with GPU-generated
+  mip levels: they stay uncompressed because they are texel-scale noise (the height maps' fine grain, differentiated
+  and multiplied by up to 20), which no GPU block codec keeps within the download budget. Compressing them, or the
+  albedo, as ETC1S visibly softened the ground at the closest camera (a sixth to a quarter of the frame changed by
+  more than 8/255), while the UASTC albedo looks the same (0.3% of the frame, 44 dB PSNR). The whole v3 world
+  needs about 119 MiB of texture memory (151 MiB with the albedo uncompressed), within its 160 MiB budget; props use 256 px normal and ORM maps (the W0 farm
   props were recooked so in W4b), the small ones a 256 px albedo, the sheep, deer, goats and grave wolves 512 px maps,
   and the barrow ghoul and bog troll a 512 px base colour with 256 px normal and ORM maps.
 - **Settlements.** Each region builds its own vernacular from the scripted kit (`build_kit.py`, `build_kit_w1.py`):
@@ -424,6 +433,17 @@ transcoding the 21 maps).
 `gltfModelSource()` gives `GLTFLoader` three.js's bundled WebAssembly
 `MeshoptDecoder`. The files require the extension and their fallback buffer holds
 no data, so a loader without the decoder fails instead of drawing anything.
+The version 3 world's surface albedo array (see "Surfaces" above) goes through the
+same transcoder: `gltfWorldSource()` loads its two parts, and `WorldAssetLibrary`
+checks each (size, sixteen layers, full mip chain, sRGB) and joins them, level by
+level, into one `CompressedArrayTexture` of 32 layers with their precomputed mip
+levels (BC7 on the test machine, RGBA8 on a software rasterizer); a missing part,
+or parts transcoded to different formats, fail the world's load. The parts are
+8.9 MB together against 3.0 MB for the albedo WebPs they replace, so a version 3
+world preloads about 21.5 MiB; its
+albedo holds 10.7 MiB of video memory instead of 42.7 MiB, and on SwiftShader with
+four cores the world was ready and drawn a little sooner (9.0 s against 9.4 s,
+median of five loads; no mip generation or WebP decoding for the albedo).
 
 Troop instances (`CharacterInstance`) are `SkeletonUtils` clones driven by an
 `AnimationMixer` from snapshot state and render time: `Idle`, `AtEase` (while a
