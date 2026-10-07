@@ -4,9 +4,9 @@ const weakest = (list: readonly BattleEnemySnapshot[]): BattleEnemySnapshot =>
   [...list].sort((a, b) => a.hp - b.hp || a.id.localeCompare(b.id))[0]!;
 
 /**
- * A simple, deterministic command for the hero's turn: heal when low, use each faction's skills in their obvious
- * situations, otherwise attack the weakest reachable enemy. The balance bots use it so that reaction skill is the only
- * variable they measure; the sandbox offers it as a suggestion and for automatic commands. Call it only on the hero's
+ * A simple, deterministic command for the hero's turn: heal when low, cover a failing wagon, use each faction's skills
+ * in their obvious situations, otherwise attack the weakest reachable enemy. The balance bots use it so that reaction
+ * skill is the only variable they measure; the game and the sandbox offer it as a suggestion. Call it only on the hero's
  * turn of an unfinished battle.
  */
 export function suggestCommand(s: BattleSnapshot): BattleCommand {
@@ -14,6 +14,9 @@ export function suggestCommand(s: BattleSnapshot): BattleCommand {
   const enabled = (id: string): boolean => s.commands.some(option => option.id === id && option.enabled);
   const close = living.filter(e => e.band === 'close'), far = living.filter(e => e.band === 'far');
   if (hero.hp < hero.maxHp * 0.35 && enabled('tonic')) return { type: 'item', item: 'tonic' };
+  // Covering the wagons earns 1 AP; at full AP the hero spends it instead, so the battle always moves on.
+  if (enabled('protect') && !hero.guarding && hero.ap < hero.maxAp && hero.hp > hero.maxHp * 0.5 &&
+      s.wards.some(w => w.hp > 0 && w.hp < w.maxHp * 0.4)) return { type: 'protect' };
   if (hero.faction === 'elf') {
     if (close.filter(e => e.kind !== 'archer').length >= 2 && enabled('fall-back')) {
       return { type: 'skill', skill: 'fall-back', target: weakest(living).id };

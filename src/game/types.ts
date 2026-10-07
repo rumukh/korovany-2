@@ -2,11 +2,14 @@
  * Public presentation contract. Distances are metres, time is seconds except tick counters.
  * Ground plane is world X/Z, Y is up; heading is atan2(x, z) radians (0 faces +Z).
  * Snapshots are independent plain JSON values; changing them never changes the session.
- * Combat steps advance 1/60 second. Narrative commands are paused transactions. No wall-clock is read.
+ * Field and battle steps advance 1/60 second. Narrative and battle commands are paused transactions. No wall-clock is read.
  */
 import type { ExplorationWorld, NarrativeInput, NarrativeSnapshot } from './narrative-types';
 import type { FactionCampaignSnapshot } from './faction-campaigns';
+import type { BattleCommand } from './battle/types';
+import type { BattleOptions, BattleView } from './battles';
 export type * from './narrative-types';
+export type { BattleOptions, BattleView } from './battles';
 
 export type FactionId = 'elf' | 'guard' | 'villain';
 export type Phase = 'playing' | 'victory' | 'defeat';
@@ -42,8 +45,11 @@ export interface GameInput {
   sprint?: boolean;
   /** Held: captures, repairs and transfers while in range. */
   interact?: boolean;
-  /** One-shot pulses: shell consumes once, never repeats across catch-up steps. */
+  /** One-shot pulses: shell consumes once, never repeats across catch-up steps. In a battle, `dodge` and `parry` are the
+   * timed reactions to the next incoming blow; in the field, `dodge` dashes and `parry` does nothing. */
   dodge?: boolean;
+  parry?: boolean;
+  /** Ignored: faction skills are battle commands. Kept so older shells and replays stay valid. */
   special?: boolean;
   /** One-shot cycle hold -> follow -> return -> hold, or explicit mode/road destination. */
   convoy?: 'cycle' | 'hold' | 'follow' | 'return' | { destination: string };
@@ -51,6 +57,10 @@ export interface GameInput {
   upgrade?: UpgradeId;
   /** Exclusive paused command: do not combine with held combat/movement input. */
   narrative?: NarrativeInput;
+  /** Exclusive paused command on the hero's turn in a battle (no tick); ignored outside battles. */
+  battle?: BattleCommand;
+  /** Exclusive, no tick: battle difficulty and reaction latency for battles that begin afterwards. */
+  battleOptions?: BattleOptions;
 }
 
 export interface PlayerSnapshot extends Position {
@@ -168,7 +178,11 @@ export interface EffectSnapshot extends Vec2 {
   duration: number;
 }
 export type EventKind = 'attack' | 'hurt' | 'kill' | 'pickup' | 'capture' | 'delivery'
-  | 'raid' | 'convoy' | 'repair' | 'upgrade' | 'ability' | 'fortress' | 'victory' | 'defeat' | 'notice';
+  | 'raid' | 'convoy' | 'repair' | 'upgrade' | 'ability' | 'fortress' | 'victory' | 'defeat' | 'notice'
+  /** A battle begins, is won or is reinforced (`event.battle`, `event.battleWon`, `event.reinforcements`). */
+  | 'battle'
+  /** The hero parried a blow (`targetId`: the attacker). */
+  | 'parry';
 export interface GameEvent extends Vec2 {
   /** Monotonic sequence; presentation can consume events once even with multiple snapshots. */
   id: number;
@@ -323,6 +337,8 @@ export interface GameSnapshot {
   rewards: RunRewards | null;
   narrative?: NarrativeSnapshot;
   campaign?: FactionCampaignSnapshot;
+  /** The battle in progress; absent in the field. While it runs, field input does nothing and `interaction` is null. */
+  battle?: BattleView;
 }
 
 /** Opaque JSON save; restoreCampaign accepts unknown and rejects invalid/corrupt saves. */
@@ -336,9 +352,11 @@ export interface CampaignSave {
   engine: unknown;
 }
 export interface GameSession {
-  /** Combat advances one tick; narrative commands never tick. Terminal sessions are frozen. */
+  /** Field steps and battle steps advance one tick; narrative, battle and battle-option commands never tick. Terminal
+   * sessions are frozen. */
   step(input?: GameInput): void;
   snapshot(): GameSnapshot;
+  /** During a battle, the campaign as that battle began: restoring it restarts the battle. */
   serialize(): CampaignSave;
 }
 export interface MetaProfile {

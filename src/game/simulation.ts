@@ -1,10 +1,12 @@
-import { createSchedule, createSimulation, createWorld, type World } from '@aegis/core';
+import { createSchedule, createSimulation, createWorld, type World, type WorldSnapshot } from '@aegis/core';
+import { commandBattle, validateBattleCommand } from './battle';
+import { battleSystem, battleView, engagementSystem, validateBattleOptions } from './battles';
 import { FACTIONS, TICK_RATE } from './config';
 import { configureFactionWorld, createMilitary, factionCampaignSnapshot, FACTION_CAMPAIGNS, SHIPMENT_NAME } from './faction-campaigns';
 import { createMonsterState } from './monsters';
 import { assertRecord, boundedNumber, validatedUpgrades } from './profile';
 import { applyNarrative, createNarrative, discoverNarrative, narrativeSnapshot, pauseNarrative, validateNarrativeInput } from './narrative';
-import { campaignSystems, createActor, interaction, objective, resolveOutcome, shopItems } from './rules';
+import { campaignSystems, createActor, interaction, objective, resolveOutcome, shopItems, type PendingStrike } from './rules';
 import { actors, campaign, Campaign, Intent, type CampaignData } from './state';
 import type { ActorSnapshot, CampaignOptions, CampaignSave, FactionId, GameInput, GameSession, GameSnapshot, MonsterSnapshot, Vec2, WorldBlueprint } from './types';
 import { generateWorld, normalizeSeed } from './world';
@@ -25,15 +27,20 @@ function inputVector(value: unknown, label: string): Vec2 {
 export function validateInput(value: unknown): GameInput {
   assertRecord(value, 'Input');
   const result: GameInput = {};
-  const names = ['move', 'aim', 'attack', 'sprint', 'interact', 'dodge', 'special', 'convoy', 'upgrade', 'narrative'];
+  const names = ['move', 'aim', 'attack', 'sprint', 'interact', 'dodge', 'parry', 'special', 'convoy', 'upgrade', 'narrative',
+    'battle', 'battleOptions'];
   if (Object.keys(value).some(k => !names.includes(k))) throw new Error('Unknown input command');
-  if (value.narrative !== undefined) {
-    if (Object.keys(value).some(k => k !== 'narrative' && value[k] !== undefined)) throw new Error('Narrative commands cannot include combat input');
-    return { narrative: validateNarrativeInput(value.narrative) };
+  for (const exclusive of ['narrative', 'battle', 'battleOptions'] as const) {
+    if (value[exclusive] !== undefined && Object.keys(value).some(k => k !== exclusive && value[k] !== undefined)) {
+      throw new Error(`${exclusive} commands cannot include other input`);
+    }
   }
+  if (value.narrative !== undefined) return { narrative: validateNarrativeInput(value.narrative) };
+  if (value.battle !== undefined) return { battle: validateBattleCommand(value.battle) };
+  if (value.battleOptions !== undefined) return { battleOptions: validateBattleOptions(value.battleOptions) };
   if (value.move !== undefined) result.move = inputVector(value.move, 'move');
   if (value.aim !== undefined) result.aim = inputVector(value.aim, 'aim');
-  for (const key of ['attack', 'sprint', 'interact', 'dodge', 'special'] as const) {
+  for (const key of ['attack', 'sprint', 'interact', 'dodge', 'parry', 'special'] as const) {
     if (value[key] !== undefined) {
       if (typeof value[key] !== 'boolean') throw new Error(`${key} must be boolean`);
       result[key] = value[key];
@@ -107,9 +114,14 @@ function deepFreeze<T>(value: T): T {
 }
 
 function session(world: World, blueprint: WorldBlueprint): GameSession {
+  // A field attack that lands on a hostile, handed from the field's systems to the engagement check in the same tick.
+  const strike: PendingStrike = { target: null };
   const simulation = createSimulation({
-    world, schedule: createSchedule().addAll(campaignSystems(blueprint)), tickRate: TICK_RATE,
+    world, tickRate: TICK_RATE,
+    schedule: createSchedule().addAll([battleSystem(blueprint), ...campaignSystems(blueprint, strike), engagementSystem(blueprint, strike)]),
   });
+  // While a battle runs, saves hold the world as that battle began.
+  let checkpoint: WorldSnapshot | null = campaign(world).battle ? world.snapshot() : null;
   // A version 3 world is about 1 MB of JSON (thousands of obstacles): every snapshot shares one deep-frozen copy instead
   // of cloning it per frame. It is immutable by contract; v1/v2 snapshots keep their own clone, unchanged.
   const sharedWorld = blueprint.version === 3 ? deepFreeze(structuredClone(blueprint)) : undefined;
@@ -118,9 +130,24 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
       if (campaign(world).phase !== 'playing') return;
       const valid = validateInput(input);
       const s = campaign(world);
+      if (valid.battleOptions) {
+        world.setResource(Intent, {});
+        s.battleOptions = valid.battleOptions;
+        return;
+      }
+      if (valid.battle) {
+        world.setResource(Intent, {});
+        if (s.battle) commandBattle(s.battle.state, valid.battle);
+        return;
+      }
       if (valid.narrative) {
         if (!s.narrative) throw new Error('Narrative commands are not supported by legacy campaigns');
         world.setResource(Intent, {});
+        // Journal tracking and closing stay available in a battle; anything else waits for the battle to end.
+        if (s.battle && valid.narrative.type !== 'track' && valid.narrative.type !== 'close') {
+          s.narrative.notice = 'danger';
+          return;
+        }
         applyNarrative(s, blueprint, actors(world), valid.narrative);
         if (s.faction === 'villain' && s.military?.directive) {
           for (const ally of actors(world).filter(a => a.siteId === 'home' && a.allegiance === 'friendly')) {
@@ -136,7 +163,14 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
         return;
       }
       world.setResource(Intent, valid);
+      const before = s.battle;
       simulation.step();
+      if (!s.battle) checkpoint = null;
+      else if (s.battle !== before) {
+        // A battle began this tick (perhaps as another was won): its starting world is the save until it ends.
+        world.setResource(Intent, {});
+        checkpoint = world.snapshot();
+      }
     },
     snapshot(): GameSnapshot {
       const s = campaign(world);
@@ -162,10 +196,11 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
         seed: s.seed, runId: s.runId, faction: s.faction, world: blueprint,
         player: s.player, actors: visibleActors, ...(monsters ? { monsters } : {}), convoy: s.convoy, outposts: s.outposts,
         pickups: s.pickups, projectiles, effects: s.effects, events: s.events,
-        objective: objective(s), fortress: s.fortress, interaction: interaction(s, blueprint, actors(world)),
+        objective: objective(s), fortress: s.fortress, interaction: s.battle ? null : interaction(s, blueprint, actors(world)),
         shop: shopItems(s, blueprint), rewards: s.rewards,
         ...(s.narrative ? { narrative: narrativeSnapshot(s, blueprint, actors(world)) } : {}),
         ...(s.military ? { campaign: factionCampaignSnapshot(s) } : {}),
+        ...(s.battle ? { battle: battleView(s, combatants) } : {}),
       };
       if (!sharedWorld) return structuredClone(view);
       const { world: _world, ...rest } = view;
@@ -175,7 +210,7 @@ function session(world: World, blueprint: WorldBlueprint): GameSession {
       const s = campaign(world);
       return {
         namespace: 'korovany2:campaign', version: blueprint.version, seed: s.seed, faction: s.faction,
-        runId: s.runId, worldId: blueprint.id, engine: world.snapshot(),
+        runId: s.runId, worldId: blueprint.id, engine: checkpoint ? structuredClone(checkpoint) : world.snapshot(),
       };
     },
   };

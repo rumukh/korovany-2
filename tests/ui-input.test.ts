@@ -236,7 +236,7 @@ describe("browser input tick boundary", () => {
   it("merges controller and keyboard levels without losing another source's held attack", () => {
     const controller: ControllerGameplay = {
       active: true, move: { x: 0.5, z: 0 }, aim: { x: 1, z: 0 },
-      attack: true, interact: false, sprint: false, dodge: false, ability: false, convoy: false, talk: false,
+      attack: true, interact: false, sprint: false, dodge: false, ability: false, convoy: false, talk: false, parry: false,
     };
     windowTarget.dispatchEvent(event("keydown", { code: "Space", repeat: false }));
     windowTarget.dispatchEvent(event("keydown", { code: "KeyW", repeat: false }));

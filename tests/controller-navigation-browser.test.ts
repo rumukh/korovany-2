@@ -441,9 +441,9 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("controller-owned DOM navig
     await run("window.ui.feedback({audioLocked:true});");
     expect(await run("return document.querySelector('.controller-status').textContent;")).toContain("настоящий щелчок");
     await run("window.ui.show(null);");
-    expect(await run("return [...document.querySelectorAll('.action-slot kbd')].map(node => node.textContent);")).toEqual(["RT", "B", "Y"]);
+    expect(await run("return [...document.querySelectorAll('.action-slot kbd')].map(node => node.textContent);")).toEqual(["RT", "B"]);
     await run("window.ui.feedback({active:false});");
-    expect(await run("return [...document.querySelectorAll('.action-slot kbd')].map(node => node.textContent);")).toEqual(["Пробел", "Q", "F"]);
+    expect(await run("return [...document.querySelectorAll('.action-slot kbd')].map(node => node.textContent);")).toEqual(["Пробел", "Q"]);
   });
 
   it("stacks controller notices below the HUD controls without covering HUD elements", async () => {

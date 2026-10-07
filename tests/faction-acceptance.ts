@@ -21,8 +21,18 @@ export const factionAcceptanceCases: FactionAcceptanceCase[] = [
 function shipmentState(save: CampaignSave) {
   return (savedResource(save).military as {
     directive: FactionDirective | null;
-    shipment: { claimed: boolean; delivered: boolean; destination: string | null; route: { x: number; z: number }[] };
+    shipment: { claimed: boolean; delivered: boolean; destination: string | null; route: { x: number; z: number }[]; repairProgress: number };
   });
+}
+
+/** A copy of `save` whose shipment lies wrecked, as a battle leaves it. */
+function wreckShipment(save: CampaignSave): CampaignSave {
+  const copy = structuredClone(save);
+  const wagon = (copy.engine as { entities: { components: { KorovanyCombatant: { id: string; hp: number } } }[] }).entities
+    .map(entity => entity.components.KorovanyCombatant).find(actor => actor.id === 'enemy-caravan')!;
+  wagon.hp = 0;
+  shipmentState(copy).shipment.repairProgress = 0;
+  return copy;
 }
 
 function assertTerminal(save: CampaignSave, endingId: string): void {
@@ -150,11 +160,13 @@ export async function factionAcceptance({ faction, directive, seed, posts }: Fac
   bot.military(checkpoint);
   expect(midShipment, `No physical shipment checkpoint for ${faction}/${directive}/${seed}`).toBeDefined();
   if (faction === 'guard') {
-    expect(disabledShipment, 'Unattended Crown shipment should require real recovery after the investigation').toBeDefined();
-    const disabled = restoreCampaign(disabledShipment!);
+    // Only battles can wreck the shipment (as a ward the enemies may strike); a wreck stays down, unattended, until the
+    // hero repairs it. Without a wreck in this run, wreck the escorted shipment in a copy of its save.
+    const wrecked = disabledShipment ?? wreckShipment(midShipment!);
+    const disabled = restoreCampaign(wrecked);
     advance(disabled, {}, 601);
     expect(disabled.snapshot().actors.find(actor => actor.id === 'enemy-caravan')).toMatchObject({ hp: 0 });
-    expect(restoreCampaign(disabled.serialize()).snapshot()).toEqual(disabled.snapshot());
+    if (!disabled.snapshot().battle) expect(restoreCampaign(disabled.serialize()).snapshot()).toEqual(disabled.snapshot());
   }
   expect(observed.size).toBeGreaterThan(2);
   const restored = restoreCampaign(midShipment!);

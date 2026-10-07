@@ -20,8 +20,8 @@ const nodeSource = { load: (id: ModelId) => parseGlbWithoutTextures(glb(id)) };
 const NEW_TROOPS = ['char-archer', 'char-captain', 'char-boss-raut', 'char-boss-marshal'] as const satisfies readonly TroopModelId[];
 
 /**
- * Simulation contract of each actor kind (src/game/rules.ts and validation.ts): windup and recovery seconds, world speed.
- * The telegraphed clips last exactly as long as the states the game scrubs them by.
+ * Authored clip lengths of each actor kind (the former field windup and recovery seconds; battle poses scrub each clip
+ * over the pose's own duration) and world speed (src/game/rules.ts and validation.ts).
  */
 const SIMULATION: Record<(typeof NEW_TROOPS)[number], { windup: number; recovery: number; speed: number; body: number }> = {
   'char-archer': { windup: 0.65, recovery: 0.65, speed: 3, body: 12_000 },

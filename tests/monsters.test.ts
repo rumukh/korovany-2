@@ -4,6 +4,7 @@ import { MONSTERS, MONSTER_RULES } from '../src/game/monsters';
 import type { FactionId, GameInput, GameSession, GameSnapshot, MonsterSnapshot, Vec2, WorldBlueprint } from '../src/game/types';
 import { distance, isWalkable, lakeClearance, obstacleClearance, projectSegment } from '../src/game/world';
 import { CHAPEL_SHRINES, LAIR_RULES, LAIRS } from '../src/game/world-v3';
+import { battleInput, playBattle } from './driver';
 
 // W4a: grave wolves. Lairs are part of a version 3 world; packs appear, hunt the hero and are saved as combatants.
 type Save = ReturnType<GameSession['serialize']> & { engine: { entities: { components: { KorovanyCombatant: Record<string, unknown> } }[];
@@ -151,34 +152,39 @@ describe('W4a grave wolves', () => {
     for (const wolf of pack(session.snapshot(), lair.id)) expect(near(wolf, lair)).toBeLessThanOrEqual(MONSTER_RULES.roam + 0.5);
   });
 
-  test('the pack hunts the hero together, bites only after a telegraphed windup and gives up beyond its leash', async () => {
+  test('the pack hunts the hero together, its contact opens a battle against the whole pack, and it gives up beyond its leash', async () => {
     const { session: start, world, lair } = staged('guard', 'wolves-b');
+    const hp = start.snapshot().player.hp;
     let session = placed(start, spot(world, lair, 12));
-    let windup = false, bitten = false;
-    for (let tick = 0; tick < 60 * 4 && !bitten; tick++) {
-      const before = session.snapshot();
-      if (pack(before, lair.id).some(m => m.state === 'windup')) windup = true;
-      session.step({});
-      if (session.snapshot().player.hp < before.player.hp) {
-        bitten = true;
-        expect(windup, 'a bite follows a windup').toBe(true);
-      }
-    }
-    expect(bitten).toBe(true);
+    // Noticed, the whole pack hunts at once (it cannot reach the hero yet).
+    await run(session, 15);
     expect(pack(session.snapshot(), lair.id).every(m => m.target === 'player')).toBe(true);
-    session = placed(session, spot(world, lair, MONSTER_RULES.leash + 15));
-    await run(session, 60 * 8);
-    for (const wolf of pack(session.snapshot(), lair.id)) {
+    expect(session.snapshot().battle).toBeUndefined();
+    // Beyond its leash the pack gives up and goes home.
+    const fled = placed(session, spot(world, lair, MONSTER_RULES.leash + 15));
+    await run(fled, 60 * 8);
+    for (const wolf of pack(fled.snapshot(), lair.id)) {
       expect(wolf.target).toBeNull();
       expect(near(wolf, lair)).toBeLessThanOrEqual(MONSTER_RULES.roam + 0.5);
     }
+    // A hero who stands is reached: nobody bites in the field, and contact opens a battle against the whole pack.
+    await until(session, 60 * 10, s => s.battle !== undefined);
+    const snapshot = session.snapshot(), battle = snapshot.battle!;
+    expect(snapshot.player.hp).toBe(hp);
+    expect(battle.opening).not.toBe('first-strike');
+    expect(battle.enemies.map(e => e.id).sort()).toEqual(pack(snapshot, lair.id).map(m => m.id).sort());
+    expect(battle.enemies.every(e => e.kind === 'wolf' && e.hp === e.maxHp)).toBe(true);
+    for (const e of battle.enemies) expect(battle.names[e.id]!.en).toMatch(/^Grave wolf( \d)?$/);
+    // While it runs, the battle's save is its start.
+    expect(restoreCampaign(save(session)).snapshot().battle!.tick).toBe(0);
   });
 
   test('killing a pack pays coins, never counts as the hero\'s kills and quiets its lair for 90-180 s', async () => {
     const { session: start, world, lair } = staged('villain', 'wolves-a');
     const session = placed(start, spot(world, lair, 10));
     const wolves = pack(session.snapshot(), lair.id).length;
-    await until(session, 60 * 20, s => !pack(s, lair.id).some(m => m.hp > 0), hunter);
+    await until(session, 60 * 20, s => s.battle !== undefined, hunter);
+    playBattle(session);
     const snapshot = session.snapshot();
     expect(snapshot.phase).toBe('playing');
     expect(pack(snapshot, lair.id).every(m => m.hp === 0 && m.state === 'dead')).toBe(true);
@@ -232,10 +238,11 @@ describe('W4a grave wolves', () => {
     for (const [faction, seed] of [['guard', 'wolves-a'], ['elf', 'wolves-b'], ['villain', 0]] as const) {
       const { session: start, world, lair } = staged(faction, String(seed));
       let session = placed(start, spot(world, lair, 20));
-      // A seeded random walk: runs at, round and away from the den, sprinting, dodging and attacking at random.
+      // A seeded random walk: runs at, round and away from the den, sprinting, dodging and attacking at random; battles
+      // are fought with perfect reactions.
       let state = 7919;
       const random = (): number => { state = (state * 48271) % 2147483647; return state / 2147483647; };
-      let heading = random() * Math.PI * 2;
+      let heading = random() * Math.PI * 2, battleStart: string | null = null, battles = 0;
       for (let tick = 0; tick < 60 * 50; tick++) {
         if (tick % 60 === 59) await breathe();
         if (tick % 45 === 0) heading += (random() - 0.5) * 2.4;
@@ -243,50 +250,73 @@ describe('W4a grave wolves', () => {
         if (snapshot.phase !== 'playing') break;
         // Pulled back towards the den when it strays beyond 70 m.
         if (near(snapshot.player, lair) > 70) heading = Math.atan2(lair.x - snapshot.player.x, lair.z - snapshot.player.z);
-        const input: GameInput = { move: { x: Math.sin(heading), z: Math.cos(heading) }, sprint: random() < 0.3,
-          attack: random() < 0.5, dodge: random() < 0.02 };
+        const input: GameInput = snapshot.battle ? battleInput(snapshot.battle) : { move: { x: Math.sin(heading), z: Math.cos(heading) },
+          sprint: random() < 0.3, attack: random() < 0.5, dodge: random() < 0.02 };
         const prey = (snapshot.monsters ?? []).find(m => m.hp > 0 && near(m, snapshot.player) < 6);
-        if (prey) input.aim = { x: prey.x - snapshot.player.x, z: prey.z - snapshot.player.z };
+        if (prey && !snapshot.battle) input.aim = { x: prey.x - snapshot.player.x, z: prey.z - snapshot.player.z };
         session.step(input);
+        const after = session.snapshot();
+        if (after.battle && !snapshot.battle) { battleStart = JSON.stringify(after); battles++; }
         if (tick % 120 === 119) {
           const resumed = restoreCampaign(JSON.parse(JSON.stringify(session.serialize())));
-          expect(JSON.stringify(resumed.snapshot()), `${faction} tick ${tick}`).toBe(JSON.stringify(session.snapshot()));
-          session = resumed;
+          // A battle resumes from its start; anything else resumes exactly where it was.
+          if (after.battle) expect(JSON.stringify(resumed.snapshot()), `${faction} tick ${tick}`).toBe(battleStart);
+          else {
+            expect(JSON.stringify(resumed.snapshot()), `${faction} tick ${tick}`).toBe(JSON.stringify(after));
+            session = resumed;
+          }
         }
       }
       expect(session.snapshot().monsters!.length, faction).toBeGreaterThan(0);
+      expect(battles, faction).toBeGreaterThan(0);
     }
   });
 
-  test('saves restore a hunt exactly, and identical runs stay identical', async () => {
+  test('saves restore a hunt exactly, a battle restarts from its start, and identical runs stay identical', async () => {
     const { session: start, world, lair } = staged('elf', 'wolves-b');
+    const policy = (s: GameSnapshot): GameInput => s.battle ? battleInput(s.battle) : hunter(s);
     const a = placed(start, spot(world, lair, 14));
     const b = placed(start, spot(world, lair, 14));
-    await run(a, 90, hunter);
-    await run(b, 90, hunter);
+    await run(a, 90, policy);
+    await run(b, 90, policy);
     expect(JSON.stringify(b.snapshot())).toBe(JSON.stringify(a.snapshot()));
+    const midway = JSON.parse(JSON.stringify(a.serialize()));
+    const one = restoreCampaign(midway), two = restoreCampaign(midway);
+    if (a.snapshot().battle) expect(one.snapshot().battle!.tick).toBe(0);
+    else expect(JSON.stringify(one.snapshot())).toBe(JSON.stringify(a.snapshot()));
+    await run(one, 240, policy);
+    await run(two, 240, policy);
+    expect(JSON.stringify(two.snapshot())).toBe(JSON.stringify(one.snapshot()));
+    await until(a, 60 * 60, s => !s.battle && !pack(s, lair.id).some(m => m.hp > 0), policy);
+    expect(pack(a.snapshot(), lair.id).every(m => m.hp === 0)).toBe(true);
     const resumed = restoreCampaign(JSON.parse(JSON.stringify(a.serialize())));
     expect(JSON.stringify(resumed.snapshot())).toBe(JSON.stringify(a.snapshot()));
-    await run(a, 240, hunter);
-    await run(resumed, 240, hunter);
+    await run(a, 240, policy);
+    await run(resumed, 240, policy);
     expect(JSON.stringify(resumed.snapshot())).toBe(JSON.stringify(a.snapshot()));
   });
 
-  test('every grave wolf faction hero wins a stand-up fight against a pack, losing a real share of health', async () => {
+  test('every faction hero beats a pack with perfect reactions; a hero who never reacts is worn down', async () => {
     for (const faction of ['elf', 'guard', 'villain'] as const) {
       for (const seed of ['wolves-a', 'wolves-b']) {
         await breathe();
-        const { session: start, world, lair } = staged(faction, seed);
-        const session = placed(start, spot(world, lair, 12));
-        const maxHp = session.snapshot().player.maxHp;
-        await until(session, 60 * 30, s => !pack(s, lair.id).some(m => m.hp > 0), hunter);
-        const snapshot = session.snapshot();
         const label = `${faction}/${seed}`;
-        expect(snapshot.phase, label).toBe('playing');
-        expect(pack(snapshot, lair.id).every(m => m.hp === 0), label).toBe(true);
-        const lost = (maxHp - snapshot.player.hp) / maxHp;
-        expect(lost, label).toBeGreaterThan(0.05);
-        expect(lost, label).toBeLessThan(0.6);
+        const { session: start, world, lair } = staged(faction, seed);
+        const at = spot(world, lair, 12);
+        const maxHp = start.snapshot().player.maxHp;
+        for (const style of ['perfect', 'passive'] as const) {
+          const session = placed(start, at);
+          await until(session, 60 * 30, s => s.battle !== undefined);
+          const snapshot = playBattle(session, style);
+          expect(snapshot.phase, `${label} ${style}`).toBe('playing');
+          expect(pack(snapshot, lair.id).every(m => m.hp === 0), `${label} ${style}`).toBe(true);
+          const lost = (maxHp - snapshot.player.hp) / maxHp;
+          if (style === 'perfect') expect(lost, label).toBe(0);
+          else {
+            expect(lost, label).toBeGreaterThan(0.1);
+            expect(lost, label).toBeLessThan(0.9);
+          }
+        }
       }
     }
   });

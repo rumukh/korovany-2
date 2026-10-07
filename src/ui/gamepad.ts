@@ -39,6 +39,8 @@ export interface ControllerGameplay {
   ability: boolean;
   convoy: boolean;
   talk: boolean;
+  /** A battle parry this tick: A or RT pressed. */
+  parry: boolean;
 }
 
 export interface ControllerFrame {
@@ -127,6 +129,7 @@ export class ControllerInput {
       interact: frame.actions.Interact === true,
       dodge: frame.pressed.includes("Dodge"), ability: frame.pressed.includes("Ability"),
       convoy: frame.pressed.includes("Convoy"), talk: frame.pressed.includes("Talk"),
+      parry: frame.pressed.includes("Interact") || frame.pressed.includes("Attack"),
     };
   }
 

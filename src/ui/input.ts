@@ -17,9 +17,11 @@ export interface InputSample {
   interact: boolean;
   convoy: boolean;
   talk: boolean;
+  /** A battle parry this tick: E, Space or a click pressed (in battle mode), or A / RT on a controller. */
+  parry: boolean;
 }
 
-type Edge = "dodge" | "ability" | "interact" | "convoy" | "attack" | "talk";
+type Edge = "dodge" | "ability" | "interact" | "convoy" | "attack" | "talk" | "parry";
 const bindings: Record<string, Edge> = {
   KeyQ: "dodge",
   KeyF: "ability",
@@ -53,6 +55,8 @@ export class GameInput {
   private enabled = false;
   private pointerDown = false;
   private escapeDown = false;
+  /** In a battle the cursor is free for the battle panel: clicks on the world parry (left) or dodge (right). */
+  private battle = false;
 
   constructor(
     private readonly surface: HTMLElement,
@@ -103,7 +107,15 @@ export class GameInput {
       if (this.enabled && gameKeys.has(event.code)) event.preventDefault();
     }, { signal });
     surface.addEventListener("pointerdown", (event) => {
-      if (!this.enabled || event.button !== 0 || editable(event.target)) return;
+      if (!this.enabled || editable(event.target)) return;
+      if (this.battle) {
+        if (event.button !== 0 && event.button !== 2) return;
+        event.preventDefault();
+        surface.focus({ preventScroll: true });
+        this.edges.add(event.button === 0 ? "parry" : "dodge");
+        return;
+      }
+      if (event.button !== 0) return;
       event.preventDefault();
       surface.focus({ preventScroll: true });
       if (!this.mouse.active) {
@@ -115,7 +127,7 @@ export class GameInput {
     }, { signal });
     window.addEventListener("click", (event) => {
       // A real menu click may have just started/resumed play; synthetic controller clicks must not capture.
-      if (this.enabled && event.isTrusted && event.detail > 0 && event.target !== surface) this.mouse.request();
+      if (this.enabled && !this.battle && event.isTrusted && event.detail > 0 && event.target !== surface) this.mouse.request();
     }, { signal });
     window.addEventListener("pointerup", (event) => {
       if (event.button === 0) this.pointerDown = false;
@@ -147,6 +159,16 @@ export class GameInput {
 
   get mouseLocked(): boolean { return this.mouse.locked; }
 
+  /** Enters or leaves a battle: the mouse is released for the battle panel, and the field's held actions stop. */
+  setBattle(battle: boolean): void {
+    if (this.battle === battle) return;
+    this.battle = battle;
+    this.pointerDown = false;
+    this.edges.delete("attack");
+    if (battle) this.mouse.unlock();
+    else if (this.enabled) this.surface.focus({ preventScroll: true });
+  }
+
   useGamepad(): void {
     this.pointerDown = false;
     this.edges.delete("attack");
@@ -172,6 +194,7 @@ export class GameInput {
       interact: this.keys.has("KeyE") || this.edges.has("interact") || controller?.interact === true,
       convoy: this.edges.has("convoy") || controller?.convoy === true,
       talk: this.edges.has("talk") || controller?.talk === true,
+      parry: this.edges.has("parry") || this.edges.has("interact") || this.edges.has("attack") || controller?.parry === true,
     };
     this.edges.clear();
     return sample;

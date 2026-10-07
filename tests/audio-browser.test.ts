@@ -147,9 +147,9 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("actual browser audio trans
     await select('[data-action="open-settings"]');
     await until(cdp, "window.korovany.inspect().audio.streams.some(s => s.id === 'title' && !s.paused && s.time > 0.1)", Boolean, 20_000);
     await language("en");
-    expect(await evaluate(cdp, "document.querySelectorAll('input[type=range]').length")).toBe(5);
+    expect(await evaluate(cdp, "document.querySelectorAll('input[type=range][data-audio-channel]').length")).toBe(5);
     await evaluate(cdp, `(() => {
-      for (const input of document.querySelectorAll("input[type=range]")) {
+      for (const input of document.querySelectorAll("input[type=range][data-audio-channel]")) {
         input.value = "0.65";
         input.dispatchEvent(new Event("input", {bubbles:true}));
       }

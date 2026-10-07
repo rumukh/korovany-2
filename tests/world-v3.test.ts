@@ -190,23 +190,24 @@ describe('version 3 campaigns', () => {
 });
 
 describe('v1 and v2 stay byte-identical', () => {
-  // Recorded at main 9d0fea7 with the Phase 0 baseline script (identical to the 23bd6c0 baseline).
+  // World IDs recorded at main 9d0fea7 with the Phase 0 baseline script (identical to the 23bd6c0 baseline). The save and
+  // snapshot hashes were re-recorded when turn-based battles replaced field combat, which changes the scripted run by design.
   const baseline: Record<string, string> = {
     'world:v1:0': 'k2-v1-1a4066b7', 'world:v2:0': 'k2-v2-3bc2f87b', 'world:v1:1': 'k2-v1-59efc101', 'world:v2:1': 'k2-v2-3c7959c4',
     'world:v1:42': 'k2-v1-1b76bcfc', 'world:v2:42': 'k2-v2-b089ed4d', 'world:v1:the-unwritten-road': 'k2-v1-c47f2d4c',
     'world:v2:the-unwritten-road': 'k2-v2-4527b1b', 'world:v1:ROAD-II': 'k2-v1-523c4622', 'world:v2:ROAD-II': 'k2-v2-be829e75',
-    'save:v1:elf': 'a1d11592b415a043ba150b796dceb2351616bcd3cdb6ca21c0f1cfa17b11ae62',
-    'snapshot:v1:elf': '6cbaa7a298aaa4e879b2889f635fa2affa1645c1d831e96e0f520dbd1b9e990e',
-    'save:v1:guard': 'facc2a245843020ad4add3c521711dfcee4032dd0babe38ae607318657e37196',
-    'snapshot:v1:guard': '8f83b7fa9418dee972294e78f3ac55da8496f2eecd2269a2531293e3f65be056',
-    'save:v1:villain': 'ed5b0e56189fd89fd105adeaf55494b335789e3e386017781b6b4ff0f001e5aa',
-    'snapshot:v1:villain': 'e20a9eb3dc1f0a6ac7332449ef5ae177b1ba09ee3cc4470cf2ab0d0d99698ace',
-    'save:v2:elf': '765ebb807b8dd602a48bc60032189e7aa4b6eaba4310f3e12d19cb47669df87b',
-    'snapshot:v2:elf': '241bd290cb80a71c4685f6975b89e56af51a4d5c3ca535a23655c84729a2163d',
-    'save:v2:guard': 'b9ff0e6ffeeff5644a170924306fe90dbccf62029f11c8147f03fa523310b832',
-    'snapshot:v2:guard': 'd47f1b4132201f95f6e0f99acc9541803d6a56b4bd0577fea2666ea49c4fc7d9',
-    'save:v2:villain': '737ee38a5a34bcb7a1c57d8dd40522c3efd56db1db07cabf42342745320c345e',
-    'snapshot:v2:villain': 'fd2840d7733f898b1fa90f22bf1a142cbe345f99d69a2a6bb38ddb25dca5cb8f',
+    'save:v1:elf': '598a2a0db5c3f1aadb46b616a1c52c3738139575ff91fad9d2288b0f48d08120',
+    'snapshot:v1:elf': 'c34123589018d02dd18f12e642e23e0c4974ec89b500eb0734f6932d5a883c5b',
+    'save:v1:guard': '7dd732268215870afdb4629523b86d85e068570d78c51e30a903c1d0dec4a6ec',
+    'snapshot:v1:guard': '2b7ac910f4d7b43b905a4c6d9dedcde0f268abbe3466abb0d2157e1750b520f4',
+    'save:v1:villain': '95ff26912e7e6713690cb5704d49d185dc65aca3c1d126bd53d4b3e04300b3b8',
+    'snapshot:v1:villain': '65eeeab7bbe3d5c9c9256ff1a1740d6139c519043cb0dc8080d5e08c662af9f8',
+    'save:v2:elf': 'c302038d8786636bf25b535b3f1e1324bbea0142c1e65e6bda0aa06f6e8a47ed',
+    'snapshot:v2:elf': '5dca1bd1f5519e196fc6d5a084f0e53e814adeddf5866bf76490665284dfdef4',
+    'save:v2:guard': '90a8bab931d73ef9ce5b9cc86bbf5283be8d1b674a03c483d1444926f815fe12',
+    'snapshot:v2:guard': '6c0e9e536dd56b62bedfc1495f400d23690c30ae4b68a6215104a5909d4b91de',
+    'save:v2:villain': '5189dc1e1c1b80042de15001ce5e0134926b26447fa380ac058bf90a5dd76ba0',
+    'snapshot:v2:villain': '6295b308447bce22744be581b4dd80655f45258b86c8d185e08d15f17e5028e5',
   };
   const sha = (value: unknown): string => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 

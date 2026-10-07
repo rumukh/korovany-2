@@ -1,6 +1,7 @@
 import { defaultMix, parseMix, type AudioMix } from "../audio/mix";
 
 export type Language = "ru" | "en";
+export type BattleDifficultySetting = "story" | "standard" | "expert";
 export interface Settings {
   language: Language;
   quality: "low" | "high";
@@ -8,6 +9,10 @@ export interface Settings {
   invertControllerCameraX: boolean;
   muted: boolean;
   audio: AudioMix;
+  /** Battle timing windows and damage, applied to battles that begin afterwards. */
+  battleDifficulty: BattleDifficultySetting;
+  /** Reaction latency compensation for battles, in 60 Hz ticks (0-12). */
+  battleLatency: number;
 }
 
 export type StorageIssue = "unavailable" | "corrupt" | "write" | "conflict";
@@ -32,6 +37,8 @@ export function defaultSettings(): Settings {
     invertControllerCameraX: false,
     muted: false,
     audio: defaultMix(),
+    battleDifficulty: "standard",
+    battleLatency: 0,
   };
 }
 
@@ -42,6 +49,11 @@ export function parseSettings(value: unknown): Settings | null {
     (fields.quality !== "low" && fields.quality !== "high") ||
     typeof fields.reducedMotion !== "boolean" || typeof fields.muted !== "boolean" ||
     (fields.invertControllerCameraX !== undefined && typeof fields.invertControllerCameraX !== "boolean")) return null;
+  // Settings saved before battles existed have no battle fields: they get the defaults.
+  const difficulty = fields.battleDifficulty === undefined ? "standard" : fields.battleDifficulty;
+  const latency = fields.battleLatency === undefined ? 0 : fields.battleLatency;
+  if ((difficulty !== "story" && difficulty !== "standard" && difficulty !== "expert") ||
+    typeof latency !== "number" || !Number.isInteger(latency) || latency < 0 || latency > 12) return null;
   const audio = fields.audio === undefined ? defaultMix() : parseMix(fields.audio);
   if (!audio) return null;
   return {
@@ -51,6 +63,8 @@ export function parseSettings(value: unknown): Settings | null {
     invertControllerCameraX: fields.invertControllerCameraX ?? false,
     muted: fields.muted,
     audio,
+    battleDifficulty: difficulty,
+    battleLatency: latency,
   };
 }
 

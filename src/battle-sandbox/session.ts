@@ -182,6 +182,10 @@ export function describeLog(s: BattleSnapshot, entry: BattleLogEntry): string | 
     case 'approach': return `${actor} closes in.`;
     case 'retreat': return `${actor} steps back.`;
     case 'rally': return `${actor} rallies the garrison: their next two attacks hit harder.`;
+    case 'protect': return entry.target === 'hero' ? `${actor} covers the wagons.` : `${actor} takes a blow meant for the ${entry.target}.`;
+    case 'support': return `${actor} strikes at ${target}.`;
+    case 'join': return `${actor} joins the battle.`;
+    case 'ward-down': return `The ${entry.target} is wrecked.`;
     case 'victory': return 'Victory.';
     case 'defeat': return 'Defeat.';
     case 'skill':

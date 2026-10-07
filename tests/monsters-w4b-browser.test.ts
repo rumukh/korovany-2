@@ -8,15 +8,16 @@ import {
 import { closeTestBrowser, launchTestBrowser } from './browser-cleanup';
 
 const WIDTH = 1280, HEIGHT = 720;
-/** Simulation ticks (1/60 s) between drawn frames of a hunt: 7.5 frames a second, at least three in every windup. */
+/** Simulation ticks (1/60 s) between drawn frames of a hunt: 7.5 frames a second, at least one in every battle windup. */
 const TICKS_PER_RENDER = 8;
 
 // W4b: a real guard campaign in a version 3 world, staged by save editing (only the hero moves): a barrow-ghoul pack and a
-// bog troll appear at their haunts, hunt the hero and die under the hero's blows, every few ticks drawn by the real view.
+// bog troll appear at their haunts, run at the hero and die in the battle their contact opens, every few ticks drawn by
+// the real view.
 const preview = `<!doctype html><html><head><link rel="icon" href="data:,"><style>
 html,body {margin:0;overflow:hidden;background:#000} canvas {display:block;width:${WIDTH}px;height:${HEIGHT}px}
 </style></head><body><canvas id="view" width="${WIDTH}" height="${HEIGHT}"></canvas><script type="module">
-import { createCampaign, restoreCampaign } from '/src/game/index.ts';
+import { createCampaign, restoreCampaign, suggestCommand } from '/src/game/index.ts';
 import { isWalkable, monsterLairs } from '/src/game/world.ts';
 import { parseBeasts } from '/src/audio/manifest.ts';
 import { createGameView, createRenderer, Presentation } from '/src/view/index.ts';
@@ -28,7 +29,8 @@ let presentation = null;
 const update = Presentation.prototype.update;
 Presentation.prototype.update = function (...args) { presentation = this; return update.apply(this, args); };
 try {
-  let session = createCampaign({ seed: 'wolves-a', faction: 'guard', runId: 'beasts-browser', worldVersion: 3 });
+  // An honed blade keeps the battles (and the frames drawn of them) short.
+  let session = createCampaign({ seed: 'wolves-a', faction: 'guard', runId: 'beasts-browser', worldVersion: 3, upgrades: { damage: 1 } });
   const world = session.snapshot().world;
   const near = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
   const spot = (centre, reach, apart = 0) => {
@@ -102,15 +104,18 @@ try {
         const clips = new Set(), maxHp = session.snapshot().player.maxHp;
         const result = { species, renders: 0, maxCalls: 0, maxTriangles: 0, maxBeasts: 0, mismatch: 0, seconds: 0 };
         const started = performance.now();
-        let hunting = false, lowest = maxHp;
-        for (let step = 0; step < 60 * 40; step += ${TICKS_PER_RENDER}) {
+        let lowest = maxHp;
+        // The hero waits for the beasts (they are seen running in), then fights the battle their contact opens: suggested
+        // commands, and a parry (a dodge for heavy blows) to the even-numbered blows of each move only, so it is wounded.
+        for (let step = 0; step < 60 * 120; step += ${TICKS_PER_RENDER}) {
           const snapshot = session.snapshot();
           if (pack(snapshot).length && pack(snapshot).every(m => m.hp <= 0)) break;
-          if (!hunting) hunting = pack(snapshot).some(m => m.state === 'windup');
           for (let i = 0; i < ${TICKS_PER_RENDER}; i++) {
-            const s = session.snapshot();
-            const prey = pack(s).filter(m => m.hp > 0).sort((a, b) => near(a, s.player) - near(b, s.player))[0];
-            session.step(hunting && prey ? { attack: true, aim: { x: prey.x - s.player.x, z: prey.z - s.player.z } } : {});
+            const battle = session.snapshot().battle;
+            if (battle?.phase === 'command') session.step({ battle: suggestCommand(battle) });
+            const hit = battle?.phase === 'action' ? battle.action?.hits.find(h => h.target === 'hero' && h.outcome === 'pending' &&
+              h.pressed === null && h.impact === battle.tick + 1 && h.index % 2 === 0) : undefined;
+            session.step(hit ? hit.heavy ? { dodge: true } : { parry: true } : {});
             lowest = Math.min(lowest, session.snapshot().player.hp);
           }
           counters.calls = 0;

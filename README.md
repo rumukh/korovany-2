@@ -289,9 +289,10 @@ river, places and story, and changes:
   or six dens per world, at least 100 m from any settlement, inn, chapel, home or
   military site and 22 m from the roads). A pack of three or four appears at its
   den while you are 90-160 m away and wanders round it. Come within 18 m and the
-  pack hunts you, and only you, not the convoy or a shipment: each wolf crouches
-  before it bites (its red ring shows its reach), and the pack gives up once you
-  are 35 m from its den. Wolves drop a few coins but never count as kills,
+  pack hunts you, and only you, not the convoy or a shipment: the wolf that
+  reaches you opens a battle against the whole pack (see **Battles**), and the
+  pack gives up once you are 35 m from its den. Wolves bite fast and often, but
+  each bite is light. They drop a few coins but never count as kills,
   levels or renown. A den whose pack was killed stays empty for 90-180 seconds,
   and packs far behind you vanish. Wolves near you block talking, inspecting and
   travel, like any enemy.
@@ -299,11 +300,11 @@ river, places and story, and changes:
   Raut's men dug up for bone ash haunt opened barrows on the Ash Steppe (three
   per world): an old long barrow, dug open on one flank, with a warded
   grave and headstones on the clearing's rim. They come three or four at a time,
-  each a head taller than a soldier, and rake with long claws after a short
-  windup. Bog trolls, huge wild beasts twice a soldier's height, keep alone to a
+  each a head taller than a soldier, and rake with strings of claw blows whose
+  last swipe comes late. Bog trolls, huge wild beasts twice a soldier's height, keep alone to a
   larder by a giant beast's skull in the Fens and on the Frostspine (usually
-  three per world). A troll's two-fisted slam comes after a long windup with a
-  wide red ring: step out of it. Both follow the wolves' rules (the same spawn
+  three per world). A troll's two-fisted slam comes after a long windup and is
+  heavy: no parry stops it, only a dodge. Both follow the wolves' rules (the same spawn
   distances, leash, quiet time; they drop more coins and never count as kills or
   renown), and both walk round the barrow, the skull and other big solids to
   reach you. These three are the only monsters: the Caller stays unseen and the
@@ -357,7 +358,7 @@ collected and transferred to your own convoy with **E**.
 
 Your own convoy accepts hold, follow, return-home and road-destination orders.
 The mountain ruler's soldiers follow those logistics orders along the roads
-and engage hostile forces; they are not merely decorative starting guards.
+and fight beside you in battles nearby; they are not merely decorative starting guards.
 Both carts use real roads and bridges. Hold **E** nearby to repair a damaged or
 disabled cart for free; a wreck does not permanently strand the campaign.
 Home and secured posts provide recovery and in-campaign upgrades.
@@ -372,6 +373,52 @@ and select a resolution to finish the run.
 The same seed reproduces the world, not a promise of identical outcomes under
 different player inputs. New campaigns can apply purchased permanent upgrades.
 Russian is the default language; English is available in the game.
+
+## Battles
+
+Nobody is wounded on the road. Every fight is a **turn-based battle with timed
+defence**, in the spirit of Clair Obscur: Expedition 33, played where it starts:
+
+- **Engagement.** A hostile that reaches you opens a battle; if your swing or
+  arrow lands on one first, you take the **first turn**. Caught facing away,
+  you are **ambushed**: the enemies move first and their melee fighters start
+  close. You can outrun foes that have noticed you, but not avoid a battle they
+  open. The whole group joins (a post's garrison, a raid escort, a pack, the
+  fortress), with other hostiles that are close and hunting you, up to five.
+- **Turns.** A timeline orders the hero, every enemy and your allies by speed.
+  On your turn time stops: choose **Attack** (builds action points, AP), a
+  faction **skill** (spends AP), a **tonic** (two per battle) or, with your
+  convoy or an escorted shipment within 16 m, **Cover the wagons** (enemies may
+  strike the wagons instead of you; while you cover them, those blows come at
+  you). Elves shoot (aimed shot, volley, falling back to push close enemies
+  away); guards bash and raise a bulwark that also repairs the wagons; the
+  mountain ruler cleaves and war-cries. Melee heroes must close on far enemies.
+- **Enemy turns play in real time.** As each blow lands, **parry** it (+1 AP;
+  parry a whole combo to counter) or **dodge** it (wider window; elves also gain
+  1 AP). Heavy blows can only be dodged. Reactions bind to the blow they
+  answer, so mashing fails. Blocked and countered hits fill an enemy's guard
+  break: a broken enemy loses its next turn and takes extra damage. A shrinking
+  ring over the battlefield meets its circle at the moment of impact.
+- **Allies.** Friendly troops within 22 m and your convoy's weapon (the elves'
+  arrow cart, the mountain army's siege cart) act on the timeline against the
+  weakest enemy. Enemies never target them, but a wrecked convoy's weapon
+  falls silent.
+- **The final battle.** The commander fights with two fortress guards; unless
+  you supplied the optional third post, a wave of reinforcements joins once the
+  commander is badly hurt.
+- **Outcome.** Victory leaves the bodies, loot and kills on the road; health
+  carries over, so rest at friendly holdings. Losing a battle ends the campaign.
+- **Settings.** **Battle difficulty** (Story: wider windows and much less
+  damage; Standard; Expert: tighter windows and more damage) and **reaction
+  latency compensation** (0-200 ms, for displays and controllers that report
+  presses late) apply from the next battle.
+- **Saving.** A battle is saved as it began: closing the game mid-battle and
+  continuing restarts that battle.
+
+The design, the timing windows, the content and the measured balance (bots
+with assumed human timing) are documented in `src/game/battle/README.md`. The
+development-only sandbox (`npm run dev`, then `/battle-sandbox.html`) plays the
+same engine on its own.
 
 ## The borderlands and their stories
 
@@ -453,11 +500,10 @@ unrestricted teleport out of combat.
 | --- | --- |
 | WASD | Move relative to the camera |
 | Mouse (captured) / Arrow keys (uncaptured) | Look and aim together / Aim |
-| Left mouse / Space | Attack |
+| Left mouse / Space | Strike (a strike that lands first opens a battle with the first turn) |
 | Mouse movement / Mouse wheel | Turn camera and character together / Zoom |
 | Shift | Sprint |
-| Q | Dodge |
-| F | Faction ability |
+| Q | Dash |
 | E (hold) | Contextual capture, transfer, repair, or rest |
 | T | Talk to a nearby resident / open an inspection reading panel |
 | J | Quest journal and tracking |
@@ -465,6 +511,15 @@ unrestricted teleport out of combat.
 | C | Cycle convoy orders |
 | M / Tab | Campaign map |
 | Escape | Pause / close overlay |
+
+In a battle the cursor is released for the battle panel:
+
+| Battle control | Action |
+| --- | --- |
+| 1-9 / click | Choose a command on your turn, then a target |
+| Escape | Back out of choosing a target (otherwise pause) |
+| E / Space / left click on the world | Parry the blow landing now |
+| Q / right click on the world | Dodge the blow landing now |
 
 Starting or resuming with a mouse click captures and hides the cursor. Mouse
 movement then turns the camera and character together without holding any button;
@@ -489,12 +544,14 @@ Non-standard layouts and blocked browser permissions are reported, not guessed.
 | Left stick | Camera-relative analog movement |
 | Right stick | Orbit camera; left looks left, right looks right |
 | LT + right stick | Aim independently; camera stays still |
-| RT | Attack |
+| RT | Strike (a strike that lands first opens a battle with the first turn) |
 | A (hold) / X | Contextual interaction / Talk or inspect |
-| B / Y | Dodge / Faction ability |
+| B | Dash |
 | LB (hold) / RB | Sprint / Cycle convoy orders |
 | Menu / View | Pause / Atlas |
 | D-pad up / Left or right | Journal / Camera zoom |
+| Battle: D-pad or left stick, A / B | Choose a command and target / Back |
+| Battle: A or RT / B | Parry / Dodge the blow landing now |
 
 Horizontal camera control follows the stick by default. Enable **Invert
 horizontal camera (controller)** in Settings to restore the opposite direction.

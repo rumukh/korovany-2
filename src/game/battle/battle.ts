@@ -1,36 +1,30 @@
-import { createPrng } from '@aegis/core';
+import { createPrng, prngFromState, type Prng } from '@aegis/core';
 import type { FactionId } from '../types';
-import { DIFFICULTY, ENCOUNTERS, ENEMY_KITS, HERO_KITS, HERO_TIMING, MOVE_TICKS, RULES, TIMING, type SkillSpec } from './content';
+import {
+  ALLY_KITS, DIFFICULTY, ENCOUNTERS, ENEMY_KITS, HERO_KITS, HERO_TIMING, MOVE_TICKS, RULES, TIMING, type HeroKit, type SkillSpec,
+} from './content';
 import type {
-  Band, Battle, BattleCommand, BattleCommandOption, BattleDifficulty, BattleInput, BattleLogEntry, BattleLogKind,
-  BattleNotice, BattleOpening, BattlePhase, BattleSetup, BattleSnapshot, EncounterId, EnemyKind, HitOutcome, Reaction, SkillId,
+  AllyKind, Band, Battle, BattleActionState, BattleCommand, BattleCommandOption, BattleDifficulty, BattleEnemySpec, BattleInput,
+  BattleLogKind, BattleNotice, BattleOpening, BattleSetup, BattleSnapshot, BattleState, EnemyKind, Reaction, SkillId, WardId,
 } from './types';
 
 const SKILL_IDS: readonly SkillId[] = ['aimed-shot', 'volley', 'fall-back', 'shield-bash', 'bulwark', 'cleave', 'warcry'];
 const OPENINGS: readonly BattleOpening[] = ['neutral', 'first-strike', 'ambushed'];
+const DIFFICULTIES: readonly BattleDifficulty[] = ['story', 'standard', 'expert'];
+const ENEMY_KINDS = Object.keys(ENEMY_KITS) as EnemyKind[];
+const ALLY_KINDS = Object.keys(ALLY_KITS) as AllyKind[];
+const WARD_IDS: readonly WardId[] = ['convoy', 'shipment'];
+const BANDS: readonly Band[] = ['close', 'far'];
 const LOG_LIMIT = 32;
 const ORDER_LENGTH = 7;
 /** Hits resolve this long after impact, so that late presses inside a window still count. */
 const SETTLE = Math.max(TIMING.dodge.late, TIMING.parry.late);
 
-interface Hero { hp: number; ap: number; tonics: number; bulwark: boolean; empowered: number; lockoutUntil: number; next: number }
-interface Enemy {
-  id: string; kind: EnemyKind; hp: number; maxHp: number; band: Band; breakMeter: number; broken: boolean; rallied: number;
-  next: number;
-}
-interface Hit {
-  index: number; impact: number; damage: number; heavy: boolean; outcome: HitOutcome; reaction: Reaction | null;
-  /** The tick of this blow's one bound attempt, after latency compensation. */
-  pressed: number | null;
-}
-/** Hero damage landing on enemies at tick `at`. */
-interface Strike { at: number; targets: string[]; multiplier: number; breakAdd: number; done: boolean }
-interface Action {
-  id: number; actor: string; move: string; target: string | null; start: number; end: number; hits: Hit[]; strikes: Strike[];
-  /** The villain's rage AP has been granted for this move. */
-  raged: boolean;
-}
-type ValidSetup = Required<BattleSetup>;
+type Hero = BattleState['hero'];
+type Enemy = BattleState['enemies'][number];
+type Ally = BattleState['allies'][number];
+type Hit = BattleActionState['hits'][number];
+type Strike = BattleActionState['strikes'][number];
 
 function record(value: unknown, label: string): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${label} must be an object`);
@@ -40,17 +34,82 @@ function onlyKeys(value: Record<string, unknown>, keys: readonly string[], label
   if (Object.keys(value).some(key => !keys.includes(key))) throw new Error(`Unknown ${label} field`);
 }
 const nonEmpty = (value: unknown): value is string => typeof value === 'string' && value.length > 0 && value.length <= 80;
+function positive(value: unknown, max: number, label: string): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0 || value > max) throw new Error(`Invalid ${label}`);
+  return value;
+}
+function list(value: unknown, max: number, label: string): unknown[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > max) throw new Error(`Invalid ${label}`);
+  return value;
+}
 
-function validateSetup(value: unknown): ValidSetup {
+interface Normalized {
+  rngSeed: string;
+  faction: FactionId;
+  difficulty: BattleDifficulty;
+  opening: BattleOpening;
+  latencyTicks: number;
+  enemies: { id: string; kind: EnemyKind; hp: number; band: Band | null }[];
+  allies: { id: string; kind: AllyKind }[];
+  wards: { id: WardId; hp: number; maxHp: number }[];
+  hero: { hp: number; maxHp: number; damage: number };
+}
+
+function enemySpecs(value: unknown, label: string, max: number): Normalized['enemies'] {
+  return list(value, max, label).map(raw => {
+    const spec = record(raw, label);
+    onlyKeys(spec, ['id', 'kind', 'hp', 'band'], label);
+    if (!nonEmpty(spec.id)) throw new Error(`Invalid ${label} ID`);
+    if (!ENEMY_KINDS.includes(spec.kind as EnemyKind)) throw new Error(`Unknown ${label} kind`);
+    const kind = spec.kind as EnemyKind;
+    if (spec.band !== undefined && !BANDS.includes(spec.band as Band)) throw new Error(`Invalid ${label} band`);
+    return { id: spec.id, kind, hp: spec.hp === undefined ? ENEMY_KITS[kind].maxHp : positive(spec.hp, ENEMY_KITS[kind].maxHp, `${label} HP`),
+      band: (spec.band as Band | undefined) ?? null };
+  });
+}
+
+function validateSetup(value: unknown): Normalized {
   const setup = record(value, 'Battle setup');
-  onlyKeys(setup, ['seed', 'faction', 'encounter', 'difficulty', 'opening', 'latencyTicks'], 'battle setup');
+  onlyKeys(setup, ['seed', 'faction', 'encounter', 'enemies', 'allies', 'wards', 'hero', 'difficulty', 'opening', 'latencyTicks'], 'battle setup');
   if (!nonEmpty(setup.seed) && !(typeof setup.seed === 'number' && Number.isSafeInteger(setup.seed))) {
     throw new Error('Battle seed must be a short string or a safe integer');
   }
   if (setup.faction !== 'elf' && setup.faction !== 'guard' && setup.faction !== 'villain') throw new Error('Unknown faction');
-  if (typeof setup.encounter !== 'string' || !Object.hasOwn(ENCOUNTERS, setup.encounter)) throw new Error('Unknown encounter');
+  if ((setup.encounter === undefined) === (setup.enemies === undefined)) throw new Error('A battle needs exactly one of an encounter or enemies');
+  if (setup.encounter !== undefined && (typeof setup.encounter !== 'string' || !Object.hasOwn(ENCOUNTERS, setup.encounter))) {
+    throw new Error('Unknown encounter');
+  }
+  const encounter = setup.encounter as keyof typeof ENCOUNTERS | undefined;
+  const enemies = encounter ? ENCOUNTERS[encounter].map(({ id, kind }) => ({ id, kind, hp: ENEMY_KITS[kind].maxHp, band: null }))
+    : enemySpecs(setup.enemies, 'enemy', RULES.maxEnemies);
+  if (!enemies.length) throw new Error('A battle needs at least one enemy');
+  const allies = list(setup.allies, RULES.maxAllies, 'allies').map(raw => {
+    const spec = record(raw, 'ally');
+    onlyKeys(spec, ['id', 'kind'], 'ally');
+    if (!nonEmpty(spec.id)) throw new Error('Invalid ally ID');
+    if (!ALLY_KINDS.includes(spec.kind as AllyKind)) throw new Error('Unknown ally kind');
+    return { id: spec.id, kind: spec.kind as AllyKind };
+  });
+  const wards = list(setup.wards, WARD_IDS.length, 'wards').map(raw => {
+    const spec = record(raw, 'ward');
+    onlyKeys(spec, ['id', 'hp', 'maxHp'], 'ward');
+    if (!WARD_IDS.includes(spec.id as WardId)) throw new Error('Unknown ward');
+    const maxHp = positive(spec.maxHp, 5000, 'ward max HP');
+    return { id: spec.id as WardId, hp: positive(spec.hp, maxHp, 'ward HP'), maxHp };
+  });
+  const ids = [...enemies.map(e => e.id), ...allies.map(a => a.id), ...wards.map(w => w.id), 'hero'];
+  if (new Set(ids).size !== ids.length) throw new Error('Battle participant IDs must be unique');
+  const kit = HERO_KITS[setup.faction];
+  let hero = { hp: kit.maxHp, maxHp: kit.maxHp, damage: kit.damage };
+  if (setup.hero !== undefined) {
+    const spec = record(setup.hero, 'Battle hero');
+    onlyKeys(spec, ['hp', 'maxHp', 'damage'], 'battle hero');
+    const maxHp = positive(spec.maxHp, 5000, 'hero max HP');
+    hero = { hp: positive(spec.hp, maxHp, 'hero HP'), maxHp, damage: positive(spec.damage, 1000, 'hero damage') };
+  }
   const difficulty = setup.difficulty ?? 'standard';
-  if (typeof difficulty !== 'string' || !Object.hasOwn(DIFFICULTY, difficulty)) throw new Error('Unknown difficulty');
+  if (!DIFFICULTIES.includes(difficulty as BattleDifficulty)) throw new Error('Unknown difficulty');
   const opening = setup.opening ?? 'neutral';
   if (!OPENINGS.includes(opening as BattleOpening)) throw new Error('Unknown opening');
   const latencyTicks = setup.latencyTicks ?? 0;
@@ -58,12 +117,13 @@ function validateSetup(value: unknown): ValidSetup {
     throw new Error('Latency must be 0-12 ticks');
   }
   return {
-    seed: setup.seed as string | number, faction: setup.faction, encounter: setup.encounter as EncounterId,
-    difficulty: difficulty as BattleDifficulty, opening: opening as BattleOpening, latencyTicks,
+    rngSeed: `korovany2:battle:${encounter ?? 'custom'}:${setup.seed}`, faction: setup.faction,
+    difficulty: difficulty as BattleDifficulty, opening: opening as BattleOpening, latencyTicks, enemies, allies, wards, hero,
   };
 }
 
-function validateCommand(value: unknown): BattleCommand {
+/** Validates a command's structure; throws when malformed. */
+export function validateBattleCommand(value: unknown): BattleCommand {
   const command = record(value, 'Battle command');
   if (command.type === 'attack') {
     onlyKeys(command, ['type', 'target'], 'attack');
@@ -80,6 +140,10 @@ function validateCommand(value: unknown): BattleCommand {
     onlyKeys(command, ['type', 'item'], 'item');
     if (command.item !== 'tonic') throw new Error('Unknown item');
     return { type: 'item', item: 'tonic' };
+  }
+  if (command.type === 'protect') {
+    onlyKeys(command, ['type'], 'protect');
+    return { type: 'protect' };
   }
   throw new Error('Unknown battle command');
 }
@@ -102,216 +166,245 @@ export function reactionWindow(faction: FactionId, difficulty: BattleDifficulty,
   return { early: Math.round(timing.early * scale), late: timing.late };
 }
 
-/** Creates a deterministic battle: the same setup and the same inputs on the same ticks always give the same battle. */
-export function createBattle(options: BattleSetup): Battle {
-  const setup = validateSetup(options);
-  const kit = HERO_KITS[setup.faction];
-  const scale = DIFFICULTY[setup.difficulty];
-  const rng = createPrng(`korovany2:battle:${setup.encounter}:${setup.seed}`);
-  const hero: Hero = { hp: kit.maxHp, ap: RULES.startAp, tonics: RULES.tonics, bulwark: false, empowered: 1, lockoutUntil: 0, next: 0 };
-  const enemies: Enemy[] = ENCOUNTERS[setup.encounter].map(({ id, kind }) => {
-    const enemyKit = ENEMY_KITS[kind];
-    return { id, kind, hp: enemyKit.maxHp, maxHp: enemyKit.maxHp, band: 'far', breakMeter: 0, broken: false, rallied: 0, next: 0 };
-  });
-  if (setup.opening === 'first-strike') {
-    for (const e of enemies) e.next = interval(ENEMY_KITS[e.kind].speed) * rng.range(0.6, 1.1);
-  } else if (setup.opening === 'ambushed') {
-    hero.next = interval(kit.speed);
-    for (const e of enemies) {
-      e.next = interval(ENEMY_KITS[e.kind].speed) * rng.range(0, 0.4);
-      if (!ENEMY_KITS[e.kind].ranged) e.band = 'close';
-    }
-  } else {
-    hero.next = interval(kit.speed) * rng.range(0.3, 1);
-    for (const e of enemies) e.next = interval(ENEMY_KITS[e.kind].speed) * rng.range(0.3, 1);
+/** Runs one battle operation against a state, with the battle's own PRNG loaded from and saved back to the state. */
+class Runner {
+  readonly rng: Prng;
+  readonly kit: HeroKit;
+  readonly scale: { window: number; damage: number };
+  constructor(readonly s: BattleState) {
+    this.rng = prngFromState({ s: s.rng });
+    this.kit = HERO_KITS[s.faction];
+    this.scale = DIFFICULTY[s.difficulty];
   }
-
-  let now = 0, round = 0, actionSequence = 0, logSequence = 0;
-  let phase: BattlePhase = 'command';
-  let action: Action | null = null;
-  let notice: BattleNotice | null = null;
-  const log: BattleLogEntry[] = [];
-
-  const living = (): Enemy[] => enemies.filter(e => e.hp > 0);
-  const enemyById = (id: string | undefined): Enemy | undefined => enemies.find(e => e.id === id && e.hp > 0);
-  function write(kind: BattleLogKind, actor: string, target: string, amount = 0): void {
-    log.push({ id: ++logSequence, tick: now, kind, actor, target, amount });
-    if (log.length > LOG_LIMIT) log.shift();
+  save(): void {
+    this.s.rng = [...this.rng.save().s];
   }
-  function finish(result: 'victory' | 'defeat'): void {
-    phase = result;
-    write(result, 'hero', 'hero');
+  get hero(): Hero { return this.s.hero; }
+  living(): Enemy[] { return this.s.enemies.filter(e => e.hp > 0); }
+  enemyById(id: string | undefined | null): Enemy | undefined { return this.s.enemies.find(e => e.id === id && e.hp > 0); }
+  standingWards(): BattleState['wards'] { return this.s.wards.filter(w => w.hp > 0); }
+  write(kind: BattleLogKind, actor: string, target: string, amount = 0): void {
+    this.s.log.push({ id: ++this.s.logSequence, tick: this.s.now, kind, actor, target, amount });
+    if (this.s.log.length > LOG_LIMIT) this.s.log.shift();
   }
-  function heal(amount: number): void {
-    const gained = Math.min(kit.maxHp - hero.hp, amount);
+  finish(result: 'victory' | 'defeat'): void {
+    this.s.phase = result;
+    this.write(result, 'hero', 'hero');
+  }
+  heal(amount: number): void {
+    const gained = Math.min(this.hero.maxHp - this.hero.hp, amount);
     if (gained <= 0) return;
-    hero.hp += gained;
-    write('heal', 'hero', 'hero', gained);
+    this.hero.hp += gained;
+    this.write('heal', 'hero', 'hero', gained);
   }
-  function addBreak(e: Enemy, amount: number): void {
+  addBreak(e: Enemy, amount: number): void {
     if (amount <= 0 || e.broken || e.hp <= 0) return;
     e.breakMeter += amount;
     if (e.breakMeter < ENEMY_KITS[e.kind].breakMax) return;
     e.breakMeter = 0;
     e.broken = true;
-    write('break', 'hero', e.id);
+    this.write('break', 'hero', e.id);
   }
-  function start(actor: string, move: string, target: string | null, ticks: number, hits: Hit[] = [], strikes: Strike[] = []): void {
-    action = { id: ++actionSequence, actor, move, target, start: now, end: now + ticks, hits, strikes, raged: false };
-    phase = 'action';
+  start(actor: string, move: string, target: string | null, ticks: number, hits: Hit[] = [], strikes: Strike[] = []): void {
+    this.s.action = { id: ++this.s.actionSequence, actor, move, target, start: this.s.now, end: this.s.now + ticks, hits, strikes, raged: false };
+    this.s.phase = 'action';
   }
-  /** The next actor on the timeline: the earliest `next`, the hero first and then roster order on ties. */
-  function nextActor(): Enemy | null {
-    let best: Enemy | null = null, time = hero.next;
-    for (const e of living()) if (e.next < time) { best = e; time = e.next; }
+  /** The next actor on the timeline: the earliest `next`; on ties the hero, then enemies, then allies, in roster order. */
+  nextActor(): { enemy: Enemy } | { ally: Ally } | null {
+    let best: { enemy: Enemy } | { ally: Ally } | null = null, time = this.hero.next;
+    for (const e of this.living()) if (ENEMY_KITS[e.kind].speed > 0 && e.next < time) { best = { enemy: e }; time = e.next; }
+    for (const a of this.s.allies) if (a.next < time) { best = { ally: a }; time = a.next; }
     return best;
   }
-  function beginTurn(): void {
-    action = null;
-    const actor = nextActor();
-    if (!actor) {
-      hero.next += interval(kit.speed);
-      hero.bulwark = false;
-      round++;
-      phase = 'command';
+  beginTurn(): void {
+    this.s.action = null;
+    const next = this.nextActor();
+    if (!next) {
+      this.hero.next += interval(this.kit.speed);
+      this.hero.bulwark = false;
+      this.hero.guarding = false;
+      this.s.round++;
+      this.s.phase = 'command';
       return;
     }
+    if ('ally' in next) {
+      this.allyTurn(next.ally);
+      return;
+    }
+    const actor = next.enemy;
     actor.next += interval(ENEMY_KITS[actor.kind].speed);
     if (actor.broken) {
       actor.broken = false;
-      write('recover', actor.id, actor.id);
-      start(actor.id, 'recover', null, MOVE_TICKS.recover);
+      this.write('recover', actor.id, actor.id);
+      this.start(actor.id, 'recover', null, MOVE_TICKS.recover);
       return;
     }
-    enemyTurn(actor);
+    this.enemyTurn(actor);
   }
-  function enemyTurn(e: Enemy): void {
-    const enemyKit = ENEMY_KITS[e.kind];
-    if (!enemyKit.ranged && e.band === 'far') return start(e.id, 'approach', null, MOVE_TICKS.approach);
-    if (enemyKit.ranged && e.band === 'close' && rng.bool(RULES.retreatChance)) return start(e.id, 'step-back', null, MOVE_TICKS['step-back']);
-    if (e.kind === 'captain' && living().some(other => other !== e) && !living().some(other => other.rallied > 0) &&
-        rng.bool(RULES.rallyChance)) return start(e.id, 'rally', null, MOVE_TICKS.rally);
+  allyTurn(a: Ally): void {
+    const kit = ALLY_KITS[a.kind];
+    a.next += interval(kit.speed);
+    const target = [...this.living()].sort((left, right) => left.hp - right.hp)[0]!;
+    this.write('support', a.id, target.id);
+    this.start(a.id, kit.move, target.id, kit.ticks, [],
+      [{ at: this.s.now + kit.impact, source: a.id, targets: [target.id], multiplier: 1, flat: kit.damage, breakAdd: 1, done: false }]);
+  }
+  enemyTurn(e: Enemy): void {
+    const enemyKit = ENEMY_KITS[e.kind], rng = this.rng;
+    if (!enemyKit.ranged && e.band === 'far') return this.start(e.id, 'approach', null, MOVE_TICKS.approach);
+    if (enemyKit.ranged && e.band === 'close' && rng.bool(RULES.retreatChance)) return this.start(e.id, 'step-back', null, MOVE_TICKS['step-back']);
+    if (enemyKit.rally > 0 && this.living().some(other => other !== e) && !this.living().some(other => other.rallied > 0) &&
+        rng.bool(enemyKit.rally)) return this.start(e.id, 'rally', null, MOVE_TICKS.rally);
     let roll = rng.range(0, enemyKit.moves.reduce((sum, move) => sum + move.weight, 0));
     const move = enemyKit.moves.find(candidate => (roll -= candidate.weight) < 0) ?? enemyKit.moves[enemyKit.moves.length - 1]!;
     const rally = e.rallied > 0 ? RULES.rallyBonus : 1;
     if (e.rallied > 0) e.rallied--;
-    const taken = scale.damage * kit.armor * (hero.bulwark ? RULES.bulwark : 1) * rally;
+    let target: 'hero' | WardId = 'hero';
+    const wards = this.standingWards();
+    if (enemyKit.raid > 0 && wards.length && rng.bool(enemyKit.raid)) {
+      const ward = wards.length > 1 ? wards[rng.int(0, wards.length)]! : wards[0]!;
+      if (this.hero.guarding) this.write('protect', 'hero', ward.id);
+      else target = ward.id;
+    }
+    const taken = this.scale.damage * rally * (target === 'hero' ? this.kit.armor * (this.hero.bulwark ? RULES.bulwark : 1) : 1);
     const hits: Hit[] = move.blows.map((blow, index) => ({
-      index, impact: now + blow.at, damage: Math.max(1, Math.round(blow.damage * taken)), heavy: blow.heavy === true,
-      outcome: 'pending', reaction: null, pressed: null,
+      index, impact: this.s.now + blow.at, damage: Math.max(1, Math.round(blow.damage * taken)), heavy: blow.heavy === true,
+      outcome: 'pending', reaction: null, pressed: null, target,
     }));
-    start(e.id, move.id, 'hero', move.ticks, hits);
+    this.start(e.id, move.id, target, move.ticks, hits);
   }
-  function resolveHit(current: Action, hit: Hit, attacker: Enemy | undefined): void {
+  resolveHit(current: BattleActionState, hit: Hit, attacker: Enemy | undefined): void {
+    const source = attacker?.id ?? current.actor;
+    if (hit.target !== 'hero') {
+      hit.outcome = 'hit';
+      const ward = this.s.wards.find(w => w.id === hit.target);
+      if (!ward || ward.hp <= 0) return;
+      const dealt = Math.min(ward.hp, hit.damage);
+      ward.hp -= dealt;
+      this.write('damage', source, ward.id, dealt);
+      if (ward.hp <= 0) {
+        ward.hp = 0;
+        this.write('ward-down', source, ward.id);
+        // A weapon mounted on the wrecked wagon is out of the fight.
+        this.s.allies = this.s.allies.filter(a => ALLY_KITS[a.kind].ward !== ward.id);
+      }
+      return;
+    }
     let success = false;
     if (hit.reaction && hit.pressed !== null && (hit.reaction === 'dodge' || !hit.heavy)) {
-      const window = reactionWindow(setup.faction, setup.difficulty, hit.reaction);
+      const window = reactionWindow(this.s.faction, this.s.difficulty, hit.reaction);
       success = hit.pressed >= hit.impact - window.early && hit.pressed <= hit.impact + window.late;
     }
-    const source = attacker?.id ?? '';
     if (success && hit.reaction === 'dodge') {
       hit.outcome = 'dodged';
-      write('dodge', 'hero', source);
+      if (this.kit.dodgeAp) this.hero.ap = Math.min(RULES.maxAp, this.hero.ap + 1);
+      this.write('dodge', 'hero', source);
       return;
     }
     if (success) {
       hit.outcome = 'parried';
-      hero.ap = Math.min(RULES.maxAp, hero.ap + 1);
-      write('parry', 'hero', source);
-      if (attacker) addBreak(attacker, RULES.parryBreak);
+      this.hero.ap = Math.min(RULES.maxAp, this.hero.ap + 1);
+      this.write('parry', 'hero', source);
+      if (attacker) this.addBreak(attacker, RULES.parryBreak);
       return;
     }
     hit.outcome = 'hit';
-    hero.hp = Math.max(0, hero.hp - hit.damage);
-    write('damage', source, 'hero', hit.damage);
-    if (kit.rage && !current.raged) {
+    this.hero.hp = Math.max(0, this.hero.hp - hit.damage);
+    this.write('damage', source, 'hero', hit.damage);
+    if (this.kit.rage && !current.raged) {
       current.raged = true;
-      hero.ap = Math.min(RULES.maxAp, hero.ap + 1);
+      this.hero.ap = Math.min(RULES.maxAp, this.hero.ap + 1);
     }
-    if (hero.hp === 0) finish('defeat');
+    if (this.hero.hp === 0) this.finish('defeat');
   }
-  function applyStrike(strike: Strike): void {
+  applyStrike(strike: Strike): void {
     strike.done = true;
+    const fromHero = strike.flat === 0;
     for (const id of strike.targets) {
-      const target = enemyById(id);
+      const target = this.enemyById(id);
       if (!target) continue;
-      const band = kit.ranged && target.band === 'close' ? RULES.elfClose : 1;
-      const amount = Math.max(1, Math.round(kit.damage * strike.multiplier * band * (target.broken ? RULES.brokenBonus : 1)));
+      const broken = target.broken ? RULES.brokenBonus : 1;
+      const amount = fromHero
+        ? Math.max(1, Math.round(this.hero.damage * strike.multiplier * (this.kit.ranged && target.band === 'close' ? RULES.elfClose : 1) * broken))
+        : Math.max(1, Math.round(strike.flat * broken));
       const dealt = Math.min(target.hp, amount);
       target.hp -= dealt;
-      write('damage', 'hero', target.id, dealt);
-      if (kit.lifesteal > 0) heal(Math.round(dealt * kit.lifesteal));
+      this.write('damage', strike.source, target.id, dealt);
+      if (fromHero && this.kit.lifesteal > 0) this.heal(Math.round(dealt * this.kit.lifesteal));
       if (target.hp === 0) {
         target.broken = false;
         target.rallied = 0;
-        write('defeated', 'hero', target.id);
-      } else addBreak(target, strike.breakAdd);
+        this.write('defeated', strike.source, target.id);
+      } else this.addBreak(target, strike.breakAdd);
     }
-    if (living().length === 0) finish('victory');
+    if (this.living().length === 0) this.finish('victory');
   }
-  function endAction(current: Action): void {
-    const enemy = enemyById(current.actor);
+  endAction(current: BattleActionState): void {
+    const enemy = this.enemyById(current.actor);
     if (enemy) {
       if (current.move === 'approach') {
         enemy.band = 'close';
-        write('approach', enemy.id, 'hero');
+        this.write('approach', enemy.id, 'hero');
       } else if (current.move === 'step-back') {
         enemy.band = 'far';
-        write('retreat', enemy.id, 'hero');
+        this.write('retreat', enemy.id, 'hero');
       } else if (current.move === 'rally') {
-        for (const ally of living()) ally.rallied = RULES.rallyAttacks;
-        write('rally', enemy.id, enemy.id);
-      } else if (current.hits.length > 0 && current.hits.every(h => h.outcome === 'parried') && (kit.ranged || enemy.band === 'close')) {
+        for (const ally of this.living()) ally.rallied = RULES.rallyAttacks;
+        this.write('rally', enemy.id, enemy.id);
+      } else if (current.hits.length > 0 && current.hits.every(h => h.target === 'hero' && h.outcome === 'parried') &&
+          (this.kit.ranged || enemy.band === 'close')) {
         // Every blow of the move was parried: the hero answers at once. A melee hero cannot reach a far archer.
-        write('counter', 'hero', enemy.id);
+        this.write('counter', 'hero', enemy.id);
         const timing = HERO_TIMING.counter;
-        start('hero', 'counter', enemy.id, timing.ticks, [],
-          [{ at: now + timing.impact, targets: [enemy.id], multiplier: kit.counter, breakAdd: RULES.counterBreak, done: false }]);
+        this.start('hero', 'counter', enemy.id, timing.ticks, [], [{
+          at: this.s.now + timing.impact, source: 'hero', targets: [enemy.id], multiplier: this.kit.counter, flat: 0,
+          breakAdd: RULES.counterBreak, done: false,
+        }]);
         return;
       }
     }
-    beginTurn();
+    this.beginTurn();
   }
-  function skillReason(spec: SkillSpec, target: string | undefined): BattleNotice | null {
-    if (spec.targeted ? !enemyById(target) : target !== undefined) return 'target';
-    if ((spec.id === 'fall-back' || spec.id === 'cleave') && !living().some(e => e.band === 'close')) return 'target';
-    if (spec.id === 'warcry' && !living().some(e => e.band === 'far')) return 'target';
-    return hero.ap < spec.cost ? 'ap' : null;
+  skillReason(spec: SkillSpec, target: string | undefined): BattleNotice | null {
+    if (spec.targeted ? !this.enemyById(target) : target !== undefined) return 'target';
+    if ((spec.id === 'fall-back' || spec.id === 'cleave') && !this.living().some(e => e.band === 'close')) return 'target';
+    if (spec.id === 'warcry' && !this.living().some(e => e.band === 'far')) return 'target';
+    return this.hero.ap < spec.cost ? 'ap' : null;
   }
-  function strike(targets: string[], multiplier: number, breakAdd: number, impact: number): Strike[] {
+  strike(targets: string[], multiplier: number, breakAdd: number, impact: number): Strike[] {
     if (targets.length === 0) return [];
-    const empowered = hero.empowered;
-    hero.empowered = 1;
-    return [{ at: now + impact, targets, multiplier: multiplier * empowered, breakAdd, done: false }];
+    const empowered = this.hero.empowered;
+    this.hero.empowered = 1;
+    return [{ at: this.s.now + impact, source: 'hero', targets, multiplier: multiplier * empowered, flat: 0, breakAdd, done: false }];
   }
-  function attack(targetId: string): void {
-    const target = enemyById(targetId)!;
+  attack(targetId: string): void {
+    const target = this.enemyById(targetId)!;
     let multiplier = 1;
-    if (!kit.ranged && target.band === 'far') {
+    if (!this.kit.ranged && target.band === 'far') {
       target.band = 'close';
       multiplier *= RULES.charge;
     }
-    hero.ap = Math.min(RULES.maxAp, hero.ap + 1);
+    this.hero.ap = Math.min(RULES.maxAp, this.hero.ap + 1);
     const timing = HERO_TIMING.attack;
-    start('hero', 'attack', target.id, timing.ticks, [], strike([target.id], multiplier, 1, timing.impact));
+    this.start('hero', 'attack', target.id, timing.ticks, [], this.strike([target.id], multiplier, 1, timing.impact));
   }
-  function useSkill(spec: SkillSpec, targetId: string | undefined): void {
-    hero.ap -= spec.cost;
-    write('skill', 'hero', targetId ?? 'hero', spec.cost);
+  useSkill(spec: SkillSpec, targetId: string | undefined): void {
+    this.hero.ap -= spec.cost;
+    this.write('skill', 'hero', targetId ?? 'hero', spec.cost);
     let targets: string[] = [], multiplier = spec.damage;
     switch (spec.id) {
       case 'aimed-shot':
         targets = [targetId!];
         break;
       case 'volley':
-        targets = living().map(e => e.id);
+        targets = this.living().map(e => e.id);
         break;
       case 'fall-back':
-        for (const e of living()) if (e.band === 'close') e.band = 'far';
+        for (const e of this.living()) if (e.band === 'close') e.band = 'far';
         targets = [targetId!];
         break;
       case 'shield-bash': {
-        const target = enemyById(targetId)!;
+        const target = this.enemyById(targetId)!;
         if (target.band === 'far') {
           target.band = 'close';
           multiplier *= RULES.charge;
@@ -320,24 +413,109 @@ export function createBattle(options: BattleSetup): Battle {
         break;
       }
       case 'bulwark':
-        hero.bulwark = true;
-        heal(RULES.bulwarkHeal);
+        this.hero.bulwark = true;
+        this.heal(RULES.bulwarkHeal);
+        for (const ward of this.standingWards()) {
+          const repaired = Math.min(ward.maxHp - ward.hp, RULES.bulwarkWardHeal);
+          if (repaired <= 0) continue;
+          ward.hp += repaired;
+          this.write('heal', 'hero', ward.id, repaired);
+        }
         break;
       case 'cleave':
-        targets = living().filter(e => e.band === 'close').map(e => e.id);
+        targets = this.living().filter(e => e.band === 'close').map(e => e.id);
         break;
       case 'warcry':
-        for (const e of living()) e.band = 'close';
-        hero.empowered = RULES.warcry;
+        for (const e of this.living()) e.band = 'close';
+        this.hero.empowered = RULES.warcry;
         break;
     }
-    start('hero', spec.id, targetId ?? null, spec.ticks, [], strike(targets, multiplier, spec.breakAdd, spec.impact));
+    this.start('hero', spec.id, targetId ?? null, spec.ticks, [], this.strike(targets, multiplier, spec.breakAdd, spec.impact));
   }
-  function order(): string[] {
-    if (phase === 'victory' || phase === 'defeat') return [];
-    const queue = [{ id: 'hero', next: hero.next, step: interval(kit.speed) },
-      ...living().map(e => ({ id: e.id, next: e.next, step: interval(ENEMY_KITS[e.kind].speed) }))];
-    const result = [phase === 'command' ? 'hero' : action!.actor];
+  command(command: BattleCommand): void {
+    const s = this.s;
+    s.notice = null;
+    if (s.phase !== 'command') { s.notice = 'phase'; return; }
+    if (command.type === 'attack') {
+      if (!this.enemyById(command.target)) { s.notice = 'target'; return; }
+      this.attack(command.target);
+      return;
+    }
+    if (command.type === 'item') {
+      if (this.hero.tonics === 0 || this.hero.hp >= this.hero.maxHp) { s.notice = 'item'; return; }
+      this.hero.tonics--;
+      this.write('item', 'hero', 'hero');
+      this.heal(RULES.tonicHeal);
+      this.start('hero', 'item', null, MOVE_TICKS.item);
+      return;
+    }
+    if (command.type === 'protect') {
+      if (!this.standingWards().length) { s.notice = s.wards.length ? 'target' : 'unavailable'; return; }
+      this.hero.guarding = true;
+      this.hero.ap = Math.min(RULES.maxAp, this.hero.ap + 1);
+      this.write('protect', 'hero', 'hero');
+      this.start('hero', 'protect', null, MOVE_TICKS.protect);
+      return;
+    }
+    const spec = this.kit.skills.find(skill => skill.id === command.skill);
+    if (!spec) { s.notice = 'unavailable'; return; }
+    const reason = this.skillReason(spec, command.target);
+    if (reason) { s.notice = reason; return; }
+    this.useSkill(spec, command.target);
+  }
+  tick(input: BattleInput): boolean {
+    const s = this.s;
+    if (s.phase !== 'action' || !s.action) return false;
+    s.now++;
+    const current = s.action;
+    const press: Reaction | null = input.parry ? 'parry' : input.dodge ? 'dodge' : null;
+    if (press && s.now >= this.hero.lockoutUntil) {
+      this.hero.lockoutUntil = s.now + TIMING.lockout;
+      const at = s.now - s.latencyTicks;
+      const hit = current.hits.find(h => h.target === 'hero' && h.outcome === 'pending' && h.pressed === null &&
+        at >= h.impact - TIMING.attempt && at <= h.impact + TIMING[press].late);
+      if (hit) { hit.pressed = at; hit.reaction = press; }
+    }
+    const attacker = this.enemyById(current.actor);
+    for (const hit of current.hits) {
+      if (hit.outcome === 'pending' && s.now >= hit.impact + SETTLE + s.latencyTicks) this.resolveHit(current, hit, attacker);
+      if (s.phase !== 'action') return true;
+    }
+    for (const entry of current.strikes) {
+      if (!entry.done && s.now >= entry.at) this.applyStrike(entry);
+      if (s.phase !== 'action') return true;
+    }
+    if (s.now >= current.end && current.hits.every(h => h.outcome !== 'pending') && current.strikes.every(entry => entry.done)) {
+      this.endAction(current);
+    }
+    return true;
+  }
+  join(specs: Normalized['enemies']): void {
+    const s = this.s;
+    if (s.phase === 'victory' || s.phase === 'defeat') throw new Error('A finished battle cannot be joined');
+    if (s.enemies.length + specs.length > RULES.maxEnemies) throw new Error('Too many enemies in one battle');
+    const taken = new Set([...s.enemies.map(e => e.id), ...s.allies.map(a => a.id), ...s.wards.map(w => w.id), 'hero']);
+    let base = this.hero.next;
+    for (const e of this.living()) if (ENEMY_KITS[e.kind].speed > 0) base = Math.min(base, e.next);
+    for (const a of s.allies) base = Math.min(base, a.next);
+    for (const spec of specs) {
+      if (taken.has(spec.id)) throw new Error('Joining enemy IDs must be new');
+      taken.add(spec.id);
+      const kit = ENEMY_KITS[spec.kind];
+      s.enemies.push({
+        id: spec.id, kind: spec.kind, hp: spec.hp, maxHp: kit.maxHp, band: spec.band ?? 'far', breakMeter: 0, broken: false, rallied: 0,
+        next: kit.speed > 0 ? base + interval(kit.speed) * this.rng.range(0.2, 0.8) : 0,
+      });
+      this.write('join', spec.id, 'hero');
+    }
+  }
+  order(): string[] {
+    const s = this.s;
+    if (s.phase === 'victory' || s.phase === 'defeat') return [];
+    const queue = [{ id: 'hero', next: this.hero.next, step: interval(this.kit.speed) },
+      ...this.living().filter(e => ENEMY_KITS[e.kind].speed > 0).map(e => ({ id: e.id, next: e.next, step: interval(ENEMY_KITS[e.kind].speed) })),
+      ...s.allies.map(a => ({ id: a.id, next: a.next, step: interval(ALLY_KITS[a.kind].speed) }))];
+    const result = [s.phase === 'command' || !s.action ? 'hero' : s.action.actor];
     while (result.length < ORDER_LENGTH) {
       let best = queue[0]!;
       for (const entry of queue) if (entry.next < best.next) best = entry;
@@ -346,92 +524,127 @@ export function createBattle(options: BattleSetup): Battle {
     }
     return result;
   }
-  function commandOptions(): BattleCommandOption[] {
-    if (phase !== 'command') return [];
-    const targets = living().map(e => e.id);
+  commandOptions(): BattleCommandOption[] {
+    if (this.s.phase !== 'command') return [];
+    const targets = this.living().map(e => e.id);
     const options: BattleCommandOption[] = [{ command: 'attack', id: 'attack', cost: 0, targets, enabled: true, reason: null }];
-    for (const spec of kit.skills) {
-      const reason = skillReason(spec, spec.targeted ? targets[0] : undefined);
+    for (const spec of this.kit.skills) {
+      const reason = this.skillReason(spec, spec.targeted ? targets[0] : undefined);
       options.push({ command: 'skill', id: spec.id, cost: spec.cost, targets: spec.targeted ? targets : [], enabled: !reason, reason });
     }
-    const usable = hero.tonics > 0 && hero.hp < kit.maxHp;
+    if (this.s.wards.length) {
+      const standing = this.standingWards().length > 0;
+      options.push({ command: 'protect', id: 'protect', cost: 0, targets: [], enabled: standing, reason: standing ? null : 'target' });
+    }
+    const usable = this.hero.tonics > 0 && this.hero.hp < this.hero.maxHp;
     options.push({ command: 'item', id: 'tonic', cost: 0, targets: [], enabled: usable, reason: usable ? null : 'item' });
     return options;
   }
+  snapshot(): BattleSnapshot {
+    const s = this.s, current = s.action;
+    return {
+      version: 1, difficulty: s.difficulty, opening: s.opening, phase: s.phase, tick: s.now, round: s.round,
+      hero: {
+        faction: s.faction, hp: this.hero.hp, maxHp: this.hero.maxHp, damage: this.hero.damage, ap: this.hero.ap, maxAp: RULES.maxAp,
+        tonics: this.hero.tonics, bulwark: this.hero.bulwark, guarding: this.hero.guarding, empowered: this.hero.empowered,
+        lockout: Math.max(0, this.hero.lockoutUntil - s.now),
+      },
+      enemies: s.enemies.map(e => ({
+        id: e.id, kind: e.kind, hp: e.hp, maxHp: e.maxHp, band: e.band, breakMeter: e.breakMeter,
+        breakMax: ENEMY_KITS[e.kind].breakMax, broken: e.broken, rallied: e.rallied,
+      })),
+      allies: s.allies.map(a => ({ id: a.id, kind: a.kind })),
+      wards: s.wards.map(w => ({ ...w })),
+      order: this.order(),
+      action: current ? {
+        id: current.id, actor: current.actor, move: current.move, target: current.target, start: current.start, end: current.end,
+        hits: current.hits.map(h => ({ ...h })),
+      } : null,
+      commands: this.commandOptions(),
+      log: s.log.map(entry => ({ ...entry })),
+      notice: s.notice,
+    };
+  }
+}
 
-  beginTurn();
+function run<T>(state: BattleState, operation: (runner: Runner) => T): T {
+  const runner = new Runner(state);
+  try {
+    return operation(runner);
+  } finally {
+    runner.save();
+  }
+}
+
+/** Starts a deterministic battle: the same setup and the same inputs on the same ticks always give the same battle. */
+export function startBattle(setup: BattleSetup): BattleState {
+  const n = validateSetup(setup);
+  const kit = HERO_KITS[n.faction];
+  const rng = createPrng(n.rngSeed);
+  const state: BattleState = {
+    version: 1, faction: n.faction, difficulty: n.difficulty, opening: n.opening, latencyTicks: n.latencyTicks,
+    rng: [], now: 0, round: 0, phase: 'command', notice: null, actionSequence: 0, logSequence: 0,
+    hero: {
+      hp: n.hero.hp, maxHp: n.hero.maxHp, damage: n.hero.damage, ap: RULES.startAp, tonics: RULES.tonics,
+      bulwark: false, guarding: false, empowered: 1, lockoutUntil: 0, next: 0,
+    },
+    enemies: n.enemies.map(e => ({
+      id: e.id, kind: e.kind, hp: e.hp, maxHp: ENEMY_KITS[e.kind].maxHp, band: e.band ?? 'far',
+      breakMeter: 0, broken: false, rallied: 0, next: 0,
+    })),
+    allies: n.allies.map(a => ({ id: a.id, kind: a.kind, next: 0 })),
+    wards: n.wards.map(w => ({ ...w })),
+    action: null, log: [],
+  };
+  const acting = (e: Enemy): boolean => ENEMY_KITS[e.kind].speed > 0;
+  if (n.opening === 'first-strike') {
+    for (const e of state.enemies) if (acting(e)) e.next = interval(ENEMY_KITS[e.kind].speed) * rng.range(0.6, 1.1);
+  } else if (n.opening === 'ambushed') {
+    state.hero.next = interval(kit.speed);
+    for (const [index, e] of state.enemies.entries()) {
+      if (acting(e)) e.next = interval(ENEMY_KITS[e.kind].speed) * rng.range(0, 0.4);
+      if (!ENEMY_KITS[e.kind].ranged && n.enemies[index]!.band === null) e.band = 'close';
+    }
+  } else {
+    state.hero.next = interval(kit.speed) * rng.range(0.3, 1);
+    for (const e of state.enemies) if (acting(e)) e.next = interval(ENEMY_KITS[e.kind].speed) * rng.range(0.3, 1);
+  }
+  for (const a of state.allies) a.next = interval(ALLY_KITS[a.kind].speed) * rng.range(0.4, 1.1);
+  state.rng = [...rng.save().s];
+  run(state, runner => runner.beginTurn());
+  return state;
+}
+
+/** The hero's command, on the hero's turn only. Malformed commands throw; unavailable ones set `notice` and change nothing else. */
+export function commandBattle(state: BattleState, command: BattleCommand): void {
+  const valid = validateBattleCommand(command);
+  run(state, runner => runner.command(valid));
+}
+
+/** Advances one tick while an action plays and returns true; in any other phase it changes nothing and returns false. */
+export function tickBattle(state: BattleState, input: BattleInput = {}): boolean {
+  const valid = validateInput(input);
+  return run(state, runner => runner.tick(valid));
+}
+
+/** Adds enemies to an unfinished battle (reinforcements); they start far unless a band is given, and act after the next turn. */
+export function joinBattle(state: BattleState, enemies: readonly BattleEnemySpec[]): void {
+  const specs = enemySpecs(enemies, 'joining enemy', RULES.maxEnemies);
+  run(state, runner => runner.join(specs));
+}
+
+/** A read-only view of a battle; it never changes the state. */
+export function battleSnapshot(state: BattleState): BattleSnapshot {
+  return new Runner(state).snapshot();
+}
+
+/** A self-contained battle object over its own state (sandbox, bots and tests). */
+export function createBattle(setup: BattleSetup): Battle {
+  const state = startBattle(setup);
   return {
-    command(value: BattleCommand): void {
-      const command = validateCommand(value);
-      notice = null;
-      if (phase !== 'command') { notice = 'phase'; return; }
-      if (command.type === 'attack') {
-        if (!enemyById(command.target)) { notice = 'target'; return; }
-        attack(command.target);
-        return;
-      }
-      if (command.type === 'item') {
-        if (hero.tonics === 0 || hero.hp >= kit.maxHp) { notice = 'item'; return; }
-        hero.tonics--;
-        write('item', 'hero', 'hero');
-        heal(RULES.tonicHeal);
-        start('hero', 'item', null, MOVE_TICKS.item);
-        return;
-      }
-      const spec = kit.skills.find(skill => skill.id === command.skill);
-      if (!spec) { notice = 'unavailable'; return; }
-      const reason = skillReason(spec, command.target);
-      if (reason) { notice = reason; return; }
-      useSkill(spec, command.target);
-    },
-    tick(value: BattleInput = {}): boolean {
-      const input = validateInput(value);
-      if (phase !== 'action' || !action) return false;
-      now++;
-      const current: Action = action;
-      const press: Reaction | null = input.parry ? 'parry' : input.dodge ? 'dodge' : null;
-      if (press && now >= hero.lockoutUntil) {
-        hero.lockoutUntil = now + TIMING.lockout;
-        const at = now - setup.latencyTicks;
-        const hit = current.hits.find(h => h.outcome === 'pending' && h.pressed === null &&
-          at >= h.impact - TIMING.attempt && at <= h.impact + TIMING[press].late);
-        if (hit) { hit.pressed = at; hit.reaction = press; }
-      }
-      const attacker = enemyById(current.actor);
-      for (const hit of current.hits) {
-        if (hit.outcome === 'pending' && now >= hit.impact + SETTLE + setup.latencyTicks) resolveHit(current, hit, attacker);
-        if (phase !== 'action') return true;
-      }
-      for (const entry of current.strikes) {
-        if (!entry.done && now >= entry.at) applyStrike(entry);
-        if (phase !== 'action') return true;
-      }
-      if (now >= current.end && current.hits.every(h => h.outcome !== 'pending') && current.strikes.every(s => s.done)) endAction(current);
-      return true;
-    },
-    snapshot(): BattleSnapshot {
-      const current: Action | null = action;
-      return {
-        version: 1, encounter: setup.encounter, difficulty: setup.difficulty, phase, tick: now, round,
-        hero: {
-          faction: setup.faction, hp: hero.hp, maxHp: kit.maxHp, ap: hero.ap, maxAp: RULES.maxAp, tonics: hero.tonics,
-          bulwark: hero.bulwark, empowered: hero.empowered, lockout: Math.max(0, hero.lockoutUntil - now),
-        },
-        enemies: enemies.map(e => ({
-          id: e.id, kind: e.kind, hp: e.hp, maxHp: e.maxHp, band: e.band, breakMeter: e.breakMeter,
-          breakMax: ENEMY_KITS[e.kind].breakMax, broken: e.broken, rallied: e.rallied,
-        })),
-        order: order(),
-        action: current ? {
-          id: current.id, actor: current.actor, move: current.move, target: current.target, start: current.start, end: current.end,
-          hits: current.hits.map(h => ({
-            index: h.index, impact: h.impact, heavy: h.heavy, damage: h.damage, outcome: h.outcome, reaction: h.reaction, pressed: h.pressed,
-          })),
-        } : null,
-        commands: commandOptions(),
-        log: log.map(entry => ({ ...entry })),
-        notice,
-      };
-    },
+    command: command => commandBattle(state, command),
+    tick: input => tickBattle(state, input),
+    snapshot: () => battleSnapshot(state),
+    state: () => structuredClone(state),
   };
 }

@@ -34,6 +34,10 @@ export function emit(world: World, s: CampaignData, kind: EventKind, key: string
     'notice.location': { en: 'Return to a friendly holding to purchase', ru: 'Для покупки вернитесь на дружественную позицию' },
     'notice.coins': { en: 'Not enough coins', ru: 'Недостаточно монет' }, 'notice.max': { en: 'Maximum upgrade reached', ru: 'Улучшение максимально' },
     'notice.destination': { en: 'Unknown road destination', ru: 'Неизвестный дорожный пункт' },
+    'event.battle': { en: 'Battle!', ru: 'Бой!' },
+    'event.battleWon': { en: 'Battle won', ru: 'Бой выигран' },
+    'event.reinforcements': { en: 'Reinforcements join the battle', ru: 'В бой вступает подкрепление' },
+    'event.parry': { en: 'Parried', ru: 'Парировано' },
   };
   const label = s.military ? targetId === 'enemy-caravan' && kind === 'delivery' ?
     { en: 'Shipment delivered intact; provisions recovered', ru: 'Груз доставлен целым; припасы получены' } :
@@ -45,7 +49,7 @@ export function emit(world: World, s: CampaignData, kind: EventKind, key: string
   if (s.events.length > 32) s.events.shift();
 }
 
-function effect(s: CampaignData, kind: EffectSnapshot['kind'], at: Vec2, radius: number, heading = 0): void {
+export function effect(s: CampaignData, kind: EffectSnapshot['kind'], at: Vec2, radius: number, heading = 0): void {
   const duration = kind === 'shield' ? 0.65 : 0.35;
   s.effects.push({ id: `effect-${++s.transientSequence}`, kind, x: at.x, z: at.z,
     heading, radius, duration, remaining: duration, faction: s.faction });
@@ -67,16 +71,18 @@ export function createActor(world: World, kind: ActorData['kind'], id: string, s
   }));
 }
 
-function hurtActor(world: World, s: CampaignData, a: ActorData, amount: number): void {
-  if (a.hp <= 0 || a.allegiance === 'friendly' || a.allegiance === 'neutral' || (a.siteId === 'fortress' && !s.fortress.unlocked)) return;
-  const actual = Math.min(a.hp, amount);
-  a.hp = Math.max(0, a.hp - amount);
-  effect(s, 'hit', a, a.radius + 0.5);
-  if (s.faction === 'villain' && s.player.hp > 0) s.player.hp = Math.min(s.player.maxHp, s.player.hp + actual * 0.1);
-  if (a.hp > 0) return;
+/** A combatant the hero can fight now: alive, hostile and, at the fortress, unlocked. */
+export function hostileActive(s: CampaignData, a: ActorData): boolean {
+  return a.hp > 0 && a.allegiance !== 'friendly' && a.allegiance !== 'neutral' && (a.siteId !== 'fortress' || s.fortress.unlocked);
+}
+
+/** The bookkeeping when a battle fells an enemy: its corpse, the kill ledger, its loot and any campaign outcome. */
+export function defeatActor(world: World, s: CampaignData, a: ActorData): void {
+  a.hp = 0;
   a.state = 'dead';
   a.stateTime = 0;
   a.target = null;
+  effect(s, 'hit', a, a.radius + 0.5);
   if (a.kind === 'monster') {
     emit(world, s, 'kill', 'event.kill', a, monsterSlain(world, s, a), a.id);
     return;
@@ -97,28 +103,20 @@ function hurtActor(world: World, s: CampaignData, a: ActorData, amount: number):
   emit(world, s, 'kill', 'event.kill', a, coins, a.id);
 }
 
-function hurtTarget(world: World, s: CampaignData, target: 'player' | 'convoy' | 'shipment', amount: number): void {
-  if (target === 'shipment') {
-    const shipment = actors(world).find(a => a.id === 'enemy-caravan');
-    if (!shipment || !s.military || shipment.hp <= 0) return;
-    shipment.hp = Math.max(0, shipment.hp - amount);
-    if (shipment.hp === 0) s.military.shipment.repairProgress = 0;
-    effect(s, 'hit', shipment, 1.5);
-    emit(world, s, 'hurt', 'event.hurt', shipment, amount, shipment.id);
-    return;
-  }
-  const body = target === 'player' ? s.player : s.convoy;
-  if (body.hp <= 0 || (target === 'player' && s.player.invulnerable > 0)) return;
-  const reduction = target === 'player' && s.faction === 'guard' && s.player.abilityDuration > 0 ? 0.25 : 1;
-  body.hp = Math.max(0, body.hp - amount * reduction);
-  emit(world, s, 'hurt', 'event.hurt', body, Math.round(amount * reduction), target);
-  effect(s, 'hit', body, 1);
-  if (target === 'convoy' && body.hp === 0) {
-    s.convoy.disabled = true;
-    s.convoy.repairProgress = 0;
-    emit(world, s, 'convoy', 'event.disabled', body, 0, 'convoy');
+/** Field contact: how close a hostile must come for its engagement to start a battle. */
+export function contactRange(a: ActorData, hero: { radius: number }): number {
+  return a.attackRange + hero.radius + 0.25;
+}
+
+/** Each post's living, unfriendly defenders. */
+export function countDefenders(s: CampaignData, all: readonly ActorData[]): void {
+  for (const post of s.outposts) {
+    post.defendersRemaining = all.filter(a => a.siteId === post.id && a.hp > 0 && a.allegiance !== 'friendly').length;
   }
 }
+
+/** A field attack that lands on a hostile this tick, read by the engagement check as a first strike. */
+export interface PendingStrike { target: string | null }
 
 function fire(s: CampaignData, from: Vec2, heading: number, damage: number, owner: 'player' | 'enemy',
   faction: ActorData['faction'], speed = 28, kind: 'arrow' | 'bolt' | 'siege' = 'arrow'): void {
@@ -163,7 +161,7 @@ export function objective(s: CampaignData): ObjectiveSnapshot {
 }
 
 export function interaction(s: CampaignData, world: WorldBlueprint, all: readonly ActorData[] = []): InteractionSnapshot | null {
-  if (s.phase !== 'playing') return null;
+  if (s.phase !== 'playing' || s.battle) return null;
   const p = s.player, convoy = s.convoy;
   const nearConvoy = distance(p, convoy) < 4;
   const shipment = s.military && all.find(a => a.id === 'enemy-caravan');
@@ -226,9 +224,14 @@ export function resolveOutcome(world: World, s: CampaignData): void {
   }
 }
 
-export function campaignSystems(blueprint: WorldBlueprint): System[] {
+/**
+ * The field: exploration, logistics and the approach to a fight. Every system here pauses while a battle is active
+ * (`CampaignData.battle`); the battle system then runs the tick instead (see `battles.ts`). `strike` receives the hostile
+ * a field attack lands on this tick, which the engagement check turns into a first-strike battle.
+ */
+export function campaignSystems(blueprint: WorldBlueprint, strike: PendingStrike = { target: null }): System[] {
   const state = (ctx: TickContext) => ({ s: campaign(ctx.world), input: ctx.world.getResource(Intent) ?? {} });
-  return [
+  return fieldSystems([
     {
       name: 'KorovanyTimers', phase: 'preUpdate',
       run(ctx) {
@@ -271,36 +274,20 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
         const movement = dodging ? s.dodgeDirection : move;
         moveWithCollision(blueprint, p, movement.x * speed * ctx.dt, movement.z * speed * ctx.dt, p.radius);
         p.state = dodging ? 'dodge' : Math.hypot(move.x, move.z) > 0 ? 'moving' : 'idle';
-        if (input.special && p.abilityCooldown === 0) {
-          p.abilityCooldown = faction.abilityCooldown;
-          emit(ctx.world, s, 'ability', 'event.ability', p, 0, s.faction);
-          if (s.faction === 'elf') {
-            for (let i = -2; i <= 2; i++) fire(s, p, p.heading + i * 0.12, p.damage * 1.3, 'player', s.faction);
-            effect(s, 'volley', p, 6, p.heading);
-          } else if (s.faction === 'guard') {
-            p.abilityDuration = 5;
-            p.hp = Math.min(p.maxHp, p.hp + 25);
-            if (distance(p, s.convoy) < 10) s.convoy.hp = Math.min(s.convoy.maxHp, s.convoy.hp + 55);
-            effect(s, 'shield', p, 4, p.heading);
-            for (const a of all) if (distance(p, a) < 4.5) hurtActor(ctx.world, s, a, p.damage);
-          } else {
-            for (const a of all) if (distance(p, a) < 6.5) hurtActor(ctx.world, s, a, p.damage * 2);
-            effect(s, 'cleave', p, 6.5, p.heading);
-          }
-        }
+        // Faction skills belong to battles now; the field ability input does nothing.
         if (input.attack && p.attackCooldown === 0 && !dodging) {
           p.attackCooldown = faction.attackCooldown;
           p.state = 'attack';
           emit(ctx.world, s, 'attack', 'event.attack', p, 0, 'player');
+          // A swing or an arrow that lands on a hostile is a first strike: the battle opens with the hero's turn.
           if (s.faction === 'elf') fire(s, p, p.heading, p.damage, 'player', s.faction);
           else {
-            for (const a of all) {
+            const struck = all.filter(a => {
               const d = distance(p, a);
-              if (d <= faction.attackRange + a.radius &&
-                  (d < 1 || (Math.sin(p.heading) * (a.x - p.x) + Math.cos(p.heading) * (a.z - p.z)) / d > -0.1)) {
-                hurtActor(ctx.world, s, a, p.damage);
-              }
-            }
+              return hostileActive(s, a) && d <= faction.attackRange + a.radius &&
+                (d < 1 || (Math.sin(p.heading) * (a.x - p.x) + Math.cos(p.heading) * (a.z - p.z)) / d > -0.1);
+            }).sort((left, right) => distance(p, left) - distance(p, right))[0];
+            if (struck) strike.target ??= struck.id;
             effect(s, 'slash', p, faction.attackRange, p.heading);
           }
         }
@@ -345,30 +332,20 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
         }
         for (const a of all) {
           if (a.hp <= 0 || a.kind === 'caravan' || (a.siteId === 'fortress' && !s.fortress.unlocked)) continue;
+          // Saves from the real-time combat era may hold a swing in progress; battles replaced those swings.
+          if (a.state === 'windup' || a.state === 'attack' || a.state === 'recovery') { a.state = 'idle'; a.stateTime = 0; }
           if (a.kind === 'monster') {
-            monsterStep(ctx.world, s, blueprint, a, alerted, packs.get(a.siteId) ?? [], ctx.dt,
-              () => hurtTarget(ctx.world, s, 'player', a.damage));
+            monsterStep(ctx.world, s, blueprint, a, alerted, packs.get(a.siteId) ?? [], ctx.dt);
             continue;
           }
           if (a.allegiance === 'friendly') {
+            // Friendly forces fight beside the hero in battles; in the field they hold home or march with the convoy.
             if (s.faction === 'villain' && s.military?.directive && a.siteId === 'home') {
               a.home = { x: s.convoy.x, z: s.convoy.z };
             }
-            const enemy = all.filter(other => other.hp > 0 && other.allegiance === 'hostile' &&
-              (other.siteId !== 'fortress' || s.fortress.unlocked) && distance(a.home, other) < 20 && distance(a, other) < 22)
-              .sort((left, right) => distance(a, left) - distance(a, right))[0];
             a.target = null;
-            a.state = enemy ? 'chase' : 'idle';
-            if (enemy) {
-              const d = direction(a, enemy);
-              a.heading = Math.atan2(d.x, d.z);
-              if (distance(a, enemy) > a.attackRange) moveWithCollision(blueprint, a, d.x * a.speed * ctx.dt, d.z * a.speed * ctx.dt, a.radius);
-              else if (a.cooldown === 0) {
-                a.cooldown = 1.8;
-                if (a.kind === 'archer') fire(s, a, a.heading, a.damage, 'player', s.faction, 18, 'bolt');
-                else hurtActor(ctx.world, s, enemy, a.damage);
-              }
-            } else if (distance(a, a.home) > 2) {
+            a.state = 'idle';
+            if (distance(a, a.home) > 2) {
               let destination = a.home;
               if (s.faction === 'villain' && a.siteId === 'home') {
                 const destinationNode = blueprint.roads.nodes.find(n => n.id === s.convoy.destination) ??
@@ -393,32 +370,10 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
             continue;
           }
           if (a.siteId === 'raid' && caravan && !s.military) a.home = { x: caravan.x, z: caravan.z };
-          if (a.state === 'windup') {
-            if (a.stateTime > 0) continue;
-            a.state = 'attack'; a.stateTime = 0.12;
-            if (a.kind === 'archer') fire(s, a, a.heading, a.damage, 'enemy', a.faction, 18, 'bolt');
-            else {
-              const victim = a.target === 'shipment' ? caravan : a.target === 'convoy' ? s.convoy : s.player;
-              if (!victim) { a.target = null; continue; }
-              if (distance(a, victim) <= a.attackRange + victim.radius &&
-                  distance(a.attackPoint, victim) < (a.kind === 'boss' ? 3.5 : 2.3)) {
-                hurtTarget(ctx.world, s, a.target ?? 'player', a.damage);
-              }
-              if (a.kind === 'boss') effect(s, 'explosion', a.attackPoint, 3.5, a.heading);
-            }
-            continue;
-          }
-          if (a.state === 'attack') {
-            if (a.stateTime === 0) { a.state = 'recovery'; a.stateTime = a.kind === 'boss' ? 1.1 : 0.65; }
-            continue;
-          }
-          if (a.state === 'recovery' && a.stateTime > 0) continue;
-          const heroDistance = distance(a, s.player), cartDistance = distance(a, s.convoy);
+          // Hostile troops notice the hero, close in and make contact; contact opens a battle (KorovanyEngagement).
+          const heroDistance = distance(a, s.player);
           const heroLeash = distance(s.player, a.home) < (a.kind === 'boss' ? 22 : 19);
-          const cartLeash = distance(s.convoy, a.home) < 18;
-          const target = s.military && caravan?.allegiance === 'friendly' && !s.military.shipment.delivered &&
-            distance(a, caravan) < 12 && distance(a.home, caravan) < 20 ? 'shipment' : heroDistance < 17 && heroLeash ? 'player' :
-            cartDistance < 12 && cartLeash && !s.convoy.disabled ? 'convoy' : null;
+          const target = s.player.hp > 0 && heroDistance < 17 && heroLeash ? 'player' : null;
           a.target = target;
           if (!target) {
             a.state = 'idle';
@@ -429,18 +384,11 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
             }
             continue;
           }
-          const victim = target === 'shipment' ? caravan! : target === 'player' ? s.player : s.convoy;
-          const d = direction(a, victim), range = distance(a, victim);
+          const d = direction(a, s.player);
           a.heading = Math.atan2(d.x, d.z);
-          if (range <= a.attackRange + victim.radius && a.cooldown === 0) {
-            a.state = 'windup'; a.stateTime = a.kind === 'boss' ? 0.85 : a.kind === 'archer' ? 0.65 : 0.5;
-            a.cooldown = a.kind === 'boss' ? 2.6 : a.kind === 'archer' ? 2.2 : 1.8;
-            a.attackPoint = { x: victim.x, z: victim.z };
-          } else {
-            a.state = 'chase';
-            if (range > a.attackRange * 0.8) {
-              moveWithCollision(blueprint, a, d.x * a.speed * ctx.dt, d.z * a.speed * ctx.dt, a.radius);
-            }
+          a.state = 'chase';
+          if (heroDistance > contactRange(a, s.player) * 0.9) {
+            moveWithCollision(blueprint, a, d.x * a.speed * ctx.dt, d.z * a.speed * ctx.dt, a.radius);
           }
         }
       },
@@ -532,16 +480,7 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
             }
           }
         }
-        if (!cart.disabled && s.convoyWeaponTimer === 0) {
-          const enemy = actors(ctx.world).find(a => a.hp > 0 && distance(a, cart) < (s.faction === 'elf' ? 14 : 9) &&
-            a.allegiance !== 'friendly' && a.allegiance !== 'neutral' &&
-            (a.siteId !== 'fortress' || s.fortress.unlocked));
-          if (enemy && s.faction !== 'guard') {
-            s.convoyWeaponTimer = s.faction === 'villain' ? 2.5 : 1.2;
-            fire(s, cart, Math.atan2(enemy.x - cart.x, enemy.z - cart.z),
-              s.faction === 'villain' ? 26 : 12, 'player', s.faction, 24, s.faction === 'villain' ? 'siege' : 'arrow');
-          }
-        }
+        // The convoy's weapon (the elves' arrows, the mountain army's siege engine) fires only in battles, as an ally.
       },
     },
     {
@@ -561,21 +500,17 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
               end.x < blueprint.bounds.minX || end.x > blueprint.bounds.maxX ||
               end.z < blueprint.bounds.minZ || end.z > blueprint.bounds.maxZ) return false;
           if (projectile.owner === 'player') {
-            const hits = all.filter(a => a.hp > 0 && a.allegiance !== 'friendly' && a.allegiance !== 'neutral' && (a.siteId !== 'fortress' || s.fortress.unlocked) &&
+            const hits = all.filter(a => hostileActive(s, a) &&
               distance(a, projectSegment(a, start, end)) < a.radius + projectile.radius)
               .sort((a, b) => distance(start, a) - distance(start, b));
             const hit = hits[0];
-            if (hit) { hurtActor(ctx.world, s, hit, projectile.damage); return false; }
+            if (hit) { strike.target ??= hit.id; return false; }
           } else {
+            // Only saves from the real-time combat era hold hostile missiles; they now fall harmlessly.
             const shipment = s.military && !s.military.shipment.delivered && all.find(a => a.id === 'enemy-caravan' && a.allegiance === 'friendly' && a.hp > 0);
-            if (shipment && distance(shipment, projectSegment(shipment, start, end)) < shipment.radius + projectile.radius) {
-              hurtTarget(ctx.world, s, 'shipment', projectile.damage); return false;
-            }
-            for (const target of ['player', 'convoy'] as const) {
-              const body = target === 'player' ? s.player : s.convoy;
-              if (body.hp > 0 && distance(body, projectSegment(body, start, end)) < body.radius + projectile.radius) {
-                hurtTarget(ctx.world, s, target, projectile.damage); return false;
-              }
+            if (shipment && distance(shipment, projectSegment(shipment, start, end)) < shipment.radius + projectile.radius) return false;
+            for (const body of [s.player, s.convoy]) {
+              if (body.hp > 0 && distance(body, projectSegment(body, start, end)) < body.radius + projectile.radius) return false;
             }
           }
           return projectile.remaining > 0;
@@ -586,8 +521,8 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
       name: 'KorovanyConquest', phase: 'postUpdate',
       run(ctx) {
         const { s, input } = state(ctx), p = s.player, cart = s.convoy, all = actors(ctx.world);
+        countDefenders(s, all);
         for (const post of s.outposts) {
-          post.defendersRemaining = all.filter(a => a.siteId === post.id && a.hp > 0 && a.allegiance !== 'friendly').length;
           if (post.owner === 'enemy') {
             if (canCapturePost(s, post.id) && post.defendersRemaining === 0 && distance(p, post) <= post.captureRadius && input.interact && p.hp > 0) {
               post.captureProgress = Math.min(1, post.captureProgress + ctx.dt / 3);
@@ -644,19 +579,7 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
           s.fortress.unlocked = true;
           emit(ctx.world, s, 'fortress', 'event.fortress', s.fortress, supplied, 'fortress');
         }
-        const boss = all.find(a => a.id === s.fortress.bossId);
-        if (s.fortress.unlocked && boss && boss.hp > 0 && boss.hp < boss.maxHp * 0.6 &&
-            s.fortress.reinforcementWaves === 0 && supplied < 3) {
-          s.reinforcementTimer += ctx.dt;
-          if (s.reinforcementTimer >= 2) {
-            s.fortress.reinforcementWaves++;
-            for (let i = -1; i <= 1; i++) {
-              createActor(ctx.world, 'soldier', `reinforcement-${++s.spawnSequence}`, 'fortress',
-                { x: s.fortress.x + i * 3, z: s.fortress.z + 5 }, s.military && s.faction === 'villain' ? 'guard' : 'villain',
-                s.military ? 'hostile' : undefined);
-            }
-          }
-        }
+        // The single reinforcement wave now joins the final battle itself (see `battles.ts`).
       },
     },
     ...(blueprint.version === 3 ? [monsterSpawner(blueprint)] : []),
@@ -671,5 +594,16 @@ export function campaignSystems(blueprint: WorldBlueprint): System[] {
         }
       },
     },
-  ];
+  ]);
+}
+
+/** Field systems rest while a battle runs, and every system rests once the campaign has ended. */
+function fieldSystems(systems: System[]): System[] {
+  return systems.map(system => ({
+    ...system,
+    run(ctx: TickContext) {
+      const s = campaign(ctx.world);
+      if (!s.battle && s.phase === 'playing') system.run(ctx);
+    },
+  }));
 }

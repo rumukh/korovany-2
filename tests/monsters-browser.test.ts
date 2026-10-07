@@ -8,15 +8,16 @@ import {
 import { closeTestBrowser, launchTestBrowser } from './browser-cleanup';
 
 const WIDTH = 1280, HEIGHT = 720;
-/** Simulation ticks (1/60 s) between drawn frames of the hunt: 7.5 frames a second, at least two in every 0.35 s windup. */
+/** Simulation ticks (1/60 s) between drawn frames of the hunt: 7.5 frames a second, at least two in every battle windup. */
 const TICKS_PER_RENDER = 8;
 
 // W4a: a real guard campaign in a version 3 world, staged by save editing (only the hero moves): a grave-wolf pack
-// appears at a den, hunts the hero and dies under the hero's blows, every few simulation ticks drawn by the real view.
+// appears at a den, runs at the hero and dies in the battle its contact opens, every few simulation ticks drawn by the
+// real view.
 const preview = `<!doctype html><html><head><link rel="icon" href="data:,"><style>
 html,body {margin:0;overflow:hidden;background:#000} canvas {display:block;width:${WIDTH}px;height:${HEIGHT}px}
 </style></head><body><canvas id="view" width="${WIDTH}" height="${HEIGHT}"></canvas><script type="module">
-import { createCampaign, restoreCampaign } from '/src/game/index.ts';
+import { createCampaign, restoreCampaign, suggestCommand } from '/src/game/index.ts';
 import { isWalkable } from '/src/game/world.ts';
 import { parseBeasts } from '/src/audio/manifest.ts';
 import { createGameView, createRenderer, Presentation } from '/src/view/index.ts';
@@ -28,7 +29,8 @@ let presentation = null;
 const update = Presentation.prototype.update;
 Presentation.prototype.update = function (...args) { presentation = this; return update.apply(this, args); };
 try {
-  let session = createCampaign({ seed: 'wolves-browser', faction: 'guard', runId: 'wolves-browser', worldVersion: 3 });
+  // An honed blade keeps the battle (and the frames drawn of it) short.
+  let session = createCampaign({ seed: 'wolves-browser', faction: 'guard', runId: 'wolves-browser', worldVersion: 3, upgrades: { damage: 1 } });
   const world = session.snapshot().world;
   const lair = world.lairs[0];
   const near = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
@@ -126,16 +128,24 @@ try {
           result.slowestGpuMs = Math.max(result.slowestGpuMs, await gpuIdle());
         };
         const maxHp = session.snapshot().player.maxHp;
-        let hunting = false;
-        for (let step = 0; step < 900; step += ${TICKS_PER_RENDER}) {
+        // The hero waits for the pack (it is seen running in), then fights the battle its contact opens: suggested
+        // commands, and a parry (a dodge for heavy blows) to every blow but the first, which wounds it. (A parried bite is
+        // a whole move parried: its counter kills a wolf, so answering every bite would leave the hero unhurt.)
+        let unanswered = 1;
+        for (let step = 0; step < 60 * 90; step += ${TICKS_PER_RENDER}) {
           const snapshot = session.snapshot();
           const pack = (snapshot.monsters ?? []).filter(m => m.lairId === lair.id);
           if (pack.length && pack.every(m => m.hp <= 0)) break;
-          if (!hunting) hunting = pack.some(m => m.state === 'windup');
-          const prey = pack.filter(m => m.hp > 0).sort((a, b) => near(a, snapshot.player) - near(b, snapshot.player))[0];
           for (let i = 0; i < ${TICKS_PER_RENDER}; i++) {
-            const s = session.snapshot();
-            session.step(hunting && prey ? { attack: true, aim: { x: prey.x - s.player.x, z: prey.z - s.player.z } } : {});
+            const battle = session.snapshot().battle;
+            if (battle?.phase === 'command') session.step({ battle: suggestCommand(battle) });
+            let hit = battle?.phase === 'action' ? battle.action?.hits.find(h => h.target === 'hero' && h.outcome === 'pending' &&
+              h.pressed === null && h.impact === battle.tick + 1) : undefined;
+            if (hit && unanswered > 0) {
+              unanswered--;
+              hit = undefined;
+            }
+            session.step(hit ? hit.heavy ? { dodge: true } : { parry: true } : {});
           }
           counters.calls = 0;
           counters.triangles = 0;

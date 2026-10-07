@@ -1,9 +1,10 @@
 import { createPrng, type Prng } from '@aegis/core';
 import {
-  createBattle, DECISION_SECONDS, suggestCommand, type BattleDifficulty, type BattleHitSnapshot,
-  type BattleInput, type BattleLogEntry, type BattleOpening, type BattleSetup, type BattleSnapshot,
+  battleSnapshot, commandBattle, createBattle, DECISION_SECONDS, HERO_KITS, joinBattle, RULES, startBattle, suggestCommand,
+  tickBattle, type BattleDifficulty, type BattleHitSnapshot, type BattleInput, type BattleLogEntry, type BattleOpening,
+  type BattleSetup, type BattleSnapshot, type EncounterId,
 } from '../src/game/battle';
-import type { FactionId } from '../src/game';
+import { FACTIONS, type FactionId } from '../src/game';
 
 export type ReactionProfile = 'none' | 'masher' | 'novice' | 'average' | 'expert' | 'perfect';
 
@@ -127,9 +128,9 @@ export interface BattleMetrics {
 }
 
 export function measure(faction: FactionId, difficulty: BattleDifficulty, profile: ReactionProfile, seeds: number,
-  opening: BattleOpening = 'neutral'): BattleMetrics {
+  opening: BattleOpening = 'neutral', encounter: EncounterId = 'post-garrison'): BattleMetrics {
   const results = Array.from({ length: seeds }, (_, i) =>
-    playBattle({ seed: `tuning-${i}`, faction, encounter: 'post-garrison', difficulty, opening }, profile, `reactor-${i}`));
+    playBattle({ seed: `tuning-${i}`, faction, encounter, difficulty, opening }, profile, `reactor-${i}`));
   const mean = (values: number[]): number => values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
   const wins = results.filter(r => r.victory);
   const blows = results.reduce((sum, r) => sum + r.blows, 0);
@@ -146,4 +147,43 @@ export function formatMetrics(rows: readonly BattleMetrics[]): string {
     '| --- | --- | --- | --- | --- | --- | --- | --- |',
     ...rows.map(r => `| ${r.faction} | ${r.difficulty} | ${r.profile} | ${pct(r.winRate)} | ${r.minutes.toFixed(1)} | ` +
       `${r.rounds.toFixed(1)} | ${r.winRate ? pct(r.hpLeft) : '-'} | ${pct(r.defended)} |`)].join('\n');
+}
+/**
+ * The campaign's final battle as the engagement builds it: the commander (Raut for the elf and the guard, the Palace
+ * Marshal for the villain) and two fortress guards; with `wave`, the fortress's reinforcements join once the commander
+ * falls below `RULES.waveAt`, as `battles.ts` does. `upgrades` is the level of both damage and vitality purchases.
+ */
+export function playFinale(faction: FactionId, difficulty: BattleDifficulty, profile: ReactionProfile, seed: number,
+  upgrades = 0, wave = true): { victory: boolean; hpLeft: number; minutes: number } {
+  const maxHp = FACTIONS[faction].maxHp + upgrades * 30;
+  const damage = HERO_KITS[faction].damage * (FACTIONS[faction].damage + upgrades * 8) / FACTIONS[faction].damage;
+  const state = startBattle({
+    seed: `finale-${seed}`, faction, difficulty, hero: { hp: maxHp, maxHp, damage },
+    enemies: [{ id: 'boss', kind: faction === 'villain' ? 'marshal' : 'warlord' }, { id: 'guard-1', kind: 'captain' }, { id: 'guard-2', kind: 'captain' }],
+  });
+  const reactor = new Reactor(profile, `finale-reactor-${seed}`);
+  let joined = !wave;
+  for (let step = 0; step < 400_000; step++) {
+    if (state.phase === 'victory' || state.phase === 'defeat') {
+      return { victory: state.phase === 'victory', hpLeft: state.hero.hp / state.hero.maxHp, minutes: (state.now / 60 + state.round * DECISION_SECONDS) / 60 };
+    }
+    const boss = state.enemies[0]!;
+    if (!joined && boss.hp > 0 && boss.hp < boss.maxHp * RULES.waveAt) {
+      joined = true;
+      joinBattle(state, [1, 2, 3].map(n => ({ id: `reinforcement-${n}`, kind: 'soldier' as const, hp: RULES.waveHp })));
+    }
+    const s = battleSnapshot(state);
+    if (s.phase === 'command') { commandBattle(state, suggestCommand(s)); continue; }
+    reactor.observe(s);
+    tickBattle(state, reactor.input(state.now + 1));
+  }
+  throw new Error(`Finale did not finish: ${faction} ${difficulty} ${profile} ${seed}`);
+}
+
+export function measureFinale(faction: FactionId, difficulty: BattleDifficulty, profile: ReactionProfile, seeds: number,
+  upgrades = 0, wave = true): { winRate: number; hpLeft: number; minutes: number } {
+  const results = Array.from({ length: seeds }, (_, i) => playFinale(faction, difficulty, profile, i, upgrades, wave));
+  const wins = results.filter(r => r.victory);
+  const mean = (values: number[]): number => values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+  return { winRate: wins.length / seeds, hpLeft: mean(wins.map(r => r.hpLeft)), minutes: mean(results.map(r => r.minutes)) };
 }

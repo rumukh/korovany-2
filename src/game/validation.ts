@@ -1,4 +1,5 @@
 import type { EntitySnapshot, WorldSnapshot } from '@aegis/core';
+import { validateBattleOptions, validateBattleRecord } from './battles';
 import { FACTIONS } from './config';
 import { DIRECTIVES, militaryReady, shipmentDestination, type MilitaryState } from './faction-campaigns';
 import { MONSTER_FACTION, MONSTER_RULES, MONSTERS, monsterNumber } from './monsters';
@@ -74,7 +75,7 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
   assertRecord(raw, 'Campaign resource');
   assertRecord(raw.convoy, 'convoy');
   const { narrative: _initialNarrative, military: _initialMilitary, ...baseInitial } = initial;
-  const { narrative: rawNarrative, military: rawMilitary, ...baseRaw } = raw;
+  const { narrative: rawNarrative, military: rawMilitary, battle: rawBattle, battleOptions: rawBattleOptions, ...baseRaw } = raw;
   if (blueprint.version === 1 && Object.hasOwn(raw, 'narrative')) throw new Error('Legacy save contains narrative state');
   if (blueprint.version === 1 && Object.hasOwn(raw, 'military')) throw new Error('Legacy save contains faction military state');
   const template: CampaignData = {
@@ -91,6 +92,7 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
   };
   shape(baseRaw, template, 'campaign');
   const s = baseRaw;
+  if (rawBattleOptions !== undefined) s.battleOptions = validateBattleOptions(rawBattleOptions);
   if (blueprint.version !== 1) {
     assertRecord(rawMilitary, 'Military state'); assertRecord(rawMilitary.shipment, 'Military shipment');
     const militaryTemplate: MilitaryState = {
@@ -230,11 +232,12 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     const event = s.events[i]!;
     point(event); boundedNumber(event.id, 'event ID', 1, s.eventSequence, true);
     boundedNumber(event.tick, 'event tick', 0, tick, true); boundedNumber(event.amount, 'event amount', 0, 10_000);
-    oneOf(event.kind, ['attack', 'hurt', 'kill', 'pickup', 'capture', 'delivery', 'raid', 'convoy', 'repair', 'upgrade', 'ability', 'fortress', 'victory', 'defeat', 'notice'], 'event kind');
+    oneOf(event.kind, ['attack', 'hurt', 'kill', 'pickup', 'capture', 'delivery', 'raid', 'convoy', 'repair', 'upgrade', 'ability', 'fortress', 'victory', 'defeat', 'notice', 'battle', 'parry'], 'event kind');
     oneOf(event.key, ['event.attack', 'event.hurt', 'event.kill', 'event.coin', 'event.health',
       'event.supply', 'event.capture', 'event.delivery', 'event.raid', 'event.convoy', 'event.disabled',
       'event.repair', 'event.upgrade', 'event.ability', 'event.fortress', 'event.victory', 'event.defeat',
-      'notice.location', 'notice.coins', 'notice.max', 'notice.destination'], 'event localization key');
+      'notice.location', 'notice.coins', 'notice.max', 'notice.destination',
+      'event.battle', 'event.battleWon', 'event.reinforcements', 'event.parry'], 'event localization key');
     same(event.id, s.eventSequence - s.events.length + i + 1, 'event history sequence');
     if (i > 0 && (event.id <= s.events[i - 1]!.id || event.tick < s.events[i - 1]!.tick)) throw new Error('Unordered event history');
   }
@@ -422,6 +425,12 @@ export function validateSavedWorld(value: unknown, initial: CampaignData, bluepr
     return a.id === 'boss' && typeof a.hp === 'number' && a.hp > 0;
   });
   same(s.fortress.bossDefeated, !livingBoss, 'boss outcome');
+  if (rawBattle !== undefined) {
+    // A battle is saved only as it began: the world just after the engagement, with no input pending.
+    if (s.phase !== 'playing' || p.hp <= 0 || Object.keys(input).length > 0 || s.projectiles.length > 0 ||
+        s.narrative?.dialogue || s.narrative?.inspection) throw new Error('Invalid battle checkpoint');
+    s.battle = validateBattleRecord(rawBattle, blueprint, s, entities.map(e => e.components.KorovanyCombatant as ActorData));
+  }
   assertRecord(value.prng, 'PRNG');
   if (!Array.isArray(value.prng.s) || value.prng.s.length !== 4) throw new Error('Invalid PRNG');
   const words = value.prng.s.map((word, i) => boundedNumber(word, `PRNG word ${i}`, 0, 0xffffffff, true));

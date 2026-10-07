@@ -7,6 +7,7 @@ import { isWalkable } from "../src/game/world";
 import { parseBeasts, parseSoundtrack } from "../src/audio/manifest";
 import { AudioPresentation } from "../src/audio/presentation";
 import { Soundscape } from "../src/audio/soundscape";
+import { battleInput } from "./driver";
 
 // W4a: the grave wolves' voices are synthesised by scripts/audio/synth_beasts.py into their own manifest; the soundtrack
 // keeps its own unchanged.
@@ -85,23 +86,22 @@ describe("grave wolf voices", () => {
     move(spot(12));
     presentation.reset(session.snapshot());
     cue.mockClear();
-    const hunter = (snapshot: GameSnapshot) => {
-      const prey = (snapshot.monsters ?? []).filter((m) => m.hp > 0)
-        .sort((a, b) => Math.hypot(a.x - snapshot.player.x, a.z - snapshot.player.z) - Math.hypot(b.x - snapshot.player.x, b.z - snapshot.player.z))[0];
-      return prey ? { attack: true, aim: { x: prey.x - snapshot.player.x, z: prey.z - snapshot.player.z } } : {};
-    };
-    let hunting = false;
-    for (let tick = 0; tick < 60 * 20; tick++) {
+    let engaged = false;
+    for (let tick = 0; tick < 60 * 60; tick++) {
       const snapshot = session.snapshot();
-      if ((snapshot.monsters ?? []).some((m) => m.lairId === lair.id) && (snapshot.monsters ?? []).filter((m) => m.lairId === lair.id).every((m) => m.hp <= 0)) break;
-      // Stand still until the pack has turned on the hero, then fight.
-      if (!hunting) hunting = (snapshot.monsters ?? []).some((m) => m.target === "player" && m.state === "windup");
-      session.step(hunting ? hunter(snapshot) : {});
+      const pack = (snapshot.monsters ?? []).filter((m) => m.lairId === lair.id);
+      if (pack.length && pack.every((m) => m.hp <= 0)) break;
+      // Stand still until the pack reaches the hero; the battle it opens is fought with perfect reactions.
+      engaged ||= snapshot.battle !== undefined;
+      session.step(snapshot.battle ? battleInput(snapshot.battle) : {});
       show(session.snapshot());
     }
+    expect(engaged).toBe(true);
     for (const voice of ["howl", "snarl", "yelp", "death"]) expect(ids(), voice).toContain(`beast-wolf-${voice}`);
-    // Monster deaths have their own cry, not the troops' kill sting.
+    // Monster deaths have their own cry, not the troops' kill sting; parries ring and the won battle has its sting.
     expect(ids()).not.toContain("kill");
+    expect(ids()).toContain("attack-guard");
+    expect(ids()).toContain("upgrade");
     expect(scene.mock.calls.some((call) => call[0] === "combat")).toBe(true);
   });
 });

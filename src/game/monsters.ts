@@ -3,7 +3,8 @@
  * graves, barrow ghouls drawn to the burials Raut's men dug up for bone ash, and bog trolls of the fens and passes. They
  * are beasts, not the dead: the Caller stays unseen and the missing crews never become monsters. Packs appear at the
  * wolves' lairs and the other beasts' haunts (`WorldBlueprint.lairs` and `haunts`) while the hero is 90-160 m away,
- * wander within 25 m, hunt the hero only (never the convoy or a shipment) and give up beyond their 35 m leash; idle
+ * wander within 25 m, hunt the hero only (never the convoy or a shipment) and give up beyond their 35 m leash; a hunter
+ * that reaches the hero opens a battle (`battles.ts`). Idle
  * packs vanish beyond 240 m, and a place whose pack was killed out stays empty for 90-180 s. Packs, spawn points,
  * roaming and cooldowns draw on the simulation's seeded PRNG, so replays and saves stay deterministic. Version 1/2
  * campaigns have no lairs, no monster state and no monster system: none of this runs or draws there.
@@ -15,16 +16,13 @@ import { distance, isWalkable, monsterLairs, moveWithCollision, nearbyObstacles,
 
 export interface MonsterSpec {
   hp: number;
+  /** Field stat kept for saves and validation; battles use the species' kit (`battle/content.ts`). */
   damage: number;
   /** Hunting speed; `walk` is the wandering pace. */
   speed: number;
   walk: number;
   radius: number;
   attackRange: number;
-  /** Seconds of the telegraphed windup, the recovery after a strike and the cooldown between strikes. */
-  windup: number;
-  recovery: number;
-  cooldown: number;
   /** The hero is noticed inside `aggro` metres. */
   aggro: number;
   /** Pack size, inclusive. */
@@ -34,14 +32,11 @@ export interface MonsterSpec {
 }
 
 export const MONSTERS: Readonly<Record<MonsterSpecies, Readonly<MonsterSpec>>> = {
-  wolf: { hp: 48, damage: 8, speed: 6.0, walk: 1.3, radius: 0.6, attackRange: 1.9, windup: 0.35, recovery: 0.4, cooldown: 1.2,
-    aggro: 18, pack: [3, 4], coins: 4 },
-  /** A claw swipe from a lean, long-armed carrion beast, in threes and fours. */
-  ghoul: { hp: 72, damage: 10, speed: 5.0, walk: 1.1, radius: 0.6, attackRange: 2.1, windup: 0.45, recovery: 0.5, cooldown: 1.4,
-    aggro: 16, pack: [3, 4], coins: 6 },
-  /** Alone: a slow, heavily telegraphed two-fisted slam that the hero can step out of; it takes a long fight to fell. */
-  troll: { hp: 300, damage: 24, speed: 4.4, walk: 1.0, radius: 1.3, attackRange: 3.2, windup: 0.9, recovery: 1.0, cooldown: 2.4,
-    aggro: 20, pack: [1, 1], coins: 20 },
+  wolf: { hp: 48, damage: 8, speed: 6.0, walk: 1.3, radius: 0.6, attackRange: 1.9, aggro: 18, pack: [3, 4], coins: 4 },
+  /** A lean, long-armed carrion beast with raking claws, in threes and fours. */
+  ghoul: { hp: 72, damage: 10, speed: 5.0, walk: 1.1, radius: 0.6, attackRange: 2.1, aggro: 16, pack: [3, 4], coins: 6 },
+  /** Alone, slow and heavy: its slams can only be dodged, and it takes a long battle to fell. */
+  troll: { hp: 300, damage: 24, speed: 4.4, walk: 1.0, radius: 1.3, attackRange: 3.2, aggro: 20, pack: [1, 1], coins: 20 },
 };
 
 export const MONSTER_RULES = {
@@ -230,25 +225,13 @@ function detour(blueprint: WorldBlueprint, a: ActorData, goal: Vec2): Vec2 | nul
 }
 
 /**
- * One monster's turn in the enemy AI: the soldiers' telegraphed windup, strike and recovery with its species' timings,
- * hunting the hero inside its aggro radius (or with its pack, `alerted`) while the hero stays inside the leash, and
- * wandering its circle otherwise. `bite` deals the strike's damage to the hero.
+ * One monster's turn in the field: hunting the hero inside its aggro radius (or with its pack, `alerted`) while the hero
+ * stays inside the leash, and wandering its circle otherwise. A hunter that reaches the hero makes contact, which opens a
+ * battle (the fighting itself happens there, with the species' battle kit).
  */
 export function monsterStep(world: World, s: CampaignData, blueprint: WorldBlueprint, a: ActorData, alerted: ReadonlySet<string>,
-  pack: readonly ActorData[], dt: number, bite: () => void): void {
+  pack: readonly ActorData[], dt: number): void {
   const spec = MONSTERS[a.species!], p = s.player;
-  if (a.state === 'windup') {
-    if (a.stateTime > 0) return;
-    a.state = 'attack';
-    a.stateTime = 0.12;
-    if (p.hp > 0 && distance(a, p) <= a.attackRange + p.radius && distance(a.attackPoint, p) < 2.3) bite();
-    return;
-  }
-  if (a.state === 'attack') {
-    if (a.stateTime === 0) { a.state = 'recovery'; a.stateTime = spec.recovery; }
-    return;
-  }
-  if (a.state === 'recovery' && a.stateTime > 0) return;
   const range = distance(a, p);
   const hunting = p.hp > 0 && distance(p, a.home) < MONSTER_RULES.leash &&
     (range < spec.aggro || alerted.has(a.siteId) || (a.target === 'player' && range < spec.aggro * 2));
@@ -275,13 +258,6 @@ export function monsterStep(world: World, s: CampaignData, blueprint: WorldBluep
   a.target = 'player';
   const dx = (p.x - a.x) / (range || 1), dz = (p.z - a.z) / (range || 1);
   a.heading = Math.atan2(dx, dz);
-  if (range <= a.attackRange + p.radius && a.cooldown === 0) {
-    a.state = 'windup';
-    a.stateTime = spec.windup;
-    a.cooldown = spec.cooldown;
-    a.attackPoint = { x: p.x, z: p.z };
-    return;
-  }
   a.state = 'chase';
   // Close in on the hero, round any box in the way, weaving round other solids, while keeping apart from the rest of the
   // pack.

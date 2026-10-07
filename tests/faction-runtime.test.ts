@@ -101,19 +101,26 @@ describe('authoritative faction runtime boundaries', () => {
 
   test('guard shipment can be disabled, remains present, and is freely recovered without a directive', () => {
     const game = createCampaign({ faction: 'guard', seed: 'recover-shipment', upgrades: { damage: 3, vitality: 3, logistics: 3 } });
+    // Nobody harms wagons in the field: unattended, the shipment stands intact. Only battles can wreck it.
     advance(game, {}, 7200);
-    const wreck = game.snapshot().actors.find(a => a.id === 'enemy-caravan')!;
-    expect(wreck.hp).toBe(0);
-    expect(restoreCampaign(game.serialize()).snapshot()).toEqual(game.snapshot());
-    const bot = new CampaignDriver(game);
+    const intact = game.snapshot().actors.find(a => a.id === 'enemy-caravan')!;
+    expect(intact.hp).toBe(intact.maxHp);
+    const wrecked = corrupt(game.serialize(), s => { s.military!.shipment.repairProgress = 0; });
+    const wagon = (wrecked.engine as { entities: { components: { KorovanyCombatant: { id: string; hp: number } } }[] }).entities
+      .find(e => e.components.KorovanyCombatant.id === 'enemy-caravan')!.components.KorovanyCombatant;
+    wagon.hp = 0;
+    const recovered = restoreCampaign(wrecked);
+    expect(recovered.snapshot().actors.find(a => a.id === 'enemy-caravan')).toMatchObject({ hp: 0, state: 'idle' });
+    expect(restoreCampaign(recovered.serialize()).snapshot()).toEqual(recovered.snapshot());
+    const bot = new CampaignDriver(recovered);
     bot.toNode('raid');
     bot.fight('raid');
-    bot.walk(game.snapshot().actors.find(a => a.id === 'enemy-caravan')!);
-    advance(game, { interact: true }, 301);
-    expect(game.snapshot().actors.find(a => a.id === 'enemy-caravan')!.hp).toBeGreaterThan(0);
-    expect(game.snapshot().campaign!.directive).toBeNull();
-    expect(game.snapshot().objective.raidComplete).toBe(false);
-    expect(restoreCampaign(game.serialize()).snapshot()).toEqual(game.snapshot());
+    bot.walk(recovered.snapshot().actors.find(a => a.id === 'enemy-caravan')!);
+    advance(recovered, { interact: true }, 301);
+    expect(recovered.snapshot().actors.find(a => a.id === 'enemy-caravan')!.hp).toBeGreaterThan(0);
+    expect(recovered.snapshot().campaign!.directive).toBeNull();
+    expect(recovered.snapshot().objective.raidComplete).toBe(false);
+    expect(restoreCampaign(recovered.serialize()).snapshot()).toEqual(recovered.snapshot());
   });
 
   test('legacy world and narrative version are separate; faction military state is absent on v1', () => {
@@ -127,9 +134,8 @@ describe('authoritative faction runtime boundaries', () => {
 
   test('faction defeat is terminal and rewards cannot be claimed twice', () => {
     const game = createCampaign({ faction: 'elf', seed: 'faction-terminal', runId: 'faction-terminal-once' });
-    const bot = new CampaignDriver(game);
-    bot.toNode('forest', false);
-    advance(game, {}, 9000);
+    const bot = new CampaignDriver(game, 'reckless');
+    expect(() => bot.toNode('forest', false)).toThrow(/Driver defeated/);
     const snapshot = game.snapshot();
     expect(snapshot.phase).toBe('defeat');
     expect(snapshot.narrative!.dialogue).toBeNull();
@@ -142,7 +148,7 @@ describe('authoritative faction runtime boundaries', () => {
     expect(claimRewards(profile, snapshot.rewards!)).toEqual(profile);
   });
 
-  test('villain troops obey convoy movements, engage enemies and resume deterministically', async () => {
+  test('villain troops march with the convoy, leave fighting to battles and resume deterministically', async () => {
     const game = createCampaign({ faction: 'villain', seed: 'sovereign-squad', upgrades: { logistics: 3 } });
     const story = new FactionStoryDriver(game);
     await story.directive('dominion');
@@ -163,15 +169,17 @@ describe('authoritative faction runtime boundaries', () => {
     for (let i = 0; i < 2600; i++) {
       advance(game, {});
       advance(resumed, {});
-      fired ||= game.snapshot().projectiles.some(p => p.owner === 'player' && p.kind === 'bolt');
+      fired ||= game.snapshot().projectiles.length > 0;
       if (i % 30 === 0) {
         expect(resumed.serialize()).toEqual(game.serialize());
       }
     }
     const snapshot = game.snapshot();
     expect(snapshot.actors.filter(a => a.siteId === 'home').every(a => dist(a, home) > 100)).toBe(true);
-    expect(fired, JSON.stringify({ convoy: snapshot.convoy, actors: snapshot.actors.filter(a => a.siteId === 'home' || a.siteId === 'quarry') })).toBe(true);
-    expect(snapshot.player.kills).toBeGreaterThan(0);
+    // Troops fight beside the hero in battles only: marching past hostiles starts nothing in the field.
+    expect(fired).toBe(false);
+    expect(snapshot.player.kills).toBe(0);
+    expect(snapshot.battle).toBeUndefined();
     expect(snapshot.actors.filter(a => a.siteId === 'home').every(a => a.allegiance === 'friendly' && a.target === null)).toBe(true);
     expect(restoreCampaign(game.serialize()).snapshot()).toEqual(snapshot);
   });

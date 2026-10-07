@@ -48,8 +48,9 @@ export function voiceState(faction: FactionId, journal: string[] = [], militaryC
   const template = templates.get(faction)!;
   const world = voiceWorld(faction);
   const { quests } = getFactionStory(faction);
+  const { battle: _battle, ...snapshot } = structuredClone(template);
   const state: CampaignData = {
-    ...structuredClone(template),
+    ...snapshot,
     worldId: world.id, phase: 'playing', projectiles: [],
     raidComplete: militaryComplete, eventSequence: 0, transientSequence: 0, spawnSequence: 0,
     followTimer: 0, convoyWeaponTimer: 0, reinforcementTimer: 0, dodgeDirection: { x: 0, z: 1 },

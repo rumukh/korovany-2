@@ -196,7 +196,7 @@ the preview's world assets.
   trolls (`char-ghoul`, `char-troll`, cooked by `cook_monster_biped.py` on the troops' humanoid rig), all with the
   `MONSTER_CLIPS` contract and their own gaits (`MONSTER_GAITS`), come from `GameSnapshot.monsters`, not `actors`, and are drawn by `MonsterInstance` (`monsters.ts`), the
   troops' clip logic for a beast: Idle, then Walk or Run by ground speed (a wolf runs above 2.2 m/s), Windup, Strike and
-  Recovery scrubbed by the snapshot's progress through those states, Hit added on a wound and Death held at its last
+  Recovery scrubbed by the snapshot's progress through those states (in battles, the poses round each blow), Hit added on a wound and Death held at its last
   frame. Monsters are never dyed and carry no allegiance ring; a hostile health bar shows once wounded or winding up,
   and the windup's red tell ring has the beast's reach (wolf 1.9 m, ghoul 2.1 m, troll 3.2 m). Bodies lie along steep
   ground like the troops' (lairs and haunts are level anyway). `worldAssetIds` adds each lair's and haunt's species
@@ -425,8 +425,8 @@ Troop instances (`CharacterInstance`) are `SkeletonUtils` clones driven by an
 `AnimationMixer` from snapshot state and render time: `Idle`, `AtEase` (while a
 story scene is open), `Run` (moving faster than 0.35 m/s, played at the ratio of
 the measured ground speed to the troop's `runSpeed`), `Windup`, `Strike` and
-`Recovery` (scrubbed by snapshot progress, each lasting exactly as long as the
-actor kind's state), an additive `Hit` on health loss, and `Death`, which is held
+`Recovery` (scrubbed by snapshot progress over each state's duration as first
+observed, so a battle pose of any length plays the whole clip), an additive `Hit` on health loss, and `Death`, which is held
 as the corpse. All troops are cooked at human size; `TROOPS` scales the captain
 by 1.2 and the bosses by 1.7 at runtime, the sizes of the procedural figures they
 replace, and their Run clips are authored at the world speed divided by that
@@ -462,7 +462,8 @@ The hero (`HeroInstance`) is a `SkeletonUtils` clone with 14 clips: `Idle`,
 `AtEase` (while a story scene is open), `Interact` (while interaction progress
 rises), the directional runs `Run`, `RunBack`, `RunLeft` and `RunRight`, `Sprint`
 (blended in by ground speed), `Dodge` (while the player dodges), the `Attack`
-and `AttackB` swings (alternating, on the player's own attack events), `Ability`,
+and `AttackB` swings (alternating, on the player's own attack events, which
+battles also emit for swings, counters and parries), `Ability` (on battle skills),
 an additive `Hit` on health loss, and the held `Death`. Movement comes from the
 snapshot's velocity in the hero's frame. Every locomotion clip shares one stride
 phase advanced by that ground speed, so planted feet keep the authored stride.
@@ -582,8 +583,8 @@ crease strain), including deliberately broken copies that must fail.
 `tests/hero-models.test.ts` does the same for every hero clip, drives each hero
 through the presenter with real campaign inputs, and checks foot planting in
 eight directions. `tests/troop-models.test.ts` does it for the archer, captain
-and bosses, whose telegraphed clips must last exactly as long as the simulation's
-windup and recovery. `tests/wagon-models.test.ts` checks the wagons' structure
+and bosses, whose telegraphed clips keep the lengths they were authored at (the
+former field windup and recovery; battle poses scrub them over their own durations). `tests/wagon-models.test.ts` checks the wagons' structure
 (a static body, one wheel node per axle touching the ground, a harness whose
 shafts meet the ox's hame hooks, budgets and WebP maps) and the cargo's fit in the
 convoy's bed, verifies every frame of every ox gait at its authored speed with

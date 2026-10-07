@@ -223,7 +223,12 @@ describe('hero presentation without a DOM', () => {
       tick({ attack: true });
       expect(character().overlay?.clip).toBe('AttackB');
       repeat(Math.ceil(FACTIONS[faction].attackCooldown * 60) + 1, {});
-      tick({ special: true });
+      // Faction skills are battle commands; the ability event a skill emits plays its own clip.
+      tick({}, next => {
+        const id = Math.max(0, ...next.events.map(event => event.id)) + 1;
+        next.events = [...next.events, { id, tick: next.tick, kind: 'ability', key: 'event.ability', x: next.player.x,
+          z: next.player.z, amount: 0, targetId: faction }];
+      });
       expect(character().overlay?.clip).toBe('Ability');
       // The longest ability (the villain's 0.9 s cleave) and its 0.15 s fade.
       repeat(75, {});

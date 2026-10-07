@@ -48,9 +48,10 @@ describe("isolated browser persistence", () => {
     vi.stubGlobal("window", { matchMedia: () => ({ matches: false }) });
     expect(defaultSettings().invertControllerCameraX).toBe(false);
     const old = { language: "en", quality: "high", reducedMotion: false, muted: true, audio: defaultMix() };
-    expect(parseSettings(old)).toEqual({ ...old, invertControllerCameraX: false });
+    const battle = { battleDifficulty: "standard", battleLatency: 0 };
+    expect(parseSettings(old)).toEqual({ ...old, invertControllerCameraX: false, ...battle });
     for (const inverted of [false, true]) {
-      const saved = { ...old, invertControllerCameraX: inverted };
+      const saved = { ...old, invertControllerCameraX: inverted, ...battle };
       expect(parseSettings(JSON.parse(JSON.stringify(saved)))).toEqual(saved);
     }
     for (const invalid of ["false", 0, 1, null, {}]) {
@@ -58,6 +59,27 @@ describe("isolated browser persistence", () => {
     }
     for (const language of ["en", "ru"] as const) {
       expect(translate(language, "invertControllerCameraX")).not.toBe("invertControllerCameraX");
+    }
+  });
+
+  it("defaults older settings to standard battles without latency compensation and validates the battle settings", () => {
+    vi.stubGlobal("window", { matchMedia: () => ({ matches: false }) });
+    expect(defaultSettings()).toMatchObject({ battleDifficulty: "standard", battleLatency: 0 });
+    const saved = { language: "ru", quality: "low", reducedMotion: true, muted: false, invertControllerCameraX: true, audio: defaultMix() };
+    for (const battleDifficulty of ["story", "standard", "expert"] as const) {
+      for (const battleLatency of [0, 7, 12]) {
+        const value = { ...saved, battleDifficulty, battleLatency };
+        expect(parseSettings(JSON.parse(JSON.stringify(value)))).toEqual(value);
+      }
+    }
+    for (const invalid of [{ battleDifficulty: "easy" }, { battleDifficulty: null }, { battleLatency: -1 }, { battleLatency: 13 },
+      { battleLatency: 2.5 }, { battleLatency: "3" }]) {
+      expect(parseSettings({ ...saved, ...invalid }), JSON.stringify(invalid)).toBeNull();
+    }
+    for (const language of ["en", "ru"] as const) {
+      for (const key of ["battleDifficulty", "battleLatency", "battleLatency.help", "battleDifficulty.story", "battleDifficulty.expert"]) {
+        expect(translate(language, key)).not.toBe(key);
+      }
     }
   });
 

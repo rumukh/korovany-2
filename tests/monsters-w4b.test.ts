@@ -7,6 +7,7 @@ import { MONSTERS, MONSTER_RULES } from '../src/game/monsters';
 import type { FactionId, GameInput, GameSession, GameSnapshot, MonsterSnapshot, MonsterSpecies, Vec2, WorldBlueprint, WorldLair } from '../src/game/types';
 import { isWalkable, lakeClearance, monsterLairs, obstacleClearance, projectSegment } from '../src/game/world';
 import { CHAPEL_SHRINES, HAUNTS, LAIR_RULES, V3_BUILDINGS } from '../src/game/world-v3';
+import { playBattle } from './driver';
 
 // W4b: barrow ghouls at opened barrows on the Ash Steppe and bog trolls in the Fens and on the Frostspine. Their haunts
 // sit beside the W4a wolves' lairs (`WorldBlueprint.haunts`), whose placement W4b leaves exactly as it was.
@@ -64,12 +65,6 @@ function staged(faction: FactionId, seed: string | number, haunt: (world: WorldB
   return { session, world, lair };
 }
 const first = (species: MonsterSpecies) => (world: WorldBlueprint): WorldLair => world.haunts!.find(h => h.species === species)!;
-
-/** Aims and attacks the nearest living beast; stands still. */
-const hunter = (snapshot: GameSnapshot): GameInput => {
-  const prey = (snapshot.monsters ?? []).filter(m => m.hp > 0).sort((a, b) => near(a, snapshot.player) - near(b, snapshot.player))[0];
-  return prey ? { attack: true, aim: { x: prey.x - snapshot.player.x, z: prey.z - snapshot.player.z } } : {};
-};
 
 describe('W4b barrow ghouls and bog trolls', () => {
   test('version 3 worlds keep ghoul haunts on the Ash Steppe and troll haunts in the Fens and Frostspine, clear of everything', () => {
@@ -160,7 +155,7 @@ describe('W4b barrow ghouls and bog trolls', () => {
     });
   }
 
-  test('trolls round the giant skull to reach a hero behind it, ghouls fight in the open, and every faction hero wins', async () => {
+  test('trolls round the giant skull to reach a hero behind it, ghouls come in the open, and every faction hero wins the battle', async () => {
     const results: string[] = [];
     for (const species of ['ghoul', 'troll'] as const) {
       for (const faction of ['elf', 'guard', 'villain'] as const) {
@@ -179,44 +174,58 @@ describe('W4b barrow ghouls and bog trolls', () => {
           const at = behind ?? spot(world, lair, 12);
           if (species === 'troll') expect(behind, `${faction}/${seed}: a spot behind the skull`).not.toBeNull();
           const session = placed(start, at);
-          const maxHp = session.snapshot().player.maxHp;
-          let lowest = maxHp;
-          const ticks = await until(session, 60 * 40, s => !pack(s, lair.id).some(m => m.hp > 0), s => {
-            lowest = Math.min(lowest, s.player.hp);
-            return hunter(s);
-          });
-          const snapshot = session.snapshot();
+          const hp = session.snapshot().player.hp;
+          // The hero only waits: the beasts must reach it, and their contact opens the battle.
+          const ticks = await until(session, 60 * 40, s => s.battle !== undefined);
           const label = `${species}/${faction}/${seed}`;
+          const engaged = session.snapshot();
+          expect(engaged.battle, `${label} not reached in ${ticks / 60} s`).toBeDefined();
+          expect(engaged.player.hp, label).toBe(hp);
+          expect(engaged.battle!.opening, label).not.toBe('first-strike');
+          expect(engaged.battle!.enemies.filter(e => e.kind === species).map(e => e.id).sort(), label)
+            .toEqual(pack(engaged, lair.id).map(m => m.id).sort());
+          const snapshot = playBattle(session);
           expect(snapshot.phase, label).toBe('playing');
-          expect(pack(snapshot, lair.id).every(m => m.hp === 0), `${label} killed in ${ticks / 60} s`).toBe(true);
-          // The beasts land blows (the villain's life-steal may heal the hero back to full by the end).
-          const dip = (maxHp - lowest) / maxHp;
-          results.push(`${label} ${(dip * 100).toFixed(0)}%`);
-          expect(dip, label).toBeGreaterThan(0.02);
-          expect(dip, label).toBeLessThan(0.8);
+          expect(pack(snapshot, lair.id).every(m => m.hp === 0 && m.state === 'dead'), label).toBe(true);
+          // Perfect reactions take no wound at all.
+          expect(snapshot.player.hp, label).toBe(hp);
+          results.push(`${label} ${(ticks / 60).toFixed(1)} s`);
         }
       }
     }
-    console.info('W4b stand-up fights (lowest health, as health lost)', results.join(', '));
+    console.info('W4b engagements (time for the beasts to reach the waiting hero)', results.join(', '));
   }, 300_000);
 
-  test('a troll\'s slam is a long telegraph the hero can step out of', async () => {
+  test('a troll\'s slam is a long, heavy telegraph: a parry cannot stop it, a dodge can', async () => {
     const { session: start, world, lair } = staged('guard', 'wolves-a', first('troll'));
-    let session = placed(start, spot(world, lair, 12));
-    await until(session, 60 * 20, s => pack(s, lair.id).some(m => m.state === 'windup'));
-    const troll = pack(session.snapshot(), lair.id).find(m => m.state === 'windup')!;
-    expect(troll.stateTime).toBeGreaterThan(0.6);
-    const hp = session.snapshot().player.hp;
-    // Step straight back out of reach during the windup: the slam misses.
-    const away = (s: GameSnapshot): GameInput => {
-      const t = pack(s, lair.id)[0]!, d = near(t, s.player) || 1;
-      return { move: { x: (s.player.x - t.x) / d, z: (s.player.z - t.z) / d } };
-    };
-    await until(session, 90, s => pack(s, lair.id)[0]!.state === 'recovery', away);
-    expect(pack(session.snapshot(), lair.id)[0]!.state).toBe('recovery');
-    expect(session.snapshot().player.hp).toBe(hp);
-    session = restoreCampaign(JSON.parse(JSON.stringify(session.serialize())));
-    expect(session.snapshot().monsters!.length).toBeGreaterThan(0);
+    const session = placed(start, spot(world, lair, 12));
+    await until(session, 60 * 20, s => s.battle !== undefined);
+    const outcomes = new Map<'parry' | 'dodge', string>();
+    let windup = 0;
+    for (let i = 0; i < 40_000 && outcomes.size < 2; i++) {
+      const s = session.snapshot(), battle = s.battle;
+      if (!battle) break;
+      if (battle.phase === 'command') { session.step({ battle: { type: 'attack', target: battle.enemies.find(e => e.hp > 0)!.id } }); continue; }
+      const action = battle.action!;
+      const troll = pack(s, lair.id)[0]!;
+      if (action.actor === troll.id && action.hits.some(h => h.heavy) && troll.state === 'windup') windup = Math.max(windup, troll.stateTime);
+      const hit = action.hits.find(h => h.target === 'hero' && h.outcome === 'pending' && h.pressed === null && h.impact === battle.tick + 1);
+      if (!hit?.heavy) { session.step(hit ? { parry: true } : {}); continue; }
+      // A heavy blow lands on the tick being entered: answer it once with a parry, once with a dodge, and read the log.
+      const reaction = outcomes.has('parry') ? 'dodge' : 'parry';
+      const seen = Math.max(0, ...battle.log.map(e => e.id));
+      session.step({ [reaction]: true });
+      for (let tick = 0; tick < 6; tick++) session.step({});
+      const fresh = session.snapshot().battle?.log.filter(e => e.id > seen) ?? [];
+      outcomes.set(reaction, fresh.some(e => e.kind === 'dodge') ? 'dodged'
+        : fresh.some(e => e.kind === 'damage' && e.target === 'hero') ? 'hit' : 'unresolved');
+    }
+    expect(windup).toBeGreaterThan(0.6);
+    expect(outcomes.get('parry')).toBe('hit');
+    expect(outcomes.get('dodge')).toBe('dodged');
+    const resumed = restoreCampaign(JSON.parse(JSON.stringify(session.serialize())));
+    expect(resumed.snapshot().battle?.tick ?? 0).toBe(0);
+    expect(resumed.snapshot().monsters!.length).toBeGreaterThan(0);
   });
 
   test('the beasts\' voices ship beside the wolf\'s: each species howls, snarls, yelps and dies, from the committed synthesis', () => {

@@ -67,28 +67,33 @@ describe('real-input campaign acceptance', () => {
       expect(claimRewards(profile, final.rewards!)).toEqual(profile);
     });
   }
-  test('unguarded hero dies, terminal defeat stays frozen', () => {
+  test('a hero who never defends falls in battle, terminal defeat stays frozen', () => {
     const game = createCampaign({ seed: 'defeat', faction: 'elf' });
-    const bot = new CampaignDriver(game);
-    bot.toNode('forest', false);
-    advance(game, {}, 9000);
+    const bot = new CampaignDriver(game, 'reckless');
+    expect(() => bot.toNode('forest', false)).toThrow(/Driver defeated/);
     expect(game.snapshot().phase).toBe('defeat');
+    expect(game.snapshot().battle).toBeUndefined();
     const save = game.serialize();
     advance(game, { interact: true, special: true }, 300);
+    game.step({ battle: { type: 'item', item: 'tonic' } });
     expect(game.serialize()).toEqual(save);
     expect(restoreCampaign(save).snapshot()).toEqual(game.snapshot());
   });
-  test('an abandoned convoy can be recovered without supplies or coins', () => {
+  test('a wrecked convoy can be recovered without supplies or coins', () => {
     const game = createCampaign({ seed: 'repair', faction: 'guard' });
     game.step({ convoy: { destination: 'forest' } });
     advance(game, {}, 9000);
-    expect(game.snapshot().convoy.disabled).toBe(true);
-    const bot = new CampaignDriver(game);
+    // Nobody harms wagons in the field: the convoy arrives unescorted and intact.
+    expect(game.snapshot().convoy).toMatchObject({ disabled: false, hp: game.snapshot().convoy.maxHp });
+    const save = JSON.parse(JSON.stringify(game.serialize()));
+    Object.assign(save.engine.resources.KorovanyCampaign.convoy, { hp: 0, disabled: true, repairProgress: 0 });
+    const wrecked = restoreCampaign(save);
+    const bot = new CampaignDriver(wrecked);
     bot.capture('forest');
     bot.walk(bot.snap().convoy);
-    advance(game, { interact: true }, 120);
-    expect(restoreCampaign(game.serialize()).snapshot()).toEqual(bot.snap());
-    advance(game, { interact: true }, 660);
+    advance(wrecked, { interact: true }, 120);
+    expect(restoreCampaign(wrecked.serialize()).snapshot()).toEqual(bot.snap());
+    advance(wrecked, { interact: true }, 660);
     expect(bot.snap().convoy.hp).toBeGreaterThan(0);
     expect(bot.snap().convoy.disabled).toBe(false);
     bot.waitConvoy('home');
@@ -132,19 +137,24 @@ describe('persistence and input boundaries', () => {
   }
   test('capture and fortress gates cannot be bypassed by interaction or invalid route commands', () => {
     const game = createCampaign({ seed: 'gates', faction: 'guard' });
-    const bot = new CampaignDriver(game);
-    bot.toNode('forest', false);
-    advance(game, { interact: true }, 60);
-    expect(bot.snap().outposts.find(p => p.id === 'forest')?.captureProgress).toBe(0);
-    expect(bot.snap().interaction?.kind).toBe('contested');
     game.step({ convoy: { destination: 'not-a-road-node' }, upgrade: 'damage' });
+    expect(game.snapshot().convoy.mode).toBe('hold');
+    expect(game.snapshot().player.upgrades.damage).toBe(0);
+    expect(game.snapshot().events.some(event => event.key === 'notice.destination')).toBe(true);
+    // The garrison engages before the hero reaches the post; nothing in the field moves while the battle waits.
+    const bot = new CampaignDriver(game, 'halt');
+    bot.toNode('forest', false);
+    expect(bot.snap().battle).toBeDefined();
+    advance(game, { interact: true, move: { x: 1, z: 0 }, convoy: 'follow' }, 60);
+    expect(bot.snap().battle).toBeDefined();
+    expect(bot.snap().outposts.find(p => p.id === 'forest')?.captureProgress).toBe(0);
+    expect(bot.snap().interaction).toBeNull();
     expect(bot.snap().convoy.mode).toBe('hold');
-    expect(bot.snap().player.upgrades.damage).toBe(0);
-    expect(bot.snap().events.some(event => event.key === 'notice.destination')).toBe(true);
     const other = createCampaign({ seed: 'gates', faction: 'elf' });
     const scout = new CampaignDriver(other);
     scout.toNode('fortress');
     advance(other, { attack: true, special: true, aim: { x: 0, z: 1 }, interact: true }, 180);
+    expect(scout.snap().battle).toBeUndefined();
     expect(scout.snap().actors.find(a => a.id === 'boss')?.hp).toBe(480);
     expect(scout.snap().fortress.unlocked).toBe(false);
     expect(scout.snap().interaction?.kind).toBe('locked');

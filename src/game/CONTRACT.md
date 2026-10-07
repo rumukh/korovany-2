@@ -23,8 +23,9 @@ be decorative, but roads, sites and bridge deck must stay traversable.
 The shell owns title/faction/seed selection, settings, RU/EN localization, camera,
 keyboard/pointer conversion to world-space directions, pause, fixed 60 Hz
 accumulation with a frame cap, save storage and metadata persistence. `step` takes
-held attack/sprint/interact; dodge/special/convoy/upgrade are one-shot pulses.
-Pause means not calling combat `step`. Neither renderer nor shell may mutate live rules.
+held attack/sprint/interact; dodge/parry/convoy/upgrade are one-shot pulses
+(`special` is accepted and ignored: faction skills are battle commands).
+Pause means not calling `step`. Neither renderer nor shell may mutate live rules.
 The exception is `step({ narrative: command })`: it is a paused transaction and
 never increments the tick or advances movement, timers, projectiles, RNG, the
 convoy or hostile AI. Narrative input is exclusive of combat input. Valid
@@ -32,10 +33,49 @@ transactions clear the Aegis intent resource, including refused stale choices.
 An open conversation or inspection also blocks ordinary combat ticks until a
 `close` command (or the conversation's offered `leave` choice). The shell may therefore submit dialogue and
 journal commands while its fixed-step loop is paused.
+`step({ battle: command })` and `step({ battleOptions })` are paused transactions
+too, exclusive of any other input: the first applies a `BattleCommand` on the
+hero's turn of the battle in progress (ignored outside battles; an unavailable
+command only sets the battle's `notice`), the second stores the battle difficulty
+and reaction latency (0-12 ticks) for battles that begin afterwards
+(`CampaignData.battleOptions`, saved; absent means standard and 0).
 `snapshot` returns an independent plain object. Its world is immutable by contract
 for the lifetime of that run; renderer can cache scenery by `world.id`. A version 3
 world (about 6,000 obstacles) is not copied per snapshot: every snapshot of a run
 shares one deep-frozen copy of it, and only the rest of the snapshot is fresh.
+
+Battles (`battles.ts`, engine in `battle/`): nobody deals damage in the field.
+A hostile hunting the hero within `attackRange + hero radius + 0.25` m (contact)
+opens a battle, an ambush when it is more than about 110 degrees from the hero's
+heading; a field swing or a player arrow that lands on an active hostile first
+opens one with a first strike (the hero's turn first). Participants: the trigger,
+its site's group within 30 m and other hostiles within 18 m (monsters of other
+lairs only while hunting), at most five; friendly troops within 22 m (at most
+three) and the convoy's weapon (`convoy-cart`: the elves' arrow cart or the
+villain's siege cart, the convoy within 16 m and not disabled) are allies; the
+convoy and a claimed, undelivered shipment within 16 m are wards. Enemy battle HP
+is the kit's maximum scaled by the actor's HP share; the hero's is campaign HP,
+its damage the kit's scaled by damage upgrades. While `CampaignData.battle` (the
+battle record) exists every field system rests and `KorovanyBattle` runs first
+in each tick: it ticks the battle on every world tick while an action plays
+(reaction pulses from `Intent.parry` / `dodge`), and on the hero's turn the world
+ticks but the battle waits. It shows the battle in the world: actor HP and
+deaths (kills, loot, raid and boss outcomes as before), ward damage (a convoy at
+zero is disabled, and its weapon leaves the battle), poses (`windup`/`attack`/`recovery` round each blow, `chase`
+while taking a place), places on the battlefield, the hero's facing and
+`dodge` state, effects, and events (`attack` for the hero's swings and parry
+presses, `ability` for skills, `hurt`, `kill`, `parry`, and `battle` with
+`event.battle`, `event.battleWon` and `event.reinforcements`). The fortress's
+single reinforcement wave (three soldiers, as before) joins the final battle once
+the commander is below 60% (unless all three posts are supplied). Victory clears
+the record and the field resumes in the same tick; defeat ends the campaign.
+`GameSnapshot.battle` (`BattleView`: the engine's `BattleSnapshot` plus localized
+`names` of every participant) is present while a battle runs, and `interaction`
+is null. Saves during a battle hold the world as the battle began (the session's
+checkpoint, taken right after the engagement with an empty intent, also when a
+battle begins in the tick another is won), so restoring
+one restarts the battle; the validator regenerates the record from the saved world
+and its saved trigger, opening and seed, and rejects any difference.
 
 Version 3 (`generateWorld(seed, 3)`, `CampaignOptions.worldVersion: 3`) keeps the
 v2 geography, regions, locations, roads, river, bridges, sites and story, and
@@ -95,10 +135,9 @@ species, x, z, heading, hp, maxHp, radius, state, stateTime, attackRange, target
 'player' | null, home, lairId }`; the key is absent in v1/v2), never in `actors`.
 A wolf (48 HP, 8 damage, 6 m/s, 0.6 m radius, 1.9 m reach) wanders within 25 m
 of its den, hunts the hero inside 18 m (its whole pack with it) while the hero
-stays within 35 m of the den, and attacks with the troops' telegraphed windup
-(0.35 s), strike and recovery (0.4 s) and a 1.2 s cooldown. It never targets the
-convoy or a shipment. Friendly soldiers, the convoy's weapon, abilities and
-projectiles hurt monsters like any hostile actor. A dead monster drops 4 coins
+stays within 35 m of the den, and its contact opens a battle against the pack
+(the `wolf` battle kit). It never targets the convoy or a shipment. In battles,
+allies and the convoy's weapon fight monsters like any enemy. A dead monster drops 4 coins
 while fewer than 16 pickups lie on the ground and stays down for 8 s. Its kill
 emits `event.kill` (amount: the coins, `targetId`: its ID) but never counts
 towards `player.kills`, level or renown. Once a lair's whole pack is dead the
@@ -115,10 +154,10 @@ ghoul haunts in the Ash Steppe with an opened long barrow (`kit-barrow`, a
 haunts in the Fens and on the Frostspine with a giant skull and two big mossy
 boulders (`<haunt>-piece-<n>`). The spawner, cooldowns, validation and terrain
 levelling treat lairs and haunts alike (`monsterLairs`: lairs, then haunts). A
-ghoul (72 HP, 10 damage, 5 m/s, 0.6 m radius, 2.1 m reach, windup 0.45 s,
-recovery 0.5 s, cooldown 1.4 s, 16 m aggro) comes in packs of 3-4 and drops 6
-coins; a troll (300 HP, 24 damage, 4.4 m/s, 1.3 m radius, 3.2 m reach, windup
-0.9 s, recovery 1.0 s, cooldown 2.4 s, 20 m aggro) comes alone and drops 20.
+ghoul (72 HP, 10 damage, 5 m/s, 0.6 m radius, 2.1 m reach, 16 m aggro) comes in
+packs of 3-4 and drops 6 coins; a troll (300 HP, 24 damage, 4.4 m/s, 1.3 m radius,
+3.2 m reach, 20 m aggro) comes alone and drops 20. In battle they fight with the
+`ghoul` and `troll` kits (the troll's slams are heavy: only a dodge avoids them).
 Chasing monsters walk round the corners of a box (a barrow, a skull, a fallen
 trunk) that stands between them and the hero.
 Default `generateWorld`/`createCampaign` versions stay 2; the browser shell passes `worldVersion: 3` for new
@@ -129,10 +168,10 @@ an ordinary error.
 
 Renderer sees player, actors (including the enemy caravan), convoy, collision
 obstacles, road graph, water/bridges, pickups, effects, projectiles, faction colors,
-AI windup/attack/recovery state, fortress and outpost ownership/progress.
+battle poses (windup/attack/recovery), fortress and outpost ownership/progress.
 For v2, `ActorSnapshot.allegiance` explicitly identifies friendly, hostile and
 neutral actors. Appearance and political identity never imply hostility. Friendly
-soldiers fight hostile forces; the player and friendly projectiles cannot damage
+soldiers fight beside the hero in battles; the player and friendly projectiles cannot engage
 friendly/neutral soldiers or the shipment. `WorldRegion.politicalFaction` exposes
 four political territories: elves, Crown, mountain ruler, and independent humans.
 `owner`, not faction color, defines controlled holdings. V1 retains its original
@@ -200,7 +239,7 @@ not an enemy simply because of its legacy ID. It begins friendly for guard and
 neutral for the other factions. Clear its hostile escort/attackers and hold E
 within 4m to assume control after the directive (guard also needs the gate
 defense). It follows its actual road route at 4m/s only while the hero is within
-22m. Attacks can disable it without deleting it; held E repairs a wreck in five
+22m. Enemy blows in a battle (where it is a ward) can wreck it without deleting it; held E repairs a wreck in five
 seconds for free, then continuously repairs damage. Delivery requires a living
 wagon physically at its destination and no nearby hostile forces. It grants
 90 supplies once. The separate logistics convoy still begins with 30 cargo,
@@ -319,12 +358,15 @@ Node-only renderer or CLI. A custom Three presenter is intentional.
 
 The registered `KorovanyCombatant` component owns hostile/friendly forces and the shipment; the
 `KorovanyCampaign` resource owns the hero, convoy and campaign counters.
-`KorovanyIntent` receives validated per-tick input. The schedule runs timers,
-hero action, enemy AI, convoy routing, swept projectiles, conquest and terminal
-cleanup in that order. Saves retain the entire engine World including PRNG and
+`KorovanyIntent` receives validated per-tick input. The schedule runs the battle
+(`KorovanyBattle`), then timers, hero action, enemy AI, convoy routing, swept
+projectiles, conquest and terminal cleanup in that order (these field systems rest
+while a battle is active), then the engagement check (`KorovanyEngagement`).
+Saves retain the entire engine World including PRNG and
 entity allocator. Restoration validates the generated world ID, finite bounded
 state, roster identity, collision positions, contiguous events, on-road paths,
-supply conservation, captured-post defenders and terminal rewards.
+supply conservation, captured-post defenders, terminal rewards and the battle
+record.
 
 Generator geometry reserves all road corridors before adding scenery; circle
 walls at actual sites are also authoritative. Corpses expire after eight seconds,

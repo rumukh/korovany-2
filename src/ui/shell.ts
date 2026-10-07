@@ -1,5 +1,6 @@
-import { FACTIONS, FACTION_CAMPAIGNS, type FactionId, type GameEvent, type GameInput, type GameSnapshot, type MetaProfile, type NarrativeInput, type UpgradeId } from "../game";
+import { FACTIONS, FACTION_CAMPAIGNS, type BattleCommand, type FactionId, type GameEvent, type GameInput, type GameSnapshot, type MetaProfile, type NarrativeInput, type UpgradeId } from "../game";
 import { Atlas } from "./atlas";
+import { BattleHud } from "./battle-hud";
 import { formatTime, translate } from "./locale";
 import type { Settings } from "./storage";
 import { campaignContent, dialogueContent, inspectionContent, journalContent, localText, militaryObjective, questTarget, worldTarget, type QuestFilter } from "./story";
@@ -25,7 +26,8 @@ export type ShellAction =
   | { type: "settings"; settings: Settings }
   | { type: "metaUpgrade" | "upgrade"; id: UpgradeId }
   | { type: "convoy"; order: NonNullable<GameInput["convoy"]> }
-  | { type: "narrative"; command: NarrativeInput };
+  | { type: "narrative"; command: NarrativeInput }
+  | { type: "battle"; command: BattleCommand };
 
 export interface ShellState {
   settings: Settings;
@@ -83,6 +85,9 @@ export class GameShell {
   private readonly controllerStatus = element("div", "controller-status");
   private readonly confirmationHost = element("div", "confirmation-host");
   private readonly navigation = new ControllerNavigation();
+  private readonly battleHud: BattleHud;
+  /** Escape left target selection on key-down: its key-up must not reach the game input (which would pause). */
+  private escapeConsumed = false;
   private readonly controller = new AbortController();
   private controllerFeedback: ControllerFeedback = { active: false, connected: false, armed: false, audioLocked: false, status: "no-device" };
   private controllerSeen = false;
@@ -104,6 +109,7 @@ export class GameShell {
 
   constructor(root: HTMLElement, state: ShellState, private readonly dispatch: (action: ShellAction) => void) {
     this.state = state;
+    this.battleHud = new BattleHud((command) => dispatch({ type: "battle", command }));
     this.canvas.tabIndex = 0;
     this.live.setAttribute("aria-live", "polite");
     this.live.setAttribute("aria-atomic", "true");
@@ -119,7 +125,7 @@ export class GameShell {
     this.minimap.type = "button";
     this.minimap.addEventListener("click", () => dispatch({ type: "overlay", overlay: "map" }));
     this.hudRail.append(this.minimap, this.controls, this.hudControllerStatus);
-    this.hud.append(this.hudTop, this.hudRail, this.hudBottom);
+    this.hud.append(this.hudTop, this.hudRail, this.hudBottom, this.battleHud.cue, this.battleHud.root);
     this.voiceCaption.setAttribute("aria-live", "polite");
     this.voiceCaption.setAttribute("aria-atomic", "true");
     this.modelStatus.hidden = true;
@@ -127,6 +133,11 @@ export class GameShell {
     root.replaceChildren(this.canvas, this.hud, this.overlayHost, this.warnings, this.live, this.voiceCaption, this.modelStatus,
       this.controllerStatus, this.confirmationHost);
     window.addEventListener("keydown", (event) => this.overlayKey(event), { signal: this.controller.signal, capture: true });
+    window.addEventListener("keyup", (event) => {
+      if (event.code !== "Escape" || !this.escapeConsumed) return;
+      this.escapeConsumed = false;
+      event.stopImmediatePropagation();
+    }, { signal: this.controller.signal, capture: true });
     window.addEventListener("focusin", (event) => {
       if (this.confirmation && event.target instanceof Node && !this.confirmationHost.contains(event.target)) {
         controllerControls(this.confirmationHost)[0]?.focus({ preventScroll: true });
@@ -432,6 +443,9 @@ export class GameShell {
     this.snapshot = snapshot;
     this.atlas.observe(snapshot);
     if (this.currentOverlay !== null) return;
+    // In a battle the battle panel replaces the road panels at the bottom of the screen.
+    this.battleHud.update(snapshot.battle, this.state.settings.language, this.controllerFeedback.active);
+    this.hudBottom.hidden = snapshot.battle !== undefined;
     const crest = element("section", "hero-panel");
     crest.append(element("div", `faction-crest ${snapshot.faction}`, snapshot.faction === "elf" ? "↟" : snapshot.faction === "guard" ? "♜" : "◆"));
     const vitals = element("div", "hero-vitals");
@@ -507,13 +521,13 @@ export class GameShell {
       actions.append(interaction);
     }
     const slots = element("div", "action-slots");
+    // Faction skills are battle commands; on the road a strike that lands first opens a battle with the first turn.
     for (const [key, label, cooldown] of [
       ["Space", "attack", snapshot.player.attackCooldown],
       ["Q", "dodge", snapshot.player.dodgeCooldown],
-      ["F", FACTIONS[snapshot.faction].abilityKey, snapshot.player.abilityCooldown],
     ] as const) {
       const slot = element("div", "action-slot");
-      const glyph = this.controllerFeedback.active ? ({ Space: "RT", Q: "B", F: "Y" } as const)[key] : key === "Space" ? this.t("spaceKey") : key;
+      const glyph = this.controllerFeedback.active ? ({ Space: "RT", Q: "B" } as const)[key] : key === "Space" ? this.t("spaceKey") : key;
       slot.append(element("kbd", "", glyph), element("span", "", this.t(label)),
         element("small", cooldown > 0 ? "cooldown" : "", cooldown > 0 ? `${cooldown.toFixed(1)}${this.t("seconds")}` : this.t("ready")));
       slots.append(slot);
@@ -530,6 +544,31 @@ export class GameShell {
       this.minimap.replaceChildren(this.atlas.draw(snapshot, this.state.settings.language, true), element("span", "", `${this.controllerFeedback.active ? "View" : "M"} · ${this.t("map")}`));
       this.lastMapTick = snapshot.tick;
     }
+  }
+
+  /** The battle's approach ring follows the battle every frame (the panel itself refreshes with the HUD). */
+  battleFrame(snapshot: GameSnapshot | null): void {
+    this.battleHud.frame(this.currentOverlay === null ? snapshot?.battle : undefined);
+  }
+
+  /** Controller input for the battle's commands on the hero's turn, while the game runs; true when it acted. */
+  handleBattleController(frame: ControllerUiFrame, dt: number): boolean {
+    if (this.currentOverlay !== null || this.confirmation || !this.battleHud.commanding) {
+      this.navigation.reset();
+      return false;
+    }
+    if (this.controllerGate) {
+      this.navigation.reset();
+      if (controllerNeutral(frame)) this.controllerGate = false;
+      return false;
+    }
+    if (!this.controllerFeedback.active || !this.controllerFeedback.armed || this.controllerFeedback.status !== "ready") {
+      this.navigation.reset();
+      return false;
+    }
+    const acted = frame.cancel ? this.battleHud.cancel() : this.navigation.handle(this.battleHud.controls, frame, dt);
+    if (acted) { this.controllerGate = true; this.navigation.reset(); }
+    return acted;
   }
 
   private meter(key: string, value: number, max: number, className: string, label?: string): HTMLElement {
@@ -889,6 +928,43 @@ export class GameShell {
       row.append(input);
       panel.append(row);
     }
+    const difficultyRow = element("label", "setting-row", this.t("battleDifficulty"));
+    const difficulty = element("select");
+    difficulty.dataset.controllerKey = "setting:battleDifficulty";
+    difficulty.setAttribute("aria-label", this.t("battleDifficulty"));
+    for (const value of ["story", "standard", "expert"] as const) {
+      const option = element("option", "", this.t(`battleDifficulty.${value}`));
+      option.value = value;
+      option.selected = this.state.settings.battleDifficulty === value;
+      difficulty.append(option);
+    }
+    difficulty.addEventListener("change", () => {
+      const value = difficulty.value;
+      if (value === "story" || value === "standard" || value === "expert") {
+        this.dispatch({ type: "settings", settings: { ...this.state.settings, battleDifficulty: value } });
+      }
+    });
+    difficultyRow.append(difficulty);
+    const latencyRow = element("label", "setting-row", this.t("battleLatency"));
+    const latency = element("input");
+    latency.type = "range";
+    latency.min = "0";
+    latency.max = "12";
+    latency.step = "1";
+    latency.value = String(this.state.settings.battleLatency);
+    latency.dataset.controllerKey = "setting:battleLatency";
+    latency.setAttribute("aria-label", this.t("battleLatency"));
+    const milliseconds = (ticks: number): string => `${Math.round(ticks * 1000 / 60)} ms`;
+    const latencyOutput = element("output", "", milliseconds(this.state.settings.battleLatency));
+    latency.setAttribute("aria-valuetext", latencyOutput.value);
+    latency.addEventListener("input", () => {
+      const ticks = Number(latency.value);
+      latencyOutput.value = milliseconds(ticks);
+      latency.setAttribute("aria-valuetext", latencyOutput.value);
+      this.dispatch({ type: "settings", settings: { ...this.state.settings, battleLatency: ticks } });
+    });
+    latencyRow.append(latency, latencyOutput);
+    panel.append(difficultyRow, latencyRow, element("p", "small muted", this.t("battleLatency.help")));
     const mixer = element("fieldset", "audio-mixer");
     mixer.append(element("legend", "", this.t("audio.mixer")));
     for (const channel of mixChannels) {
@@ -1031,7 +1107,14 @@ export class GameShell {
       }
       return;
     }
-    if (this.currentOverlay === null) return;
+    if (this.currentOverlay === null) {
+      if (this.battleHud.key(event)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (event.code === "Escape") this.escapeConsumed = true;
+      }
+      return;
+    }
     const editable = event.target instanceof HTMLElement && event.target.matches("input, textarea, select");
     if (this.currentOverlay === "dialogue" && !editable && !event.repeat && /^Digit[1-9]$/.test(event.code)) {
       event.preventDefault();

@@ -9,6 +9,12 @@ import type { Soundscape } from "./soundscape";
 
 export type AudioOutput = Pick<Soundscape, "setActive" | "setScene" | "speak" | "cancelSpeech" | "cue">;
 
+/** Effect cues of the battle events by localization key; a battle's start has none (the combat score carries it). */
+const BATTLE_CUES: Readonly<Record<string, string | undefined>> = {
+  "event.battleWon": "upgrade",
+  "event.reinforcements": "fortress",
+};
+
 interface DialogueLine {
   speaker: string;
   text: LocalizedText;
@@ -138,7 +144,8 @@ export class AudioPresentation {
     // Version 3 monsters hunting the hero count as danger too.
     const beasts = (snapshot.monsters ?? []).some((monster) => monster.hp > 0 && near(monster, 28) &&
       ["windup", "attack", "chase"].includes(monster.state));
-    if (enemies.length || beasts) this.dangerUntil = snapshot.elapsed + 6;
+    // A battle plays the combat score throughout, even while the hero chooses a command.
+    if (enemies.length || beasts || snapshot.battle) this.dangerUntil = snapshot.elapsed + 6;
     if (snapshot.fortress.unlocked && !snapshot.fortress.bossDefeated &&
       snapshot.actors.some((actor) => actor.kind === "boss" && actor.hp > 0 && near(actor, 36) &&
         actor.allegiance !== "friendly" && actor.allegiance !== "neutral")) this.bossUntil = snapshot.elapsed + 8;
@@ -169,8 +176,13 @@ export class AudioPresentation {
       if (event.kind === "notice") continue;
       // A monster's fall has its own cry (below), not the troops' kill sting.
       if (event.kind === "kill" && event.targetId.startsWith("monster-")) continue;
+      // Battles reuse the effect bank: a parry rings like steel turned aside, a won battle has a small bronze sting and the
+      // fortress's reinforcements its alarm bell; a battle's start is carried by the combat score.
       const id = event.kind === "attack" ? `attack-${snapshot.faction}`
-        : event.kind === "ability" ? `ability-${snapshot.faction}` : event.kind === "hurt" ? "hit" : event.kind;
+        : event.kind === "ability" ? `ability-${snapshot.faction}` : event.kind === "hurt" ? "hit"
+          : event.kind === "parry" ? "attack-guard"
+            : event.kind === "battle" ? BATTLE_CUES[event.key] : event.kind;
+      if (!id) continue;
       if (event.kind === "victory" || event.kind === "defeat") {
         this.sound.cue(id);
         this.terminalCue = `${snapshot.runId}:${snapshot.phase}`;

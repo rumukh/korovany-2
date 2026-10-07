@@ -162,8 +162,6 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("real browser shell control
     await until(cdp, `window.korovany.inspect().snapshot.events.some(e => e.id > ${firstAttackEvent} && e.kind === 'attack')`, Boolean, 15_000);
     await press("Space", false);
     await press("ArrowLeft", false);
-    await tap("KeyF");
-    await until(cdp, "window.korovany.inspect().snapshot.player.abilityCooldown", (cooldown: number) => cooldown > 0, 15_000);
     await tap("KeyC");
     await until(cdp, "window.korovany.inspect().snapshot.convoy.mode", (mode: string) => mode !== moved.snapshot?.convoy.mode, 15_000);
 

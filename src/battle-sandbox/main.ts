@@ -264,6 +264,7 @@ function togglePause(force?: boolean): void {
 
 function describeCommand(s: BattleSnapshot, command: BattleCommand): string {
   if (command.type === 'item') return 'Tonic';
+  if (command.type === 'protect') return 'Protect';
   const name = command.type === 'attack' ? 'Attack' : moveName(command.skill);
   return command.target ? `${name} → ${actorName(s, command.target)}` : name;
 }
@@ -313,7 +314,8 @@ function commandsPanel(s: BattleSnapshot): string {
   }
   if (session.autoCommands) return '<p class="hint">Auto commands are on: the suggested command plays for you.</p>';
   const suggestion = suggestCommand(s);
-  const suggestedId = suggestion.type === 'attack' ? 'attack' : suggestion.type === 'item' ? 'tonic' : suggestion.skill;
+  const suggestedId = suggestion.type === 'attack' ? 'attack' : suggestion.type === 'item' ? 'tonic'
+    : suggestion.type === 'protect' ? 'protect' : suggestion.skill;
   return `<div class="buttons">${s.commands.map((option, i) => `<button type="button" class="command${option.id === suggestedId ? ' suggested' : ''}"
       data-option="${i}"${option.enabled ? '' : ` aria-disabled="true" title="${escapeHtml(noticeText(option.reason!))}"`}>
       <kbd>${i + 1}</kbd> ${escapeHtml(moveName(option.id))}${option.cost ? ` <small>${option.cost} AP</small>` : ''}${

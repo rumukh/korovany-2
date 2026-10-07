@@ -70,6 +70,7 @@ let viewWorldId: string | null = null;
 let input: GameInput | null = null;
 let controllerInput: ControllerInput | null = null;
 let queued: CampaignInput = {};
+let inBattle = false;
 let lastAim: Vec2 = { x: 0, z: -1 };
 let lastFrame: number | null = null;
 let accumulator = 0;
@@ -209,6 +210,8 @@ function changeOverlay(overlay: Overlay, selection?: SpeechSelection): void {
   shell?.show(overlay);
   if (overlay === null && campaign && snapshot?.phase === "playing") {
     running = true;
+    // Before input resumes: the click that resumed play must not capture the mouse in a battle.
+    syncBattle();
     input?.setEnabled(true);
   }
   syncAudio(selection);
@@ -287,6 +290,7 @@ function begin(sameSeed?: boolean, confirmed = false): void {
     upgrades: profile.upgrades, runId: crypto.randomUUID(), worldVersion,
   });
   snapshot = campaign.snapshot();
+  applyBattleOptions();
   audio.reset(snapshot);
   campaignSave.adopt();
   atlasSave.adopt();
@@ -304,6 +308,7 @@ function begin(sameSeed?: boolean, confirmed = false): void {
 
 function resume(): void {
   if (!campaign || !snapshot) return;
+  applyBattleOptions();
   selectedFaction = snapshot.faction;
   selectedSeed = snapshot.seed;
   refresh(false);
@@ -384,11 +389,14 @@ function dispatch(action: ShellAction): void {
         break;
       case "settings": {
         const languageChanged = settings.language !== action.settings.language;
+        const battleChanged = settings.battleDifficulty !== action.settings.battleDifficulty ||
+          settings.battleLatency !== action.settings.battleLatency;
         settings = action.settings;
         storage.write(storageKeys.settings, settings);
         sound.configure(settings.muted, settings.audio);
         view?.setQuality(settings.quality);
         view?.setReducedMotion(settings.reducedMotion);
+        if (battleChanged && !atTitle) applyBattleOptions();
         refresh(languageChanged);
         syncAudio();
         break;
@@ -408,6 +416,14 @@ function dispatch(action: ShellAction): void {
       case "convoy":
         resume();
         if (running) queued = { ...queued, convoy: action.order };
+        break;
+      case "battle":
+        // A battle command is a paused transaction on the hero's turn: it never advances the world.
+        if (!campaign || !snapshot?.battle || !running) break;
+        campaign.step({ battle: action.command });
+        snapshot = campaign.snapshot();
+        campaignSave.markDirty();
+        shell?.update(snapshot);
         break;
       case "narrative": {
         if (!campaign || !snapshot || atTitle || snapshot.phase !== "playing") break;
@@ -472,6 +488,13 @@ function worldDirection(local: Vec2): Vec2 {
 function sampleInput(): CampaignInput {
   const sample = input?.consume(controllerInput?.consume(snapshot?.tick ?? 0));
   if (!sample || !snapshot) return {};
+  if (snapshot.battle) {
+    // In a battle only reactions count, and only while an enemy's move plays: the hero's own presses are no parries.
+    queued = {};
+    const action = snapshot.battle.phase === "action" ? snapshot.battle.action : null;
+    if (!action || action.actor === "hero") return {};
+    return { ...(sample.parry ? { parry: true } : {}), ...(sample.dodge ? { dodge: true } : {}) };
+  }
   if (sample.talk && snapshot.narrative?.interaction) {
     const target = snapshot.narrative.interaction;
     queued = {};
@@ -504,14 +527,34 @@ function events(next: GameSnapshot): void {
       case "defeat":
       case "raid":
       case "upgrade":
+      case "battle":
       case "fortress": important = true; break;
     }
-    if (!["attack", "hurt", "pickup"].includes(event.kind)) {
+    if (!["attack", "hurt", "pickup", "parry"].includes(event.kind)) {
       if (event.label) shell?.announceText(event.label[settings.language]);
       else shell?.announce(event.key);
     }
   }
   if (next.tick - lastSaveTick >= 600 || (important && next.tick - lastSaveTick >= 120)) saveCampaign();
+}
+
+/** Battles release the mouse for the battle panel and move the approach ring every frame. */
+function syncBattle(): void {
+  const fighting = snapshot?.battle !== undefined;
+  if (fighting !== inBattle) {
+    inBattle = fighting;
+    input?.setBattle(fighting);
+    if (snapshot && running) shell?.update(snapshot);
+  }
+  shell?.battleFrame(snapshot);
+}
+
+/** Sends the battle settings to the campaign; they apply to battles that begin afterwards. */
+function applyBattleOptions(): void {
+  if (!campaign || snapshot?.phase !== "playing") return;
+  campaign.step({ battleOptions: { difficulty: settings.battleDifficulty, latencyTicks: settings.battleLatency } });
+  snapshot = campaign.snapshot();
+  campaignSave.markDirty();
 }
 
 function stopForError(error: unknown, kind: "graphics" | "game" | "assets"): void {
@@ -535,11 +578,14 @@ function pollController(delta: number): void {
     audioLocked: !settings.muted && sound.inspect().state !== "running",
   });
   if (running) {
+    const commanding = snapshot?.battle?.phase === "command";
     if (frame.disconnected) changeOverlay("pause");
-    else if (frame.overlay) changeOverlay(frame.overlay);
+    // In a battle the D-pad chooses commands: its Up does not open the journal.
+    else if (frame.overlay && !(inBattle && frame.overlay === "journal")) changeOverlay(frame.overlay);
+    else if (commanding && shell.handleBattleController(frame.ui, delta)) controllerInput.clear();
     else {
       if (frame.camera.yaw || frame.camera.pitch) view?.orbit(frame.camera.yaw, frame.camera.pitch);
-      if (frame.camera.zoom) view?.zoom(frame.camera.zoom);
+      if (frame.camera.zoom && !commanding) view?.zoom(frame.camera.zoom);
     }
   } else if (shell.handleController(frame.ui, delta)) controllerInput.clear();
 }
@@ -575,6 +621,7 @@ function frame(time: number): void {
       if (stepped) snapshot = campaign.snapshot();
       if (snapshot) {
         events(snapshot);
+        syncBattle();
         hudElapsed += delta;
         if (hudElapsed >= 0.1) {
           shell?.update(snapshot);

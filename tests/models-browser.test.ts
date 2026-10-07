@@ -242,12 +242,17 @@ window.modelHarness = {
     // The first full frame is heroStep's, after the world textures finish loading.
     return { shaderErrors, warmup };
   },
-  /** Steps the real campaign with one input and renders; dead forces the defeat pose. */
-  heroStep(input, ticks = 1, dead = false) {
+  /** Steps the real campaign with one input and renders; dead forces the defeat pose; ability shows a battle skill's
+   * ability event (faction skills are battle commands). */
+  heroStep(input, ticks = 1, dead = false, ability = false) {
     for (let tick = 0; tick < ticks; tick++) {
       campaign.step(input);
       snapshot = campaign.snapshot();
       if (dead) { snapshot.player.state = 'dead'; snapshot.player.hp = 0; }
+      if (ability && tick === 0) {
+        snapshot.events = [...snapshot.events, { id: Math.max(0, ...snapshot.events.map(event => event.id)) + 1, tick: snapshot.tick,
+          kind: 'ability', key: 'event.ability', x: snapshot.player.x, z: snapshot.player.z, amount: 0, targetId: snapshot.faction }];
+      }
       presentation.update(snapshot, 1 / 60, camera.camera, false);
     }
     camera.update(snapshot.player, 0);
@@ -444,7 +449,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === '1')('cooked models in the brows
         states.push(await evaluate(page, 'window.modelHarness.heroStep({ attack: true, move: { x: 0, z: 1 } }, 1)'));
         states.push(await evaluate(page, 'window.modelHarness.heroStep({ move: { x: 1, z: 0 }, aim: { x: 0, z: 1 } }, 20)'));
         states.push(await evaluate(page, 'window.modelHarness.heroStep({}, 30)'));
-        states.push(await evaluate(page, 'window.modelHarness.heroStep({ special: true }, 1)'));
+        states.push(await evaluate(page, 'window.modelHarness.heroStep({}, 1, false, true)'));
         states.push(await evaluate(page, 'window.modelHarness.heroStep({ dodge: true, move: { x: -1, z: 0 } }, 6)'));
         states.push(await evaluate(page, 'window.modelHarness.heroStep({}, 60)'));
         await evaluate(page, `window.modelHarness.heroFrame('${faction}', true)`);

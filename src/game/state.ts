@@ -1,4 +1,5 @@
 import { defineComponent, defineResource, type World } from '@aegis/core';
+import type { BattleOptions, BattleRecord } from './battles';
 import type { NarrativeState } from './narrative';
 import type { MilitaryState } from './faction-campaigns';
 import type {
@@ -66,6 +67,10 @@ export interface CampaignData {
   military?: MilitaryState;
   /** Version 3 only: the monster spawner's state. */
   spawner?: MonsterState;
+  /** The battle in progress, if any (see `battles.ts`); every field system rests while it runs. */
+  battle?: BattleRecord;
+  /** The shell's battle settings; absent means standard difficulty without latency compensation. */
+  battleOptions?: BattleOptions;
 }
 export const Combatant = defineComponent<ActorData>({
   id: 'KorovanyCombatant',
