@@ -1,10 +1,11 @@
 import { describe, expect, test, vi } from 'vitest';
 import * as THREE from 'three';
+import { createCampaign } from '../game';
 import { generateWorld } from '../game/world';
 import { FollowCamera } from './camera';
 import { locationStructure, regionThemes, themeAt } from './region-scenery';
-import { ViewResources } from './resources';
-import { createWorldScenery, isDressingAllowed } from './world';
+import { seededRandom, ViewResources } from './resources';
+import { createWorldScenery, dressingFilter, isDressingAllowed } from './world';
 
 const canvas = {
   getBoundingClientRect(): DOMRect {
@@ -123,5 +124,42 @@ describe('kilometre-scale world presentation', () => {
       return result;
     };
     expect(signature()).toEqual(signature());
+  });
+
+  test('the scenery build\'s dressing filter answers exactly as isDressingAllowed, at every reach', () => {
+    const worlds = [
+      generateWorld('dressing-filter', 1),
+      generateWorld('dressing-filter', 2),
+      createCampaign({ seed: 'dressing-filter', faction: 'villain', runId: 'dressing-filter' }).snapshot().world,
+    ];
+    const random = seededRandom(20261007);
+    for (const world of worlds) {
+      const allowed = dressingFilter(world);
+      const { minX, maxX, minZ, maxZ } = world.bounds;
+      const points: { x: number; z: number }[] = [];
+      for (let i = 0; i < 5000; i++) points.push({ x: minX - 3 + random() * (maxX - minX + 6), z: minZ - 3 + random() * (maxZ - minZ + 6) });
+      // Just inside and just outside each obstacle's and each road's reach, where a missed grid cell would show.
+      for (const obstacle of world.obstacles) {
+        const angle = random() * Math.PI * 2;
+        for (const reach of [obstacle.radius + 0.5 - 1e-6, obstacle.radius + 0.5 + 1e-6]) {
+          points.push({ x: obstacle.x + Math.sin(angle) * reach, z: obstacle.z + Math.cos(angle) * reach });
+        }
+      }
+      for (const edge of world.roads.edges) {
+        const start = world.roads.nodes.find(node => node.id === edge.from)!;
+        const end = world.roads.nodes.find(node => node.id === edge.to)!;
+        const length = Math.hypot(end.x - start.x, end.z - start.z) || 1;
+        const along = random();
+        for (const reach of [edge.width * 0.5 + 1.1 - 1e-6, edge.width * 0.5 + 1.1 + 1e-6]) {
+          for (const side of [-1, 1]) {
+            points.push({ x: start.x + (end.x - start.x) * along - (end.z - start.z) / length * reach * side,
+              z: start.z + (end.z - start.z) * along + (end.x - start.x) / length * reach * side });
+          }
+        }
+      }
+      const mismatches = points.filter(point => allowed(point) !== isDressingAllowed(world, point));
+      expect(mismatches, `${world.version} ${world.id}`).toEqual([]);
+      expect(points.some(point => allowed(point)), 'some dressing is allowed').toBe(true);
+    }
   });
 });
