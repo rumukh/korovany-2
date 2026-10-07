@@ -1,8 +1,9 @@
 # Turn-based battles with timed defence
 
 Design proposal and headless prototype. **Nothing here is wired into the game yet:** the shipped campaign still
-uses real-time combat (`../rules.ts`, `../monsters.ts`), and no runtime module imports this folder, so the production
-bundle is unchanged. The prototype is plain, deterministic TypeScript with bots and tests
+uses real-time combat (`../rules.ts`, `../monsters.ts`). The only importer of this folder is the development
+[battle sandbox](#try-it-by-hand-the-battle-sandbox), which the production build does not bundle, so the shipped game
+is unchanged. The prototype is plain, deterministic TypeScript with bots and tests
 (`tests/battle-prototype.test.ts`, `tests/battle-bots.ts`).
 
 The model is inspired by *Clair Obscur: Expedition 33*. The player chooses commands on their turn. On enemy turns,
@@ -119,7 +120,7 @@ first and their melee troops start close).
 ## Prototype API
 
 ```ts
-import { createBattle } from './index';
+import { createBattle, reactionWindow, suggestCommand } from './index';
 const battle = createBattle({ seed, faction, encounter: 'post-garrison', difficulty, opening, latencyTicks });
 battle.command({ type: 'attack', target: 'soldier' }); // hero turn only; refused commands set snapshot.notice
 battle.tick({ parry: true });                          // one tick of the current action; one-shot pulses
@@ -128,15 +129,49 @@ battle.snapshot();                                     // phase, timeline, AP, b
 
 - **Malformed input throws:** setups, commands and inputs are checked before anything changes.
 - **Unavailable commands** (`phase`, `target`, `ap`, `unavailable`, `item`) change nothing except `notice`.
+- **Blow snapshots:** each blow in `action.hits` reports its outcome, its reaction, and the tick of its one bound
+  press (`pressed`, after latency compensation), so a presenter can show how early or late a press was.
+- **Windows:** `reactionWindow(faction, difficulty, reaction)` is the single source of a reaction's window.
+- **Suggestions:** `suggestCommand(snapshot)` returns the shared, deliberately simple command policy. The bots use
+  it, and the sandbox offers it as a suggestion and as automatic commands.
 - **Determinism:** state is plain data, and enemy decisions use a seeded Aegis PRNG. The same setup and the same
   inputs on the same ticks always produce the same battle.
 - **Victory and defeat** freeze the battle.
 
+## Try it by hand: the battle sandbox
+
+A development page plays the post garrison battle in real time:
+
+```powershell
+npm run dev   # then open http://127.0.0.1:5173/battle-sandbox.html
+```
+
+The page is `battle-sandbox.html` with `src/battle-sandbox/`. The production build bundles only `index.html`, so the
+sandbox never ships with the game. What it offers:
+
+- **Setup:** pick the hero, difficulty, opening, seed and latency compensation. Changing the hero, difficulty or
+  opening starts a new battle.
+- **Your turn:** pick a command with the mouse or `1`–`9`. Targeted commands then take `1`–`3` or a click on an
+  enemy card. `Enter` (or `A` on a controller) plays the suggested command, and clicking an enemy is a quick attack.
+- **Enemy turns:** a ring closes on the centre circle at the moment each blow lands; red rings are heavy blows.
+  - Parry with `E`, left click or `RB`.
+  - Dodge with `Q`, right click or `B`.
+- **Feedback:** each blow reports the outcome and how many milliseconds early or late your press was against its
+  window. The stats panel suggests a latency setting once your presses lean consistently early or late.
+- **Options:**
+  - *Show windows* tints the circle while each window is open.
+  - *Auto commands* lets you practise reactions only.
+  - *Sound* adds simple synthesized cues.
+- **Other keys:** `Esc` pauses and `R` restarts the same battle. The page also pauses when it loses focus.
+
+`tests/battle-sandbox.test.ts` covers the page's DOM-free core (`src/battle-sandbox/session.ts`): the 60 Hz clock
+and its frame clamp, reaction pulses, per-blow timing feedback and the latency suggestion.
+
 ## Measured balance
 
-This is the post garrison battle, measured over 60 seeds per row with the neutral opening. The command policy is
-deliberately simple and shared across reaction profiles, so the only variable is reaction skill. The human
-profiles are **assumptions**, not player data:
+This is the post garrison battle, measured over 60 seeds per row with the neutral opening. The command policy
+(`suggestCommand`) is deliberately simple and shared across reaction profiles, so the only variable is reaction
+skill. The human profiles are **assumptions**, not player data:
 
 | Profile | Timing error (σ) | Missed blows | Parry attempts |
 | --- | --- | --- | --- |

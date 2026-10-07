@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest';
 import {
-  createBattle, ENEMY_KITS, HERO_KITS, TIMING, type Battle, type BattleActionSnapshot, type BattleInput, type BattleSetup,
-  type BattleSnapshot,
+  createBattle, ENEMY_KITS, HERO_KITS, reactionWindow, suggestCommand, TIMING, type Battle, type BattleActionSnapshot,
+  type BattleInput, type BattleSetup, type BattleSnapshot,
 } from '../src/game/battle';
 import type { FactionId } from '../src/game';
-import { chooseCommand, formatMetrics, measure, playBattle, Reactor, type BattleMetrics, type ReactionProfile } from './battle-bots';
+import { formatMetrics, measure, playBattle, Reactor, type BattleMetrics, type ReactionProfile } from './battle-bots';
 
 const FACTIONS: FactionId[] = ['elf', 'guard', 'villain'];
 const SETTLE = Math.max(TIMING.dodge.late, TIMING.parry.late);
@@ -14,7 +14,7 @@ function toNextBlow(battle: Battle): BattleSnapshot | null {
   for (let i = 0; i < 20_000; i++) {
     const s = battle.snapshot();
     if (s.phase === 'victory' || s.phase === 'defeat') return null;
-    if (s.phase === 'command') battle.command(chooseCommand(s));
+    if (s.phase === 'command') battle.command(suggestCommand(s));
     else if (s.action!.actor !== 'hero' && s.action!.hits.length > 0 && s.tick === s.action!.start) return s;
     else battle.tick();
   }
@@ -104,9 +104,12 @@ describe('battle prototype rules', () => {
   test('early, late and mashed presses fail; the dodge window is wider than the parry window', () => {
     const setup = findBlow('guard', single);
     const outcome = (presses: (a: BattleActionSnapshot) => Map<number, BattleInput>) => answer(setup, presses).action.hits[0]!;
-    const parryEarly = Math.round(TIMING.parry.early * HERO_KITS.guard.parryWindow);
-    expect(outcome(() => at([])).outcome).toBe('hit');
-    expect(outcome(a => at([[a.hits[0]!.impact - parryEarly, { parry: true }]])).outcome).toBe('parried');
+    const parryEarly = reactionWindow('guard', 'standard', 'parry').early;
+    expect(parryEarly).toBe(Math.round(TIMING.parry.early * HERO_KITS.guard.parryWindow));
+    expect(reactionWindow('guard', 'standard', 'dodge').early).toBeGreaterThan(parryEarly);
+    expect(outcome(() => at([]))).toMatchObject({ outcome: 'hit', reaction: null, pressed: null });
+    const parried = outcome(a => at([[a.hits[0]!.impact - parryEarly, { parry: true }]]));
+    expect(parried).toMatchObject({ outcome: 'parried', reaction: 'parry', pressed: parried.impact - parryEarly });
     expect(outcome(a => at([[a.hits[0]!.impact - parryEarly - 1, { parry: true }]])).outcome).toBe('hit');
     expect(outcome(a => at([[a.hits[0]!.impact - parryEarly - 1, { dodge: true }]])).outcome).toBe('dodged');
     expect(outcome(a => at([[a.hits[0]!.impact + TIMING.parry.late, { parry: true }]])).outcome).toBe('parried');
@@ -175,7 +178,7 @@ describe('battle prototype rules', () => {
     const battle = createBattle(setup), reactor = new Reactor('perfect', 'frozen');
     let s = battle.snapshot();
     for (let i = 0; i < 100_000 && s.phase !== 'victory' && s.phase !== 'defeat'; i++) {
-      if (s.phase === 'command') battle.command(chooseCommand(s));
+      if (s.phase === 'command') battle.command(suggestCommand(s));
       else { reactor.observe(s); battle.tick(reactor.input(s.tick + 1)); }
       s = battle.snapshot();
     }

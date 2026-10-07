@@ -1,4 +1,5 @@
 import { createPrng } from '@aegis/core';
+import type { FactionId } from '../types';
 import { DIFFICULTY, ENCOUNTERS, ENEMY_KITS, HERO_KITS, HERO_TIMING, MOVE_TICKS, RULES, TIMING, type SkillSpec } from './content';
 import type {
   Band, Battle, BattleCommand, BattleCommandOption, BattleDifficulty, BattleInput, BattleLogEntry, BattleLogKind,
@@ -93,6 +94,13 @@ function validateInput(value: unknown): BattleInput {
 }
 
 const interval = (speed: number): number => 100 / speed;
+
+/** A reaction's success window around impact: from `early` ticks before it to `late` ticks after it. */
+export function reactionWindow(faction: FactionId, difficulty: BattleDifficulty, reaction: Reaction): { early: number; late: number } {
+  const kit = HERO_KITS[faction], timing = TIMING[reaction];
+  const scale = DIFFICULTY[difficulty].window * (reaction === 'dodge' ? kit.dodgeWindow : kit.parryWindow);
+  return { early: Math.round(timing.early * scale), late: timing.late };
+}
 
 /** Creates a deterministic battle: the same setup and the same inputs on the same ticks always give the same battle. */
 export function createBattle(options: BattleSetup): Battle {
@@ -197,9 +205,8 @@ export function createBattle(options: BattleSetup): Battle {
   function resolveHit(current: Action, hit: Hit, attacker: Enemy | undefined): void {
     let success = false;
     if (hit.reaction && hit.pressed !== null && (hit.reaction === 'dodge' || !hit.heavy)) {
-      const window = TIMING[hit.reaction];
-      const early = Math.round(window.early * scale.window * (hit.reaction === 'dodge' ? kit.dodgeWindow : kit.parryWindow));
-      success = hit.pressed >= hit.impact - early && hit.pressed <= hit.impact + window.late;
+      const window = reactionWindow(setup.faction, setup.difficulty, hit.reaction);
+      success = hit.pressed >= hit.impact - window.early && hit.pressed <= hit.impact + window.late;
     }
     const source = attacker?.id ?? '';
     if (success && hit.reaction === 'dodge') {
@@ -417,7 +424,9 @@ export function createBattle(options: BattleSetup): Battle {
         order: order(),
         action: current ? {
           id: current.id, actor: current.actor, move: current.move, target: current.target, start: current.start, end: current.end,
-          hits: current.hits.map(h => ({ index: h.index, impact: h.impact, heavy: h.heavy, damage: h.damage, outcome: h.outcome, reaction: h.reaction })),
+          hits: current.hits.map(h => ({
+            index: h.index, impact: h.impact, heavy: h.heavy, damage: h.damage, outcome: h.outcome, reaction: h.reaction, pressed: h.pressed,
+          })),
         } : null,
         commands: commandOptions(),
         log: log.map(entry => ({ ...entry })),

@@ -79,6 +79,8 @@ export interface BattleHitSnapshot {
   damage: number;
   outcome: HitOutcome;
   reaction: Reaction | null;
+  /** Tick of this blow's one bound attempt, after latency compensation; null without one. */
+  pressed: number | null;
 }
 
 export interface BattleActionSnapshot {
