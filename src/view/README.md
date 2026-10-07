@@ -95,7 +95,10 @@ props in `models.ts`: own files (`public/world/<id>/<id>.glb`, `public/world/sur
 and budgets.
 `createGameView` needs a page-lifetime `WorldAssetLibrary` in `GameViewOptions.worldAssets` and presents a v3 world
 only once `worldAssetIds(world)` and the surface layers have loaded; a failed load is thrown by `render` (there is no
-primitive fallback). Version 1 and 2 worlds request nothing from it.
+primitive fallback). Version 1 and 2 worlds request nothing from it. `assetsReady(world, models, worldAssets)` is that
+rule, and `main.ts` holds the simulation and shows its loading line on the same rule for the shown world, so a
+version 1 or 2 campaign continued from the version 3 title preview starts once its models are in, without waiting for
+the preview's world assets.
 
 - **Surfaces.** Thirty-two 512 px tiling layers (`WORLD_SURFACES`: architecture, ground, rock and bark) form two
   `DataArrayTexture`s: the sRGB albedo, carrying in its alpha the roughness that `deriveSurface` derives at load from

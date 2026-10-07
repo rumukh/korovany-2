@@ -3,7 +3,7 @@ import {
   purchaseMetaUpgrade, metaUpgradeCost, MAX_UPGRADE_LEVEL,
   type GameSession, type GameSnapshot, type GameInput as CampaignInput, type MetaProfile, type RunRewards, type UpgradeId, type Vec2,
 } from "./game";
-import { createGameView, createRenderer, type GameView } from "./view";
+import { assetsReady, createGameView, createRenderer, type GameView } from "./view";
 import { campaignModelIds, gltfModelSource, ModelLibrary } from "./view/models";
 import { gltfWorldSource, WorldAssetLibrary, worldAssetIds } from "./view/world-assets";
 import { Soundscape } from "./audio/soundscape";
@@ -92,7 +92,6 @@ const models = new ModelLibrary(gltfModelSource(), []);
 const worldAssets = new WorldAssetLibrary(gltfWorldSource());
 // New campaigns start in world version 3; saved version 1 and 2 campaigns keep restoring in their own worlds.
 const worldVersion = 3 as const;
-const assetsReady = (): boolean => models.isReady && worldAssets.isReady;
 // One renderer for the page, so model uploads and shader programs survive the title, faction and run changes
 // that replace the world mirror.
 let renderer: ReturnType<typeof createRenderer> | undefined;
@@ -556,9 +555,11 @@ function frame(time: number): void {
     }
     // Until the cooked models (and a version 3 world's assets) are ready the world is not drawn, so the simulation
     // holds as well: a run that starts early (its click still captures the mouse) begins on the first frame the
-    // player can see.
-    shell?.setModelsLoading(!assetsReady());
-    if (running && campaign && assetsReady()) {
+    // player can see. Both follow the shown world, so a version 1 or 2 campaign does not wait for the version 3 title
+    // preview's world assets.
+    const shown = atTitle ? preview : snapshot;
+    shell?.setModelsLoading(shown !== null && !assetsReady(shown.world, models, worldAssets));
+    if (running && campaign && snapshot && assetsReady(snapshot.world, models, worldAssets)) {
       accumulator += delta;
       let stepped = false;
       while (accumulator >= STEP) {

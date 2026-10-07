@@ -928,6 +928,17 @@ export function compileFrame(
 }
 
 /**
+ * Everything a world presents has loaded: every requested cooked model and, for a version 3 world only, the world
+ * assets. The view draws nothing until then, and the shell holds the simulation on the same rule, so a version 1 or 2
+ * campaign never waits for world assets that a version 3 title preview requested.
+ */
+export function assetsReady(world: WorldBlueprint, models: ModelLibrary, worldAssets?: WorldAssetLibrary): boolean {
+  if (world.version !== 3) return models.isReady;
+  if (!worldAssets) throw new Error('A version 3 world needs the world asset library.');
+  return models.isReady && worldAssets.isReady;
+}
+
+/**
  * Browser-only Three presenter. It owns GPU resources, not input, RAF or game rules.
  * A changed world/run/faction rebuilds the mirror and releases the previous run.
  * Nothing is presented until every cooked model is loaded; a load failure is thrown by `render`.
@@ -947,12 +958,7 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
   const models = options.models ?? new ModelLibrary(gltfModelSource());
   const worldAssets = options.worldAssets;
   const createResources = () => new ViewResources(new THREE.TextureLoader(), renderer.capabilities.getMaxAnisotropy(), models, worldAssets);
-  /** Everything a world presents has loaded: the cooked models and, for a version 3 world, its world assets. */
-  const ready = (world: WorldBlueprint): boolean => {
-    if (world.version !== 3) return models.isReady;
-    if (!worldAssets) throw new Error('A version 3 world needs the world asset library.');
-    return models.isReady && worldAssets.isReady;
-  };
+  const ready = (world: WorldBlueprint): boolean => assetsReady(world, models, worldAssets);
   let presentation: Presentation | undefined;
   let environment: THREE.WebGLRenderTarget | undefined;
   let postprocessing: WorldPostprocessing | undefined;
