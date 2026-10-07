@@ -63,6 +63,18 @@ Set `AEGIS_BROWSER` to an executable path if the browser is not installed in a
 standard location. `KOROVANY_CAPTURE_DIR` optionally selects a screenshot output
 directory.
 
+While iterating, run the unit tests and only the browser suites that cover the
+change; CI still runs every suite before deployment:
+
+```powershell
+$env:KOROVANY_BROWSER = '1'
+$env:KOROVANY_TEST_SUITE = 'browser'
+npm test -- tests\story-browser.test.ts tests\controller-browser.test.ts
+```
+
+Run one browser-test process per machine at a time: concurrent software-WebGL
+runs slow each other enough to reach the per-test time limits.
+
 Browser-enabled runs execute test files sequentially: the engine's CDP launcher
 uses software WebGL, so concurrent renderers and simulation suites otherwise
 compete for CPU time. Ordinary headless unit-test runs remain parallel on 75% of

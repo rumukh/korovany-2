@@ -5,7 +5,9 @@ import * as THREE from 'three';
 import { createCampaign } from '../src/game';
 import { generateWorld, isWalkable } from '../src/game/world';
 import { V3_BUILDINGS, V3_FENCE, V3_PROPS } from '../src/game/world-v3';
+import { assetsReady } from '../src/view';
 import { crowHomes, flockHomes } from '../src/view/fauna';
+import { ModelLibrary } from '../src/view/models';
 import {
   CROW_CLIPS, deriveSurface, FAUNA_CLIPS, ROCK_VARIANTS, SURFACE_FINISH, SURFACE_METRES, SURFACE_SIZE, TREE_PARTS, TREE_VARIANTS,
   WORLD_MODEL_IDS, WORLD_MODELS, WORLD_SURFACES, WorldAssetLibrary, worldAssetIds, type WorldAssetSource, type WorldModelId,
@@ -296,6 +298,38 @@ describe('version 3 world assets', () => {
     const small = new WorldAssetLibrary(wrongSize);
     await expect(small.request(['kit-shed'])).rejects.toThrow(/is 256x256, expected 512x512/);
     small.dispose();
+  });
+
+  test('a version 1 or 2 world is ready with its models while a version 3 preview\'s world assets still load', async () => {
+    let release!: () => void;
+    const loaded = new Promise<void>(resolve => { release = resolve; });
+    const worldAssets = new WorldAssetLibrary({
+      async model(id) {
+        await loaded;
+        return parseGlbWithoutTextures(glb(id));
+      },
+      async image() {
+        await loaded;
+        return { width: SURFACE_SIZE, height: SURFACE_SIZE, data: new Uint8ClampedArray(SURFACE_SIZE * SURFACE_SIZE * 4).fill(128) };
+      },
+    });
+    const models = new ModelLibrary({ load: () => Promise.reject(new Error('no model was requested')) }, []);
+    const modelsLoading = new ModelLibrary({ load: () => new Promise(() => undefined) }, ['char-line-soldier']);
+    const preview = generateWorld('asset-gate', 3);
+    const preload = worldAssets.request(['kit-barn']);
+    expect(worldAssets.isReady).toBe(false);
+    expect(assetsReady(generateWorld('asset-gate', 1), models, worldAssets)).toBe(true);
+    expect(assetsReady(generateWorld('asset-gate', 2), models, worldAssets)).toBe(true);
+    expect(assetsReady(preview, models, worldAssets)).toBe(false);
+    expect(assetsReady(generateWorld('asset-gate', 2), modelsLoading, worldAssets)).toBe(false);
+    expect(() => assetsReady(preview, models)).toThrow(/needs the world asset library/);
+    release();
+    await preload;
+    expect(assetsReady(preview, models, worldAssets)).toBe(true);
+    expect(assetsReady(preview, modelsLoading, worldAssets)).toBe(false);
+    worldAssets.dispose();
+    models.dispose();
+    modelsLoading.dispose();
   });
 
   test('surface data: a flat height map is a flat normal at its finish roughness, and gradients wrap', () => {
