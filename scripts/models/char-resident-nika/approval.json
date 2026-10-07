@@ -37,10 +37,10 @@
     },
     {
       "gate": "in-game",
-      "decision": "Ship the calibrated residents, ship-001-q-m (Recommended)",
-      "decidedAt": "2026-10-02T17:27:57.123230+02:00",
-      "question": "Gate 3 for batch D3, delegated under the standing instruction of 2026-10-01: Lev, Yara, Nika, Radek and Oss are in the running game at the Star Monastery, Thornwatch, the High Pass, the Bell Foundry and the Lantern Ferry (board 127.0.0.1:47895, _reviews/gate3-residents-d3). Rig, weights and clips are identical in both candidates, both are quantized and meshopt-compressed, and both pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the five GLBs add 2.66 MB (2.43 MB as served) and all 28 preloaded models total 20.1 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in all 20 scene and quality pairs and draw calls fall by 26 to 52 per scene; in SwiftShader p50 is up to 2.8% higher. Calibrated lifts all five to their concepts' brightness; the lift reddens Oss's painted back and brightens Radek's teal hem speckles. As cooked, they stay at 55% to 65% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
-      "sha256": "7aba4521c2e55a08248805cfc7d3d8ebf6b03a7149a7c6d809386c5361d59239",
+      "decision": "Ship the map-halved model (Recommended)",
+      "decidedAt": "2026-10-07T01:03:00.013679+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: char-resident-nika with its maps of 1024 px or more halved (resize_maps.py, then meshopt_glb.mjs; geometry, skin and clips byte-identical) is in the running game (board _reviews/gate3-resize-large). The file falls from 585,672 to 360,756 bytes. In isolated renders 0.0% of its pixels differ by more than 8/255 at 18 m (0.075% at pixel ratio 1.75, 0.0% at 26 m), tone ratio 1.0007; in the game (three factions, 18 and 26 m, pixel ratio 1 and 1.75) at most 0.019% of a frame differs by more than 8/255. Close-ups are softer (6.182% of pixels over 8/255). Shader programs are unchanged. Should I ship it?",
+      "sha256": "729c16595cbcaebbf82f71cc482d7c6bf3ec0089b153357ba4b023d35d8170d0",
       "decidedBy": {
         "mode": "delegated",
         "record": "_reviews/delegation-2026-10-01.json",
@@ -62,6 +62,19 @@
         "record": "_reviews/delegation-2026-10-01.json",
         "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
       }
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "Ship the calibrated residents, ship-001-q-m (Recommended)",
+      "decidedAt": "2026-10-02T17:27:57.123230+02:00",
+      "question": "Gate 3 for batch D3, delegated under the standing instruction of 2026-10-01: Lev, Yara, Nika, Radek and Oss are in the running game at the Star Monastery, Thornwatch, the High Pass, the Bell Foundry and the Lantern Ferry (board 127.0.0.1:47895, _reviews/gate3-residents-d3). Rig, weights and clips are identical in both candidates, both are quantized and meshopt-compressed, and both pass the per-frame verifier on every 60 Hz frame of Idle and Talk. Measured cost: the five GLBs add 2.66 MB (2.43 MB as served) and all 28 preloaded models total 20.1 MB. On the RTX 4070 Ti SUPER, p50 is equal or lower in all 20 scene and quality pairs and draw calls fall by 26 to 52 per scene; in SwiftShader p50 is up to 2.8% higher. Calibrated lifts all five to their concepts' brightness; the lift reddens Oss's painted back and brightens Radek's teal hem speckles. As cooked, they stay at 55% to 65% of their concepts. This is not AAA: faces are soft, hands are mittens, the backs are projected paintings, PBR maps are derived from colour, and only procedural Idle and Talk exist. Which should I ship?",
+      "sha256": "7aba4521c2e55a08248805cfc7d3d8ebf6b03a7149a7c6d809386c5361d59239",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      },
+      "superseded": "Re-shipped with its maps of 1024 px or more halved (resize_maps.py: a 2x2 box filter, as the GPU builds mip level 1, then meshopt_glb.mjs): the game camera never samples the cooked top level, so the frames are unchanged while the file shrinks by about a third and those maps' texture memory to a quarter (_reviews/gate3-resize-large)."
     }
   ]
 }

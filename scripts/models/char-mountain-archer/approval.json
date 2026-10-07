@@ -26,10 +26,10 @@
     },
     {
       "gate": "in-game",
-      "decision": "approve: ship all three mountain troops as cooked",
-      "decidedAt": "2026-10-04T04:31:43.533277+02:00",
-      "question": "Ship the mountain soldier, archer and captain as cooked (ship-001-t-q-m) in place of the Crown troop models for mountain-army (villain) troop actors, after the in-game review at gameplay camera distances, combat, corpse and conversation states, high and low quality, reduced motion and measured cost?",
-      "sha256": "302a7fd634bb000c4fc9c45409489410eddfe6cf7804f0c3e1f8a90744909da9",
+      "decision": "Ship the map-halved model (Recommended)",
+      "decidedAt": "2026-10-07T01:03:00.013679+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: char-mountain-archer with its maps of 1024 px or more halved (resize_maps.py, then meshopt_glb.mjs; geometry, skin and clips byte-identical) is in the running game (board _reviews/gate3-resize-large). The file falls from 893,324 to 596,308 bytes. In isolated renders 0.036% of its pixels differ by more than 8/255 at 18 m (0.279% at pixel ratio 1.75, 0.0% at 26 m), tone ratio 0.9991; in the game (three factions, 18 and 26 m, pixel ratio 1 and 1.75) at most 0.019% of a frame differs by more than 8/255. Close-ups are softer (10.948% of pixels over 8/255). Shader programs are unchanged. Should I ship it?",
+      "sha256": "321f2ebeb7f87e4ec50a48ef027888460083b5668c9be4aec7765b8071f7bceb",
       "decidedBy": {
         "mode": "delegated",
         "record": "_reviews/delegation-2026-10-01.json",
@@ -46,6 +46,19 @@
       "sha256": "4b3f8ffc84a6ecfd09627f7a254137d85a8e14cd62ce8476edf001dc7ad800d1",
       "approvedFileSha256": "48253a851adf7bfa3849fda4569d153a82b4e9c026786a097a1c30c46e71f879",
       "pixelSha256": "f7c89fc04707a28f29208bfda4915c46196621524fb8f08b98f169bcabb8a15e"
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "approve: ship all three mountain troops as cooked",
+      "decidedAt": "2026-10-04T04:31:43.533277+02:00",
+      "question": "Ship the mountain soldier, archer and captain as cooked (ship-001-t-q-m) in place of the Crown troop models for mountain-army (villain) troop actors, after the in-game review at gameplay camera distances, combat, corpse and conversation states, high and low quality, reduced motion and measured cost?",
+      "sha256": "302a7fd634bb000c4fc9c45409489410eddfe6cf7804f0c3e1f8a90744909da9",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      },
+      "superseded": "Re-shipped with its maps of 1024 px or more halved (resize_maps.py: a 2x2 box filter, as the GPU builds mip level 1, then meshopt_glb.mjs): the game camera never samples the cooked top level, so the frames are unchanged while the file shrinks by about a third and those maps' texture memory to a quarter (_reviews/gate3-resize-large)."
     }
   ]
 }

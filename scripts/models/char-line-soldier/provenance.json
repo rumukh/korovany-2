@@ -3,8 +3,8 @@
   "id": "char-line-soldier",
   "output": {
     "file": "public/models/char-line-soldier/char-line-soldier.glb",
-    "sha256": "92f1f1fc7f93f3cfa8059bd8c04be205bd96115f60f720ed29f3a9ade6a353a1",
-    "bytes": 929732
+    "sha256": "167b54b54bdee6c90ca61c73550f7337588d994ac2be556b73a41de38e622d67",
+    "bytes": 602852
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from original Blender reference renders; no third-party or real-person likeness was used as input.",
   "acknowledgment": {
@@ -344,20 +344,20 @@
         {
           "image": "body-base",
           "size": [
-            1024,
-            1024
+            512,
+            512
           ],
-          "bytes": 236928,
-          "sha256": "28aca5a8c4d48cade4a8840d8e51992cf0e5a98bcf592bb1d13b954443e70082",
-          "bytesBefore": 181302,
+          "bytes": 91952,
+          "sha256": "ec1037e897736f8b11f6f7bc8a2110b7bd91d21fc3551c99c4b86916ac28fa54",
+          "bytesBefore": 236928,
           "meanAbsRgbError": {
-            "dyed": 1.47,
-            "undyed": 2.031
+            "dyed": 1.677,
+            "undyed": 2.168
           },
-          "undyedFraction": 0.8578,
+          "undyedFraction": 0.8495,
           "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
-          "script": "derive_tone_cook.py",
-          "note": "Re-encoded with the settings above after the tone lift; the other images are the source cook's bytes."
+          "script": "resize_maps.py",
+          "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba"
         },
         {
           "image": "items-base",
@@ -378,7 +378,21 @@
           },
           "undyedFraction": 0.782
         }
-      ]
+      ],
+      "amendedBy": {
+        "script": "resize_maps.py",
+        "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba",
+        "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+        "settings": {
+          "quality": 90,
+          "method": 6,
+          "exact": true,
+          "alpha": "lossless"
+        },
+        "images": [
+          "body-base"
+        ]
+      }
     },
     "toneDerivation": {
       "script": "derive_tone_cook.py",
@@ -485,27 +499,33 @@
           "raw": 0,
           "packed": 0
         },
-        "stored": 553648
+        "stored": 226770
       },
-      "inputSha256": "314b8046a659e89e1013daf98cf86c2b98dcd958b60533862038ccba38a376ca",
-      "bytesBefore": 1124620,
-      "bytesAfter": 929732
+      "inputSha256": "2b47dde8fef1aa88591e54415f7c081d4a3a17e59fcf961755f04e3284e8f927",
+      "bytesBefore": 797736,
+      "bytesAfter": 602852
     },
     "derivedFrom": {
-      "cook": "cook-016-g-q",
-      "sha256": "314b8046a659e89e1013daf98cf86c2b98dcd958b60533862038ccba38a376ca",
-      "bytes": 1124620,
-      "note": "The exact cook-016-g-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "cook": "cook-016-g-q-h",
+      "sha256": "2b47dde8fef1aa88591e54415f7c081d4a3a17e59fcf961755f04e3284e8f927",
+      "bytes": 797736,
+      "note": "The exact cook-016-g-q-h output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
       "derivedFrom": {
-        "cook": "cook-016-g",
-        "sha256": "ade41a9ea4a539676087081b07c4b463d3a88b2b887ec9b8bb456ad6e3a70bc4",
-        "bytes": 1628180,
-        "note": "The exact cook-016-g output, quantized by quantize_glb.py; the Blender cook was not re-run.",
+        "cook": "cook-016-g-q",
+        "sha256": "314b8046a659e89e1013daf98cf86c2b98dcd958b60533862038ccba38a376ca",
+        "bytes": 1124620,
+        "note": "The exact cook-016-g-q output (the shipped cook-016-g-q-m before EXT_meshopt_compression) with its maps of 1024 px or more halved by resize_maps.py; the Blender cook was not re-run.",
         "derivedFrom": {
-          "cook": "cook-016",
-          "sha256": "94bcc11ec66ab3d213bfbc3ea0091395d6c8dd4984ac13bc5a3d0be79535f78c",
-          "bytes": 1572556,
-          "note": "The exact cook-016 output with its body-base image lifted by derive_tone_cook.py; the Blender cook was not re-run."
+          "cook": "cook-016-g",
+          "sha256": "ade41a9ea4a539676087081b07c4b463d3a88b2b887ec9b8bb456ad6e3a70bc4",
+          "bytes": 1628180,
+          "note": "The exact cook-016-g output, quantized by quantize_glb.py; the Blender cook was not re-run.",
+          "derivedFrom": {
+            "cook": "cook-016",
+            "sha256": "94bcc11ec66ab3d213bfbc3ea0091395d6c8dd4984ac13bc5a3d0be79535f78c",
+            "bytes": 1572556,
+            "note": "The exact cook-016 output with its body-base image lifted by derive_tone_cook.py; the Blender cook was not re-run."
+          }
         }
       }
     },
@@ -586,15 +606,114 @@
       "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
       "derive_tone_cook.py": "fdbd431007ed167667a5e8ccb229fdc4d0b65079c171e7f219f5ba0624d13675",
       "quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f",
-      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5",
+      "resize_maps.py": "50c064c9eb1f597903437ca9cf6a409e7345b9606543d17d4f0e1c620f220688"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
-    "seconds": 31.0
+    "seconds": 31.0,
+    "textureResize": {
+      "script": "resize_maps.py",
+      "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba",
+      "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+      "minSize": 1024,
+      "filter": "2x2 box to half size, as the GPU builds mip level 1: sRGB colour in linear light, alpha and data plainly",
+      "reason": "The game camera never samples this model's top mip level (follow camera at 18-40 m, 48 degree view, pixel ratio at most 1.75); halving its large maps leaves the game's frames unchanged and quarters their texture memory.",
+      "inputSha256": "314b8046a659e89e1013daf98cf86c2b98dcd958b60533862038ccba38a376ca",
+      "bytesBefore": 1124620,
+      "bytesAfter": 797736,
+      "images": [
+        {
+          "image": "body-normal",
+          "role": "data",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 183404,
+          "bytes": 64338,
+          "sha256Before": "0ffd790aef39719fb491bb50f4973b3c5ea1805260b6b3c020cd0c02c0e174f5",
+          "sha256": "deef388b335a9bdf80ba5d96a8bd725d08de46f2c93340d02b0097427b2ac123",
+          "settings": {
+            "quality": 92,
+            "method": 6
+          },
+          "meanAbsRgbError": 2.658
+        },
+        {
+          "image": "body-orm",
+          "role": "data",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 121318,
+          "bytes": 58482,
+          "sha256Before": "cdb191cafcab4674d89e6b13c1bd63b0c1e17544a6ec336f9f4eeb875a80da83",
+          "sha256": "0f82bb804004eccda00bbe54233f86f067b1dd6af326c9248f0fa0aa30af86fd",
+          "settings": {
+            "quality": 92,
+            "method": 6
+          },
+          "meanAbsRgbError": 3.899
+        },
+        {
+          "image": "body-base",
+          "role": "colour",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 236928,
+          "bytes": 91952,
+          "sha256Before": "28aca5a8c4d48cade4a8840d8e51992cf0e5a98bcf592bb1d13b954443e70082",
+          "sha256": "ec1037e897736f8b11f6f7bc8a2110b7bd91d21fc3551c99c4b86916ac28fa54",
+          "settings": {
+            "quality": 90,
+            "method": 6,
+            "exact": true,
+            "alpha": "lossless"
+          },
+          "meanAbsRgbError": 2.094
+        }
+      ],
+      "kept": [
+        {
+          "image": "items-base",
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 5866,
+          "sha256": "cb530f1cb206e85331ec016d426081deb05812ac8b30471e40873f22afdddf03"
+        },
+        {
+          "image": "items-orm",
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 6132,
+          "sha256": "95b06a0b04de5f3666f54ed361949aa222dc50f542d6152b6d204d95b4928e10"
+        }
+      ]
+    }
   },
   "limitations": [
     "Single-view TRELLIS reconstruction: fused 3-4 finger 'mitten' hands and a soft, low-detail face; mail rings, laces and buckles exist only as texture and baked normal relief.",
     "The back of the body is a projected rear-view concept blended into TRELLIS's texture at the sides; a thin dark strip remains where neither view reaches.",
-    "Maps are 1024 px on the decimated TRELLIS atlas (57% coverage, about 2.7 texels per cm), whose charts touch, so filtering can show faint seams. A fresh unwrap was tried and rejected: it covered only 37% of the texture.",
+    "Maps are cooked at 1024 px on the decimated TRELLIS atlas (57% coverage, about 2.7 texels per cm) and ship at 512 px (about 1.35 texels per cm), the finest level the game camera samples; the charts touch, so filtering can show faint seams. A fresh unwrap was tried and rejected: it covered only 37% of the texture.",
     "Roughness, metalness and the faction-dye mask are derived from colour inside declared regions, not measured PBR or hand-painted masks.",
     "TRELLIS's colours came out darker than the concept. The base colour is lifted after the cook (derive_tone_cook.py) by luma power 0.6, the calibration's floor (the Crown archer and captain and both factions' troops stop there too), which still leaves the soldier darker than its concept: about 104.8/255 mean luma in the game against 110.8/255 (84.7/255 before the lift).",
     "Linear blend skinning with half-rotation shoulder and knee helpers; creases stretch up to about 2x at the 99.5th percentile in combat and running frames, and single edges up to about 6x at armpit and knee creases.",

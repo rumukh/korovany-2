@@ -65,7 +65,7 @@ describe('cooked wagons, draft ox and cargo', () => {
     expect(triangles(document, WAGON_NODES.harness)).toBeLessThanOrEqual(3_000);
     const images = gltf.images!.map((image, index) => ({ name: image.name, ...imageSize(imageBytes(document, index)) }));
     expect(images.every(image => image.format === 'webp')).toBe(true);
-    for (const name of ['body-base', 'body-normal', 'body-orm']) expect(images.find(image => image.name === name)?.width).toBeGreaterThanOrEqual(1024);
+    for (const name of ['body-base', 'body-normal', 'body-orm']) expect(images.find(image => image.name === name)?.width).toBeGreaterThanOrEqual(512);
     // Only the pennant is dye-masked: the parts' base alpha is the mask.
     expect(images.find(image => image.name === 'parts-base')?.alpha).toBe(true);
     const { scene } = await parseGlbWithoutTextures(bytes);
@@ -123,7 +123,7 @@ describe('cooked wagons, draft ox and cargo', () => {
     expect(triangles(document, 'body')).toBeLessThanOrEqual(10_000);
     const images = gltf.images!.map((image, index) => ({ name: image.name, ...imageSize(imageBytes(document, index)) }));
     expect(images.every(image => image.format === 'webp')).toBe(true);
-    for (const name of ['body-base', 'body-normal', 'body-orm']) expect(images.find(image => image.name === name)?.width).toBeGreaterThanOrEqual(1024);
+    for (const name of ['body-base', 'body-normal', 'body-orm']) expect(images.find(image => image.name === name)?.width).toBeGreaterThanOrEqual(512);
     const { scene } = await parseGlbWithoutTextures(bytes);
     const bounds = new THREE.Box3().setFromObject(scene);
     expect(bounds.min.y).toBeCloseTo(0, 2);

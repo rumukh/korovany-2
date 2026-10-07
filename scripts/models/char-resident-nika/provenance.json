@@ -4,8 +4,8 @@
   "role": "Nika Frost, pass guide (the narrative resident 'nika', presentation only)",
   "output": {
     "file": "public/models/char-resident-nika/char-resident-nika.glb",
-    "sha256": "7aba4521c2e55a08248805cfc7d3d8ebf6b03a7149a7c6d809386c5361d59239",
-    "bytes": 585672
+    "sha256": "729c16595cbcaebbf82f71cc482d7c6bf3ec0089b153357ba4b023d35d8170d0",
+    "bytes": 360756
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from a plain civilian body template (itself made locally from the approved line-soldier concept with the blank head of an original Blender mannequin) and the resident's own in-game portrait as the identity reference. The portraits are original Korovany II artwork generated earlier for the project with Azure OpenAI gpt-image-2 (public/portraits/manifest.json); they were used here only as local references, with no new cloud generation. No third-party image, franchise design or real-person likeness was used as input.",
   "acknowledgment": {
@@ -339,23 +339,36 @@
         {
           "image": "body-base",
           "size": [
-            1024,
-            1024
+            512,
+            512
           ],
-          "bytes": 196538,
-          "sha256": "9cc445d736a00aa25a44f422a77f79f437c93da8bac3aeaebc529d10caf47b77",
-          "bytesBefore": 6000,
+          "bytes": 71528,
+          "sha256": "08680238185ffa90f5f0ceed1d2c94d51ce4059e8bd15094b1ac2317854c5755",
+          "bytesBefore": 196538,
           "meanAbsRgbError": {
             "dyed": null,
-            "undyed": 2.077
+            "undyed": 2.315
           },
-          "meanAbsRgbErrorBefore": {
-            "dyed": null,
-            "undyed": 67.377
-          },
-          "undyedFraction": 1
+          "undyedFraction": 1,
+          "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+          "script": "resize_maps.py",
+          "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba"
         }
-      ]
+      ],
+      "amendedBy": {
+        "script": "resize_maps.py",
+        "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba",
+        "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+        "settings": {
+          "quality": 90,
+          "method": 6,
+          "exact": true,
+          "alpha": "lossless"
+        },
+        "images": [
+          "body-base"
+        ]
+      }
     },
     "ormSize": 512,
     "quantization": {
@@ -430,22 +443,28 @@
           "raw": 0,
           "packed": 0
         },
-        "stored": 377348
+        "stored": 152438
       },
-      "inputSha256": "f6382520768d10cf4e665335fb81102cc05f4398d8519040a6e9405054c5a94f",
-      "bytesBefore": 732932,
-      "bytesAfter": 585672
+      "inputSha256": "5879265ef52b907ee7588e4c60fb6c9fa509cbc2a708a8b1e2619c8de5ef5ae2",
+      "bytesBefore": 508016,
+      "bytesAfter": 360756
     },
     "derivedFrom": {
-      "cook": "ship-001-q",
-      "sha256": "f6382520768d10cf4e665335fb81102cc05f4398d8519040a6e9405054c5a94f",
-      "bytes": 732932,
-      "note": "The exact ship-001-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "cook": "ship-001-q-h",
+      "sha256": "5879265ef52b907ee7588e4c60fb6c9fa509cbc2a708a8b1e2619c8de5ef5ae2",
+      "bytes": 508016,
+      "note": "The exact ship-001-q-h output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
       "derivedFrom": {
-        "cook": "ship-001",
-        "sha256": "f208eef89cb03d9365328167756c918a836c0c1af102867596966228b39095fb",
-        "bytes": 1097528,
-        "note": "The exact ship-001 output, quantized by quantize_glb.py; the Blender cook was not re-run."
+        "cook": "ship-001-q",
+        "sha256": "f6382520768d10cf4e665335fb81102cc05f4398d8519040a6e9405054c5a94f",
+        "bytes": 732932,
+        "note": "The exact ship-001-q output (the shipped ship-001-q-m before EXT_meshopt_compression) with its maps of 1024 px or more halved by resize_maps.py; the Blender cook was not re-run.",
+        "derivedFrom": {
+          "cook": "ship-001",
+          "sha256": "f208eef89cb03d9365328167756c918a836c0c1af102867596966228b39095fb",
+          "bytes": 1097528,
+          "note": "The exact ship-001 output, quantized by quantize_glb.py; the Blender cook was not re-run."
+        }
       }
     },
     "weights": {
@@ -545,11 +564,80 @@
       "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
       "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
       "quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f",
-      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5",
+      "resize_maps.py": "50c064c9eb1f597903437ca9cf6a409e7345b9606543d17d4f0e1c620f220688"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
     "seconds": 73.8,
-    "verification": "tests/resident-models.test.ts verifies every 60 Hz frame of Idle and Talk as planted loops and rejects six deliberately broken copies; tests/residents-browser.test.ts renders the residents in the game's WebGL presenter."
+    "verification": "tests/resident-models.test.ts verifies every 60 Hz frame of Idle and Talk as planted loops and rejects six deliberately broken copies; tests/residents-browser.test.ts renders the residents in the game's WebGL presenter.",
+    "textureResize": {
+      "script": "resize_maps.py",
+      "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba",
+      "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+      "minSize": 1024,
+      "filter": "2x2 box to half size, as the GPU builds mip level 1: sRGB colour in linear light, alpha and data plainly",
+      "reason": "The game camera never samples this model's top mip level (follow camera at 18-40 m, 48 degree view, pixel ratio at most 1.75); halving its large maps leaves the game's frames unchanged and quarters their texture memory.",
+      "inputSha256": "f6382520768d10cf4e665335fb81102cc05f4398d8519040a6e9405054c5a94f",
+      "bytesBefore": 732932,
+      "bytesAfter": 508016,
+      "images": [
+        {
+          "image": "body-normal",
+          "role": "data",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 153330,
+          "bytes": 53430,
+          "sha256Before": "6368c0a4eaf43359ef5aa3566c449e53b27e9beb45592fa411f6d9bf7ae4f813",
+          "sha256": "5595f95ba78304f331091a10ed08c71eac5d8fee82bcab4ad505fc3998a68ab1",
+          "settings": {
+            "quality": 92,
+            "method": 6
+          },
+          "meanAbsRgbError": 2.268
+        },
+        {
+          "image": "body-base",
+          "role": "colour",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 196538,
+          "bytes": 71528,
+          "sha256Before": "9cc445d736a00aa25a44f422a77f79f437c93da8bac3aeaebc529d10caf47b77",
+          "sha256": "08680238185ffa90f5f0ceed1d2c94d51ce4059e8bd15094b1ac2317854c5755",
+          "settings": {
+            "quality": 90,
+            "method": 6,
+            "exact": true,
+            "alpha": "lossless"
+          },
+          "meanAbsRgbError": 2.315
+        }
+      ],
+      "kept": [
+        {
+          "image": "body-orm",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 27480,
+          "sha256": "0746b453a707f523d629ba569a69dbd25f7847a88981a2eaa4828641f19b0816"
+        }
+      ]
+    }
   },
   "limitations": [
     "Single-view TRELLIS reconstruction: hands are fused 'mitten' shapes and the face is soft, with smeared eye sockets; at the game's closest camera (18 m) a resident is about 140 px tall, so neither reads in play.",
@@ -558,6 +646,7 @@
     "Linear blend skinning with shoulder and knee helpers and hem panels; edge strain is bounded on every 60 Hz frame (the provenance records the measured maxima).",
     "Two procedural loops authored in Blender, Idle and Talk, with no motion capture, no facial animation, no lip sync, no finger animation and no cloth simulation; clips are keyed at 30 Hz. Residents stand: there is no walk, turn or work clip, and the presenter turns them to face the hero instantly, as the procedural figures did.",
     "Re-cooking is not guaranteed to be byte-reproducible: MikkTSpace tangents can round differently on a few vertices.",
-    "A small dark smudge at the right temple; the rope coil is fused to the coat front."
+    "A small dark smudge at the right temple; the rope coil is fused to the coat front.",
+    "Maps of 1024 px or more ship at half the cooked resolution (resize_maps.py: a 2x2 box filter, as the GPU builds mip level 1): the game camera stays 18-40 m away, so it never sampled the cooked top level, and close-up renders are softer than the cook."
   ]
 }

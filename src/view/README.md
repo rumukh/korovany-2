@@ -304,8 +304,8 @@ residents and the Echo Well and landmarks standing in it), and `main.ts`
 requests that set whenever it presents a title preview, a new run or a resumed
 one. The other factions' heroes and boss are never fetched for a campaign that
 cannot show them, and a campaign without elf troops (the mountain sovereign's)
-never fetches theirs; a story campaign preloads 28.0 to 29.3 MB of the 33.9 MB
-of models and a legacy one about 13.1 to 13.6 MB (`tests/campaign-models.test.ts` checks the
+never fetches theirs; a story campaign preloads 20.6 to 21.3 MB of the 24.5 MB
+of models and a legacy one about 9.0 to 9.5 MB (`tests/campaign-models.test.ts` checks the
 sets, the 30 MB budget and full runs, including the reinforcement wave). Loaded
 models stay for the page, so a faction picked again or the run started from the
 title's preview never waits twice. Until every requested
@@ -353,6 +353,21 @@ exactly that reordered data. Files are about a fifth smaller. GitHub Pages
 already gzips GLBs, so on its own this step cuts the download by only about 7%.
 Quantization is what makes the static props smaller to download.
 Textures stay WebP and are not compressed again.
+
+**Map size.** The follow camera stays 18 to 40 m from the hero (a 48 degree view,
+pixel ratio at most 1.75), so a character or wagon is never drawn large enough to
+sample the top level of a 1024 px map. The 37 characters and wagons therefore
+ship their maps of 1024 px or more at half size (the bosses' 2048 px base colour
+at 1024 px): `pipeline/resize_maps.py` runs before `meshopt_glb.mjs` on each
+shipping cook, applies a 2x2 box filter as the GPU builds mip level 1 (sRGB colour
+in linear light, the dye mask and data maps plainly) and re-encodes with the cooks'
+WebP settings (`exact`, lossless alpha for dye-masked base colour). Geometry, skins
+and clips stay byte-identical. In the game at most 0.019% of a frame changes
+(three factions, 18 and 26 m, pixel ratio 1 and 1.75) and tone stays within 0.2%;
+the files are 35% smaller and those maps' texture memory is a quarter (a story
+campaign's models hold about 276 MiB instead of 604 MiB). Close-ups outside the
+game are softer than the cooks. The landmarks, the Echo Well, the cargo and the
+pickups keep their maps.
 `gltfModelSource()` gives `GLTFLoader` three.js's bundled WebAssembly
 `MeshoptDecoder`. The files require the extension and their fallback buffer holds
 no data, so a loader without the decoder fails instead of drawing anything.
@@ -475,8 +490,8 @@ structures and pickups remain; with one, a landmark or pickup that failed to
 load stops the game on the asset error. A landmark has at most 15,000 triangles
 and 1024 px maps (0.71 to 0.91 MB per file) and a pickup at most 3,000 triangles
 and 512 px maps (0.25 to 0.29 MB); together the nine add 5.70 MB. The three elf
-troops add 2.67 MB (0.80 to 1.01 MB each) and the three mountain troops 2.62 MB
-(0.83 to 0.90 MB each), so the forty-eight models total 33.9 MB, of which one
+troops add 1.74 MB (0.52 to 0.65 MB each) and the three mountain troops 1.73 MB
+(0.54 to 0.60 MB each), so the forty-eight models total 24.5 MB, of which one
 campaign preloads its own set.
 
 After a world mirror is built and after every quality change, `createGameView`

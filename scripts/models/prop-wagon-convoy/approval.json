@@ -25,10 +25,10 @@
     },
     {
       "gate": "in-game",
-      "decision": "Ship the four quantized props (Recommended)",
-      "decidedAt": "2026-10-02T14:11:03.184756+02:00",
-      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: the Echo Well, both wagons and the cargo, with vertex data quantized by quantize_static_glb.py before the meshopt step, are in the running game (board 127.0.0.1:47897, _reviews/gate3-static-quantized). Files fall 32.4% (3,835,088 to 2,590,916 bytes) and the gzip download 32.2% (3,647,712 to 2,474,649). In 51 game frames the worst whole-frame mean difference is 0.0077/255 and at most 0.0054% of a frame's pixels change by more than 8/255; programs and draw calls are identical. Should I ship the quantized props?",
-      "sha256": "56853d43df0eb417c8a95bee4ab1207944430190736c95cd0a06e09c6ae4924d",
+      "decision": "Ship the map-halved model (Recommended)",
+      "decidedAt": "2026-10-07T01:03:00.013679+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: prop-wagon-convoy with its maps of 1024 px or more halved (resize_maps.py, then meshopt_glb.mjs; geometry, skin and clips byte-identical) is in the running game (board _reviews/gate3-resize-large). The file falls from 754,788 to 475,732 bytes. In isolated renders 0.079% of its pixels differ by more than 8/255 at 18 m (1.125% at pixel ratio 1.75, 0.068% at 26 m), tone ratio 1.0; in the game (three factions, 18 and 26 m, pixel ratio 1 and 1.75) at most 0.019% of a frame differs by more than 8/255. Close-ups are softer (9.944% of pixels over 8/255). Shader programs are unchanged. Should I ship it?",
+      "sha256": "9463fc4e81c2399005f667c16b2b7936792b9270a0348aa8b916fdc1b17c62e4",
       "decidedBy": {
         "mode": "delegated",
         "record": "_reviews/delegation-2026-10-01.json",
@@ -57,6 +57,19 @@
         "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
       },
       "superseded": "Re-shipped with quantized vertex data (quantize_static_glb.py: 16-bit positions with one uniform scale per mesh in its node, 8-bit normals and tangents, 16-bit UVs) before the meshopt step; about a third fewer bytes and visually unchanged in the game (_reviews/gate3-static-quantized)."
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "Ship the four quantized props (Recommended)",
+      "decidedAt": "2026-10-02T14:11:03.184756+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: the Echo Well, both wagons and the cargo, with vertex data quantized by quantize_static_glb.py before the meshopt step, are in the running game (board 127.0.0.1:47897, _reviews/gate3-static-quantized). Files fall 32.4% (3,835,088 to 2,590,916 bytes) and the gzip download 32.2% (3,647,712 to 2,474,649). In 51 game frames the worst whole-frame mean difference is 0.0077/255 and at most 0.0054% of a frame's pixels change by more than 8/255; programs and draw calls are identical. Should I ship the quantized props?",
+      "sha256": "56853d43df0eb417c8a95bee4ab1207944430190736c95cd0a06e09c6ae4924d",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      },
+      "superseded": "Re-shipped with its maps of 1024 px or more halved (resize_maps.py: a 2x2 box filter, as the GPU builds mip level 1, then meshopt_glb.mjs): the game camera never samples the cooked top level, so the frames are unchanged while the file shrinks by about a third and those maps' texture memory to a quarter (_reviews/gate3-resize-large)."
     }
   ]
 }

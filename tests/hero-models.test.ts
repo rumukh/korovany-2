@@ -99,7 +99,7 @@ describe('cooked hero models', () => {
     expect(primitives).toBeLessThanOrEqual(3);
     const images = gltf.images!.map((image, index) => ({ name: image.name, ...imageSize(imageBytes(document, index)) }));
     expect(images.every(image => image.format === 'webp')).toBe(true);
-    for (const name of ['body-base', 'body-normal', 'body-orm']) expect(images.find(image => image.name === name)).toMatchObject({ width: 1024, height: 1024 });
+    for (const name of ['body-base', 'body-normal', 'body-orm']) expect(images.find(image => image.name === name)).toMatchObject({ width: 512, height: 512 });
     // The base-colour alpha is the dye mask read by the shared dyed program.
     expect(images.find(image => image.name === 'body-base')?.alpha).toBe(true);
     const { scene, animations } = await parseGlbWithoutTextures(bytes);

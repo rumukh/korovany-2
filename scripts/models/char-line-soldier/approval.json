@@ -33,10 +33,10 @@
     },
     {
       "gate": "in-game",
-      "decision": "approve: ship the lifted soldier",
-      "decidedAt": "2026-10-04T14:08:30.647362+02:00",
-      "question": "Ship the Crown line soldier with its base colour lifted by luma power 0.6 (cook-016-g-q-m: derive_tone_cook.py on the shipped cook, then quantized and meshopt-compressed), calibrated in the game like every other troop, after the in-game review at gameplay camera distances, combat, corpse and conversation states, high and low quality and reduced motion?",
-      "sha256": "92f1f1fc7f93f3cfa8059bd8c04be205bd96115f60f720ed29f3a9ade6a353a1",
+      "decision": "Ship the map-halved model (Recommended)",
+      "decidedAt": "2026-10-07T01:03:00.013679+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: char-line-soldier with its maps of 1024 px or more halved (resize_maps.py, then meshopt_glb.mjs; geometry, skin and clips byte-identical) is in the running game (board _reviews/gate3-resize-large). The file falls from 929,732 to 602,852 bytes. In isolated renders 0.032% of its pixels differ by more than 8/255 at 18 m (0.351% at pixel ratio 1.75, 0.065% at 26 m), tone ratio 0.9997; in the game (three factions, 18 and 26 m, pixel ratio 1 and 1.75) at most 0.019% of a frame differs by more than 8/255. Close-ups are softer (10.635% of pixels over 8/255). Shader programs are unchanged. Should I ship it?",
+      "sha256": "167b54b54bdee6c90ca61c73550f7337588d994ac2be556b73a41de38e622d67",
       "decidedBy": {
         "mode": "delegated",
         "record": "_reviews/delegation-2026-10-01.json",
@@ -95,6 +95,19 @@
         "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
       },
       "superseded": "Re-shipped with its base colour lifted by luma power 0.6 after the cook (derive_tone_cook.py), calibrated in the game like the other line troops: about 104.8/255 mean luma against the concept's 110.8/255 (84.7 before); geometry, rig, clips and every other image are byte-identical (_reviews/gate3-soldier-tone)."
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "approve: ship the lifted soldier",
+      "decidedAt": "2026-10-04T14:08:30.647362+02:00",
+      "question": "Ship the Crown line soldier with its base colour lifted by luma power 0.6 (cook-016-g-q-m: derive_tone_cook.py on the shipped cook, then quantized and meshopt-compressed), calibrated in the game like every other troop, after the in-game review at gameplay camera distances, combat, corpse and conversation states, high and low quality and reduced motion?",
+      "sha256": "92f1f1fc7f93f3cfa8059bd8c04be205bd96115f60f720ed29f3a9ade6a353a1",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      },
+      "superseded": "Re-shipped with its maps of 1024 px or more halved (resize_maps.py: a 2x2 box filter, as the GPU builds mip level 1, then meshopt_glb.mjs): the game camera never samples the cooked top level, so the frames are unchanged while the file shrinks by about a third and those maps' texture memory to a quarter (_reviews/gate3-resize-large)."
     }
   ]
 }

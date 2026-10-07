@@ -4,8 +4,8 @@
   "role": "mountain-army bowman (archer actors of the villain faction)",
   "output": {
     "file": "public/models/char-mountain-archer/char-mountain-archer.glb",
-    "sha256": "302a7fd634bb000c4fc9c45409489410eddfe6cf7804f0c3e1f8a90744909da9",
-    "bytes": 893324
+    "sha256": "321f2ebeb7f87e4ec50a48ef027888460083b5668c9be4aec7765b8071f7bceb",
+    "bytes": 596308
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from the approved line-soldier concept with its head replaced by the blank head of an original Blender mannequin; no cloud generation, third-party image, franchise design or real-person likeness was used as input.",
   "acknowledgment": {
@@ -343,21 +343,20 @@
         {
           "image": "body-base",
           "size": [
-            1024,
-            1024
+            512,
+            512
           ],
-          "bytes": 208664,
-          "sha256": "4a06c24c8d909ef1921849e7fd68a2174094ce0a5e6c8c86b464aea0f0f449d4",
-          "bytesBefore": 62894,
+          "bytes": 79624,
+          "sha256": "ec2871740404fc381c278c42f148e38d563026c6b52dc10aa6d1d4f322e04476",
+          "bytesBefore": 208664,
           "meanAbsRgbError": {
-            "dyed": 1.474,
-            "undyed": 1.809
+            "dyed": 1.767,
+            "undyed": 2.012
           },
-          "meanAbsRgbErrorBefore": {
-            "dyed": 1.35,
-            "undyed": 50.791
-          },
-          "undyedFraction": 0.9039
+          "undyedFraction": 0.8986,
+          "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+          "script": "resize_maps.py",
+          "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba"
         },
         {
           "image": "items-base",
@@ -378,7 +377,21 @@
           },
           "undyedFraction": 1
         }
-      ]
+      ],
+      "amendedBy": {
+        "script": "resize_maps.py",
+        "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba",
+        "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+        "settings": {
+          "quality": 90,
+          "method": 6,
+          "exact": true,
+          "alpha": "lossless"
+        },
+        "images": [
+          "body-base"
+        ]
+      }
     },
     "tangentRepair": {
       "script": "repair_tangents.py",
@@ -462,27 +475,33 @@
           "raw": 0,
           "packed": 0
         },
-        "stored": 498326
+        "stored": 201312
       },
-      "inputSha256": "05621a468ff2997a2c44fe65ab9d318cddee5f5a6c6bb9c187c49310489bf12b",
-      "bytesBefore": 1088388,
-      "bytesAfter": 893324
+      "inputSha256": "832dd3cfac11517601385ba1a041c85d77ef7cfc2cfa3fe0862aba74f5430b1a",
+      "bytesBefore": 791368,
+      "bytesAfter": 596308
     },
     "derivedFrom": {
-      "cook": "ship-001-t-q",
-      "sha256": "05621a468ff2997a2c44fe65ab9d318cddee5f5a6c6bb9c187c49310489bf12b",
-      "bytes": 1088388,
-      "note": "The exact ship-001-t-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "cook": "ship-001-t-q-h",
+      "sha256": "832dd3cfac11517601385ba1a041c85d77ef7cfc2cfa3fe0862aba74f5430b1a",
+      "bytes": 791368,
+      "note": "The exact ship-001-t-q-h output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
       "derivedFrom": {
-        "cook": "ship-001-t",
-        "sha256": "d067dbd29e0d28e8517ff693bc3095e515c7e3f915fe6fcadd820991c5422eb9",
-        "bytes": 1605880,
-        "note": "The exact ship-001-t output, quantized by quantize_glb.py; the Blender cook was not re-run.",
+        "cook": "ship-001-t-q",
+        "sha256": "05621a468ff2997a2c44fe65ab9d318cddee5f5a6c6bb9c187c49310489bf12b",
+        "bytes": 1088388,
+        "note": "The exact ship-001-t-q output (the shipped ship-001-t-q-m before EXT_meshopt_compression) with its maps of 1024 px or more halved by resize_maps.py; the Blender cook was not re-run.",
         "derivedFrom": {
-          "cook": "ship-001",
+          "cook": "ship-001-t",
           "sha256": "d067dbd29e0d28e8517ff693bc3095e515c7e3f915fe6fcadd820991c5422eb9",
           "bytes": 1605880,
-          "note": "The exact ship-001 output, tangents checked and degenerate ones repaired by repair_tangents.py; the Blender cook was not re-run."
+          "note": "The exact ship-001-t output, quantized by quantize_glb.py; the Blender cook was not re-run.",
+          "derivedFrom": {
+            "cook": "ship-001",
+            "sha256": "d067dbd29e0d28e8517ff693bc3095e515c7e3f915fe6fcadd820991c5422eb9",
+            "bytes": 1605880,
+            "note": "The exact ship-001 output, tangents checked and degenerate ones repaired by repair_tangents.py; the Blender cook was not re-run."
+          }
         }
       }
     },
@@ -713,11 +732,110 @@
       "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
       "repair_tangents.py": "be1ff6e6aa829a639644a8f7b6960b424c5bcaba0b137fe4ffc5f3da338cb952",
       "quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f",
-      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5",
+      "resize_maps.py": "50c064c9eb1f597903437ca9cf6a409e7345b9606543d17d4f0e1c620f220688"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
     "seconds": 43.2,
-    "verification": "tests/faction-troop-models.test.ts verifies every 60 Hz frame of every clip and rejects six deliberately broken copies."
+    "verification": "tests/faction-troop-models.test.ts verifies every 60 Hz frame of every clip and rejects six deliberately broken copies.",
+    "textureResize": {
+      "script": "resize_maps.py",
+      "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba",
+      "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+      "minSize": 1024,
+      "filter": "2x2 box to half size, as the GPU builds mip level 1: sRGB colour in linear light, alpha and data plainly",
+      "reason": "The game camera never samples this model's top mip level (follow camera at 18-40 m, 48 degree view, pixel ratio at most 1.75); halving its large maps leaves the game's frames unchanged and quarters their texture memory.",
+      "inputSha256": "05621a468ff2997a2c44fe65ab9d318cddee5f5a6c6bb9c187c49310489bf12b",
+      "bytesBefore": 1088388,
+      "bytesAfter": 791368,
+      "images": [
+        {
+          "image": "body-normal",
+          "role": "data",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 175950,
+          "bytes": 59660,
+          "sha256Before": "64207a79aa8e14bc798b4065071ca7d6c9e07561ede1c335613b2c3fb2646870",
+          "sha256": "dc31b7d761ce2ed7d79702811de8abb769249338ec3ce0505292a93bd3a885e7",
+          "settings": {
+            "quality": 92,
+            "method": 6
+          },
+          "meanAbsRgbError": 2.447
+        },
+        {
+          "image": "body-orm",
+          "role": "data",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 101270,
+          "bytes": 49586,
+          "sha256Before": "8253514f6b4ca6d8a9b46b3537121293bcef41a76f8046320bd8bf85f938ddf5",
+          "sha256": "f5f094e18320277e8f930c9cbca72a8e52400fc6568195e859f9e75a76837bce",
+          "settings": {
+            "quality": 92,
+            "method": 6
+          },
+          "meanAbsRgbError": 2.453
+        },
+        {
+          "image": "body-base",
+          "role": "colour",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 208664,
+          "bytes": 79624,
+          "sha256Before": "4a06c24c8d909ef1921849e7fd68a2174094ce0a5e6c8c86b464aea0f0f449d4",
+          "sha256": "ec2871740404fc381c278c42f148e38d563026c6b52dc10aa6d1d4f322e04476",
+          "settings": {
+            "quality": 90,
+            "method": 6,
+            "exact": true,
+            "alpha": "lossless"
+          },
+          "meanAbsRgbError": 1.987
+        }
+      ],
+      "kept": [
+        {
+          "image": "items-base",
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 5554,
+          "sha256": "42d8ffa348d1ec9dfc1e10b19fa11e135006e896e1e5663ae26d0c7834da248b"
+        },
+        {
+          "image": "items-orm",
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 6888,
+          "sha256": "879e3e43fefb4a7c0c429a1c55ce8df33499fe4f445fce73df47aebd3b27bae5"
+        }
+      ]
+    }
   },
   "limitations": [
     "Single-view TRELLIS reconstruction from one concept: hands are fused or loosely split 'mitten' shapes with red-tinted fingers, and faces are soft, with smeared eyes and mouths.",
@@ -732,6 +850,7 @@
     "Re-cooking is not guaranteed to be byte-reproducible: MikkTSpace tangents can round differently on a few vertices, and Blender's smart UV project can lay out the item atlas differently between runs.",
     "The concept's bright blue eyes came out as faint purple smudges under the brows (kept: retinting them would erase the eye sockets).",
     "TRELLIS added a pale speck to the front of the cap band on every high-detail seed; 113 texels were painted back to the band's black.",
-    "The fur cap and shoulder cape are smooth masses with painted fur; the bow is rigid and its string does not draw back with the hand."
+    "The fur cap and shoulder cape are smooth masses with painted fur; the bow is rigid and its string does not draw back with the hand.",
+    "Maps of 1024 px or more ship at half the cooked resolution (resize_maps.py: a 2x2 box filter, as the GPU builds mip level 1): the game camera stays 18-40 m away, so it never sampled the cooked top level, and close-up renders are softer than the cook."
   ]
 }

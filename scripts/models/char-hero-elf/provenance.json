@@ -4,8 +4,8 @@
   "role": "forest elf resistance defender (player, elf faction)",
   "output": {
     "file": "public/models/char-hero-elf/char-hero-elf.glb",
-    "sha256": "3aef54d767e1725de81922ca35dd230f59aaba440bc9d793c333bbb4e4bb0172",
-    "bytes": 1046544
+    "sha256": "6f294810d7e53a2dfb9e64f8747b680efd7c4b13fba1c70d456e53dc073d785a",
+    "bytes": 745264
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from the approved line-soldier concept (with its head replaced by the blank head of an original Blender mannequin) and the game's own portrait of the hero, an original Korovany II artwork generated earlier with Azure OpenAI gpt-image-2 and used here only as a local identity reference; no new cloud generation, third-party image, franchise design or real-person likeness was used.",
   "acknowledgment": {
@@ -309,21 +309,20 @@
         {
           "image": "body-base",
           "size": [
-            1024,
-            1024
+            512,
+            512
           ],
-          "bytes": 175070,
-          "sha256": "433851baea4b75bd74772f4e9aed057c010976bffa2bc66466f0738588fca6ac",
-          "bytesBefore": 5642,
+          "bytes": 63236,
+          "sha256": "3a70206f37965cf5c0d63ff46b51daaf06aed62990abb0947309cfa4843838e7",
+          "bytesBefore": 175070,
           "meanAbsRgbError": {
             "dyed": null,
-            "undyed": 1.832
+            "undyed": 2.124
           },
-          "meanAbsRgbErrorBefore": {
-            "dyed": null,
-            "undyed": 37.434
-          },
-          "undyedFraction": 1
+          "undyedFraction": 1,
+          "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+          "script": "resize_maps.py",
+          "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba"
         },
         {
           "image": "items-base",
@@ -344,7 +343,21 @@
           },
           "undyedFraction": 1
         }
-      ]
+      ],
+      "amendedBy": {
+        "script": "resize_maps.py",
+        "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba",
+        "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+        "settings": {
+          "quality": 90,
+          "method": 6,
+          "exact": true,
+          "alpha": "lossless"
+        },
+        "images": [
+          "body-base"
+        ]
+      }
     },
     "quantization": {
       "script": "quantize_glb.py",
@@ -418,22 +431,28 @@
           "raw": 0,
           "packed": 0
         },
-        "stored": 499880
+        "stored": 198604
       },
-      "inputSha256": "d7d9481b9300ae059f2499479f4169b92f233a52f3756ef48cc300f6008d2faf",
-      "bytesBefore": 1294604,
-      "bytesAfter": 1046544
+      "inputSha256": "17bcaeb014b1ec9cae8d62268c20cef9f57e18f39674cb506ff7619d95a8baa2",
+      "bytesBefore": 993320,
+      "bytesAfter": 745264
     },
     "derivedFrom": {
-      "cook": "full-004-q",
-      "sha256": "d7d9481b9300ae059f2499479f4169b92f233a52f3756ef48cc300f6008d2faf",
-      "bytes": 1294604,
-      "note": "The exact full-004-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "cook": "full-004-q-h",
+      "sha256": "17bcaeb014b1ec9cae8d62268c20cef9f57e18f39674cb506ff7619d95a8baa2",
+      "bytes": 993320,
+      "note": "The exact full-004-q-h output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
       "derivedFrom": {
-        "cook": "full-004",
-        "sha256": "c300775b79ecc19b09754560abe1096132fcb0b85a6e9aad1b23eeec59e195ca",
-        "bytes": 1982008,
-        "note": "The exact full-004 output, quantized by quantize_glb.py; the Blender cook was not re-run."
+        "cook": "full-004-q",
+        "sha256": "d7d9481b9300ae059f2499479f4169b92f233a52f3756ef48cc300f6008d2faf",
+        "bytes": 1294604,
+        "note": "The exact full-004-q output (the shipped full-004-q-m before EXT_meshopt_compression) with its maps of 1024 px or more halved by resize_maps.py; the Blender cook was not re-run.",
+        "derivedFrom": {
+          "cook": "full-004",
+          "sha256": "c300775b79ecc19b09754560abe1096132fcb0b85a6e9aad1b23eeec59e195ca",
+          "bytes": 1982008,
+          "note": "The exact full-004 output, quantized by quantize_glb.py; the Blender cook was not re-run."
+        }
       }
     },
     "weights": {
@@ -788,16 +807,115 @@
       "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
       "webp_exact.py": "73b62c0bd3e59166aede070eaa488b56f2e9ce66a148bd59d830c6052f3ddb9b",
       "quantize_glb.py": "d5409172d8df6b4540efb173f8942497f8ca0d1653bfce7c31850e7265a76b7f",
-      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5",
+      "resize_maps.py": "50c064c9eb1f597903437ca9cf6a409e7345b9606543d17d4f0e1c620f220688"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
     "seconds": 34.9,
-    "verification": "tests/hero-models.test.ts verifies every 60 Hz frame of every clip and rejects six deliberately broken copies."
+    "verification": "tests/hero-models.test.ts verifies every 60 Hz frame of every clip and rejects six deliberately broken copies.",
+    "textureResize": {
+      "script": "resize_maps.py",
+      "scriptSha256": "eb3b047710fcba852d2cb8f82f655d4d9cdac4b1cd7e474a92bf9b29ee8776ba",
+      "encoder": "Pillow 12.3.0 / libwebp 1.6.0",
+      "minSize": 1024,
+      "filter": "2x2 box to half size, as the GPU builds mip level 1: sRGB colour in linear light, alpha and data plainly",
+      "reason": "The game camera never samples this model's top mip level (follow camera at 18-40 m, 48 degree view, pixel ratio at most 1.75); halving its large maps leaves the game's frames unchanged and quarters their texture memory.",
+      "inputSha256": "d7d9481b9300ae059f2499479f4169b92f233a52f3756ef48cc300f6008d2faf",
+      "bytesBefore": 1294604,
+      "bytesAfter": 993320,
+      "images": [
+        {
+          "image": "body-normal",
+          "role": "data",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 183950,
+          "bytes": 61716,
+          "sha256Before": "16686e04c0d9b52c76e2ad266ae9f1c1ecf437c3ab7366980b1881c6ba1fdb38",
+          "sha256": "aa00fd2b08780459275f3dedb6d17ef8613bafcd8eb549cb32d5f5ce00da9ae9",
+          "settings": {
+            "quality": 92,
+            "method": 6
+          },
+          "meanAbsRgbError": 2.528
+        },
+        {
+          "image": "body-orm",
+          "role": "data",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 130404,
+          "bytes": 63196,
+          "sha256Before": "dc9274d71417ee3c797b9129d9c651467189904605560e3281dac3bf5742be47",
+          "sha256": "8af8b7bc83754a44a6bdfe8a11c143bb36d176787736030e53640b474053715a",
+          "settings": {
+            "quality": 92,
+            "method": 6
+          },
+          "meanAbsRgbError": 2.959
+        },
+        {
+          "image": "body-base",
+          "role": "colour",
+          "sizeBefore": [
+            1024,
+            1024
+          ],
+          "size": [
+            512,
+            512
+          ],
+          "bytesBefore": 175070,
+          "bytes": 63236,
+          "sha256Before": "433851baea4b75bd74772f4e9aed057c010976bffa2bc66466f0738588fca6ac",
+          "sha256": "3a70206f37965cf5c0d63ff46b51daaf06aed62990abb0947309cfa4843838e7",
+          "settings": {
+            "quality": 90,
+            "method": 6,
+            "exact": true,
+            "alpha": "lossless"
+          },
+          "meanAbsRgbError": 2.124
+        }
+      ],
+      "kept": [
+        {
+          "image": "items-base",
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 4712,
+          "sha256": "928f57fd680d4ff9d04c8b0770e6f03ead401d03561213938bbf53e7b0158ffd"
+        },
+        {
+          "image": "items-orm",
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 5744,
+          "sha256": "a2a9247405e785ce74ecda85a09a781fb1007452a74f45938d26cc647f4bcc4b"
+        }
+      ]
+    }
   },
   "limitations": [
     "Single-view TRELLIS reconstruction from one concept: hands are fused 'mitten' shapes (a thumb and two or three joined fingers), and the face is soft, with smeared eye sockets that read as a dark band at gameplay distance.",
     "TRELLIS invented a near-black back on every seed; the back is a projected rear-view concept, blended into the reconstructed texture at the sides, with the nearest painted colour carried into a few unpainted back pixels.",
-    "Maps are 1024 px on the decimated TRELLIS atlas (about 57-62% coverage), whose charts touch, so filtering can show faint seams.",
+    "Maps are cooked at 1024 px on the decimated TRELLIS atlas (about 57-62% coverage) and ship at 512 px, the finest level the game camera samples; the charts touch, so filtering can show faint seams.",
     "Roughness, metalness and ambient occlusion are derived from colour inside declared regions and a Cycles bake, not measured PBR or hand-painted masks.",
     "Linear blend skinning with shoulder, hip and knee helpers: creases stretch up to about 2x at the 99.5th percentile in running and combat frames, and single edges up to about 7x at armpit, elbow and knee creases.",
     "Weapons and the quiver are low-poly Blender-authored meshes with flat painted colour, not reconstructed from a concept.",
