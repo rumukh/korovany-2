@@ -4,8 +4,8 @@
   "role": "the bronze armillary on its tide-marked pedestal drawn for every building of the Tide Observatory and the Star Monastery's first building",
   "output": {
     "file": "public/models/prop-tide-armillary/prop-tide-armillary.glb",
-    "sha256": "9e3861525e0889d131173a4a8b9c5ffc04ecf97b074b111de63ca65fd89a8de5",
-    "bytes": 726760
+    "sha256": "823738ee9022c6a6693304b762cb42a921b2c8beb8f7adf27c00e1c343196179",
+    "bytes": 2866428
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from the agent's original grey Blender blockout renders (pipeline/make_landmark_references_v2.py); no cloud generation, third-party image, franchise design or real-person likeness was used as input.",
   "acknowledgment": {
@@ -100,6 +100,14 @@
         "wholeToolchainMit": false,
         "commercialClearanceEstablished": false
       }
+    },
+    {
+      "name": "Basis Universal 2.50 (basisu)",
+      "build": "bin/basisu_st.wasm of tag v2_50 (WASI, single-threaded), run by Node.js node:wasi",
+      "source": "https://github.com/BinomialLLC/basis_universal",
+      "sha256": "b42d951b1bf146133578e8c7927ad4a4a857552846a46a3ee33b541b2a06bc7d",
+      "license": "Apache-2.0",
+      "role": "GPU texture compression of the shipped maps (UASTC in KTX2, Zstandard), not shipped"
     }
   ],
   "source": {
@@ -356,27 +364,33 @@
           "raw": 0,
           "packed": 0
         },
-        "stored": 551962
+        "stored": 2691615
       },
-      "inputSha256": "1b29bda6a16062bcd0de557af2c33f31f3f806f6863423130749ea7dad843158",
-      "bytesBefore": 872844,
-      "bytesAfter": 726760
+      "inputSha256": "0d3c06f0366b00426dcab4a14add5d8da22514159163dc441693bfaa1956c643",
+      "bytesBefore": 3012508,
+      "bytesAfter": 2866428
     },
     "derivedFrom": {
-      "cook": "ship-002-t-q",
-      "sha256": "1b29bda6a16062bcd0de557af2c33f31f3f806f6863423130749ea7dad843158",
-      "bytes": 872844,
-      "note": "The exact ship-002-t-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "cook": "ship-002-t-q-k",
+      "sha256": "0d3c06f0366b00426dcab4a14add5d8da22514159163dc441693bfaa1956c643",
+      "bytes": 3012508,
+      "note": "The exact ship-002-t-q-k output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
       "derivedFrom": {
-        "cook": "ship-002-t",
-        "sha256": "2f396dba25d0f0e48e23a2fc2e40fe5da5bd87e10abcc2c13374f4f3ae6895d2",
-        "bytes": 1194548,
-        "note": "The exact ship-002-t output, quantized by quantize_prop_glb.py; the Blender cook was not re-run.",
+        "cook": "ship-002-t-q",
+        "sha256": "1b29bda6a16062bcd0de557af2c33f31f3f806f6863423130749ea7dad843158",
+        "bytes": 872844,
+        "note": "The exact ship-002-t-q output (the shipped ship-002-t-q-m before EXT_meshopt_compression) with its maps re-encoded as Basis Universal UASTC KTX2 by ktx2_glb.py; the Blender cook was not re-run.",
         "derivedFrom": {
-          "cook": "ship-002",
+          "cook": "ship-002-t",
           "sha256": "2f396dba25d0f0e48e23a2fc2e40fe5da5bd87e10abcc2c13374f4f3ae6895d2",
           "bytes": 1194548,
-          "note": "The exact ship-002 output, tangents checked and degenerate ones repaired by repair_tangents.py; the Blender cook was not re-run."
+          "note": "The exact ship-002-t output, quantized by quantize_prop_glb.py; the Blender cook was not re-run.",
+          "derivedFrom": {
+            "cook": "ship-002",
+            "sha256": "2f396dba25d0f0e48e23a2fc2e40fe5da5bd87e10abcc2c13374f4f3ae6895d2",
+            "bytes": 1194548,
+            "note": "The exact ship-002 output, tangents checked and degenerate ones repaired by repair_tangents.py; the Blender cook was not re-run."
+          }
         }
       }
     },
@@ -387,11 +401,194 @@
       "k2sheet.py": "0141e81990f6318c974fa018c895e02aa71b9c8ba5e23dbdd741e4881e6f177c",
       "repair_tangents.py": "be1ff6e6aa829a639644a8f7b6960b424c5bcaba0b137fe4ffc5f3da338cb952",
       "quantize_prop_glb.py": "4fceea5247a9da87d455879dd049eeba1426a67202a5e502e321731f8813378f",
-      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5",
+      "ktx2_glb.py": "29ea13b9e375f0893aba54c78f5f23d62e104c9c9ddc1f4bc11568706e4ca5aa",
+      "ktx2_tool.mjs": "0f94eb2f2f3ba5654ff42c915705fb41390118aa7fec0fa6f236763708900f81"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
     "seconds": 31.5,
-    "verification": "tests/landmark-models.test.ts checks one static mesh and material within the triangle budget, normals, tangents and WebP maps, and that every vertex of every placement stays inside its location's authoritative 2.8 m circular building blocker and above the ground; tests/models.test.ts checks that every normal and tangent is a finite unit vector; tests/models-browser.test.ts decodes its maps and tests/props-browser.test.ts renders it at its locations on the shader programs warmed at load."
+    "verification": "tests/landmark-models.test.ts checks one static mesh and material within the triangle budget, normals, tangents and WebP maps, and that every vertex of every placement stays inside its location's authoritative 2.8 m circular building blocker and above the ground; tests/models.test.ts checks that every normal and tangent is a finite unit vector; tests/models-browser.test.ts decodes its maps and tests/props-browser.test.ts renders it at its locations on the shader programs warmed at load.",
+    "textureCompression": {
+      "extension": "KHR_texture_basisu",
+      "codec": "Basis Universal UASTC LDR 4x4 in KTX2, Zstandard supercompression",
+      "encoder": {
+        "name": "Basis Universal basisu",
+        "version": "Basis Universal LDR/HDR GPU Texture Supercompression System v2.50.0 (WASI)",
+        "build": "bin/basisu_st.wasm (WASI, single-threaded) of tag v2_50",
+        "source": "https://github.com/BinomialLLC/basis_universal",
+        "license": "Apache-2.0",
+        "sha256": "b42d951b1bf146133578e8c7927ad4a4a857552846a46a3ee33b541b2a06bc7d"
+      },
+      "transcoder": {
+        "name": "three.js 0.169.0 examples/jsm/libs/basis (the game's)",
+        "sha256": {
+          "basis_transcoder.js": "8478b5b6d6b74e7d3082b89f6417321d8d1dc0307f2b30d4484bb11b441696a1",
+          "basis_transcoder.wasm": "6cf17dc889352c42e9acf8897107978d127005fe3386c36a0e3845e27967630a"
+        }
+      },
+      "script": "ktx2_glb.py",
+      "scriptSha256": "29ea13b9e375f0893aba54c78f5f23d62e104c9c9ddc1f4bc11568706e4ca5aa",
+      "toolSha256": "0f94eb2f2f3ba5654ff42c915705fb41390118aa7fec0fa6f236763708900f81",
+      "mips": "full chain, 2x2 box filter with clamped edges (sRGB colour in linear light)",
+      "inputSha256": "1b29bda6a16062bcd0de557af2c33f31f3f806f6863423130749ea7dad843158",
+      "bytesBefore": 872844,
+      "bytesAfter": 3012508,
+      "images": [
+        {
+          "image": "prop-normal",
+          "role": "normal",
+          "size": [
+            1024,
+            1024
+          ],
+          "alpha": false,
+          "bytesBefore": 178046,
+          "bytes": 893508,
+          "sha256Before": "348e5f9055876de1fb87e38c138845860e253e1dd31bd4e1f8dd045d3845cac3",
+          "sha256": "d0a7276d7d4636dd5b88bacebc932c86d5f911eccca8dcd3c023b2ff7efa3bd3",
+          "levels": 11,
+          "transfer": "linear",
+          "settings": [
+            "-uastc",
+            "-uastc_level",
+            "2",
+            "-uastc_rdo_d",
+            "32768",
+            "-uastc_rdo_m",
+            "-ktx2",
+            "-ktx2_zstandard_level",
+            "22",
+            "-mipmap",
+            "-mip_filter",
+            "box",
+            "-mip_clamp",
+            "-no_multithreading",
+            "-uastc_rdo_l",
+            "0.5",
+            "-normal_map",
+            "-no_alpha"
+          ],
+          "transcodedTo": [
+            "ASTC 4x4",
+            "BC7",
+            "BC1/BC3",
+            "ETC1/ETC2",
+            "PVRTC1",
+            "RGBA8"
+          ],
+          "mip0": {
+            "meanAbsRgbError": 0.951,
+            "psnr": 43.47
+          },
+          "mip2": {
+            "meanAbsRgbError": 1.561,
+            "psnr": 39.66
+          }
+        },
+        {
+          "image": "prop-orm",
+          "role": "data",
+          "size": [
+            1024,
+            1024
+          ],
+          "alpha": false,
+          "bytesBefore": 196960,
+          "bytes": 863871,
+          "sha256Before": "b437a95a81e318d6128d62f999bfc2bde0cb42c6b412e7a7e910e50e5e97e41c",
+          "sha256": "69166e98e87d713dc000dfed7411d4fea8085dffe976cd81a9680209ae78e8bb",
+          "levels": 11,
+          "transfer": "linear",
+          "settings": [
+            "-uastc",
+            "-uastc_level",
+            "2",
+            "-uastc_rdo_d",
+            "32768",
+            "-uastc_rdo_m",
+            "-ktx2",
+            "-ktx2_zstandard_level",
+            "22",
+            "-mipmap",
+            "-mip_filter",
+            "box",
+            "-mip_clamp",
+            "-no_multithreading",
+            "-uastc_rdo_l",
+            "1",
+            "-linear",
+            "-no_alpha"
+          ],
+          "transcodedTo": [
+            "ASTC 4x4",
+            "BC7",
+            "BC1/BC3",
+            "ETC1/ETC2",
+            "PVRTC1",
+            "RGBA8"
+          ],
+          "mip0": {
+            "meanAbsRgbError": 1.233,
+            "psnr": 41.68
+          },
+          "mip2": {
+            "meanAbsRgbError": 2.047,
+            "psnr": 37.46
+          }
+        },
+        {
+          "image": "prop-base-1024",
+          "role": "colour",
+          "size": [
+            1024,
+            1024
+          ],
+          "alpha": false,
+          "bytesBefore": 176956,
+          "bytes": 934236,
+          "sha256Before": "45b838cede61ad66c12cc5254c128f0008c2c98a4750c56d8d1398c3be597d2c",
+          "sha256": "cf87a25bc0868720f9ceb8c571f43b842afd168a212bf80559f2de807944b791",
+          "levels": 11,
+          "transfer": "sRGB",
+          "settings": [
+            "-uastc",
+            "-uastc_level",
+            "2",
+            "-uastc_rdo_d",
+            "32768",
+            "-uastc_rdo_m",
+            "-ktx2",
+            "-ktx2_zstandard_level",
+            "22",
+            "-mipmap",
+            "-mip_filter",
+            "box",
+            "-mip_clamp",
+            "-no_multithreading",
+            "-uastc_rdo_l",
+            "1",
+            "-srgb",
+            "-no_alpha"
+          ],
+          "transcodedTo": [
+            "ASTC 4x4",
+            "BC7",
+            "BC1/BC3",
+            "ETC1/ETC2",
+            "PVRTC1",
+            "RGBA8"
+          ],
+          "mip0": {
+            "meanAbsRgbError": 1.049,
+            "psnr": 42.74
+          },
+          "mip2": {
+            "meanAbsRgbError": 1.832,
+            "psnr": 38.93
+          }
+        }
+      ]
+    }
   },
   "limitations": [
     "Single-view TRELLIS reconstruction from one approved concept: the far side, back and underside are TRELLIS's invention, with no rear-view painting projected onto them.",
@@ -399,6 +596,7 @@
     "Re-cooking is not guaranteed to be byte-reproducible: MikkTSpace tangents can round differently on a few vertices.",
     "TRELLIS painted the ball red-brown on every seed; a declared retint repaints it toward the concept's lit bronze (mean sRGB 76, 63, 52 before, 146, 122, 93 after), keeping the painted seam detail.",
     "The rings are soft tubes and the barnacles and moss are painted relief; verdigris is a colour class with metalness 0.3 and roughness 0.55, a patina approximation, and the ball is metalness 0.75.",
-    "The drum's back and the sphere's far rings are invented by the single-view reconstruction; placed at 0.98 of the 2.8 m reach, the armillary stands 11.4 m at every building (the procedural one stood about 10 to 13 m at the Tide Observatory and 7 m at the Star Monastery's 8 m building)."
+    "The drum's back and the sphere's far rings are invented by the single-view reconstruction; placed at 0.98 of the 2.8 m reach, the armillary stands 11.4 m at every building (the procedural one stood about 10 to 13 m at the Tide Observatory and 7 m at the Star Monastery's 8 m building).",
+    "Maps ship GPU-compressed as Basis Universal UASTC in KTX2 (ktx2_glb.py; about a quarter of the video memory of decoded WebP): against the cooked maps the transcoded result measures 41.7 to 43.5 dB PSNR at full size and 37.5 to 39.7 dB at a quarter size (what the game camera samples), so close-ups can show faint 4x4 block artefacts."
   ]
 }

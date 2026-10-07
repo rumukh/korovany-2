@@ -6,6 +6,7 @@ import {
 import { assetsReady, createGameView, createRenderer, type GameView } from "./view";
 import { campaignModelIds, gltfModelSource, ModelLibrary } from "./view/models";
 import { gltfWorldSource, WorldAssetLibrary, worldAssetIds } from "./view/world-assets";
+import { disposeTextureTranscoder } from "./view/textures";
 import { Soundscape } from "./audio/soundscape";
 import { AudioPresentation, type SpeechSelection } from "./audio/presentation";
 import { GameInput } from "./ui/input";
@@ -710,6 +711,7 @@ function dispose(): void {
   view?.dispose();
   models.dispose();
   worldAssets.dispose();
+  disposeTextureTranscoder();
   renderer?.dispose();
   sound.dispose();
   shell?.dispose();

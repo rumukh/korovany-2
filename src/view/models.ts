@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
+import { textureTranscoder } from './textures';
 
 /** Cooked, provenance-tracked GLB assets shipped under `public/models/<id>/<id>.glb`. */
 export type HeroFaction = 'elf' | 'guard' | 'villain';
@@ -226,9 +227,10 @@ export function modelUrl(id: ModelId): string {
 }
 
 /** Browser source: the same three.js GLTFLoader version the game renders with. Geometry and animation data are
- * EXT_meshopt_compression-encoded, decoded by three.js's bundled WebAssembly decoder. */
+ * EXT_meshopt_compression-encoded, decoded by three.js's bundled WebAssembly decoder; GPU-compressed maps
+ * (KHR_texture_basisu, KTX2) go through the page's shared Basis Universal transcoder (`textures.ts`). */
 export function gltfModelSource(): ModelSource {
-  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).setKTX2Loader(textureTranscoder());
   return { load: id => loader.loadAsync(modelUrl(id)) };
 }
 

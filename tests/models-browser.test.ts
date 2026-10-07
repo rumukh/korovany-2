@@ -49,6 +49,7 @@ function texturesOf(root) {
 // colour under a zero dye mask, which is every undyed texel (all of a hero's body).
 const probe = document.createElement('canvas').getContext('webgl2');
 function decode({ key, texture, material }) {
+  if (texture.isCompressedTexture) return decodeCompressed({ key, texture, material });
   const image = texture.image;
   const gl = probe;
   const handle = gl.createTexture();
@@ -61,13 +62,38 @@ function decode({ key, texture, material }) {
   gl.readPixels(0, 0, image.width, image.height, gl.RGBA, gl.UNSIGNED_BYTE, data);
   gl.deleteFramebuffer(framebuffer);
   gl.deleteTexture(handle);
+  return summary({ key, texture, material }, data);
+}
+// GPU-compressed (KTX2) maps exist only as transcoded blocks on the game's renderer: sample the top level there into an
+// 8-bit target (sRGB for colour, so the bytes compare with an image's) and read it back. Everything made here is freed.
+function decodeCompressed({ key, texture, material }) {
+  const { width, height } = texture.image;
+  const target = new THREE.WebGLRenderTarget(width, height, { depthBuffer: false,
+    colorSpace: texture.colorSpace === THREE.SRGBColorSpace ? THREE.SRGBColorSpace : THREE.NoColorSpace });
+  const copy = new THREE.ShaderMaterial({ uniforms: { map: { value: texture } },
+    vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+    fragmentShader: 'uniform sampler2D map; varying vec2 vUv; void main() { gl_FragColor = textureLod(map, vUv, 0.0); }' });
+  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), copy);
+  quad.frustumCulled = false;
+  const scene = new THREE.Scene().add(quad);
+  renderer.setRenderTarget(target);
+  renderer.render(scene, new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1));
+  const data = new Uint8Array(width * height * 4);
+  renderer.readRenderTargetPixels(target, 0, 0, width, height, data);
+  renderer.setRenderTarget(null);
+  quad.geometry.dispose();
+  copy.dispose();
+  target.dispose();
+  return summary({ key, texture, material }, data);
+}
+function summary({ key, texture, material }, data) {
   let low = 255, high = 0, alphaLow = 255, alphaHigh = 0;
   for (let i = 0; i < data.length; i += 4) {
     low = Math.min(low, data[i + 1]); high = Math.max(high, data[i + 1]);
     alphaLow = Math.min(alphaLow, data[i + 3]); alphaHigh = Math.max(alphaHigh, data[i + 3]);
   }
-  return { key, material, width: image.width, height: image.height, range: high - low, alphaRange: alphaHigh - alphaLow,
-    colorSpace: texture.colorSpace };
+  return { key, material, width: texture.image.width, height: texture.image.height, range: high - low, alphaRange: alphaHigh - alphaLow,
+    colorSpace: texture.colorSpace, compressed: Boolean(texture.isCompressedTexture) };
 }
 function render() {
   renderer.info.reset();

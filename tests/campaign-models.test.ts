@@ -15,8 +15,9 @@ const FACTIONS: FactionId[] = ['elf', 'guard', 'villain'];
 const RESIDENT_IDS: ModelId[] = Object.values(RESIDENTS).map(resident => resident.id);
 const BOSSES: ModelId[] = ['char-boss-raut', 'char-boss-marshal'];
 const STORY_WORLD: ModelId[] = [...RESIDENT_IDS, ...LANDMARK_IDS, 'prop-echo-well'];
-/** The approved plan's per-campaign preload budget for cooked models. */
-const PRELOAD_BUDGET = 30 * 1024 * 1024;
+/** The per-campaign preload budget for cooked models: 30 MiB in the approved plan, raised to 35 MiB by the owner on
+ * 2026-10-06 for GPU-compressed (KTX2) landmarks and Echo Well. */
+const PRELOAD_BUDGET = 35 * 1024 * 1024;
 
 /** A source that hands out empty static meshes and counts how often each model is fetched. */
 function countingSource(fail?: ModelId): ModelSource & { calls: Map<ModelId, number> } {
@@ -98,7 +99,7 @@ describe('per-campaign model preloading', () => {
     }
   });
 
-  test('each campaign preloads less than every model and stays inside the 30 MB preload budget', () => {
+  test('each campaign preloads less than every model and stays inside the 35 MB preload budget', () => {
     const all = MODEL_IDS.reduce((sum, id) => sum + bytes(id), 0);
     const sizes: Record<string, number> = {};
     for (const version of [1, 2] as const) {

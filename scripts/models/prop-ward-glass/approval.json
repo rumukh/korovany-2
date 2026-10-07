@@ -37,6 +37,20 @@
     },
     {
       "gate": "in-game",
+      "decision": "Ship the KTX2 model (Recommended)",
+      "decidedAt": "2026-10-07T03:23:50+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: prop-ward-glass with its three 1024 px maps encoded as Basis Universal UASTC KTX2 (ktx2_glb.py with Basis Universal 2.50, then meshopt_glb.mjs; geometry and materials byte-identical) is in the running game (board _reviews/gate3-ktx2-landmarks). The file grows from 856,632 to 3,059,056 bytes and its maps' video memory falls from 16.8 MB to 4.2 MB (BC7 on this GPU). Transcoded maps against the cooked ones, PSNR at full and quarter size: prop-normal 40.4/35.4 dB, prop-orm 41.2/37.3 dB, prop-base-1024 42.1/36.8 dB. In isolated renders 1.082% of its pixels differ by more than 8/255 at 18 m (0.481% at pixel ratio 1.75, 1.865% at 26 m; close-up 0.459%), tone ratio 1.0006; in the game (every landmark location and the well, 18 and 26 m, pixel ratio 1 and 1.75) at most 0.056% of a frame differs by more than 8/255 (lowest PSNR 53.5 dB). Shader programs are unchanged (35). Should I ship it?",
+      "sha256": "e1203e8682da3abeae28a236f3c03dd34066127499550cf3157b7fa3f244a0bc",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "gate": "in-game:superseded",
       "decision": "Ship the six landmarks and three pickups as cooked and encoded (Recommended)",
       "decidedAt": "2026-10-03T13:34:50.609284+02:00",
       "question": "Gate 3 for batches E and F, delegated under the standing instruction of 2026-10-01 (board 127.0.0.1:47910, _reviews/gate3-props-ef). Phase 2, batches E and F: the six signature landmarks (the Ward-Bell Frame at the Bell Foundry and the Reed Chapel, the Stag Shrine Gate, the Frozen Beacon, the Tide Observatory Armillary at the Tide Observatory and the Star Monastery's first building, the Ward-Glass Outcrop at the Glass Quarry and the Ash Cairn) and the three pickups (a coin purse, a healer's satchel and a supply bundle), cooked from the approved concepts and TRELLIS meshes, replace the procedural landmark structures and pickups. Decided under your standing delegation (_reviews/delegation-2026-10-01.json): I ship the recommended candidate and record it without asking; this board stays available for review. Each landmark is scaled uniformly inside its building's authoritative 2.8 m blocker and faces the location centre; each pickup keeps the procedural pickup's size, lift, bob, spin and reduced-motion stillness. Footprints, collision, AI, timing, saves and narrative are unchanged. Every model is quantized (a centred 16-bit position range, worst error 0.14 mm on the 18 m tower) and meshopt-compressed, and all nine pass the tangent check. Measured cost: the nine GLBs add 5.70 MB (5.58 MB gzip-9), so the 42 preloaded models total 28.5 MB, inside the plan's 30 MB; the satchel (286 KB) and the crate (262 KB) exceed the batch F plan's 250 KB per pickup. On the RTX 4070 Ti SUPER, p50 frame time is equal or lower in 24 of 32 location, scene and quality pairs and at most 0.2 ms higher in the rest (all p95 at most 3.5 ms); draw calls fall by 6 to 33 per scene, while triangles rise by 37k to 162k, peaking at 354k against the 400k budget. In SwiftShader, the CI software path, p50 changes by -2.7% to +12.5% (median +5.2%) because software rasterization pays for the extra triangles. This is not AAA: each model is a single-view reconstruction whose back, sides and underside are invented; thin parts (bell rod, antler tines, armillary rings, basket bars, rope, handles) are soft or fused; detail is painted into one texture rather than modelled with trims; colour defects TRELLIS repeated on every seed were repainted by declared, measured repairs rather than authored; roughness and metalness are colour-derived; the concept's studio light is partly baked into the stone; nothing animates except the pickups' bob and spin; and there are no LODs. At the gameplay camera (18 to 40 m) these read as solid, specific landmarks and pickups, not as AAA hero props close up. Which should I ship?",
@@ -45,7 +59,8 @@
         "mode": "delegated",
         "record": "_reviews/delegation-2026-10-01.json",
         "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
-      }
+      },
+      "superseded": "Re-shipped with its maps GPU-compressed as Basis Universal UASTC in KTX2 (ktx2_glb.py, then meshopt_glb.mjs; the owner chose this direction on 2026-10-06 with the model preload budget raised to 35 MiB): the maps hold about a quarter of the video memory of decoded WebP and the frames are unchanged (_reviews/gate3-ktx2-landmarks)."
     }
   ]
 }
