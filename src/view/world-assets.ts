@@ -132,8 +132,10 @@ export const SURFACE_METRES: Readonly<Record<WorldSurface, number>> = {
   castle: 3, mossruin: 2, darkforest: 4, cliff: 4, 'bark-pine': 1, moss: 2,
 };
 /**
- * How each layer's grayscale height map becomes its surface data at load: tangent normals from the height gradient
- * times `relief`, and roughness around `roughness` (crevices rougher, raised detail slightly smoother).
+ * How each layer's grayscale height map becomes its surface data (`deriveSurface`): tangent normals from the height
+ * gradient times `relief`, and roughness around `roughness` (crevices rougher, raised detail slightly smoother).
+ * scripts/world/pipeline/surface_arrays_ktx2.py derives the shipped surface arrays the same way, from the recipe's copy
+ * of these values.
  */
 export const SURFACE_FINISH: Readonly<Record<WorldSurface, { relief: number; roughness: number }>> = {
   daub: { relief: 2.2, roughness: 0.93 }, timber: { relief: 3, roughness: 0.84 }, thatch: { relief: 4, roughness: 0.96 },
@@ -193,9 +195,27 @@ export function worldModelUrl(id: WorldModelId): string {
   return `${import.meta.env.BASE_URL}world/${id}/${id}.glb`;
 }
 
-export function surfaceUrl(surface: WorldSurface, map: 'albedo' | 'height'): string {
-  return `${import.meta.env.BASE_URL}world/surfaces/${surface}-${map}.webp`;
+/** A layer's cooked grayscale height map, from which `deriveSurface` derives its tangent normals at load. */
+export function surfaceUrl(surface: WorldSurface): string {
+  return `${import.meta.env.BASE_URL}world/surfaces/${surface}-height.webp`;
 }
+
+/**
+ * The albedo surface array, GPU-compressed (Basis Universal UASTC in KTX2): one SURFACE_SIZE layer per WORLD_SURFACES
+ * entry, sRGB colour with the layer's roughness in alpha, with a full mip chain. It ships as SURFACE_ALBEDO_PARTS files
+ * of consecutive layers, each within the world's 8 MiB per-file budget, which `WorldAssetLibrary` joins into one array
+ * at load. scripts/world/pipeline/surface_albedo_ktx2.py builds them from the layers' cooked albedo and height WebPs in
+ * `public/world/surfaces/` (the game no longer loads the albedo WebPs; the roughness is derived offline exactly as
+ * `deriveSurface` derives it).
+ */
+export const SURFACE_ALBEDO_PARTS = 2;
+/** Layers in each albedo part: part `p` holds layers `p * SURFACE_ALBEDO_PART_LAYERS` onward. */
+export const SURFACE_ALBEDO_PART_LAYERS = WORLD_SURFACES.length / SURFACE_ALBEDO_PARTS;
+export function surfaceAlbedoUrl(part: number): string {
+  return `${import.meta.env.BASE_URL}world/surfaces/surfaces-albedo-${part}.ktx2`;
+}
+/** Mip levels of the albedo array: SURFACE_SIZE down to 1 x 1. */
+export const SURFACE_LEVELS = Math.log2(SURFACE_SIZE) + 1;
 
 /** Decoded opaque RGBA pixels, top row first. */
 export interface SurfacePixels {
@@ -206,15 +226,19 @@ export interface SurfacePixels {
 
 export interface WorldAssetSource {
   model(id: WorldModelId): Promise<{ scene: THREE.Object3D; animations: THREE.AnimationClip[] }>;
+  /** One part of the albedo surface array (`surfaceAlbedoUrl`) with its mip chain, as the KTX2 transcoder returns it. */
+  surfaceAlbedo(part: number): Promise<THREE.Texture>;
   image(url: string): Promise<SurfacePixels>;
 }
 
-/** Browser source: three's GLTFLoader with the bundled meshopt decoder and the page's shared KTX2 transcoder
- * (`textures.ts`), and WebP layers decoded by the browser. */
+/** Browser source: three's GLTFLoader with the bundled meshopt decoder, the page's shared KTX2 transcoder (`textures.ts`)
+ * for the models' compressed maps and the albedo parts, and height maps decoded by the browser. */
 export function gltfWorldSource(): WorldAssetSource {
-  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).setKTX2Loader(textureTranscoder());
+  const transcoder = textureTranscoder();
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).setKTX2Loader(transcoder);
   return {
     model: id => loader.loadAsync(worldModelUrl(id)),
+    surfaceAlbedo: part => transcoder.loadAsync(surfaceAlbedoUrl(part)),
     async image(url) {
       const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -241,7 +265,7 @@ export interface WorldModel {
 
 export interface WorldSurfaces {
   /** sRGB colour with the layer's roughness in alpha (an sRGB texture's alpha stays linear), one layer per WORLD_SURFACES entry. */
-  readonly albedo: THREE.DataArrayTexture;
+  readonly albedo: THREE.CompressedArrayTexture;
   /** RG8 linear data: tangent-space normal X and Y (0.5 = flat). */
   readonly surface: THREE.DataArrayTexture;
 }
@@ -257,6 +281,8 @@ function meshes(root: THREE.Object3D): THREE.Mesh[] {
 /**
  * Tangent normal (R, G; +v along increasing rows) and roughness (B) of one tiling layer from its height map (rows
  * top-down as the image, values 0..1), written as RGBA8 into `target` at `offset`. Gradients wrap, so the result tiles.
+ * The albedo array carries this function's roughness precomputed: surface_arrays_ktx2.py is an exact port of it (the
+ * world asset tests check the two agree), while the normals are still derived at load from the height maps.
  */
 export function deriveSurface(heights: Float32Array, size: number, finish: { relief: number; roughness: number },
   target: Uint8Array, offset: number): void {
@@ -275,6 +301,50 @@ export function deriveSurface(heights: Float32Array, size: number, finish: { rel
       target[i + 3] = 255;
     }
   }
+}
+
+/**
+ * An albedo part must be a texture array of SURFACE_ALBEDO_PART_LAYERS SURFACE_SIZE layers in sRGB, with its full mip
+ * chain (precomputed: nothing is generated at load). Rows stay top-down: v = 0 is the image's top edge, the glTF
+ * convention the kit, tree and rock UVs follow.
+ */
+function albedoPart(part: number, texture: THREE.Texture): THREE.CompressedArrayTexture {
+  const url = surfaceAlbedoUrl(part);
+  if (!(texture as THREE.CompressedArrayTexture).isCompressedArrayTexture) throw new Error(`${url} is not a texture array`);
+  const layers = texture as THREE.CompressedArrayTexture;
+  const { width, height, depth } = layers.image;
+  if (width !== SURFACE_SIZE || height !== SURFACE_SIZE) throw new Error(`${url} is ${width}x${height}, expected ${SURFACE_SIZE}x${SURFACE_SIZE}`);
+  if (depth !== SURFACE_ALBEDO_PART_LAYERS) throw new Error(`${url} has ${depth} layers, expected ${SURFACE_ALBEDO_PART_LAYERS}`);
+  const levels = layers.mipmaps?.length ?? 0;
+  if (levels !== SURFACE_LEVELS) throw new Error(`${url} has ${levels} mip levels, expected ${SURFACE_LEVELS}`);
+  if (layers.colorSpace !== THREE.SRGBColorSpace) throw new Error(`${url} is not sRGB`);
+  return layers;
+}
+
+/**
+ * One array of every layer from the albedo parts, in order: at each mip level a part's layers follow the previous part's.
+ * The transcoder gives every part the same GPU format (all are UASTC with alpha), which this checks.
+ */
+function joinAlbedo(parts: readonly THREE.CompressedArrayTexture[]): THREE.CompressedArrayTexture {
+  const first = parts[0]!;
+  parts.forEach((part, index) => {
+    if (part.format !== first.format || part.type !== first.type) {
+      throw new Error(`${surfaceAlbedoUrl(index)} was transcoded to another format than ${surfaceAlbedoUrl(0)}`);
+    }
+  });
+  const mipmaps = first.mipmaps!.map((level, index) => {
+    const data = new Uint8Array(parts.reduce((bytes, part) => bytes + part.mipmaps![index]!.data.byteLength, 0));
+    let offset = 0;
+    for (const part of parts) {
+      const layers = part.mipmaps![index]!.data;
+      data.set(new Uint8Array(layers.buffer, layers.byteOffset, layers.byteLength), offset);
+      offset += layers.byteLength;
+    }
+    return { data, width: level.width, height: level.height };
+  });
+  const albedo = new THREE.CompressedArrayTexture(mipmaps, SURFACE_SIZE, SURFACE_SIZE, WORLD_SURFACES.length, first.format, first.type);
+  albedo.colorSpace = THREE.SRGBColorSpace;
+  return albedo;
 }
 
 function validate(id: WorldModelId, scene: THREE.Object3D, clips: ReadonlyMap<string, THREE.AnimationClip>): void {
@@ -401,48 +471,49 @@ export class WorldAssetLibrary {
   }
 
   private async loadSurfaces(): Promise<void> {
-    const size = SURFACE_SIZE;
-    const layer = size * size * 4;
-    const albedo = new Uint8Array(layer * WORLD_SURFACES.length);
-    const surface = new Uint8Array(layer * WORLD_SURFACES.length);
-    const heights = new Float32Array(size * size);
-    await Promise.all(WORLD_SURFACES.flatMap((name, index) => (['albedo', 'height'] as const).map(async map => {
-      const url = surfaceUrl(name, map);
+    const size = SURFACE_SIZE, texels = size * size;
+    const normals = new Uint8Array(texels * 2 * WORLD_SURFACES.length);
+    const heights = new Float32Array(texels);
+    const derived = new Uint8Array(texels * 4);
+    const albedoLoads = Promise.allSettled(Array.from({ length: SURFACE_ALBEDO_PARTS }, (_, part) => this.source.surfaceAlbedo(part)));
+    const heightLoads = Promise.allSettled([Promise.all(WORLD_SURFACES.map(async (name, index) => {
+      const url = surfaceUrl(name);
       const pixels = await this.source.image(url);
       if (pixels.width !== size || pixels.height !== size) throw new Error(`${url} is ${pixels.width}x${pixels.height}, expected ${size}x${size}`);
       // Rows stay top-down: v = 0 is the image's top edge, the glTF convention the kit, tree and rock UVs follow.
-      const row = size * 4;
-      if (map === 'albedo') {
-        albedo.set(pixels.data.subarray(0, size * row), index * layer);
-        return;
+      for (let i = 0; i < texels; i++) heights[i] = pixels.data[i * 4]! / 255;
+      deriveSurface(heights, size, SURFACE_FINISH[name], derived, 0);
+      // The data array keeps only the normal's X and Y (the roughness rides in the albedo's alpha): two bytes a texel.
+      for (let i = 0, offset = index * texels * 2; i < texels; i++) {
+        normals[offset + i * 2] = derived[i * 4]!;
+        normals[offset + i * 2 + 1] = derived[i * 4 + 1]!;
       }
-      for (let i = 0; i < size * size; i++) heights[i] = pixels.data[i * 4]! / 255;
-      deriveSurface(heights, size, SURFACE_FINISH[name], surface, index * layer);
-    })));
-    // Roughness rides in the albedo's alpha and the data array keeps only the normal's X and Y: two bytes a texel, not four.
-    const normals = new Uint8Array(size * size * 2 * WORLD_SURFACES.length);
-    for (let i = 0, texels = size * size * WORLD_SURFACES.length; i < texels; i++) {
-      albedo[i * 4 + 3] = surface[i * 4 + 2]!;
-      normals[i * 2] = surface[i * 4]!;
-      normals[i * 2 + 1] = surface[i * 4 + 1]!;
+    }))]);
+    const [parts, [heightLoad]] = await Promise.all([albedoLoads, heightLoads]);
+    const loaded = parts.flatMap(load => load.status === 'fulfilled' ? [load.value] : []);
+    try {
+      for (const load of parts) if (load.status === 'rejected') throw load.reason;
+      if (heightLoad!.status === 'rejected') throw heightLoad!.reason;
+      const albedo = joinAlbedo(loaded.map((texture, part) => albedoPart(part, texture)));
+      const surface = new THREE.DataArrayTexture(normals, size, size, WORLD_SURFACES.length);
+      surface.format = THREE.RGFormat;
+      surface.colorSpace = THREE.NoColorSpace;
+      surface.generateMipmaps = true;
+      for (const texture of [albedo, surface]) {
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        texture.magFilter = THREE.LinearFilter;
+        texture.minFilter = THREE.LinearMipmapLinearFilter;
+        texture.anisotropy = 8;
+        texture.needsUpdate = true;
+      }
+      if (this.disposed) {
+        albedo.dispose();
+        surface.dispose();
+      } else this.arrays = { albedo, surface };
+    } finally {
+      // The parts were never uploaded: the joined array holds copies of their layers.
+      for (const texture of loaded) texture.dispose();
     }
-    const array = (data: Uint8Array<ArrayBuffer>, colorSpace: THREE.ColorSpace, format: THREE.PixelFormat = THREE.RGBAFormat): THREE.DataArrayTexture => {
-      const texture = new THREE.DataArrayTexture(data, size, size, WORLD_SURFACES.length);
-      texture.format = format;
-      texture.colorSpace = colorSpace;
-      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      texture.magFilter = THREE.LinearFilter;
-      texture.minFilter = THREE.LinearMipmapLinearFilter;
-      texture.generateMipmaps = true;
-      texture.anisotropy = 8;
-      texture.needsUpdate = true;
-      return texture;
-    };
-    const arrays = { albedo: array(albedo, THREE.SRGBColorSpace), surface: array(normals, THREE.NoColorSpace, THREE.RGFormat) };
-    if (this.disposed) {
-      arrays.albedo.dispose();
-      arrays.surface.dispose();
-    } else this.arrays = arrays;
   }
 
   get status(): WorldAssetStatus {

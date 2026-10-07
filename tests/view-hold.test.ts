@@ -12,6 +12,7 @@ import { ViewResources } from '../src/view/resources';
 import { MONSTER_MODELS, SURFACE_SIZE, WorldAssetLibrary, worldAssetIds, type WorldAssetSource, type WorldModelId } from '../src/view/world-assets';
 import { yieldRunner } from './faction-driver';
 import { parseGlbWithoutTextures } from './glb';
+import { fakeSurfaceAlbedo } from './world-surfaces';
 
 afterEach(yieldRunner);
 
@@ -19,6 +20,7 @@ const models = { load: (id: ModelId) => parseGlbWithoutTextures(new Uint8Array(r
 const world: WorldAssetSource = {
   model: (id: WorldModelId) => parseGlbWithoutTextures(new Uint8Array(readFileSync(new URL(`../public/world/${id}/${id}.glb`, import.meta.url)))),
   image: async () => ({ width: SURFACE_SIZE, height: SURFACE_SIZE, data: new Uint8ClampedArray(SURFACE_SIZE * SURFACE_SIZE * 4).fill(128) }),
+  surfaceAlbedo: async () => fakeSurfaceAlbedo(),
 };
 const material = new THREE.MeshStandardMaterial();
 const pose = (skinned: THREE.SkinnedMesh[], root?: THREE.Object3D): number[] => [

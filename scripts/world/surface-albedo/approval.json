@@ -1,0 +1,23 @@
+{
+ "asset": "surface-albedo",
+ "decisions": [
+  {
+   "gate": "in-game",
+   "decision": "accepted",
+   "files": [
+    {
+     "file": "public/world/surfaces/surfaces-albedo-0.ktx2",
+     "sha256": "1df61030028cb067fa0c48b1f3872513dbb63ea64ca7224d3bdb6465bdb1e22d"
+    },
+    {
+     "file": "public/world/surfaces/surfaces-albedo-1.ktx2",
+     "sha256": "612bfe17109a5e9677260200e08615f7a82ec06bc9603f595f8b847213e5b7a8"
+    }
+   ],
+   "delegation": "_reviews/delegation-2026-10-04-world.json",
+   "board": "_reviews/gate-ktx2-surfaces/split",
+   "decidedAt": "2026-10-07",
+   "rationale": "UASTC (lambda 1) albedo in two parts of 16 layers, joined at load, with the normals derived at load as before, looks the same in play: 0.26-0.30% of the frame over 8/255 (median), 44 dB, 50 dB blurred, fine-detail energy 0.99, tone within 0.6%, the same as the single 32-layer file reviewed first (_reviews/gate-ktx2-surfaces), which exceeded the world's 8 MiB per-file budget. Rejected there: ETC1S albedo (18-19% of the frame over 8/255, visibly softer gravel and slightly darker), ETC1S normals (25% with ETC1S albedo), UASTC normals (10.1-10.3 MB at any rate-distortion setting) and UASTC lambda 2-4 albedo (1.1-5.7%)."
+  }
+ ]
+}

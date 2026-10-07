@@ -1,0 +1,209 @@
+{
+ "schema": "korovany2-surface-albedo/1",
+ "about": "The world surface albedo arrays (public/world/surfaces/surfaces-albedo-0.ktx2 and surfaces-albedo-1.ktx2, the layers in order, sixteen in each, so that no file exceeds the world's 8 MiB per-file budget; the game joins them into one array at load): every tiling layer's cooked albedo WebP with the roughness deriveSurface gives its height WebP in alpha, encoded by scripts/world/pipeline/surface_albedo_ktx2.py. Layer order and finishes are the game's WORLD_SURFACES and SURFACE_FINISH.",
+ "size": 512,
+ "layers": [
+  {
+   "name": "daub",
+   "relief": 2.2,
+   "roughness": 0.93
+  },
+  {
+   "name": "timber",
+   "relief": 3.0,
+   "roughness": 0.84
+  },
+  {
+   "name": "thatch",
+   "relief": 4.0,
+   "roughness": 0.96
+  },
+  {
+   "name": "shingle",
+   "relief": 3.5,
+   "roughness": 0.88
+  },
+  {
+   "name": "rubble",
+   "relief": 5.0,
+   "roughness": 0.9
+  },
+  {
+   "name": "planks",
+   "relief": 3.0,
+   "roughness": 0.85
+  },
+  {
+   "name": "dark",
+   "relief": 1.0,
+   "roughness": 0.95
+  },
+  {
+   "name": "meadow",
+   "relief": 2.5,
+   "roughness": 0.96
+  },
+  {
+   "name": "forest",
+   "relief": 3.0,
+   "roughness": 0.97
+  },
+  {
+   "name": "mud",
+   "relief": 2.0,
+   "roughness": 0.72
+  },
+  {
+   "name": "road",
+   "relief": 3.0,
+   "roughness": 0.9
+  },
+  {
+   "name": "field",
+   "relief": 4.0,
+   "roughness": 0.95
+  },
+  {
+   "name": "granite",
+   "relief": 4.0,
+   "roughness": 0.93
+  },
+  {
+   "name": "bark-spruce",
+   "relief": 5.0,
+   "roughness": 0.92
+  },
+  {
+   "name": "bark-birch",
+   "relief": 4.0,
+   "roughness": 0.9
+  },
+  {
+   "name": "ashlar",
+   "relief": 4.0,
+   "roughness": 0.9
+  },
+  {
+   "name": "slate",
+   "relief": 3.0,
+   "roughness": 0.78
+  },
+  {
+   "name": "lime",
+   "relief": 2.0,
+   "roughness": 0.93
+  },
+  {
+   "name": "tarred",
+   "relief": 3.0,
+   "roughness": 0.8
+  },
+  {
+   "name": "brick",
+   "relief": 4.0,
+   "roughness": 0.9
+  },
+  {
+   "name": "reedmud",
+   "relief": 2.5,
+   "roughness": 0.76
+  },
+  {
+   "name": "pebbles",
+   "relief": 5.0,
+   "roughness": 0.86
+  },
+  {
+   "name": "ash",
+   "relief": 2.0,
+   "roughness": 0.97
+  },
+  {
+   "name": "snow",
+   "relief": 2.0,
+   "roughness": 0.74
+  },
+  {
+   "name": "cobbles",
+   "relief": 5.0,
+   "roughness": 0.86
+  },
+  {
+   "name": "coldgrass",
+   "relief": 3.0,
+   "roughness": 0.96
+  },
+  {
+   "name": "castle",
+   "relief": 4.5,
+   "roughness": 0.91
+  },
+  {
+   "name": "mossruin",
+   "relief": 4.0,
+   "roughness": 0.94
+  },
+  {
+   "name": "darkforest",
+   "relief": 3.0,
+   "roughness": 0.97
+  },
+  {
+   "name": "cliff",
+   "relief": 4.5,
+   "roughness": 0.92
+  },
+  {
+   "name": "bark-pine",
+   "relief": 5.0,
+   "roughness": 0.93
+  },
+  {
+   "name": "moss",
+   "relief": 2.5,
+   "roughness": 0.97
+  }
+ ],
+ "parts": [
+  {
+   "file": "surfaces-albedo-0.ktx2",
+   "layers": 16
+  },
+  {
+   "file": "surfaces-albedo-1.ktx2",
+   "layers": 16
+  }
+ ],
+ "maxFileBytes": 8388608,
+ "basisu": [
+  "-srgb",
+  "-uastc",
+  "-uastc_level",
+  "2",
+  "-uastc_rdo_d",
+  "32768",
+  "-uastc_rdo_m",
+  "-ktx2_zstandard_level",
+  "22",
+  "-uastc_rdo_l",
+  "1"
+ ],
+ "fixture": {
+  "seed": 20261007,
+  "size": 64,
+  "finishes": [
+   {
+    "relief": 3,
+    "roughness": 0.9
+   },
+   {
+    "relief": 5,
+    "roughness": 0.3
+   },
+   {
+    "relief": 2.2,
+    "roughness": 0.97
+   }
+  ]
+ }
+}

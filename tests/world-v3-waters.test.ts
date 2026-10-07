@@ -12,6 +12,7 @@ import { riverToCoast, WATER_LEVEL, waterGeometry, waterTint } from '../src/view
 import { SHORE_MODELS, SURFACE_SIZE, TREE_VARIANTS, WORLD_MODELS, WorldAssetLibrary, worldAssetIds, type WorldAssetSource,
   type WorldModelId } from '../src/view/world-assets';
 import { parseGlbWithoutTextures } from './glb';
+import { fakeSurfaceAlbedo } from './world-surfaces';
 
 // W3b presentation of the water: the river, the lakes and the sea in one mesh, beds carved below it, level banks, and the
 // reed beds, drowned trees and stumps and the sea's boulders, all presentation only.
@@ -21,6 +22,7 @@ const shipped = new URL('../public/world/', import.meta.url);
 const nodeSource: WorldAssetSource = {
   model: (id: WorldModelId) => parseGlbWithoutTextures(new Uint8Array(readFileSync(new URL(`${id}/${id}.glb`, shipped)))),
   image: async () => ({ width: SURFACE_SIZE, height: SURFACE_SIZE, data: new Uint8ClampedArray(SURFACE_SIZE * SURFACE_SIZE * 4).fill(128) }),
+  surfaceAlbedo: async () => fakeSurfaceAlbedo(),
 };
 
 describe('version 3 water presentation', () => {
