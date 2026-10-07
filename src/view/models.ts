@@ -23,6 +23,9 @@ export type ModelId = TroopModelId | 'prop-echo-well' | HeroModelId | WagonModel
 export const LANDMARK_IDS: readonly LandmarkModelId[] = ['prop-ward-bell', 'prop-stag-gate', 'prop-frozen-beacon', 'prop-tide-armillary',
   'prop-ward-glass', 'prop-ash-cairn'];
 export const PICKUP_IDS: readonly PickupModelId[] = ['prop-pickup-coin', 'prop-pickup-health', 'prop-pickup-supply'];
+/** Models whose maps ship GPU-compressed (Basis Universal UASTC in KTX2) and are transcoded at load; every other model's
+ * maps are WebP. */
+export const TRANSCODED_MODEL_IDS: readonly ModelId[] = [...LANDMARK_IDS, 'prop-echo-well'];
 export const FACTION_TROOP_IDS: readonly FactionTroopModelId[] = ['char-elf-soldier', 'char-elf-archer', 'char-elf-captain',
   'char-mountain-soldier', 'char-mountain-archer', 'char-mountain-captain'];
 export const MODEL_IDS: readonly ModelId[] = ['char-line-soldier', 'prop-echo-well', 'char-hero-elf', 'char-hero-guard', 'char-hero-villain',
@@ -346,7 +349,8 @@ export interface CampaignModelSource {
  * troop of every actor, the boss faction's soldier (the only actors created after a campaign starts are the boss's
  * reinforcement soldiers; version 3 monsters are world fauna, loaded with the world's assets), the shared wagons and
  * pickups, and, in a world with a story, all twenty residents and the Echo Well and signature landmarks standing in it.
- * The other factions' heroes and boss are never loaded.
+ * The other factions' heroes and boss are never loaded. Models with GPU-compressed maps come first, so their maps are
+ * transcoded while the other models download.
  */
 export function campaignModelIds(snapshot: CampaignModelSource): ModelId[] {
   const ids = new Set<ModelId>([HEROES[snapshot.faction].id, ...SHARED_MODEL_IDS]);
@@ -364,7 +368,7 @@ export function campaignModelIds(snapshot: CampaignModelSource): ModelId[] {
     const landmark = landmarkModelFor(place.id, obstacle.variant);
     if (landmark) ids.add(landmark);
   }
-  return MODEL_IDS.filter(id => ids.has(id));
+  return [...TRANSCODED_MODEL_IDS, ...MODEL_IDS.filter(id => !TRANSCODED_MODEL_IDS.includes(id))].filter(id => ids.has(id));
 }
 
 /**

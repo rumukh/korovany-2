@@ -57,34 +57,66 @@ export function probeTextureSupport(): TextureSupport {
 
 let rendererSupport: (() => TextureSupport) | undefined;
 
-/** Lets the transcoder read the GPU's formats from the game's renderer (`createRenderer`) instead of a probe context. */
+/**
+ * Lets the transcoder read the GPU's formats from the game's renderer (`createRenderer`) instead of a probe context,
+ * and starts its workers, so they are ready before the first GPU-compressed map arrives.
+ */
 export function useRendererTextureSupport(renderer: THREE.WebGLRenderer): void {
   rendererSupport = () => contextTextureSupport(renderer.getContext() as WebGL2RenderingContext);
+  shared?.startWorkers();
 }
 
-/**
- * A KTX2Loader that reads GPU support on its first texture, so model libraries can be built before the renderer. Two
- * workers transcode: on a four-core machine they were as fast as four, with half the start-up compilation competing
- * with the page's own loading.
- */
+/** Transcoder workers: on a four-core machine two were as fast as four, with half the start-up competing with loading. */
+const WORKERS = 2;
+
+/** A KTX2Loader that reads GPU support when first needed, so model libraries can be built before the renderer. */
 class GameKTX2Loader extends KTX2Loader {
   private supportRead = false;
+  private spares: Worker[] = [];
+  private disposed = false;
 
   constructor(private readonly support: () => TextureSupport) {
     super(new THREE.LoadingManager());
     // KTX2Loader fetches fixed file names under its transcoder path; the build serves them as hashed assets.
     this.manager.setURLModifier(url => url === 'basis_transcoder.js' ? transcoderScriptUrl
       : url === 'basis_transcoder.wasm' ? transcoderBinaryUrl : url);
-    this.setTranscoderPath('').setWorkerLimit(2);
+    this.setTranscoderPath('').setWorkerLimit(WORKERS);
+  }
+
+  private readSupport(): void {
+    if (this.supportRead) return;
+    this.detectSupport({ extensions: transcodeTargets(this.support()) } as unknown as THREE.WebGLRenderer);
+    this.supportRead = true;
+  }
+
+  /**
+   * Creates the workers ahead of the first texture. A fresh worker compiles the transcoder before it can transcode,
+   * which delayed the landmarks' first maps by about a quarter of a second on a busy four-core machine.
+   */
+  startWorkers(): void {
+    if (this.supportRead) return;
+    this.readSupport();
+    this.init().then(() => {
+      if (this.disposed) return;
+      // KTX2Loader's own worker creator, which hands each worker the transcoder and the GPU's formats.
+      const create = this.workerPool.workerCreator.bind(this.workerPool);
+      while (this.spares.length < WORKERS) this.spares.push(create());
+      this.workerPool.setWorkerCreator(() => this.spares.shift() ?? create());
+    }, () => undefined);
   }
 
   override load(url: string, onLoad: (texture: THREE.CompressedTexture) => void, onProgress?: (event: ProgressEvent) => void,
     onError?: (error: unknown) => void): void {
-    if (!this.supportRead) {
-      this.detectSupport({ extensions: transcodeTargets(this.support()) } as unknown as THREE.WebGLRenderer);
-      this.supportRead = true;
-    }
+    this.readSupport();
     super.load(url, onLoad, onProgress, onError);
+  }
+
+  override dispose(): this {
+    this.disposed = true;
+    super.dispose();
+    for (const worker of this.spares) worker.terminate();
+    this.spares = [];
+    return this;
   }
 }
 
@@ -92,12 +124,19 @@ let shared: GameKTX2Loader | undefined;
 
 /**
  * The page's one KTX2 (Basis Universal) transcoder for cooked models and world assets. Transcoding runs in its worker
- * pool. GPU support comes from the game's renderer when it has registered (it exists before the first texture
- * arrives), otherwise from a probe context. A texture or transcoder that cannot be fetched or transcoded fails its
- * model's load; there is no fallback.
+ * pool. In a browser it fetches the transcoder at once, ahead of the model and world downloads that would otherwise
+ * queue in front of it. GPU support comes from the game's renderer when it has registered (it exists before the first
+ * texture arrives), otherwise from a probe context. A texture or transcoder that cannot be fetched or transcoded fails
+ * its model's load (that load awaits the same fetch); there is no fallback.
  */
 export function textureTranscoder(support: () => TextureSupport = () => rendererSupport?.() ?? probeTextureSupport()): KTX2Loader {
-  shared ??= new GameKTX2Loader(support);
+  if (!shared) {
+    shared = new GameKTX2Loader(support);
+    if (typeof document !== 'undefined') {
+      shared.init().catch(() => undefined);
+      if (rendererSupport) shared.startWorkers();
+    }
+  }
   return shared;
 }
 

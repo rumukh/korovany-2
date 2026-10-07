@@ -399,8 +399,15 @@ instead: it decodes a compressed texture when it is first drawn, which cost the
 landmarks' first frame about 0.4 s on SwiftShader, while uncompressed maps with
 their precomputed mip levels load there about as fast as WebP. Its transcoder, three.js's
 `basis_transcoder.js` and `.wasm` (57.5 KB and 527 KB, 248 KB gzipped), is built
-as hashed assets and fetched with the first KTX2 texture; transcoding runs in two
-workers, which `main.ts` stops at page teardown. A transcoder or texture that
+as hashed assets and fetched as soon as the page creates its model library, ahead of
+the model and world downloads (fetched with the first KTX2 texture instead, it
+queued behind about 150 world-asset requests on the six connections of a test
+server and started transcoding after nearly everything else had loaded).
+Transcoding runs in two workers, which `createRenderer()` starts once the GPU's
+formats are known (a fresh worker spends about a quarter of a second compiling the
+transcoder) and `main.ts` stops at page teardown, and `campaignModelIds()` lists
+the GPU-compressed models (`TRANSCODED_MODEL_IDS`) first, so their maps transcode
+while the other models download. A transcoder or texture that
 cannot be fetched or transcoded fails its model's load like a missing file. The
 maps then hold one byte per texel on the GPU instead of four: a story campaign's
 models hold about 192 MiB of textures instead of 276 MiB, with the same shader

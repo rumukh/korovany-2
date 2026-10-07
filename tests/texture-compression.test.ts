@@ -1,15 +1,15 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
-import { LANDMARK_IDS, type ModelId } from '../src/view/models';
+import { createCampaign } from '../src/game';
+import { campaignModelIds, MODEL_IDS, TRANSCODED_MODEL_IDS, type ModelId } from '../src/view/models';
 import { contextTextureSupport, disposeTextureTranscoder, textureTranscoder, transcodeTargets, type TextureSupport } from '../src/view/textures';
 import { imageBytes, imageSize, readGlb } from './glb';
 
-/** Models whose maps ship GPU-compressed (Basis Universal UASTC in KTX2); every other model ships WebP. */
-const KTX2_MODELS: ModelId[] = [...LANDMARK_IDS, 'prop-echo-well'];
 const sources = new URL('../scripts/models/', import.meta.url);
 const transcoder = new URL('../node_modules/three/examples/jsm/libs/basis/', import.meta.url);
 const sha256 = (bytes: Uint8Array | string) => createHash('sha256').update(bytes).digest('hex');
+const glb = (id: ModelId) => readGlb(new Uint8Array(readFileSync(new URL(`../public/models/${id}/${id}.glb`, import.meta.url))));
 
 interface TextureCompression {
   extension: string;
@@ -78,8 +78,26 @@ describe('GPU-compressed model textures', () => {
     disposeTextureTranscoder();
   });
 
-  test.each(KTX2_MODELS)('%s: UASTC KTX2 maps with full mip chains, recorded against the shipped bytes and transcoder', id => {
-    const document = readGlb(new Uint8Array(readFileSync(new URL(`../public/models/${id}/${id}.glb`, import.meta.url))));
+  test('exactly the listed models ship GPU-compressed maps; every other model ships WebP', () => {
+    for (const id of MODEL_IDS) {
+      const { json: gltf } = glb(id);
+      const transcoded = TRANSCODED_MODEL_IDS.includes(id);
+      expect(gltf.extensionsRequired?.includes('KHR_texture_basisu') ?? false, id).toBe(transcoded);
+      expect(gltf.extensionsRequired?.includes('EXT_texture_webp') ?? false, id).toBe(!transcoded);
+    }
+  });
+
+  test('a story campaign requests its GPU-compressed models first, so their maps transcode while the rest download', () => {
+    for (const faction of ['elf', 'guard', 'villain'] as const) {
+      const ids = campaignModelIds(createCampaign({ seed: 'transcode-order', faction, worldVersion: 3 }).snapshot());
+      const transcoded = ids.filter(id => TRANSCODED_MODEL_IDS.includes(id));
+      expect(transcoded, faction).toEqual([...TRANSCODED_MODEL_IDS]);
+      expect(ids.slice(0, transcoded.length), faction).toEqual(transcoded);
+    }
+  });
+
+  test.each(TRANSCODED_MODEL_IDS)('%s: UASTC KTX2 maps with full mip chains, recorded against the shipped bytes and transcoder', id => {
+    const document = glb(id);
     const { json: gltf } = document;
     expect(gltf.extensionsRequired).toContain('KHR_texture_basisu');
     expect(gltf.extensionsUsed).not.toContain('EXT_texture_webp');
