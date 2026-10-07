@@ -15,7 +15,7 @@ view.render(campaign.snapshot(), frameSeconds);
 
 | Method | Contract |
 | --- | --- |
-| `render(snapshot, dt, hold?)` | Detached readonly game state and nonnegative cosmetic frame seconds; no simulation updates. Rebuilds and disposes the previous mirror when world, run ID, faction or rewound tick changes. `hold` says the shell will not advance the scene (paused, at the title or behind a menu) under reduced motion: once the scene has settled, a frame that would repeat the last one drawn is skipped and the canvas keeps it. |
+| `render(snapshot, dt, hold?)` | Detached readonly game state and nonnegative cosmetic frame seconds; no simulation updates. Rebuilds and disposes the previous mirror when world, run ID, faction or rewound tick changes. Frames each battle as it begins (see the camera below). `hold` says the shell will not advance the scene (paused, at the title or behind a menu) under reduced motion: once the scene has settled, a frame that would repeat the last one drawn is skipped and the canvas keeps it. |
 | `getMoveBasis()` | Unit `forward` and `right` vectors in world X/Z for shell-owned movement conversion. |
 | `screenToWorld(clientX, clientY)` | Ray-plane intersection in world X/Z using the canvas CSS rectangle; `null` for invalid/unavailable intersection. |
 | `orbit(deltaYaw, deltaPitch?)` | Radian deltas. Pitch is constrained for third-person visibility. |
@@ -222,7 +222,11 @@ instead of stretching one shadow texture over the full map.
 The sky also supplies a prefiltered reflection environment for metal, stone and
 wood. Water has view-dependent reflection, sun glints and shallow-bank foam.
 The camera keeps its 18-40 metre distance range and allows a 0.38-radian minimum
-pitch for landscape views. Tree crowns switch to shared lower-detail geometry
+pitch for landscape views. When a snapshot first shows a battle, the camera eases
+(within about a second, at once under reduced motion) behind the hero's shoulder
+towards the foe it faces, 21 metres out at a 0.62-radian pitch, so the attackers
+are in view; any orbit or zoom by the player takes over, and when the battle ends
+the pitch and distance from before it return. Tree crowns switch to shared lower-detail geometry
 beyond 95 metres and in low quality; this does not change their solid footprint.
 
 Actors and projectiles are keyed by authoritative IDs, with faction silhouettes,

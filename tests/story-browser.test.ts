@@ -74,7 +74,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("narrative browser integrat
     const save = game.serialize();
     const settings: Omit<Settings, "audio"> = {
       language: "en", quality: "high", reducedMotion: false, muted: false, invertControllerCameraX: false,
-      battleDifficulty: "standard", battleLatency: 0,
+      battleDifficulty: "standard", battleLatency: 0, battleHints: true,
     };
     await evaluate(cdp, `(() => {
       localStorage.setItem(${JSON.stringify(storageKeys.campaign)}, ${JSON.stringify(JSON.stringify(save))});

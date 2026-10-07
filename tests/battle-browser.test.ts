@@ -17,7 +17,7 @@ interface Inspection {
   overlay: string | null;
   running: boolean;
   mouseLook: boolean;
-  settings: { battleDifficulty: string; battleLatency: number };
+  settings: { battleDifficulty: string; battleLatency: number; battleHints: boolean };
   controller: { active: boolean; armed: boolean };
 }
 
@@ -116,15 +116,15 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("turn-based battles in the 
   const toCommand = (): Promise<unknown> =>
     until(cdp, "window.korovany.inspect().snapshot.battle?.phase", (phase: string | undefined) => phase === "command", 120_000);
   /** Waits for a blow aimed at the hero that lands in 14-24 ticks: a press then binds to it however slowly frames arrive.
-   * Meanwhile the hero covers the convoy on its turns, so the battle lasts. */
-  async function incoming(): Promise<{ action: number; index: number }> {
+   * Meanwhile the hero covers the convoy on its turns, so the battle lasts. `ready` is a further page condition. */
+  async function incoming(ready = "true"): Promise<{ action: number; index: number }> {
     return until<{ action: number; index: number }>(cdp, `(() => {
       const battle = window.korovany.inspect().snapshot.battle;
       if (!battle) throw new Error('The battle ended first');
       if (battle.phase === 'command') { document.querySelector('[data-controller-key="battle-command:protect"]')?.click(); return null; }
       const hit = battle.action?.hits.find(h => h.target === 'hero' && h.outcome === 'pending' && h.pressed === null &&
         h.impact - battle.tick <= 24 && h.impact - battle.tick >= 14);
-      return hit ? { action: battle.action.id, index: hit.index } : null;
+      return hit && (${ready}) ? { action: battle.action.id, index: hit.index } : null;
     })()`, Boolean, 120_000);
   }
   async function reaction(blow: { action: number; index: number }): Promise<string | null> {
@@ -166,6 +166,8 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("turn-based battles in the 
   it("plays a battle by keyboard and mouse: commands, parries, dodges, victory and back to the road", async () => {
     await continueBattle(loneSoldier());
     await until(cdp, "!document.querySelector('.battle-hud').hidden && document.querySelector('.hud-bottom').hidden", Boolean, 10_000);
+    // The battle HUD replaces the road panels and the minimap; the battlefield's centre stays clear for clicks.
+    expect(await evaluate(cdp, "[document.querySelector('.hud-top').hidden, document.querySelector('.minimap').hidden]")).toEqual([true, true]);
     let state = await inspect();
     expect(state.mouseLook).toBe(false);
     expect(await evaluate(cdp, "document.pointerLockElement")).toBeNull();
@@ -177,14 +179,29 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("turn-based battles in the 
     expect(commands).toEqual(["battle-command:attack", "battle-command:shield-bash", "battle-command:bulwark", "battle-command:protect",
       "battle-command:tonic"]);
     expect(await evaluate(cdp, "document.querySelector('.battle-hud').innerText")).toContain("Your turn");
+    expect(await evaluate(cdp, "document.querySelector('.battle-banner').textContent")).toBe("First strike! You act first.");
+    expect(await evaluate(cdp, "document.elementFromPoint(innerWidth / 2, innerHeight / 2) === document.querySelector('canvas.world')")).toBe(true);
     await capture("battle-command-en");
     // 1 picks Attack; with one enemy no target is asked for.
     await tap("Digit1");
     await until(cdp, "window.korovany.inspect().snapshot.battle?.action?.move", (move: string) => move === "attack", 30_000);
-    // E answers an incoming blow with a parry; a right click on the world, with a dodge.
-    const parried = await incoming();
+    // E answers an incoming blow with a parry; a right click on the world, with a dodge. The defence guide explains them.
+    const parried = await incoming("document.querySelector('.defend-how') !== null");
     await tap("KeyE");
+    // The defence cue shows the blow coming, the keys that answer it and (hints are on by default) the success bands.
+    const cue = await evaluate<{ hidden: boolean; live: boolean; keys: string; band: number; panel: string }>(cdp, `(() => {
+      const cue = document.querySelector('.battle-cue');
+      return { hidden: cue.hidden, live: cue.classList.contains('live'), keys: cue.querySelector('.cue-keys').textContent,
+        band: Number(cue.querySelector('.zone.parry').getAttribute('stroke-width')),
+        panel: document.querySelector('.battle-actions-panel .battle-prompt').textContent };
+    })()`);
+    expect(cue).toMatchObject({ hidden: false, live: true, panel: "Enemy turn" });
+    expect(cue.keys).toMatch(/E.*Parry.*Q.*Dodge/s);
+    expect(cue.band).toBeGreaterThan(0);
     expect(await reaction(parried)).toBe("parry");
+    // Every blow reports what it came to.
+    expect(await until(cdp, "[...document.querySelectorAll('.cue-feedback li strong')].map(node => node.textContent).find(text => /^(PARRIED|HIT −\\d+)$/.test(text)) ?? null",
+      (text: string | null) => text !== null, 30_000)).toMatch(/^(PARRIED|HIT −\d+)$/);
     const blow = await incoming();
     const point = await evaluate<{ x: number; y: number }>(cdp, "({ x: innerWidth / 2, y: innerHeight / 3 })");
     await cdp.send("Input.dispatchMouseEvent", { type: "mousePressed", x: point.x, y: point.y, button: "right", buttons: 2, clickCount: 1 });
@@ -203,6 +220,7 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("turn-based battles in the 
     expect(state.snapshot!.player.kills).toBe(kills + 1);
     expect(state.snapshot!.events.some(event => event.key === "event.battleWon")).toBe(true);
     await until(cdp, "document.querySelector('.battle-hud').hidden && !document.querySelector('.hud-bottom').hidden", Boolean, 10_000);
+    expect(await evaluate(cdp, "[document.querySelector('.hud-top').hidden, document.querySelector('.minimap').hidden]")).toEqual([false, false]);
     // The road again: a click on the world captures the mouse.
     await click(cdp, point.x, point.y);
     await until(cdp, "document.pointerLockElement === document.querySelector('canvas.world')", Boolean, 10_000);
@@ -217,8 +235,9 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("turn-based battles in the 
       const latency = document.querySelector('[data-controller-key="setting:battleLatency"]');
       latency.value = '3';
       latency.dispatchEvent(new Event('input', { bubbles: true }));
+      document.querySelector('[data-controller-key="setting:battleHints"]').click();
     })()`);
-    expect((await inspect()).settings).toMatchObject({ battleDifficulty: "story", battleLatency: 3 });
+    expect((await inspect()).settings).toMatchObject({ battleDifficulty: "story", battleLatency: 3, battleHints: false });
     await tap("Escape");
     await clickSelector('[data-action="resume"]');
     await until(cdp, "window.korovany.inspect().running", Boolean, 10_000);
@@ -230,6 +249,85 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("turn-based battles in the 
     expect(cdp.diagnostics.filter(entry => !/status of 404/.test(entry)), JSON.stringify(cdp.diagnostics)).toEqual([]);
   }, 600_000);
 
+  it("reports every blow and cues the blow a press would answer, from real engine battles driven tick by tick", async () => {
+    type Outcome = { popups: string[][]; cues: { tick: number; mark: string; parry: boolean; dodge: boolean; next: number }[]; impacts: number[] };
+    const run = (move: string, presses: Record<number, string>, options: { stale?: number; latency?: number } = {}): Promise<Outcome> =>
+      evaluate<Outcome>(cdp, `(async () => {
+        const { BattleHud } = await import('/src/ui/battle-hud.ts');
+        const { startBattle, battleSnapshot, tickBattle, commandBattle } = await import('/src/game/battle/index.ts');
+        const names = { hero: { en: 'You', ru: 'Вы' }, soldier: { en: 'Soldier', ru: 'Солдат' } };
+        const view = state => ({ ...battleSnapshot(state), names });
+        // Plays to the soldier's first ${JSON.stringify(move)} (seeds tried in turn); the hero attacks on its turns.
+        const toMove = state => {
+          for (let i = 0; i < 2000; i++) {
+            if (state.phase === 'command') commandBattle(state, { type: 'attack', target: 'soldier' });
+            else if (state.action?.actor === 'soldier' && state.action.hits.length) return state.action.move === ${JSON.stringify(move)};
+            else tickBattle(state, {});
+            if (state.phase === 'victory' || state.phase === 'defeat') return false;
+          }
+          return false;
+        };
+        let state = null;
+        for (let seed = 0; seed < 300 && !state; seed++) {
+          const candidate = startBattle({ seed, faction: 'guard', enemies: [{ id: 'soldier', kind: 'soldier' }], opening: 'ambushed',
+            latencyTicks: ${options.latency ?? 0} });
+          if (toMove(candidate)) state = candidate;
+        }
+        if (!state) throw new Error('No battle opens with ${move}');
+        const impacts = state.action.hits.map(hit => hit.impact);
+        const hud = new BattleHud(() => {});
+        const views = [view(state)];
+        hud.update(views[0], 'en', false, true, 0);
+        hud.frame(views[0], 0);
+        const cues = [];
+        const presses = ${JSON.stringify(presses)};
+        const action = state.action.id;
+        for (let i = 0; i < 400 && state.action?.id === action; i++) {
+          const kind = presses[state.now + 1 - impacts[0]];
+          if (kind) hud.press(kind);
+          tickBattle(state, kind ? { [kind]: true } : {});
+          const current = view(state);
+          views.push(current);
+          hud.frame(current, 0);
+          // The shell refreshes the panels about every sixth frame, and on a save or a pause with the snapshot it last
+          // refreshed with, which may be some ticks old.
+          if (state.now - impacts[0] === ${options.stale ?? -999}) hud.update(views[views.length - 5], 'en', false, true, 0);
+          else if (state.now % 6 === 0) hud.update(current, 'en', false, true, 0);
+          const next = hud.root.querySelector('.ring.next');
+          cues.push({ tick: state.now - impacts[0], mark: hud.root.querySelector('.mark').textContent,
+            parry: hud.root.querySelector('.cue-key.parry').classList.contains('open'),
+            dodge: hud.root.querySelector('.cue-key.dodge').classList.contains('open'),
+            next: next ? Number(next.getAttribute('r')) : -1 });
+        }
+        // Late presses may still arrive after the move: the grace period runs out.
+        for (let i = 0; i < 30; i++) {
+          tickBattle(state, {});
+          hud.frame(view(state), 0);
+        }
+        const popups = [...hud.root.querySelectorAll('.cue-feedback li')].map(item => [...item.children].map(node => node.textContent));
+        return { popups, cues, impacts: impacts.map(impact => impact - impacts[0]) };
+      })()`);
+    // A blow nobody answers says so; a press after it landed corrects that to how late it was.
+    expect((await run("cut", {})).popups).toEqual([[expect.stringMatching(/^HIT −\d+$/), "No reaction: E parries, Q dodges"]]);
+    expect((await run("cut", { 6: "parry" })).popups).toEqual([[expect.stringMatching(/^HIT −\d+$/), "Too late by 67 ms"]]);
+    expect((await run("cut", { [-30]: "dodge" })).popups).toEqual([[expect.stringMatching(/^HIT −\d+$/), "Too early by 333 ms"]]);
+    // A dodged first blow is answered: NOW! and the lit keys move on to the second blow instead of lingering.
+    const combo = await run("double-cut", { [-1]: "dodge", 23: "parry" }, { stale: 6 });
+    expect(combo.impacts).toEqual([0, 24]);
+    expect(combo.popups).toEqual([["DODGED"], ["PARRIED", "+1 AP"]]);
+    for (const cue of combo.cues.filter(entry => entry.tick >= 0 && entry.tick <= 13)) {
+      expect(cue, `tick ${cue.tick}`).toMatchObject({ mark: "", parry: false, dodge: false });
+    }
+    expect(combo.cues.find(entry => entry.tick === 22)).toMatchObject({ mark: "NOW!", parry: true, dodge: true });
+    // With latency compensation a landed blow stays unresolved a while; the cue moves on as soon as its window closes.
+    const delayed = await run("double-cut", {}, { latency: 6 });
+    const nextRadius = (tick: number): number => delayed.cues.find(entry => entry.tick === tick)!.next;
+    expect(nextRadius(2)).toBeLessThan(nextRadius(5));
+    expect(delayed.cues.find(entry => entry.tick === 22)).toMatchObject({ parry: true, dodge: true });
+    expect(delayed.popups).toEqual([[expect.stringMatching(/^HIT −\d+$/), "No reaction: E parries, Q dodges"],
+      [expect.stringMatching(/^HIT −\d+$/), "No reaction: E parries, Q dodges"]]);
+  }, 120_000);
+
   it("chooses targets with number keys, backs out with Escape without pausing, and fights with a controller", async () => {
     await continueBattle(garrison());
     await toCommand();
@@ -238,6 +336,9 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("turn-based battles in the 
     const targets = await evaluate<string[]>(cdp, "[...document.querySelectorAll('.battle-controls button')].map(button => button.dataset.controllerKey)");
     expect(targets.filter(key => key.startsWith("battle-target:")).length).toBeGreaterThanOrEqual(3);
     expect(targets.at(-1)).toBe("battle-back");
+    // The enemy cards carry the same numbers as the target buttons.
+    const numbers = await evaluate<string[]>(cdp, "[...document.querySelectorAll('.battle-enemy.targetable .target-key')].map(key => key.textContent)");
+    expect(numbers).toEqual(targets.slice(0, -1).map((_, index) => String(index + 1)));
     await capture("battle-targets-en");
     await tap("Escape");
     await frames(3);
@@ -260,7 +361,8 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("turn-based battles in the 
     await padTap(0);
     await until(cdp, "window.korovany.inspect().snapshot.battle?.action", (action: { actor: string; target: string } | null) =>
       action?.actor === "hero" && action.target === first, 30_000);
-    // RT answers a blow with a parry.
+    // RT answers a blow with a parry. The cue shows the controller's buttons; with defence hints turned off in the first
+    // test's settings, it shows no bands and the defence guide no explanations.
     const blow = await until<{ action: number; index: number }>(cdp, `(() => {
       const battle = window.korovany.inspect().snapshot.battle;
       if (!battle) throw new Error('The battle ended first');
@@ -268,6 +370,12 @@ describe.runIf(process.env.KOROVANY_BROWSER === "1")("turn-based battles in the 
         h.pressed === null && h.impact - battle.tick <= 24 && h.impact - battle.tick >= 14) : undefined;
       return hit ? { action: battle.action.id, index: hit.index } : null;
     })()`, Boolean, 120_000);
+    const cue = await evaluate<{ keys: string[]; how: boolean; band: number }>(cdp, `({
+      keys: [...document.querySelectorAll('.cue-key kbd')].map(key => key.textContent),
+      how: Boolean(document.querySelector('.defend-how')),
+      band: Number(document.querySelector('.zone.parry').getAttribute('stroke-width')),
+    })`);
+    expect(cue).toEqual({ keys: ["A", "B"], how: false, band: 0 });
     await padTap(7);
     expect(await reaction(blow)).toBe("parry");
     // The game page declares no icon, so the browser's own /favicon.ico request is a 404; nothing may throw.

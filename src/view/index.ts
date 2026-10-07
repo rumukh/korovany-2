@@ -973,6 +973,8 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
   let runId: string | undefined;
   let faction: GameSnapshot['faction'] | undefined;
   let lastTick = -1;
+  /** Whether the last snapshot drawn was in a battle: the camera frames each battle as it begins. */
+  let battling = false;
   let needsWarmup = true;
   let warmup: ModelWarmup | undefined;
   const warmTarget = new THREE.WebGLRenderTarget(4, 4);
@@ -1023,6 +1025,7 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
     next.scene.environment = environment.texture;
     presentation = next;
     camera.reset();
+    battling = false;
     applyQuality();
     return next;
   }
@@ -1064,11 +1067,17 @@ export function createGameView(canvas: HTMLCanvasElement, blueprint: WorldBluepr
         // presentation and releases only the run's visuals; the warm-up compiles any model the run added.
         current.resetRun();
         camera.reset();
+        battling = false;
         needsWarmup = true;
       }
       runId = snapshot.runId;
       faction = snapshot.faction;
       lastTick = snapshot.tick;
+      if ((snapshot.battle !== undefined) !== battling) {
+        battling = snapshot.battle !== undefined;
+        if (battling) camera.frameBattle(snapshot.player.heading);
+        else camera.endBattle();
+      }
       const frameDt = Math.min(dt, 0.1);
       camera.update(snapshot.player, frameDt, current.terrain.height(snapshot.player.x, snapshot.player.z));
       current.update(snapshot, frameDt, camera.camera, reducedMotion, renderer.getDrawingBufferSize(DRAWING_BUFFER).y / 2);

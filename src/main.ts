@@ -493,6 +493,7 @@ function sampleInput(): CampaignInput {
     queued = {};
     const action = snapshot.battle.phase === "action" ? snapshot.battle.action : null;
     if (!action || action.actor === "hero") return {};
+    if (sample.parry || sample.dodge) shell?.battlePress(sample.parry ? "parry" : "dodge");
     return { ...(sample.parry ? { parry: true } : {}), ...(sample.dodge ? { dodge: true } : {}) };
   }
   if (sample.talk && snapshot.narrative?.interaction) {
@@ -538,7 +539,7 @@ function events(next: GameSnapshot): void {
   if (next.tick - lastSaveTick >= 600 || (important && next.tick - lastSaveTick >= 120)) saveCampaign();
 }
 
-/** Battles release the mouse for the battle panel and move the approach ring every frame. */
+/** Battles release the mouse for the battle panel and move the defence cue every frame. */
 function syncBattle(): void {
   const fighting = snapshot?.battle !== undefined;
   if (fighting !== inBattle) {
@@ -546,7 +547,7 @@ function syncBattle(): void {
     input?.setBattle(fighting);
     if (snapshot && running) shell?.update(snapshot);
   }
-  shell?.battleFrame(snapshot);
+  shell?.battleFrame(snapshot, accumulator / STEP);
 }
 
 /** Sends the battle settings to the campaign; they apply to battles that begin afterwards. */

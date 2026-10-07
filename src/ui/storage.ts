@@ -13,6 +13,8 @@ export interface Settings {
   battleDifficulty: BattleDifficultySetting;
   /** Reaction latency compensation for battles, in 60 Hz ticks (0-12). */
   battleLatency: number;
+  /** Battle defence hints: the parry and dodge bands, keys that light up while they would succeed, and explanations. */
+  battleHints: boolean;
 }
 
 export type StorageIssue = "unavailable" | "corrupt" | "write" | "conflict";
@@ -39,6 +41,7 @@ export function defaultSettings(): Settings {
     audio: defaultMix(),
     battleDifficulty: "standard",
     battleLatency: 0,
+    battleHints: true,
   };
 }
 
@@ -52,8 +55,9 @@ export function parseSettings(value: unknown): Settings | null {
   // Settings saved before battles existed have no battle fields: they get the defaults.
   const difficulty = fields.battleDifficulty === undefined ? "standard" : fields.battleDifficulty;
   const latency = fields.battleLatency === undefined ? 0 : fields.battleLatency;
+  const hints = fields.battleHints === undefined ? true : fields.battleHints;
   if ((difficulty !== "story" && difficulty !== "standard" && difficulty !== "expert") ||
-    typeof latency !== "number" || !Number.isInteger(latency) || latency < 0 || latency > 12) return null;
+    typeof latency !== "number" || !Number.isInteger(latency) || latency < 0 || latency > 12 || typeof hints !== "boolean") return null;
   const audio = fields.audio === undefined ? defaultMix() : parseMix(fields.audio);
   if (!audio) return null;
   return {
@@ -65,6 +69,7 @@ export function parseSettings(value: unknown): Settings | null {
     audio,
     battleDifficulty: difficulty,
     battleLatency: latency,
+    battleHints: hints,
   };
 }
 

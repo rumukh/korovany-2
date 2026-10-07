@@ -397,8 +397,22 @@ defence**, in the spirit of Clair Obscur: Expedition 33, played where it starts:
   parry a whole combo to counter) or **dodge** it (wider window; elves also gain
   1 AP). Heavy blows can only be dodged. Reactions bind to the blow they
   answer, so mashing fails. Blocked and countered hits fill an enemy's guard
-  break: a broken enemy loses its next turn and takes extra damage. A shrinking
-  ring over the battlefield meets its circle at the moment of impact.
+  break: a broken enemy loses its next turn and takes extra damage.
+- **Reading a blow.** For each blow aimed at you a ring closes in around your
+  hero and meets the white circle as the blow lands. A parry succeeds while the
+  ring crosses the narrow **gold band**, a dodge while it crosses the wider
+  **blue band**; the **E Parry** and **Q Dodge** keys under your hero light up
+  while each would succeed, and the circle reads **NOW!** at the parry moment.
+  Heavy blows have a **red ring and "!"**: the Parry key is struck out. Every
+  blow then reports **PARRIED**, **DODGED** or **HIT** with what went wrong
+  (too early or late by how many milliseconds, a heavy blow parried, a second
+  press too soon after the first, or no key pressed). The panel at the bottom
+  right explains the enemy's move.
+- **The battle screen.** The camera swings behind your shoulder to face the
+  foe. The turn order runs along the top (**Now** first), the enemies with
+  their health, close/far range and guard are on the left, your health, action
+  points, tonics, allies and wagons at the bottom left, and the commands at the
+  bottom right; the road panels and minimap stay hidden until the battle ends.
 - **Allies.** Friendly troops within 22 m and your convoy's weapon (the elves'
   arrow cart, the mountain army's siege cart) act on the timeline against the
   weakest enemy. Enemies never target them, but a wrecked convoy's weapon
@@ -411,7 +425,9 @@ defence**, in the spirit of Clair Obscur: Expedition 33, played where it starts:
 - **Settings.** **Battle difficulty** (Story: wider windows and much less
   damage; Standard; Expert: tighter windows and more damage) and **reaction
   latency compensation** (0-200 ms, for displays and controllers that report
-  presses late) apply from the next battle.
+  presses late) apply from the next battle. **Defence hints** (on by default)
+  show the gold and blue bands, light the keys and explain each defence; with
+  them off, the ring, the keys and the feedback remain.
 - **Saving.** A battle is saved as it began: closing the game mid-battle and
   continuing restarts that battle.
 

@@ -125,7 +125,7 @@ export class GameShell {
     this.minimap.type = "button";
     this.minimap.addEventListener("click", () => dispatch({ type: "overlay", overlay: "map" }));
     this.hudRail.append(this.minimap, this.controls, this.hudControllerStatus);
-    this.hud.append(this.hudTop, this.hudRail, this.hudBottom, this.battleHud.cue, this.battleHud.root);
+    this.hud.append(this.hudTop, this.hudRail, this.hudBottom, this.battleHud.root);
     this.voiceCaption.setAttribute("aria-live", "polite");
     this.voiceCaption.setAttribute("aria-atomic", "true");
     this.modelStatus.hidden = true;
@@ -443,9 +443,13 @@ export class GameShell {
     this.snapshot = snapshot;
     this.atlas.observe(snapshot);
     if (this.currentOverlay !== null) return;
-    // In a battle the battle panel replaces the road panels at the bottom of the screen.
-    this.battleHud.update(snapshot.battle, this.state.settings.language, this.controllerFeedback.active);
-    this.hudBottom.hidden = snapshot.battle !== undefined;
+    // In a battle the battle HUD replaces the road panels and the minimap, so the battlefield stays clear.
+    this.battleHud.update(snapshot.battle, this.state.settings.language, this.controllerFeedback.active, this.state.settings.battleHints,
+      this.state.settings.battleLatency);
+    const fighting = snapshot.battle !== undefined;
+    this.hudBottom.hidden = fighting;
+    this.hudTop.hidden = fighting;
+    this.minimap.hidden = fighting;
     const crest = element("section", "hero-panel");
     crest.append(element("div", `faction-crest ${snapshot.faction}`, snapshot.faction === "elf" ? "↟" : snapshot.faction === "guard" ? "♜" : "◆"));
     const vitals = element("div", "hero-vitals");
@@ -546,9 +550,15 @@ export class GameShell {
     }
   }
 
-  /** The battle's approach ring follows the battle every frame (the panel itself refreshes with the HUD). */
-  battleFrame(snapshot: GameSnapshot | null): void {
-    this.battleHud.frame(this.currentOverlay === null ? snapshot?.battle : undefined);
+  /** The battle's defence cue follows the battle every frame (the panels refresh with the HUD); `alpha` is the share of
+   * a simulation tick elapsed since the shown snapshot. */
+  battleFrame(snapshot: GameSnapshot | null, alpha = 0): void {
+    this.battleHud.frame(this.currentOverlay === null ? snapshot?.battle : undefined, alpha);
+  }
+
+  /** A parry or dodge pressed during an enemy's move, for the defence cue's feedback. */
+  battlePress(kind: "parry" | "dodge"): void {
+    this.battleHud.press(kind);
   }
 
   /** Controller input for the battle's commands on the hero's turn, while the game runs; true when it acted. */
@@ -964,7 +974,14 @@ export class GameShell {
       this.dispatch({ type: "settings", settings: { ...this.state.settings, battleLatency: ticks } });
     });
     latencyRow.append(latency, latencyOutput);
-    panel.append(difficultyRow, latencyRow, element("p", "small muted", this.t("battleLatency.help")));
+    const hintsRow = element("label", "setting-row", this.t("battleHints"));
+    const hints = element("input");
+    hints.type = "checkbox";
+    hints.dataset.controllerKey = "setting:battleHints";
+    hints.checked = this.state.settings.battleHints;
+    hints.addEventListener("change", () => this.dispatch({ type: "settings", settings: { ...this.state.settings, battleHints: hints.checked } }));
+    hintsRow.append(hints);
+    panel.append(difficultyRow, latencyRow, element("p", "small muted", this.t("battleLatency.help")), hintsRow);
     const mixer = element("fieldset", "audio-mixer");
     mixer.append(element("legend", "", this.t("audio.mixer")));
     for (const channel of mixChannels) {

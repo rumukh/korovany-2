@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
 import type { WorldBlueprint } from '../game/types';
 import { createActor, createWagon } from './actors';
-import { FollowCamera } from './camera';
+import { BATTLE_FRAMING, FollowCamera } from './camera';
 import { seededRandom, ViewResources } from './resources';
 import { createWorldScenery, distanceToSegment, dressingFilter, isDressingAllowed } from './world';
 
@@ -66,6 +66,44 @@ describe('shell-controlled camera', () => {
     expect(camera.camera.position.distanceTo(new THREE.Vector3(60, 0.65, 60))).toBeCloseTo(18);
     expect(() => camera.orbit(Infinity)).toThrow('finite');
     expect(() => camera.zoom(NaN)).toThrow('finite');
+  });
+
+  it('frames a battle over the hero\'s shoulder, gives way to the player and restores pitch and distance afterwards', () => {
+    const camera = new FollowCamera(canvasBox());
+    camera.resize(1366, 768);
+    camera.zoom(4000);
+    camera.update({ x: 0, z: 0 }, 1 / 60);
+    const road = camera.camera.position.clone();
+    const focus = new THREE.Vector3(0, 0.65, 0);
+    expect(road.distanceTo(focus)).toBeCloseTo(40);
+    const heading = 2.1;
+    camera.frameBattle(heading);
+    camera.update({ x: 0, z: 0 }, 1 / 60);
+    // It eases in rather than cutting.
+    expect(camera.camera.position.distanceTo(focus)).toBeGreaterThan(BATTLE_FRAMING.distance + 1);
+    for (let i = 0; i < 180; i++) camera.update({ x: 0, z: 0 }, 1 / 60);
+    const framed = camera.camera.position;
+    expect(framed.distanceTo(focus)).toBeCloseTo(BATTLE_FRAMING.distance, 3);
+    expect(Math.cos(Math.atan2(framed.x, framed.z) - (heading + Math.PI + BATTLE_FRAMING.shoulder))).toBeCloseTo(1, 5);
+    // Behind the hero: forward points the way the hero faces, towards the foe.
+    const { forward } = camera.getMoveBasis();
+    expect(forward.x * Math.sin(heading) + forward.z * Math.cos(heading)).toBeGreaterThan(Math.cos(BATTLE_FRAMING.shoulder) - 1e-6);
+    camera.endBattle();
+    for (let i = 0; i < 180; i++) camera.update({ x: 0, z: 0 }, 1 / 60);
+    const elevation = (point: THREE.Vector3): number => Math.asin((point.y - focus.y) / point.distanceTo(focus));
+    expect(camera.camera.position.distanceTo(focus)).toBeCloseTo(40, 3);
+    expect(elevation(camera.camera.position)).toBeCloseTo(elevation(road), 3);
+    // The player's own orbit takes over from a framing in progress; reduced motion frames at once.
+    camera.frameBattle(0);
+    camera.orbit(0.2);
+    for (let i = 0; i < 180; i++) camera.update({ x: 0, z: 0 }, 1 / 60);
+    expect(camera.camera.position.distanceTo(focus)).toBeCloseTo(40, 3);
+    camera.endBattle();
+    camera.setReducedMotion(true);
+    camera.frameBattle(heading);
+    camera.update({ x: 0, z: 0 }, 1 / 60);
+    expect(camera.camera.position.distanceTo(focus)).toBeCloseTo(BATTLE_FRAMING.distance, 5);
+    expect(() => camera.frameBattle(Number.NaN)).toThrow('finite');
   });
 });
 
