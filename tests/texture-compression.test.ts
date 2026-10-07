@@ -31,8 +31,8 @@ function ktx2(bytes: Uint8Array) {
 }
 
 describe('GPU-compressed model textures', () => {
-  test('the transcoder prefers BC7 to ASTC where both exist and otherwise keeps three.js\'s choice', () => {
-    const support = (names: string[]): TextureSupport => ({ has: name => names.includes(name) });
+  test('the transcoder prefers BC7 to ASTC where both exist, keeps three.js\'s choice otherwise and gives software rasterizers RGBA8', () => {
+    const support = (names: string[], software = false): TextureSupport => ({ has: name => names.includes(name), software });
     const both = transcodeTargets(support(['WEBGL_compressed_texture_astc', 'EXT_texture_compression_bptc', 'WEBGL_compressed_texture_etc']));
     expect(both.has('WEBGL_compressed_texture_astc')).toBe(false);
     expect(both.has('EXT_texture_compression_bptc')).toBe(true);
@@ -41,6 +41,12 @@ describe('GPU-compressed model textures', () => {
     expect(mobile.has('WEBGL_compressed_texture_astc')).toBe(true);
     expect(mobile.has('EXT_texture_compression_bptc')).toBe(false);
     expect(transcodeTargets(support([])).has('WEBGL_compressed_texture_s3tc')).toBe(false);
+    // SwiftShader advertises every format but decodes compressed textures on first use; with none, KTX2Loader picks RGBA8.
+    const swiftShader = transcodeTargets(support(['WEBGL_compressed_texture_astc', 'EXT_texture_compression_bptc',
+      'WEBGL_compressed_texture_etc', 'WEBGL_compressed_texture_s3tc'], true));
+    for (const name of ['WEBGL_compressed_texture_astc', 'EXT_texture_compression_bptc', 'WEBGL_compressed_texture_etc', 'WEBGL_compressed_texture_s3tc']) {
+      expect(swiftShader.has(name), name).toBe(false);
+    }
   });
 
   test('one transcoder serves the page until it is disposed', () => {

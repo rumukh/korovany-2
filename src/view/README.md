@@ -389,9 +389,12 @@ PSNR at full size, 34 to 41 dB at a quarter size). In the browser, `textures.ts`
 gives `gltfModelSource()` and `gltfWorldSource()` one shared `KTX2Loader`. On its
 first KTX2 texture it reads the GPU's compressed formats from a short-lived WebGL 2
 context, so the libraries can still be built before the renderer, and it prefers
-BC7 to ASTC where both exist (software renderers such as SwiftShader decode ASTC
-uploads slowly); otherwise three.js's order applies (ASTC, BC7, ETC2, ETC1, S3TC,
-PVRTC, then uncompressed RGBA8). Its transcoder, three.js's
+BC7 to ASTC where both exist (some drivers emulate ASTC); otherwise three.js's
+order applies (ASTC, BC7, ETC2, ETC1, S3TC, PVRTC, then uncompressed RGBA8). A
+software rasterizer (SwiftShader in the browser tests, llvmpipe, WARP) gets RGBA8
+instead: it decodes a compressed texture when it is first drawn, which cost the
+landmarks' first frame about 0.4 s on SwiftShader, while uncompressed maps with
+their precomputed mip levels load there about as fast as WebP. Its transcoder, three.js's
 `basis_transcoder.js` and `.wasm` (57.5 KB and 527 KB, 248 KB gzipped), is built
 as hashed assets and fetched with the first KTX2 texture; transcoding runs in four
 workers, which `main.ts` stops at page teardown. A transcoder or texture that

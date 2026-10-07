@@ -11,25 +11,36 @@ export const COMPRESSED_TEXTURE_EXTENSIONS = [
 
 export interface TextureSupport {
   has(name: string): boolean;
+  /** A software rasterizer (SwiftShader, llvmpipe, WARP), which emulates compressed formats by decoding them on first use. */
+  readonly software?: boolean;
 }
 
 /**
  * The formats the transcoder may target. BC7 is preferred to ASTC where a GPU offers both: from UASTC both are near
- * lossless at one byte per texel, and software renderers (SwiftShader) decode ASTC uploads far more slowly. Otherwise
- * three.js's order applies (ASTC, BC7, ETC2, ETC1, S3TC, PVRTC, then uncompressed RGBA8).
+ * lossless at one byte per texel, and ASTC is slower to decode where it is emulated. Otherwise three.js's order applies
+ * (ASTC, BC7, ETC2, ETC1, S3TC, PVRTC, then uncompressed RGBA8). A software rasterizer gets uncompressed RGBA8: it keeps
+ * textures in system memory either way and pays for decoding a compressed one when it is first drawn (BC7 on SwiftShader
+ * cost the landmarks' first frame about 0.4 s more than RGBA8), while the precomputed mip levels still spare it the
+ * mipmap generation a WebP upload needs.
  */
 export function transcodeTargets(support: TextureSupport): TextureSupport {
+  if (support.software) return { has: () => false };
   const bc7 = support.has('EXT_texture_compression_bptc');
   return { has: name => !(bc7 && name === 'WEBGL_compressed_texture_astc') && support.has(name) };
 }
+
+/** Renderer strings of software rasterizers: SwiftShader (Chrome), llvmpipe and softpipe (Mesa), WARP (Windows). */
+const SOFTWARE_RENDERER = /SwiftShader|llvmpipe|softpipe|Basic Render Driver/i;
 
 /** Compressed-texture support of this browser's WebGL 2, read from a short-lived context like the game renderer's. */
 export function probeTextureSupport(): TextureSupport {
   const gl = document.createElement('canvas').getContext('webgl2', { alpha: false, antialias: false, powerPreference: 'high-performance' });
   if (!gl) throw new Error('WebGL 2 is not available in this browser.');
   const supported = new Set<string>(COMPRESSED_TEXTURE_EXTENSIONS.filter(name => gl.getExtension(name) !== null));
+  const info = gl.getExtension('WEBGL_debug_renderer_info');
+  const renderer = String(gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
   gl.getExtension('WEBGL_lose_context')?.loseContext();
-  return { has: name => supported.has(name) };
+  return { has: name => supported.has(name), software: SOFTWARE_RENDERER.test(renderer) };
 }
 
 /** A KTX2Loader that reads GPU support on its first texture, so model libraries can be built before the renderer. */
