@@ -19,6 +19,7 @@ import { MonsterInstance } from './monsters';
 import { lightWorld, lightWorldV3, positionSun, positionSunV3, skyEnvironment, V3_GRADE } from './atmosphere';
 import { WorldPostprocessing } from './postprocessing';
 import { DRAFT_OX, gltfModelSource, HEROES, LANDMARK_IDS, ModelLibrary, PICKUP_IDS, propInstance, troopModelFor, WAGONS, type CharacterInstance, type HeroInstance, type ModelStatus, type TroopModelId, type WagonModelId } from './models';
+import { useRendererTextureSupport } from './textures';
 
 export type { GroundPoint, MovementBasis } from './camera';
 export type { ModelStatus } from './models';
@@ -57,12 +58,15 @@ export interface GameViewOptions {
   renderer?: THREE.WebGLRenderer;
 }
 
-/** The game's WebGL 2 renderer for `canvas`. Share one across successive views and dispose it after the last. */
+/** The game's WebGL 2 renderer for `canvas`. Share one across successive views and dispose it after the last. The KTX2
+ * transcoder reads the GPU's compressed formats from it. */
 export function createRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
   try {
     const context = canvas.getContext('webgl2', { alpha: false, antialias: true, powerPreference: 'high-performance' });
     if (!context) throw new Error('WebGL 2 is not available in this browser.');
-    return new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: false });
+    const renderer = new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: false });
+    useRendererTextureSupport(renderer);
+    return renderer;
   } catch (cause) {
     throw new Error('Korovany II could not start its 3D renderer. Enable hardware acceleration and WebGL 2, then reload.', { cause });
   }

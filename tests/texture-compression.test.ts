@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import { LANDMARK_IDS, type ModelId } from '../src/view/models';
-import { disposeTextureTranscoder, textureTranscoder, transcodeTargets, type TextureSupport } from '../src/view/textures';
+import { contextTextureSupport, disposeTextureTranscoder, textureTranscoder, transcodeTargets, type TextureSupport } from '../src/view/textures';
 import { imageBytes, imageSize, readGlb } from './glb';
 
 /** Models whose maps ship GPU-compressed (Basis Universal UASTC in KTX2); every other model ships WebP. */
@@ -47,6 +47,26 @@ describe('GPU-compressed model textures', () => {
     for (const name of ['WEBGL_compressed_texture_astc', 'EXT_texture_compression_bptc', 'WEBGL_compressed_texture_etc', 'WEBGL_compressed_texture_s3tc']) {
       expect(swiftShader.has(name), name).toBe(false);
     }
+  });
+
+  test('reads compressed formats and software rasterizers from a WebGL context', () => {
+    const UNMASKED_RENDERER = 0x9246;
+    const context = (renderer: string, extensions: string[]) => ({
+      RENDERER: 0x1f01,
+      getExtension: (name: string) => name === 'WEBGL_debug_renderer_info' ? { UNMASKED_RENDERER_WEBGL: UNMASKED_RENDERER }
+        : extensions.includes(name) ? {} : null,
+      getParameter: (parameter: number) => parameter === UNMASKED_RENDERER ? renderer : 'WebKit WebGL',
+    }) as unknown as WebGL2RenderingContext;
+    const swiftShader = contextTextureSupport(context(
+      'ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)', ['EXT_texture_compression_bptc']));
+    expect(swiftShader.software).toBe(true);
+    expect(swiftShader.has('EXT_texture_compression_bptc')).toBe(true);
+    expect(transcodeTargets(swiftShader).has('EXT_texture_compression_bptc')).toBe(false);
+    const gpu = contextTextureSupport(context(
+      'ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)', ['EXT_texture_compression_bptc', 'WEBGL_compressed_texture_s3tc']));
+    expect(gpu.software).toBe(false);
+    expect(transcodeTargets(gpu).has('EXT_texture_compression_bptc')).toBe(true);
+    expect(gpu.has('WEBGL_compressed_texture_astc')).toBe(false);
   });
 
   test('one transcoder serves the page until it is disposed', () => {

@@ -387,8 +387,11 @@ game's own transcoder, transcodes every level to every format three.js may pick,
 and records the error against the cooked maps in `provenance.json` (39 to 44 dB
 PSNR at full size, 34 to 41 dB at a quarter size). In the browser, `textures.ts`
 gives `gltfModelSource()` and `gltfWorldSource()` one shared `KTX2Loader`. On its
-first KTX2 texture it reads the GPU's compressed formats from a short-lived WebGL 2
-context, so the libraries can still be built before the renderer, and it prefers
+first KTX2 texture it reads the GPU's compressed formats from the game's renderer,
+which `createRenderer()` registers before any model can finish loading (pages that
+load models without it use a short-lived WebGL 2 context instead; the game avoids
+one because creating a context waits for the GPU process, which stalled a background
+tab behind another tab's frames). It prefers
 BC7 to ASTC where both exist (some drivers emulate ASTC); otherwise three.js's
 order applies (ASTC, BC7, ETC2, ETC1, S3TC, PVRTC, then uncompressed RGBA8). A
 software rasterizer (SwiftShader in the browser tests, llvmpipe, WARP) gets RGBA8
@@ -396,15 +399,17 @@ instead: it decodes a compressed texture when it is first drawn, which cost the
 landmarks' first frame about 0.4 s on SwiftShader, while uncompressed maps with
 their precomputed mip levels load there about as fast as WebP. Its transcoder, three.js's
 `basis_transcoder.js` and `.wasm` (57.5 KB and 527 KB, 248 KB gzipped), is built
-as hashed assets and fetched with the first KTX2 texture; transcoding runs in four
+as hashed assets and fetched with the first KTX2 texture; transcoding runs in two
 workers, which `main.ts` stops at page teardown. A transcoder or texture that
 cannot be fetched or transcoded fails its model's load like a missing file. The
 maps then hold one byte per texel on the GPU instead of four: a story campaign's
 models hold about 192 MiB of textures instead of 276 MiB, with the same shader
 programs. In the game at most 0.056% of a frame differs by more than 8/255 (every
 landmark location and the well, 18 and 26 m, pixel ratio 1 and 1.75) and tone
-stays within 0.2%. The price is download: the seven files grow from 5.7 to
-20.3 MB.
+stays within 0.2%. The price is download and load time: the seven files grow from
+5.7 to 20.3 MB, and on the RTX 4070 Ti test machine loading them took about 0.55 s
+instead of 0.09 s (fetching the larger files, starting the transcoder and
+transcoding the 21 maps).
 `gltfModelSource()` gives `GLTFLoader` three.js's bundled WebAssembly
 `MeshoptDecoder`. The files require the extension and their fallback buffer holds
 no data, so a loader without the decoder fails instead of drawing anything.

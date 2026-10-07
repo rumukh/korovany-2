@@ -32,28 +32,50 @@ export function transcodeTargets(support: TextureSupport): TextureSupport {
 /** Renderer strings of software rasterizers: SwiftShader (Chrome), llvmpipe and softpipe (Mesa), WARP (Windows). */
 const SOFTWARE_RENDERER = /SwiftShader|llvmpipe|softpipe|Basic Render Driver/i;
 
-/** Compressed-texture support of this browser's WebGL 2, read from a short-lived context like the game renderer's. */
-export function probeTextureSupport(): TextureSupport {
-  const gl = document.createElement('canvas').getContext('webgl2', { alpha: false, antialias: false, powerPreference: 'high-performance' });
-  if (!gl) throw new Error('WebGL 2 is not available in this browser.');
+/** The compressed formats and rasterizer of a WebGL 2 context. */
+export function contextTextureSupport(gl: WebGL2RenderingContext): TextureSupport {
   const supported = new Set<string>(COMPRESSED_TEXTURE_EXTENSIONS.filter(name => gl.getExtension(name) !== null));
   const info = gl.getExtension('WEBGL_debug_renderer_info');
   const renderer = String(gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
-  gl.getExtension('WEBGL_lose_context')?.loseContext();
   return { has: name => supported.has(name), software: SOFTWARE_RENDERER.test(renderer) };
 }
 
-/** A KTX2Loader that reads GPU support on its first texture, so model libraries can be built before the renderer. */
+/**
+ * Support read from a short-lived WebGL 2 context like the game renderer's, for pages that load models without the
+ * game's renderer. Creating a context waits for the GPU process, which can stall a page whose GPU work queues behind
+ * another tab's, so the game reads its own renderer instead (`useRendererTextureSupport`).
+ */
+export function probeTextureSupport(): TextureSupport {
+  const gl = document.createElement('canvas').getContext('webgl2', { alpha: false, antialias: false, powerPreference: 'high-performance' });
+  if (!gl) throw new Error('WebGL 2 is not available in this browser.');
+  try {
+    return contextTextureSupport(gl);
+  } finally {
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+  }
+}
+
+let rendererSupport: (() => TextureSupport) | undefined;
+
+/** Lets the transcoder read the GPU's formats from the game's renderer (`createRenderer`) instead of a probe context. */
+export function useRendererTextureSupport(renderer: THREE.WebGLRenderer): void {
+  rendererSupport = () => contextTextureSupport(renderer.getContext() as WebGL2RenderingContext);
+}
+
+/**
+ * A KTX2Loader that reads GPU support on its first texture, so model libraries can be built before the renderer. Two
+ * workers transcode: on a four-core machine they were as fast as four, with half the start-up compilation competing
+ * with the page's own loading.
+ */
 class GameKTX2Loader extends KTX2Loader {
   private supportRead = false;
 
   constructor(private readonly support: () => TextureSupport) {
-    const manager = new THREE.LoadingManager();
+    super(new THREE.LoadingManager());
     // KTX2Loader fetches fixed file names under its transcoder path; the build serves them as hashed assets.
-    manager.setURLModifier(url => url === 'basis_transcoder.js' ? transcoderScriptUrl
+    this.manager.setURLModifier(url => url === 'basis_transcoder.js' ? transcoderScriptUrl
       : url === 'basis_transcoder.wasm' ? transcoderBinaryUrl : url);
-    super(manager);
-    this.setTranscoderPath('');
+    this.setTranscoderPath('').setWorkerLimit(2);
   }
 
   override load(url: string, onLoad: (texture: THREE.CompressedTexture) => void, onProgress?: (event: ProgressEvent) => void,
@@ -70,9 +92,11 @@ let shared: GameKTX2Loader | undefined;
 
 /**
  * The page's one KTX2 (Basis Universal) transcoder for cooked models and world assets. Transcoding runs in its worker
- * pool. A texture or transcoder that cannot be fetched or transcoded fails its model's load; there is no fallback.
+ * pool. GPU support comes from the game's renderer when it has registered (it exists before the first texture
+ * arrives), otherwise from a probe context. A texture or transcoder that cannot be fetched or transcoded fails its
+ * model's load; there is no fallback.
  */
-export function textureTranscoder(support: () => TextureSupport = probeTextureSupport): KTX2Loader {
+export function textureTranscoder(support: () => TextureSupport = () => rendererSupport?.() ?? probeTextureSupport()): KTX2Loader {
   shared ??= new GameKTX2Loader(support);
   return shared;
 }
@@ -81,4 +105,5 @@ export function textureTranscoder(support: () => TextureSupport = probeTextureSu
 export function disposeTextureTranscoder(): void {
   shared?.dispose();
   shared = undefined;
+  rendererSupport = undefined;
 }
