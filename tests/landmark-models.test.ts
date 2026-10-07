@@ -30,7 +30,7 @@ function meshesOf(root: THREE.Object3D): THREE.Mesh[] {
 }
 
 describe('cooked signature landmarks', () => {
-  test.each(LANDMARK_IDS)('%s: one static mesh and material within budget, with WebP base colour, normal and ORM maps', id => {
+  test.each(LANDMARK_IDS)('%s: one static mesh and material within budget, with GPU-compressed (KTX2) base colour, normal and ORM maps', id => {
     const document = readGlb(glb(id));
     expect(document.json.skins ?? []).toHaveLength(0);
     expect(document.json.animations ?? []).toHaveLength(0);
@@ -52,9 +52,9 @@ describe('cooked signature landmarks', () => {
     for (const [slot, reference] of Object.entries(slots)) {
       expect(reference, slot).toBeDefined();
       const texture = document.json.textures![reference!.index]!;
-      const source = texture.extensions?.['EXT_texture_webp']?.source ?? texture.source!;
+      const source = texture.extensions?.['KHR_texture_basisu']?.source ?? texture.source!;
       const size = imageSize(imageBytes(document, source));
-      expect(size.format, slot).toBe('webp');
+      expect(size.format, slot).toBe('ktx2');
       expect(size.width, slot).toBeGreaterThanOrEqual(512);
       expect(size.width, slot).toBeLessThanOrEqual(1024);
     }

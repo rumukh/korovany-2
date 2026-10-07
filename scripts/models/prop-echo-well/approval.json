@@ -20,10 +20,10 @@
     },
     {
       "gate": "in-game",
-      "decision": "Ship the four quantized props (Recommended)",
-      "decidedAt": "2026-10-02T14:11:03.184756+02:00",
-      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: the Echo Well, both wagons and the cargo, with vertex data quantized by quantize_static_glb.py before the meshopt step, are in the running game (board 127.0.0.1:47897, _reviews/gate3-static-quantized). Files fall 32.4% (3,835,088 to 2,590,916 bytes) and the gzip download 32.2% (3,647,712 to 2,474,649). In 51 game frames the worst whole-frame mean difference is 0.0077/255 and at most 0.0054% of a frame's pixels change by more than 8/255; programs and draw calls are identical. Should I ship the quantized props?",
-      "sha256": "8f77450e8560e9803236b70aabd83b068c333aa0824a4bc6c16696b3ff10b69b",
+      "decision": "Ship the KTX2 model (Recommended)",
+      "decidedAt": "2026-10-07T03:23:50+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: prop-echo-well with its three 1024 px maps encoded as Basis Universal UASTC KTX2 (ktx2_glb.py with Basis Universal 2.50, then meshopt_glb.mjs; geometry and materials byte-identical) is in the running game (board _reviews/gate3-ktx2-landmarks). The file grows from 826,020 to 2,882,820 bytes and its maps' video memory falls from 16.8 MB to 4.2 MB (BC7 on this GPU). Transcoded maps against the cooked ones, PSNR at full and quarter size: prop-normal 41.7/38.0 dB, prop-orm 42.1/38.2 dB, prop-base-1024 42.6/39.1 dB. In isolated renders 0.932% of its pixels differ by more than 8/255 at 18 m (0.659% at pixel ratio 1.75, 0.9% at 26 m; close-up 0.628%), tone ratio 1.0011; in the game (every landmark location and the well, 18 and 26 m, pixel ratio 1 and 1.75) at most 0.056% of a frame differs by more than 8/255 (lowest PSNR 53.5 dB). Shader programs are unchanged (35). Should I ship it?",
+      "sha256": "829fb39167799f7fae3f42603b034ec39b4e313810e2dcf2dfeef372f7ad36d0",
       "decidedBy": {
         "mode": "delegated",
         "record": "_reviews/delegation-2026-10-01.json",
@@ -52,6 +52,19 @@
         "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
       },
       "superseded": "Re-shipped with quantized vertex data (quantize_static_glb.py: 16-bit positions with one uniform scale per mesh in its node, 8-bit normals and tangents, 16-bit UVs) before the meshopt step; about a third fewer bytes and visually unchanged in the game (_reviews/gate3-static-quantized)."
+    },
+    {
+      "gate": "in-game:superseded",
+      "decision": "Ship the four quantized props (Recommended)",
+      "decidedAt": "2026-10-02T14:11:03.184756+02:00",
+      "question": "Gate 3 re-ship, delegated under the standing instruction of 2026-10-01: the Echo Well, both wagons and the cargo, with vertex data quantized by quantize_static_glb.py before the meshopt step, are in the running game (board 127.0.0.1:47897, _reviews/gate3-static-quantized). Files fall 32.4% (3,835,088 to 2,590,916 bytes) and the gzip download 32.2% (3,647,712 to 2,474,649). In 51 game frames the worst whole-frame mean difference is 0.0077/255 and at most 0.0054% of a frame's pixels change by more than 8/255; programs and draw calls are identical. Should I ship the quantized props?",
+      "sha256": "8f77450e8560e9803236b70aabd83b068c333aa0824a4bc6c16696b3ff10b69b",
+      "decidedBy": {
+        "mode": "delegated",
+        "record": "_reviews/delegation-2026-10-01.json",
+        "userMessage": "Go ahead and since I approved all your recommended options before, go with your recommended options without asking for approval going forward."
+      },
+      "superseded": "Re-shipped with its maps GPU-compressed as Basis Universal UASTC in KTX2 (ktx2_glb.py, then meshopt_glb.mjs; the owner chose this direction on 2026-10-06 with the model preload budget raised to 35 MiB): the maps hold about a quarter of the video memory of decoded WebP and the frames are unchanged (_reviews/gate3-ktx2-landmarks)."
     }
   ]
 }

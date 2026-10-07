@@ -189,10 +189,13 @@ pennants (the convoy flies its faction's colour, the shipment its current
 allegiance) without extra shader variants. Each campaign loads only the models it
 can show (its own hero, the boss it fights, the troops of its factions, the
 wagons and pickups, and in story worlds the residents and landmarks): about
-20.6 to 21.3 MB of the 24.5 MB of models for a story campaign and about 9.0 to
+35.2 to 35.9 MB of the 39.1 MB of models for a story campaign and about 9.0 to
 9.5 MB for a legacy one. Characters and wagons ship their maps of 1024 px or more
 at half size, since the game camera never comes close enough to show the finer
 level; the frames look the same with a quarter of those maps' texture memory.
+The landmarks and the Echo Well, which the camera does see up close, keep 1024 px
+maps GPU-compressed as Basis Universal UASTC in KTX2: the files are larger, but
+those maps hold a quarter of the video memory and look the same in play.
 The game waits for those models before presenting a run and stops
 with an explicit asset error if any fails to load.
 
@@ -659,7 +662,9 @@ requests. On `main`, it can publish the build through GitHub Pages. Set the
 repository's **Settings > Pages > Source** to **GitHub Actions** before enabling
 deployment. Local builds do not require GitHub.
 
-Aegis packages declare MIT; Three.js is MIT. Runtime notices are included in
+Aegis packages declare MIT; Three.js is MIT, and the Basis Universal transcoder it
+loads for the GPU-compressed textures is Apache-2.0 (with KTX-Parse and zstddec,
+MIT, and the Zstandard decoder, BSD). Runtime notices are included in
 [`public/THIRD_PARTY_NOTICES.txt`](public/THIRD_PARTY_NOTICES.txt) and copied into
 the production build. The engine remains pinned with its upstream provenance.
 The sequel uses newly authored procedural visuals, forty-two locally generated and

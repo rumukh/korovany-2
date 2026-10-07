@@ -3,8 +3,8 @@
   "id": "prop-echo-well",
   "output": {
     "file": "public/models/prop-echo-well/prop-echo-well.glb",
-    "sha256": "8f77450e8560e9803236b70aabd83b068c333aa0824a4bc6c16696b3ff10b69b",
-    "bytes": 826020
+    "sha256": "829fb39167799f7fae3f42603b034ec39b4e313810e2dcf2dfeef372f7ad36d0",
+    "bytes": 2882820
   },
   "license": "Generated for rumukh/korovany-2. TRELLIS code and the TRELLIS-image-large weights are MIT-licensed, but the textured export this asset went through depends on components restricted to research and evaluation (the Gaussian export path and diffoctreerast). No commercial clearance has been established for TRELLIS-derived output. The project owner explicitly acknowledged publishing it on the public korovany-2 GitHub Pages site. Concepts were generated locally with Qwen Image Edit Plus 2511 in WanGP from original Blender reference renders; no third-party or real-person likeness was used as input.",
   "acknowledgment": {
@@ -99,6 +99,14 @@
         "wholeToolchainMit": false,
         "commercialClearanceEstablished": false
       }
+    },
+    {
+      "name": "Basis Universal 2.50 (basisu)",
+      "build": "bin/basisu_st.wasm of tag v2_50 (WASI, single-threaded), run by Node.js node:wasi",
+      "source": "https://github.com/BinomialLLC/basis_universal",
+      "sha256": "b42d951b1bf146133578e8c7927ad4a4a857552846a46a3ee33b541b2a06bc7d",
+      "license": "Apache-2.0",
+      "role": "GPU texture compression of the shipped maps (UASTC in KTX2, Zstandard), not shipped"
     }
   ],
   "source": {
@@ -260,22 +268,28 @@
           "raw": 0,
           "packed": 0
         },
-        "stored": 618462
+        "stored": 2675250
       },
-      "inputSha256": "649a2313b71b02eba7fc1c99a081d6302618e662b19eb7e14c1479c6431cf15c",
-      "bytesBefore": 987676,
-      "bytesAfter": 826020
+      "inputSha256": "a552de21597fe0e1a18d1fcfe484b6f47333374b073861e4c47bfb23e9ce5bd7",
+      "bytesBefore": 3044476,
+      "bytesAfter": 2882820
     },
     "derivedFrom": {
-      "cook": "cook-004-q",
-      "sha256": "649a2313b71b02eba7fc1c99a081d6302618e662b19eb7e14c1479c6431cf15c",
-      "bytes": 987676,
-      "note": "The exact cook-004-q output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
+      "cook": "cook-004-q-k",
+      "sha256": "a552de21597fe0e1a18d1fcfe484b6f47333374b073861e4c47bfb23e9ce5bd7",
+      "bytes": 3044476,
+      "note": "The exact cook-004-q-k output, reordered for locality and compressed by meshopt_glb.mjs (EXT_meshopt_compression, no lossy filters); the Blender cook was not re-run.",
       "derivedFrom": {
-        "cook": "cook-004",
-        "sha256": "888827c4da0083eb0398762c63e5d2cfb5812b654dd94da22cb96468bb02b1ba",
-        "bytes": 1377252,
-        "note": "The exact cook-004 output, quantized by quantize_static_glb.py; the Blender cook was not re-run."
+        "cook": "cook-004-q",
+        "sha256": "649a2313b71b02eba7fc1c99a081d6302618e662b19eb7e14c1479c6431cf15c",
+        "bytes": 987676,
+        "note": "The exact cook-004-q output (the shipped cook-004-q-m before EXT_meshopt_compression) with its maps re-encoded as Basis Universal UASTC KTX2 by ktx2_glb.py; the Blender cook was not re-run.",
+        "derivedFrom": {
+          "cook": "cook-004",
+          "sha256": "888827c4da0083eb0398762c63e5d2cfb5812b654dd94da22cb96468bb02b1ba",
+          "bytes": 1377252,
+          "note": "The exact cook-004 output, quantized by quantize_static_glb.py; the Blender cook was not re-run."
+        }
       }
     },
     "scripts": {
@@ -283,14 +297,198 @@
       "k2cook.py": "6503ca0953d8ca03843cc8356642592df2905dafd02e0acd8d068f7c1b497041",
       "k2materials.py": "c9868ae635a4b505716c1328f16ea198d103d3946fa0fbfa173a5c6b40008ab5",
       "quantize_static_glb.py": "9a42f5dc947e841f43cf6b4b096dedb9d063911c3f56236b9cb1dc13d3607327",
-      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5"
+      "meshopt_glb.mjs": "7903ae27ea5361247e8d0504058777c70a21a4ec6528df3b657d413f8f1db1d5",
+      "ktx2_glb.py": "29ea13b9e375f0893aba54c78f5f23d62e104c9c9ddc1f4bc11568706e4ca5aa",
+      "ktx2_tool.mjs": "0f94eb2f2f3ba5654ff42c915705fb41390118aa7fec0fa6f236763708900f81"
     },
     "scriptsNote": "SHA-256 of each script with LF line endings, equal to its copy in scripts/models/pipeline.",
-    "seconds": 31.8
+    "seconds": 31.8,
+    "textureCompression": {
+      "extension": "KHR_texture_basisu",
+      "codec": "Basis Universal UASTC LDR 4x4 in KTX2, Zstandard supercompression",
+      "encoder": {
+        "name": "Basis Universal basisu",
+        "version": "Basis Universal LDR/HDR GPU Texture Supercompression System v2.50.0 (WASI)",
+        "build": "bin/basisu_st.wasm (WASI, single-threaded) of tag v2_50",
+        "source": "https://github.com/BinomialLLC/basis_universal",
+        "license": "Apache-2.0",
+        "sha256": "b42d951b1bf146133578e8c7927ad4a4a857552846a46a3ee33b541b2a06bc7d"
+      },
+      "transcoder": {
+        "name": "three.js 0.169.0 examples/jsm/libs/basis (the game's)",
+        "sha256": {
+          "basis_transcoder.js": "8478b5b6d6b74e7d3082b89f6417321d8d1dc0307f2b30d4484bb11b441696a1",
+          "basis_transcoder.wasm": "6cf17dc889352c42e9acf8897107978d127005fe3386c36a0e3845e27967630a"
+        }
+      },
+      "script": "ktx2_glb.py",
+      "scriptSha256": "29ea13b9e375f0893aba54c78f5f23d62e104c9c9ddc1f4bc11568706e4ca5aa",
+      "toolSha256": "0f94eb2f2f3ba5654ff42c915705fb41390118aa7fec0fa6f236763708900f81",
+      "mips": "full chain, 2x2 box filter with clamped edges (sRGB colour in linear light)",
+      "inputSha256": "649a2313b71b02eba7fc1c99a081d6302618e662b19eb7e14c1479c6431cf15c",
+      "bytesBefore": 987676,
+      "bytesAfter": 3044476,
+      "images": [
+        {
+          "image": "prop-normal",
+          "role": "normal",
+          "size": [
+            1024,
+            1024
+          ],
+          "alpha": false,
+          "bytesBefore": 217614,
+          "bytes": 951724,
+          "sha256Before": "614f03b499c482ba1027dd30015e51b5420099b0dcc752e621b8a79f46daf8bc",
+          "sha256": "3609252db848dc4b1c5b218da35595efe4bf865c86d328bdf475957927664134",
+          "levels": 11,
+          "transfer": "linear",
+          "settings": [
+            "-uastc",
+            "-uastc_level",
+            "2",
+            "-uastc_rdo_d",
+            "32768",
+            "-uastc_rdo_m",
+            "-ktx2",
+            "-ktx2_zstandard_level",
+            "22",
+            "-mipmap",
+            "-mip_filter",
+            "box",
+            "-mip_clamp",
+            "-no_multithreading",
+            "-uastc_rdo_l",
+            "0.5",
+            "-normal_map",
+            "-no_alpha"
+          ],
+          "transcodedTo": [
+            "ASTC 4x4",
+            "BC7",
+            "BC1/BC3",
+            "ETC1/ETC2",
+            "PVRTC1",
+            "RGBA8"
+          ],
+          "mip0": {
+            "meanAbsRgbError": 1.172,
+            "psnr": 41.71
+          },
+          "mip2": {
+            "meanAbsRgbError": 1.932,
+            "psnr": 38
+          }
+        },
+        {
+          "image": "prop-orm",
+          "role": "data",
+          "size": [
+            1024,
+            1024
+          ],
+          "alpha": false,
+          "bytesBefore": 198700,
+          "bytes": 795384,
+          "sha256Before": "9b7c43e7af16f0809ad51122fbbf311fd54dc139f9bf10d98c6ab268951280ad",
+          "sha256": "bb1efd6c1a6e1226020ae262a1e41dad8c70b6da0b39c5400514b3aef18bc788",
+          "levels": 11,
+          "transfer": "linear",
+          "settings": [
+            "-uastc",
+            "-uastc_level",
+            "2",
+            "-uastc_rdo_d",
+            "32768",
+            "-uastc_rdo_m",
+            "-ktx2",
+            "-ktx2_zstandard_level",
+            "22",
+            "-mipmap",
+            "-mip_filter",
+            "box",
+            "-mip_clamp",
+            "-no_multithreading",
+            "-uastc_rdo_l",
+            "1",
+            "-linear",
+            "-no_alpha"
+          ],
+          "transcodedTo": [
+            "ASTC 4x4",
+            "BC7",
+            "BC1/BC3",
+            "ETC1/ETC2",
+            "PVRTC1",
+            "RGBA8"
+          ],
+          "mip0": {
+            "meanAbsRgbError": 1.103,
+            "psnr": 42.14
+          },
+          "mip2": {
+            "meanAbsRgbError": 1.673,
+            "psnr": 38.21
+          }
+        },
+        {
+          "image": "prop-base-1024",
+          "role": "colour",
+          "size": [
+            1024,
+            1024
+          ],
+          "alpha": false,
+          "bytesBefore": 202148,
+          "bytes": 928142,
+          "sha256Before": "0ceba3882ab3384cb9ca16553f29387503d5c9330f3041cdfa653284be5af9f9",
+          "sha256": "1a5d689ec6c454619e30b01a01b2a0ba1c4711285b9c0f82e040ab0f39ed473a",
+          "levels": 11,
+          "transfer": "sRGB",
+          "settings": [
+            "-uastc",
+            "-uastc_level",
+            "2",
+            "-uastc_rdo_d",
+            "32768",
+            "-uastc_rdo_m",
+            "-ktx2",
+            "-ktx2_zstandard_level",
+            "22",
+            "-mipmap",
+            "-mip_filter",
+            "box",
+            "-mip_clamp",
+            "-no_multithreading",
+            "-uastc_rdo_l",
+            "1",
+            "-srgb",
+            "-no_alpha"
+          ],
+          "transcodedTo": [
+            "ASTC 4x4",
+            "BC7",
+            "BC1/BC3",
+            "ETC1/ETC2",
+            "PVRTC1",
+            "RGBA8"
+          ],
+          "mip0": {
+            "meanAbsRgbError": 1.048,
+            "psnr": 42.6
+          },
+          "mip2": {
+            "meanAbsRgbError": 1.776,
+            "psnr": 39.08
+          }
+        }
+      ]
+    }
   },
   "limitations": [
     "Single-view TRELLIS reconstruction; small props (bowls, bucket, rope) are simplified lumps at close range.",
     "Roughness and metalness derived from colour classes and declared iron regions, not measured PBR.",
-    "Decimated from 81k to under 15k triangles with detail carried by a baked normal map."
+    "Decimated from 81k to under 15k triangles with detail carried by a baked normal map.",
+    "Maps ship GPU-compressed as Basis Universal UASTC in KTX2 (ktx2_glb.py; about a quarter of the video memory of decoded WebP): against the cooked maps the transcoded result measures 41.7 to 42.6 dB PSNR at full size and 38.0 to 39.1 dB at a quarter size (what the game camera samples), so close-ups can show faint 4x4 block artefacts."
   ]
 }

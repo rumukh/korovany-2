@@ -69,13 +69,23 @@ export function writeGlb(json: GltfJson, bin: Uint8Array): Uint8Array {
   return out;
 }
 
-/** Image header dimensions for the embedded PNG/WebP textures, without decoding pixels. */
-export function imageSize(bytes: Uint8Array): { format: 'png' | 'webp'; width: number; height: number; alpha: boolean } {
+const KTX2_IDENTIFIER = [0xab, 0x4b, 0x54, 0x58, 0x20, 0x32, 0x30, 0xbb, 0x0d, 0x0a, 0x1a, 0x0a];
+
+/** Image header dimensions for the embedded PNG, WebP and KTX2 textures, without decoding pixels. */
+export function imageSize(bytes: Uint8Array): { format: 'png' | 'webp' | 'ktx2'; width: number; height: number; alpha: boolean } {
   const ascii = (from: number, to: number) => String.fromCharCode(...bytes.subarray(from, to));
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   if (bytes[0] === 0x89 && ascii(1, 4) === 'PNG') {
     const colour = bytes[25];
     return { format: 'png', width: view.getUint32(16), height: view.getUint32(20), alpha: colour === 4 || colour === 6 };
+  }
+  if (KTX2_IDENTIFIER.every((byte, index) => bytes[index] === byte)) {
+    // Alpha from the data format descriptor: Basis UASTC with RGBA channels, Basis ETC1S with an alpha slice, else four samples.
+    const block = view.getUint32(48, true) + 4;
+    const model = bytes[block + 8];
+    const samples = ((view.getUint32(block + 4, true) >>> 16) - 24) / 16;
+    const alpha = model === 166 ? (bytes[block + 27]! & 0x0f) === 3 : model === 163 ? samples === 2 : samples === 4;
+    return { format: 'ktx2', width: view.getUint32(20, true), height: view.getUint32(24, true), alpha };
   }
   if (ascii(0, 4) === 'RIFF' && ascii(8, 12) === 'WEBP') {
     const chunk = ascii(12, 16);

@@ -3,6 +3,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { MonsterSpecies, WorldBlueprint } from '../game/types';
 import { monsterLairs } from '../game/world';
+import { textureTranscoder } from './textures';
 
 /**
  * Version 3 world assets: buildings, props, trees, rocks and animals. This registry is separate from the cooked
@@ -208,9 +209,10 @@ export interface WorldAssetSource {
   image(url: string): Promise<SurfacePixels>;
 }
 
-/** Browser source: three's GLTFLoader with the bundled meshopt decoder, and WebP layers decoded by the browser. */
+/** Browser source: three's GLTFLoader with the bundled meshopt decoder and the page's shared KTX2 transcoder
+ * (`textures.ts`), and WebP layers decoded by the browser. */
 export function gltfWorldSource(): WorldAssetSource {
-  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).setKTX2Loader(textureTranscoder());
   return {
     model: id => loader.loadAsync(worldModelUrl(id)),
     async image(url) {
