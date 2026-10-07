@@ -98,6 +98,9 @@ ordinary local runs; the example above enables the complete release coverage.
 Browser reloads wait for a new document loader and application readiness.
 Only execution-context replacement during the requested navigation is retried
 within the original deadline; renderer crashes and application errors still fail.
+A missed deadline reports the page's state: document readiness, whether the game
+started, its overlay, and any failed requests, such as a 504 from an outdated
+Vite dependency.
 Long gameplay waits keep their tick-count assertions but allow up to 60 seconds
 for software rendering. These functional scenarios are not GPU benchmarks.
 

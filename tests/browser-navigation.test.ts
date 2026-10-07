@@ -4,6 +4,8 @@ import { navigateTestPage, reloadTestPage } from "./browser-navigation";
 class Page {
   loaders = ["old", "new"];
   evaluations: (boolean | Error | { exceptionDetails: { text: string } })[] = [true];
+  /** The page's answer when a missed deadline asks for its state; "hang" never answers. */
+  state: string | undefined;
   navigationError = "";
   calls: { method: string; params: unknown }[] = [];
 
@@ -12,6 +14,9 @@ class Page {
     if (method === "Page.getFrameTree") {
       const loaderId = this.loaders.length > 1 ? this.loaders.shift()! : this.loaders[0]!;
       return { frameTree: { frame: { id: "main", loaderId } } } as T;
+    }
+    if (method === "Runtime.evaluate" && (params as { expression: string }).expression.startsWith("JSON.stringify(")) {
+      return this.state === "hang" ? new Promise<T>(() => {}) : { result: { value: this.state } } as T;
     }
     if (method === "Runtime.evaluate") {
       const value = this.evaluations.length > 1 ? this.evaluations.shift()! : this.evaluations[0]!;
@@ -77,6 +82,26 @@ describe("document-aware browser navigation", () => {
     if (state === "uncommitted") page.loaders = ["old"];
     else page.evaluations = [state === "replaced" ? new Error("Inspected target navigated or closed") : false];
     const pending = expect(reloadTestPage(page, "window.korovany", 80)).rejects.toThrow("within 80ms");
+    await vi.runAllTimersAsync();
+    await pending;
+  });
+
+  it("reports what the page looked like when it missed the deadline", async () => {
+    const page = new Page();
+    page.evaluations = [false];
+    page.state = '{"readyState":"complete","korovany":"undefined","failedRequests":["504 http://game.test/three.js"]}';
+    const pending = expect(reloadTestPage(page, "window.korovany", 80)).rejects
+      .toThrow('within 80ms; loader old -> new, context replacements 0; page {"readyState":"complete","korovany":"undefined",'
+        + '"failedRequests":["504 http://game.test/three.js"]}.');
+    await vi.runAllTimersAsync();
+    await pending;
+  });
+
+  it("waits only briefly for the state of a page that does not answer", async () => {
+    const page = new Page();
+    page.evaluations = [false];
+    page.state = "hang";
+    const pending = expect(reloadTestPage(page, "window.korovany", 80)).rejects.toThrow("page no answer within 5000ms.");
     await vi.runAllTimersAsync();
     await pending;
   });
