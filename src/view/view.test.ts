@@ -4,7 +4,7 @@ import type { WorldBlueprint } from '../game/types';
 import { createActor, createWagon } from './actors';
 import { FollowCamera } from './camera';
 import { seededRandom, ViewResources } from './resources';
-import { createWorldScenery, distanceToSegment, isDressingAllowed } from './world';
+import { createWorldScenery, distanceToSegment, dressingFilter, isDressingAllowed } from './world';
 
 function canvasBox() {
   return {
@@ -85,6 +85,10 @@ describe('authoritative scenery boundary', () => {
     const world = testWorld();
     world.roads.edges[0] = { from: 'missing', to: 'post', width: 8 };
     expect(() => isDressingAllowed(world, { x: 30, z: 30 })).toThrow('unknown node');
+    // The scenery build's filter reports it for the same points, and only for those that reach the roads.
+    const allowed = dressingFilter(world);
+    expect(() => allowed({ x: 30, z: 30 })).toThrow('unknown node');
+    expect(allowed({ x: 71, z: 30 })).toBe(false);
   });
 
   it('builds deterministic scenery without changing the blueprint and releases instance buffers', () => {

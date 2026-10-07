@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Bounds, Obstacle, Vec2, WorldBlueprint, WorldSite } from '../game/types';
+import type { Bounds, Obstacle, RoadNode, Vec2, WorldBlueprint, WorldSite } from '../game/types';
 import { palette } from './palette';
 import { beam, joint, part, shapeGeometry, StaticBatch } from './primitives';
 import { seededRandom, ViewResources } from './resources';
@@ -48,6 +48,59 @@ export function isDressingAllowed(world: WorldBlueprint, point: Vec2): boolean {
     if (distanceToSegment(point, start, end) < edge.width * 0.5 + 1.1) return false;
   }
   return true;
+}
+
+const DRESSING_CELL = 8;
+/** Grid cells cover a little more than each reach, so rounding can never leave out an obstacle or road that applies. */
+const DRESSING_MARGIN = 0.01;
+
+/**
+ * `isDressingAllowed` for the many points of one scenery build: the same tests on the same values, but each obstacle
+ * and road is tested only from the grid cells it can reach. A road edge naming an unknown node keeps the reference
+ * function, so that error is still raised for the first point that reaches the road.
+ */
+export function dressingFilter(world: WorldBlueprint): (point: Vec2) => boolean {
+  const nodes = new Map<string, RoadNode>();
+  for (const node of world.roads.nodes) if (!nodes.has(node.id)) nodes.set(node.id, node);
+  const roads: { start: RoadNode; end: RoadNode; reach: number }[] = [];
+  for (const edge of world.roads.edges) {
+    const start = nodes.get(edge.from);
+    const end = nodes.get(edge.to);
+    if (!start || !end) return point => isDressingAllowed(world, point);
+    roads.push({ start, end, reach: edge.width * 0.5 + 1.1 });
+  }
+  const { minX, maxX, minZ, maxZ } = world.bounds;
+  const columns = Math.max(1, Math.ceil((maxX - minX) / DRESSING_CELL));
+  const rows = Math.max(1, Math.ceil((maxZ - minZ) / DRESSING_CELL));
+  const column = (x: number): number => Math.min(columns - 1, Math.max(0, Math.floor((x - minX) / DRESSING_CELL)));
+  const row = (z: number): number => Math.min(rows - 1, Math.max(0, Math.floor((z - minZ) / DRESSING_CELL)));
+  const obstacleCells: Obstacle[][] = Array.from({ length: columns * rows }, () => []);
+  const roadCells: (typeof roads)[] = Array.from({ length: columns * rows }, () => []);
+  const insert = <T>(cells: T[][], item: T, x0: number, x1: number, z0: number, z1: number): void => {
+    for (let r = row(z0 - DRESSING_MARGIN), lastRow = row(z1 + DRESSING_MARGIN); r <= lastRow; r++) {
+      for (let c = column(x0 - DRESSING_MARGIN), lastColumn = column(x1 + DRESSING_MARGIN); c <= lastColumn; c++) cells[r * columns + c]!.push(item);
+    }
+  };
+  for (const obstacle of world.obstacles) {
+    const reach = obstacle.radius + 0.5;
+    insert(obstacleCells, obstacle, obstacle.x - reach, obstacle.x + reach, obstacle.z - reach, obstacle.z + reach);
+  }
+  for (const road of roads) {
+    insert(roadCells, road, Math.min(road.start.x, road.end.x) - road.reach, Math.max(road.start.x, road.end.x) + road.reach,
+      Math.min(road.start.z, road.end.z) - road.reach, Math.max(road.start.z, road.end.z) + road.reach);
+  }
+  return (point) => {
+    if (!insideBounds(point, world.bounds, -1) || insideBounds(point, world.river, 1.4)) return false;
+    if (world.sites.some((site) => Math.hypot(site.x - point.x, site.z - point.z) < site.radius + 1)) return false;
+    if (world.exploration?.locations.some(place => Math.hypot(place.x - point.x, place.z - point.z) < place.radius)) return false;
+    // Every point that gets here lies inside the bounds, so inside the grid.
+    const cell = row(point.z) * columns + column(point.x);
+    for (const obstacle of obstacleCells[cell]!) {
+      if (Math.hypot(obstacle.x - point.x, obstacle.z - point.z) < obstacle.radius + 0.5) return false;
+    }
+    for (const road of roadCells[cell]!) if (distanceToSegment(point, road.start, road.end) < road.reach) return false;
+    return true;
+  };
 }
 
 function worldSeed(seed: string): number {
@@ -553,9 +606,10 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
     }
   }
 
+  const dressingAllowed = dressingFilter(world);
   for (let index = 0; index < (world.exploration ? 28000 : 1700); index += 1) {
     const point = { x: bounds.minX + random() * width, z: bounds.minZ + random() * depth };
-    if (!isDressingAllowed(world, point)) continue;
+    if (!dressingAllowed(point)) continue;
     const batch = detailChunks?.at(point) ?? decoration;
     const theme = world.exploration ? themeAt(world, point) : undefined;
     const angle = random() * Math.PI * 2;
@@ -577,7 +631,7 @@ export function createWorldScenery(resources: ViewResources, world: WorldBluepri
       x: narrowRiverX ? (side < 0 ? river.minX - 1.55 : river.maxX + 1.55) : bounds.minX + along * width,
       z: narrowRiverX ? bounds.minZ + along * depth : (side < 0 ? river.minZ - 1.55 : river.maxZ + 1.55),
     };
-    if (!isDressingAllowed(world, point)) continue;
+    if (!dressingAllowed(point)) continue;
     const batch = detailChunks?.at(point) ?? decoration;
     const height = 0.48 + random() * 0.37;
     batch.add('box', palette.moss, [point.x, height / 2, point.z], [0.045, height, 0.045], [0.06, 0, side * 0.1], false);
